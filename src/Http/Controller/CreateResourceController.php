@@ -83,7 +83,7 @@ final class CreateResourceController
 
         $content = $request->getContent();
 
-        if ($content === '' || $content === false) {
+        if ($content === false || $content === '') {
             throw new BadRequestException('Request body must not be empty.');
         }
 
@@ -96,6 +96,11 @@ final class CreateResourceController
             throw new BadRequestException('Request body must be a valid JSON object.');
         }
 
+        if (array_is_list($decoded)) {
+            throw new BadRequestException('Request body must be a valid JSON object.');
+        }
+
+        /** @var array<string, mixed> $decoded */
         return $decoded;
     }
 

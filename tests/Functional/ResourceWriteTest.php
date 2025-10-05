@@ -221,6 +221,38 @@ final class ResourceWriteTest extends JsonApiTestCase
         ($this->createController())($request, 'articles');
     }
 
+    public function testArrayPayloadRaisesBadRequest(): void
+    {
+        $request = Request::create(
+            '/api/articles',
+            'POST',
+            server: [
+                'CONTENT_TYPE' => MediaType::JSON_API,
+                'HTTP_ACCEPT' => MediaType::JSON_API,
+            ],
+            content: json_encode([['type' => 'articles']], JSON_THROW_ON_ERROR),
+        );
+
+        $this->expectException(BadRequestException::class);
+        ($this->createController())($request, 'articles');
+    }
+
+    public function testArrayPayloadRaisesBadRequestOnPatch(): void
+    {
+        $request = Request::create(
+            '/api/articles/1',
+            'PATCH',
+            server: [
+                'CONTENT_TYPE' => MediaType::JSON_API,
+                'HTTP_ACCEPT' => MediaType::JSON_API,
+            ],
+            content: json_encode([['type' => 'articles']], JSON_THROW_ON_ERROR),
+        );
+
+        $this->expectException(BadRequestException::class);
+        ($this->updateController())($request, 'articles', '1');
+    }
+
     /**
      * @param array<string, mixed> $payload
      */
