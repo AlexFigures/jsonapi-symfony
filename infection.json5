@@ -1,0 +1,12 @@
+{
+    "$schema": "https://infection.github.io/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    "logs": {
+        "text": "infection.log"
+    },
+    "tmpDir": ".infection"
+}
