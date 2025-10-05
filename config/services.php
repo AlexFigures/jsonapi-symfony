@@ -3,8 +3,21 @@
 declare(strict_types=1);
 
 use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use JsonApi\Symfony\Http\Controller\CollectionController;
+use JsonApi\Symfony\Http\Controller\ResourceController;
+use JsonApi\Symfony\Http\Document\DocumentBuilder;
 use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
+use JsonApi\Symfony\Http\Link\LinkGenerator;
+use JsonApi\Symfony\Http\Request\PaginationConfig;
+use JsonApi\Symfony\Http\Request\QueryParser;
+use JsonApi\Symfony\Http\Request\SortingWhitelist;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
+use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return static function (ContainerConfigurator $configurator): void {
@@ -20,5 +33,72 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services->set(JsonApiHttpException::class)->abstract();
-    $services->set(ResourceRegistry::class);
+
+    $services
+        ->set(ResourceRegistry::class)
+        ->args([
+            tagged_iterator('jsonapi.resource', 'type'),
+        ])
+    ;
+
+    $services->alias(ResourceRegistryInterface::class, ResourceRegistry::class);
+
+    $services
+        ->set(PaginationConfig::class)
+        ->args([
+            '%jsonapi.pagination.default_size%',
+            '%jsonapi.pagination.max_size%',
+        ])
+    ;
+
+    $services
+        ->set(SortingWhitelist::class)
+        ->args([
+            '%jsonapi.sorting.whitelist%',
+        ])
+    ;
+
+    $services
+        ->set(QueryParser::class)
+        ->args([
+            service(ResourceRegistryInterface::class),
+            service(PaginationConfig::class),
+            service(SortingWhitelist::class),
+        ])
+    ;
+
+    $services
+        ->set(PropertyAccessorInterface::class)
+        ->factory([PropertyAccess::class, 'createPropertyAccessor'])
+    ;
+
+    $services
+        ->set(LinkGenerator::class)
+        ->args([
+            service(UrlGeneratorInterface::class),
+        ])
+    ;
+
+    $services
+        ->set(DocumentBuilder::class)
+        ->args([
+            service(ResourceRegistryInterface::class),
+            service(PropertyAccessorInterface::class),
+            service(LinkGenerator::class),
+        ])
+    ;
+
+    $services
+        ->set(CollectionController::class)
+        ->autowire()
+        ->autoconfigure()
+        ->tag('controller.service_arguments')
+    ;
+
+    $services
+        ->set(ResourceController::class)
+        ->autowire()
+        ->autoconfigure()
+        ->tag('controller.service_arguments')
+    ;
 };

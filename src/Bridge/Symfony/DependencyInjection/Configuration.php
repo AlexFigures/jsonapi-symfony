@@ -31,6 +31,30 @@ final class Configuration implements ConfigurationInterface
             ->defaultValue(MediaType::JSON_API)
         ;
 
+        $children->scalarNode('route_prefix')
+            ->defaultValue('/api')
+        ;
+
+        $children->arrayNode('pagination')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->integerNode('default_size')->min(1)->defaultValue(25)->end()
+                ->integerNode('max_size')->min(1)->defaultValue(100)->end()
+            ->end()
+        ;
+
+        $children->arrayNode('sorting')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->arrayNode('whitelist')
+                    ->useAttributeAsKey('type')
+                    ->arrayPrototype()
+                        ->scalarPrototype()->end()
+                    ->end()
+                ->end()
+            ->end()
+        ;
+
         return $treeBuilder;
     }
 }
