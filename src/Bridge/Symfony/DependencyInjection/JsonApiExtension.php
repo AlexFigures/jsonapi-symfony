@@ -20,6 +20,10 @@ final class JsonApiExtension extends Extension
 
         $container->setParameter('jsonapi.strict_content_negotiation', $config['strict_content_negotiation']);
         $container->setParameter('jsonapi.media_type', $config['media_type']);
+        $container->setParameter('jsonapi.route_prefix', $config['route_prefix']);
+        $container->setParameter('jsonapi.pagination.default_size', $config['pagination']['default_size']);
+        $container->setParameter('jsonapi.pagination.max_size', $config['pagination']['max_size']);
+        $container->setParameter('jsonapi.sorting.whitelist', $config['sorting']['whitelist']);
 
         $this->registerAutoconfiguration($container);
 
