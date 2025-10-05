@@ -1,4 +1,4 @@
-# JsonApiBundle (Stage 1)
+# JsonApiBundle (Stage 2)
 
 A DX-first Symfony 7 bundle scaffold for building fully compliant JSON:API 1.1 backends.
 
@@ -41,6 +41,11 @@ jsonapi:
         whitelist:
             articles: ['title', 'createdAt']
             authors: ['name']
+    write:
+        allow_relationship_writes: false
+        client_generated_ids:
+            articles: false
+            authors: true
 ```
 
 Declare your first resource:
@@ -65,7 +70,7 @@ final class Article
 }
 ```
 
-Stage 1 ships fully functional read endpoints:
+Stage 2 ships fully functional read endpoints and foundational writes:
 
 * Attribute-driven metadata registry with automatic discovery of attributes and relationships.
 * `GET /api/{type}` and `GET /api/{type}/{id}` controllers with JSON:API 1.1 compliant documents.
@@ -73,6 +78,24 @@ Stage 1 ships fully functional read endpoints:
 * Pagination helpers generating `self`, `first`, `prev`, `next`, and `last` links that retain other query parameters.
 * Document builder producing `data`, `included`, `links`, `meta`, and `jsonapi.version` for any combination of sparse fieldsets and includes.
 * In-memory repository and sample fixtures (Article, Author, Tag) for functional testing.
+* `POST /api/{type}`, `PATCH /api/{type}/{id}`, and `DELETE /api/{type}/{id}` controllers with ChangeSet-based write ports, transactional execution, and client-generated ID support.
+
+## Writes
+
+Stage 2 adds denormalisation of JSON:API resource documents into a `ChangeSet` consumed by the `ResourcePersister` port. Controllers wrap each write in a `TransactionManager::transactional()` call to guarantee atomicity and return the appropriate JSON:API responses:
+
+* `POST /api/{type}` ⇒ `201 Created` with the newly created resource document and a `Location` header pointing at its `self` link.
+* `PATCH /api/{type}/{id}` ⇒ `200 OK` with the updated resource document.
+* `DELETE /api/{type}/{id}` ⇒ `204 No Content`.
+
+Input documents are validated strictly:
+
+* `data.type` and `data.id` must match the endpoint.
+* Only attributes declared with `#[Attribute(writable: true)]` are accepted; attempts to write read-only or unknown attributes result in `400 Bad Request`.
+* Relationship writes are rejected by default (`allow_relationship_writes: false`).
+* Client-generated IDs are controlled per type through `write.client_generated_ids`. When disabled the bundle throws `403 Forbidden`; when enabled conflicts surface as `409 Conflict`.
+
+An in-memory `ResourcePersister` backs the functional test suite, using UUIDv4 server-generated identifiers when the client does not supply an ID.
 
 Example response:
 
@@ -117,4 +140,4 @@ Example response:
 }
 ```
 
-Upcoming stages will introduce persistence adapters, relationship endpoints, write operations, and JSON:API error documents.
+Upcoming stages will introduce relationship writes, Doctrine persistence adapters, and full JSON:API error documents.

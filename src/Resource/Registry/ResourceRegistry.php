@@ -145,7 +145,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
                 throw new LogicException(sprintf('Duplicate attribute "%s" detected on %s::%s.', $name, $member->getDeclaringClass()->getName(), $member->getName()));
             }
 
-            $attributes[$name] = new AttributeMetadata($name, $propertyPath, $instance->readable);
+            $attributes[$name] = new AttributeMetadata($name, $propertyPath, $instance->readable, $instance->writable);
         }
 
         return $attributes;

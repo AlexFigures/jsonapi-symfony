@@ -29,7 +29,7 @@ final class Article
         $this->tags = $tags === [] ? [] : array_values($tags);
     }
 
-    #[Attribute(name: 'createdAt')]
+    #[Attribute(name: 'createdAt', writable: false)]
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;

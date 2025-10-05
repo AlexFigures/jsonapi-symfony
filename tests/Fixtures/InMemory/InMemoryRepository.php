@@ -17,6 +17,7 @@ use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use JsonApi\Symfony\Tests\Fixtures\Model\Article;
 use JsonApi\Symfony\Tests\Fixtures\Model\Author;
 use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
+use ReflectionClass;
 use RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
@@ -36,6 +37,68 @@ final class InMemoryRepository implements ResourceRepository
     ) {
         $this->accessor = $accessor ?? PropertyAccess::createPropertyAccessor();
         $this->seed();
+    }
+
+    public function has(string $type, string $id): bool
+    {
+        return $this->findModel($type, $id) !== null;
+    }
+
+    public function get(string $type, string $id): ?object
+    {
+        return $this->findModel($type, $id);
+    }
+
+    public function save(string $type, object $model): void
+    {
+        $metadata = $this->registry->getByType($type);
+        $path = $metadata->idPropertyPath ?? 'id';
+        $id = (string) $this->accessor->getValue($model, $path);
+
+        $this->data[$type] ??= [];
+
+        foreach ($this->data[$type] as $index => $existing) {
+            $existingId = $this->accessor->getValue($existing, $path);
+            if ((string) $existingId === $id) {
+                $this->data[$type][$index] = $model;
+
+                return;
+            }
+        }
+
+        $this->data[$type][] = $model;
+    }
+
+    public function remove(string $type, string $id): void
+    {
+        if (!isset($this->data[$type])) {
+            return;
+        }
+
+        $metadata = $this->registry->getByType($type);
+        $path = $metadata->idPropertyPath ?? 'id';
+
+        foreach ($this->data[$type] as $index => $existing) {
+            $existingId = $this->accessor->getValue($existing, $path);
+            if ((string) $existingId === $id) {
+                unset($this->data[$type][$index]);
+                $this->data[$type] = array_values($this->data[$type]);
+
+                return;
+            }
+        }
+    }
+
+    public function createPrototype(string $type): object
+    {
+        if (isset($this->data[$type]) && $this->data[$type] !== []) {
+            return clone $this->data[$type][0];
+        }
+
+        $metadata = $this->registry->getByType($type);
+        $reflection = new ReflectionClass($metadata->class);
+
+        return $reflection->newInstanceWithoutConstructor();
     }
 
     public function findCollection(string $type, Criteria $criteria): Slice

@@ -10,6 +10,7 @@ final class AttributeMetadata
         public string $name,
         public ?string $propertyPath = null,
         public bool $readable = true,
+        public bool $writable = true,
     ) {
     }
 }

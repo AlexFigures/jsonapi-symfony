@@ -55,6 +55,18 @@ final class Configuration implements ConfigurationInterface
             ->end()
         ;
 
+        $children->arrayNode('write')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->booleanNode('allow_relationship_writes')->defaultFalse()->end()
+                ->arrayNode('client_generated_ids')
+                    ->useAttributeAsKey('type')
+                    ->booleanPrototype()->end()
+                    ->defaultValue([])
+                ->end()
+            ->end()
+        ;
+
         return $treeBuilder;
     }
 }
