@@ -5,16 +5,26 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Tests\Functional;
 
 use JsonApi\Symfony\Contract\Data\ResourceRepository;
+use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Http\Controller\CollectionController;
+use JsonApi\Symfony\Http\Controller\CreateResourceController;
+use JsonApi\Symfony\Http\Controller\DeleteResourceController;
 use JsonApi\Symfony\Http\Controller\ResourceController;
+use JsonApi\Symfony\Http\Controller\UpdateResourceController;
 use JsonApi\Symfony\Http\Document\DocumentBuilder;
 use JsonApi\Symfony\Http\Link\LinkGenerator;
 use JsonApi\Symfony\Http\Request\PaginationConfig;
 use JsonApi\Symfony\Http\Request\QueryParser;
 use JsonApi\Symfony\Http\Request\SortingWhitelist;
+use JsonApi\Symfony\Http\Write\ChangeSetFactory;
+use JsonApi\Symfony\Http\Write\InputDocumentValidator;
+use JsonApi\Symfony\Http\Write\WriteConfig;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRepository;
+use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister;
+use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager;
 use JsonApi\Symfony\Tests\Fixtures\Model\Article;
 use JsonApi\Symfony\Tests\Fixtures\Model\Author;
 use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
@@ -35,6 +45,11 @@ abstract class JsonApiTestCase extends TestCase
     private ?CollectionController $collectionController = null;
     private ?ResourceController $resourceController = null;
     private ?PropertyAccessorInterface $accessor = null;
+    private ?CreateResourceController $createController = null;
+    private ?UpdateResourceController $updateController = null;
+    private ?DeleteResourceController $deleteController = null;
+    private ?ResourcePersister $persister = null;
+    private ?TransactionManager $transactionManager = null;
 
     protected function collectionController(): CollectionController
     {
@@ -48,6 +63,27 @@ abstract class JsonApiTestCase extends TestCase
         $this->boot();
 
         return $this->resourceController;
+    }
+
+    protected function createController(): CreateResourceController
+    {
+        $this->boot();
+
+        return $this->createController;
+    }
+
+    protected function updateController(): UpdateResourceController
+    {
+        $this->boot();
+
+        return $this->updateController;
+    }
+
+    protected function deleteController(): DeleteResourceController
+    {
+        $this->boot();
+
+        return $this->deleteController;
     }
 
     protected function registry(): ResourceRegistryInterface
@@ -85,6 +121,20 @@ abstract class JsonApiTestCase extends TestCase
         return $this->accessor;
     }
 
+    protected function persister(): ResourcePersister
+    {
+        $this->boot();
+
+        return $this->persister;
+    }
+
+    protected function transactionManager(): TransactionManager
+    {
+        $this->boot();
+
+        return $this->transactionManager;
+    }
+
     private function boot(): void
     {
         if ($this->collectionController !== null) {
@@ -115,9 +165,17 @@ abstract class JsonApiTestCase extends TestCase
         $context->setHost('localhost');
 
         $urlGenerator = new UrlGenerator($routes, $context);
+        $linkGenerator = new LinkGenerator($urlGenerator);
         $accessor = PropertyAccess::createPropertyAccessor();
-        $document = new DocumentBuilder($registry, $accessor, new LinkGenerator($urlGenerator));
+        $document = new DocumentBuilder($registry, $accessor, $linkGenerator);
         $repository = new InMemoryRepository($registry, $accessor);
+        $writeConfig = new WriteConfig(false, [
+            'authors' => true,
+        ]);
+        $validator = new InputDocumentValidator($registry, $writeConfig);
+        $changeSetFactory = new ChangeSetFactory($registry);
+        $persister = new InMemoryPersister($repository, $registry, $accessor);
+        $transactionManager = new InMemoryTransactionManager();
 
         $this->registry = $registry;
         $this->repository = $repository;
@@ -125,6 +183,11 @@ abstract class JsonApiTestCase extends TestCase
         $this->document = $document;
         $this->collectionController = new CollectionController($registry, $repository, $parser, $document);
         $this->resourceController = new ResourceController($registry, $repository, $parser, $document);
+        $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig);
+        $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document);
+        $this->deleteController = new DeleteResourceController($registry, $persister, $transactionManager);
         $this->accessor = $accessor;
+        $this->persister = $persister;
+        $this->transactionManager = $transactionManager;
     }
 }

@@ -24,6 +24,8 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.pagination.default_size', $config['pagination']['default_size']);
         $container->setParameter('jsonapi.pagination.max_size', $config['pagination']['max_size']);
         $container->setParameter('jsonapi.sorting.whitelist', $config['sorting']['whitelist']);
+        $container->setParameter('jsonapi.write.allow_relationship_writes', $config['write']['allow_relationship_writes']);
+        $container->setParameter('jsonapi.write.client_generated_ids', $config['write']['client_generated_ids']);
 
         $this->registerAutoconfiguration($container);
 

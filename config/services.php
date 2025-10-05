@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
 use JsonApi\Symfony\Http\Controller\CollectionController;
+use JsonApi\Symfony\Http\Controller\CreateResourceController;
+use JsonApi\Symfony\Http\Controller\DeleteResourceController;
 use JsonApi\Symfony\Http\Controller\ResourceController;
+use JsonApi\Symfony\Http\Controller\UpdateResourceController;
 use JsonApi\Symfony\Http\Document\DocumentBuilder;
 use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
 use JsonApi\Symfony\Http\Link\LinkGenerator;
 use JsonApi\Symfony\Http\Request\PaginationConfig;
 use JsonApi\Symfony\Http\Request\QueryParser;
 use JsonApi\Symfony\Http\Request\SortingWhitelist;
+use JsonApi\Symfony\Http\Write\ChangeSetFactory;
+use JsonApi\Symfony\Http\Write\InputDocumentValidator;
+use JsonApi\Symfony\Http\Write\WriteConfig;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -89,6 +95,29 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
+        ->set(WriteConfig::class)
+        ->args([
+            '%jsonapi.write.allow_relationship_writes%',
+            '%jsonapi.write.client_generated_ids%',
+        ])
+    ;
+
+    $services
+        ->set(InputDocumentValidator::class)
+        ->args([
+            service(ResourceRegistryInterface::class),
+            service(WriteConfig::class),
+        ])
+    ;
+
+    $services
+        ->set(ChangeSetFactory::class)
+        ->args([
+            service(ResourceRegistryInterface::class),
+        ])
+    ;
+
+    $services
         ->set(CollectionController::class)
         ->autowire()
         ->autoconfigure()
@@ -97,6 +126,27 @@ return static function (ContainerConfigurator $configurator): void {
 
     $services
         ->set(ResourceController::class)
+        ->autowire()
+        ->autoconfigure()
+        ->tag('controller.service_arguments')
+    ;
+
+    $services
+        ->set(CreateResourceController::class)
+        ->autowire()
+        ->autoconfigure()
+        ->tag('controller.service_arguments')
+    ;
+
+    $services
+        ->set(UpdateResourceController::class)
+        ->autowire()
+        ->autoconfigure()
+        ->tag('controller.service_arguments')
+    ;
+
+    $services
+        ->set(DeleteResourceController::class)
         ->autowire()
         ->autoconfigure()
         ->tag('controller.service_arguments')
