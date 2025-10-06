@@ -1,0 +1,18 @@
+parameters:
+  paths:
+    - ./src
+  exclude_files:
+    - '#/Tests/#'
+  layers:
+    - name: Contract
+      collectors:
+        - type: className
+          regex: '^JsonApi\\\\Symfony\\\\Contract\\\\'
+    - name: Application
+      collectors:
+        - type: className
+          regex: '^JsonApi\\\\Symfony\\\\(?!Contract).+'
+  ruleset:
+    Contract: []
+    Application:
+      - Contract

@@ -34,3 +34,28 @@ jobs:
 
       - name: PHP CS Fixer (dry-run)
         run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+  quality:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP 8.2 with Xdebug
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: xdebug
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Mutation testing
+        run: make mutation
+
+      - name: Deptrac
+        run: make deptrac
+
+      - name: Backward compatibility check
+        run: make bc-check

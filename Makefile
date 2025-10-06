@@ -1,4 +1,4 @@
-.PHONY: test stan cs-fix rector install
+.PHONY: test stan cs-fix rector install mutation deptrac bc-check
 
 COMPOSER ?= composer
 COMPOSER_LOCK := $(wildcard composer.lock)
@@ -20,3 +20,17 @@ cs-fix: vendor/autoload.php
 
 rector: vendor/autoload.php
 	vendor/bin/rector process
+
+mutation: vendor/autoload.php
+	XDEBUG_MODE=coverage vendor/bin/infection --threads=4 --min-msi=70 --min-covered-msi=70
+
+deptrac: vendor/autoload.php
+	vendor/bin/deptrac analyse deptrac.yaml || vendor/bin/deptrac analyse --config-file=deptrac.yaml
+
+bc-check: vendor/autoload.php
+	if git describe --tags --abbrev=0 >/dev/null 2>&1; then \
+		latest_tag=$$(git describe --tags --abbrev=0); \
+		vendor/bin/roave-backward-compatibility-check --from=$$latest_tag; \
+	else \
+		echo "No git tags found; skipping BC check."; \
+	fi
