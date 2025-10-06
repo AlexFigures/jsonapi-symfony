@@ -23,5 +23,10 @@ final class ErrorCodes
     public const VALIDATION_ERROR = 'validation-error';
     public const PAGE_SIZE_TOO_LARGE = 'page-size-too-large';
     public const SORT_FIELD_NOT_ALLOWED = 'sort-field-not-allowed';
+    public const INVALID_HEADER = 'invalid-header';
+    public const PRECONDITION_FAILED = 'precondition-failed';
+    public const PRECONDITION_REQUIRED = 'precondition-required';
+    public const REQUEST_COMPLEXITY_EXCEEDED = 'request-complexity-exceeded';
+    public const INCLUDED_RESOURCES_LIMIT = 'included-resources-limit';
     public const INTERNAL_SERVER_ERROR = 'internal-server-error';
 }

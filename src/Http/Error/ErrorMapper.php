@@ -56,6 +56,11 @@ final class ErrorMapper
         return $this->builder->fromPointer($status, $code, null, $detail, $pointer);
     }
 
+    public function invalidHeader(string $header, string $detail, string $status = '400', string $code = ErrorCodes::INVALID_HEADER): ErrorObject
+    {
+        return $this->builder->fromHeader($status, $code, null, $detail, $header);
+    }
+
     public function unknownType(string $type): ErrorObject
     {
         return $this->builder->create(
@@ -114,6 +119,21 @@ final class ErrorMapper
             sprintf('Sorting by "%s" is not allowed for resource type "%s".', $field, $type),
             '400',
             ErrorCodes::SORT_FIELD_NOT_ALLOWED,
+        );
+    }
+
+    public function requestTooComplex(string $detail): ErrorObject
+    {
+        return $this->builder->create('400', ErrorCodes::REQUEST_COMPLEXITY_EXCEEDED, null, $detail);
+    }
+
+    public function includedResourcesLimit(int $limit): ErrorObject
+    {
+        return $this->builder->create(
+            '400',
+            ErrorCodes::INCLUDED_RESOURCES_LIMIT,
+            null,
+            sprintf('The request would include more than %d related resources.', $limit),
         );
     }
 
