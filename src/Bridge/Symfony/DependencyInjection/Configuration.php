@@ -61,6 +61,7 @@ final class Configuration implements ConfigurationInterface
         $writeChildren = $write->children();
 
         $writeChildren->booleanNode('allow_relationship_writes')->defaultFalse()->end();
+        /** @var ArrayNodeDefinition $clientGeneratedIds */
         $clientGeneratedIds = $writeChildren->arrayNode('client_generated_ids')->useAttributeAsKey('type');
         $clientGeneratedIds->booleanPrototype()->end();
         $clientGeneratedIds->defaultValue([]);
@@ -111,8 +112,13 @@ final class Configuration implements ConfigurationInterface
         $negotiationChildren->booleanNode('link_header')->defaultTrue()->end();
         $negotiation->end();
 
-        $profilesChildren->arrayNode('enabled_by_default')->scalarPrototype()->end()->defaultValue([]);
+        /** @var ArrayNodeDefinition $enabledByDefault */
+        $enabledByDefault = $profilesChildren->arrayNode('enabled_by_default');
+        $enabledByDefault->scalarPrototype()->end();
+        $enabledByDefault->defaultValue([]);
+        $enabledByDefault->end();
 
+        /** @var ArrayNodeDefinition $perType */
         $perType = $profilesChildren->arrayNode('per_type')->useAttributeAsKey('type')->arrayPrototype();
         $perType->scalarPrototype()->end();
         $perType->end();
@@ -167,7 +173,11 @@ final class Configuration implements ConfigurationInterface
         $lastModified = $cacheChildren->arrayNode('last_modified')->addDefaultsIfNotSet();
         $lastModifiedChildren = $lastModified->children();
         $lastModifiedChildren->scalarNode('resource_field')->defaultValue('updatedAt')->end();
-        $lastModifiedChildren->arrayNode('per_type')->useAttributeAsKey('type')->scalarPrototype()->end()->defaultValue([])->end();
+        /** @var ArrayNodeDefinition $perTypeOverrides */
+        $perTypeOverrides = $lastModifiedChildren->arrayNode('per_type')->useAttributeAsKey('type');
+        $perTypeOverrides->scalarPrototype()->end();
+        $perTypeOverrides->defaultValue([]);
+        $perTypeOverrides->end();
         $lastModifiedChildren->booleanNode('collections_max_of')->defaultTrue()->end();
         $lastModified->end();
 
@@ -254,18 +264,17 @@ final class Configuration implements ConfigurationInterface
         $doctor = $dxChildren->arrayNode('doctor')->addDefaultsIfNotSet();
         $doctorChildren = $doctor->children();
         $doctorChildren->booleanNode('enabled')->defaultTrue()->end();
-        $doctorChildren
-            ->arrayNode('rules')
-            ->scalarPrototype()->end()
-            ->defaultValue([
-                'negotiation.vary.accept',
-                'errors.listener.registered',
-                'profiles.per_type.known',
-                'filters.whitelist.coverage',
-                'pagination.cursor.sort_key.stable',
-            ])
-            ->end()
-        ;
+        /** @var ArrayNodeDefinition $rules */
+        $rules = $doctorChildren->arrayNode('rules');
+        $rules->scalarPrototype()->end();
+        $rules->defaultValue([
+            'negotiation.vary.accept',
+            'errors.listener.registered',
+            'profiles.per_type.known',
+            'filters.whitelist.coverage',
+            'pagination.cursor.sort_key.stable',
+        ]);
+        $rules->end();
         $doctor->end();
 
         $maker = $dxChildren->arrayNode('maker')->addDefaultsIfNotSet();
@@ -294,12 +303,11 @@ final class Configuration implements ConfigurationInterface
         $openApiChildren->scalarNode('route')->defaultValue('/_jsonapi/openapi.json')->end();
         $openApiChildren->scalarNode('title')->defaultValue('My API')->end();
         $openApiChildren->scalarNode('version')->defaultValue('1.0.0')->end();
-        $openApiChildren
-            ->arrayNode('servers')
-            ->scalarPrototype()->end()
-            ->defaultValue(['https://api.example.com'])
-            ->end()
-        ;
+        /** @var ArrayNodeDefinition $servers */
+        $servers = $openApiChildren->arrayNode('servers');
+        $servers->scalarPrototype()->end();
+        $servers->defaultValue(['https://api.example.com']);
+        $servers->end();
         $openApi->end();
 
         $jsonSchema = $generatorChildren->arrayNode('json_schema')->addDefaultsIfNotSet();

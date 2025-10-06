@@ -6,13 +6,19 @@ namespace JsonApi\Symfony\Http\Cache;
 
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * @phpstan-type CacheKeyConfig array{
+ *     etag?: array{include_query_shape?: bool}
+ * }
+ */
 final class CacheKeyBuilder
 {
     /**
-     * @param array<string, mixed> $config
+     * @param CacheKeyConfig $config
      */
     public function __construct(array $config = [])
     {
+        /** @var array{include_query_shape?: bool} $etag */
         $etag = $config['etag'] ?? [];
         $this->includeQueryShape = (bool) ($etag['include_query_shape'] ?? true);
     }
@@ -21,11 +27,16 @@ final class CacheKeyBuilder
 
     public function build(Request $request): string
     {
+        $route = $request->attributes->get('_route');
+        $type = $request->attributes->get('type');
+        $id = $request->attributes->get('id');
+        $relationship = $request->attributes->get('relationship');
+
         $parts = [
-            $request->attributes->get('_route', 'unknown'),
-            $request->attributes->get('type', ''),
-            (string) $request->attributes->get('id', ''),
-            (string) $request->attributes->get('relationship', ''),
+            is_string($route) && $route !== '' ? $route : 'unknown',
+            is_string($type) ? $type : '',
+            is_scalar($id) ? (string) $id : '',
+            is_scalar($relationship) ? (string) $relationship : '',
         ];
 
         if ($this->includeQueryShape) {
@@ -34,7 +45,7 @@ final class CacheKeyBuilder
             $parts[] = $this->normalizeHeader($request->headers->get('Accept-Language'));
         }
 
-        return implode('|', array_map(static fn ($value): string => (string) $value, $parts));
+        return implode('|', $parts);
     }
 
     private function normalizeQuery(Request $request): string

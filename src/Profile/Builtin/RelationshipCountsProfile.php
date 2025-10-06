@@ -7,10 +7,16 @@ namespace JsonApi\Symfony\Profile\Builtin;
 use JsonApi\Symfony\Profile\Descriptor\ProfileDescriptor;
 use JsonApi\Symfony\Profile\ProfileInterface;
 
+/**
+ * @phpstan-type RelationshipCountsConfig array{documentation?: string}
+ */
 final class RelationshipCountsProfile implements ProfileInterface
 {
     public const URI = 'urn:jsonapi:profile:rel-counts';
 
+    /**
+     * @param RelationshipCountsConfig $config
+     */
     public function __construct(private readonly array $config = [])
     {
     }

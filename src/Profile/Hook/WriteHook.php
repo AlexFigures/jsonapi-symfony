@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Profile\Hook;
 
-use JsonApi\Symfony\Http\Write\ChangeSet;
+use JsonApi\Symfony\Contract\Data\ChangeSet;
 use JsonApi\Symfony\Profile\ProfileContext;
 
 interface WriteHook

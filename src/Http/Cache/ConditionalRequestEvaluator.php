@@ -11,13 +11,32 @@ use JsonApi\Symfony\Http\Exception\PreconditionRequiredException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @phpstan-type ConditionalConfig array{
+ *     conditional?: array{
+ *         require_if_match_on_write?: bool,
+ *         enable_if_none_match?: bool,
+ *         enable_if_modified_since?: bool,
+ *         enable_if_match?: bool,
+ *         enable_if_unmodified_since?: bool
+ *     }
+ * }
+ */
 final class ConditionalRequestEvaluator
 {
     /**
-     * @param array<string, mixed> $config
+     * @param ConditionalConfig $config
      */
     public function __construct(ErrorMapper $errors, array $config = [])
     {
+        /** @var array{
+         *     require_if_match_on_write?: bool,
+         *     enable_if_none_match?: bool,
+         *     enable_if_modified_since?: bool,
+         *     enable_if_match?: bool,
+         *     enable_if_unmodified_since?: bool
+         * } $conditional
+         */
         $conditional = $config['conditional'] ?? [];
 
         $this->errors = $errors;

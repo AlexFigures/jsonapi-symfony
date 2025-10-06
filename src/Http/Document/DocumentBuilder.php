@@ -34,9 +34,9 @@ final class DocumentBuilder
      *
      * @return array{
      *     jsonapi: array{version: string},
-     *     links: array<string, string>,
+     *     links: array<string, string|list<string>>,
      *     data: list<array<string, mixed>>,
-     *     meta: array{total: int, page: int, size: int},
+     *     meta: array<string, mixed>,
      *     included?: list<array<string, mixed>>
      * }
      */
@@ -55,28 +55,45 @@ final class DocumentBuilder
             }
         }
 
+        /** @var array<string, string|list<string>> $links */
+        $links = array_merge(
+            ['self' => $this->links->topLevelSelf($request)],
+            $this->links->collectionPagination($type, $criteria->pagination, $slice->totalItems, $request),
+        );
+        /** @var array<string, mixed> $meta */
+        $meta = [
+            'total' => $slice->totalItems,
+            'page' => $slice->pageNumber,
+            'size' => $slice->pageSize,
+        ];
+
+        if ($context !== null) {
+            $links = $this->applyTopLevelLinks($context, $links, $request);
+            $updatedMeta = $this->applyTopLevelMeta($context, $meta);
+            if ($updatedMeta !== []) {
+                $meta = $updatedMeta;
+            }
+        }
+
+        /**
+         * @var array{
+         *     jsonapi: array{version: '1.1'},
+         *     links: array<string, string|list<string>>,
+         *     data: list<array<string, mixed>>,
+         *     meta: array<string, mixed>,
+         *     included?: list<array<string, mixed>>
+         * }
+         */
         $document = [
             'jsonapi' => ['version' => '1.1'],
-            'links' => array_merge(
-                ['self' => $this->links->topLevelSelf($request)],
-                $this->links->collectionPagination($type, $criteria->pagination, $slice->totalItems, $request),
-            ),
+            'links' => $links,
             'data' => $data,
-            'meta' => [
-                'total' => $slice->totalItems,
-                'page' => $slice->pageNumber,
-                'size' => $slice->pageSize,
-            ],
+            'meta' => $meta,
         ];
 
         if ($included !== []) {
             $this->limits?->assertIncludedCount(count($included));
             $document['included'] = array_values($included);
-        }
-
-        if ($context !== null) {
-            $document['links'] = $this->applyTopLevelLinks($context, $document['links'], $request);
-            $document['meta'] = $this->applyTopLevelMeta($context, $document['meta']);
         }
 
         return $document;
@@ -85,7 +102,7 @@ final class DocumentBuilder
     /**
      * @return array{
      *     jsonapi: array{version: string},
-     *     links: array<string, string>,
+     *     links: array<string, string|list<string>>,
      *     data: array{
      *         type: string,
      *         id: string,
@@ -93,6 +110,7 @@ final class DocumentBuilder
      *         attributes: array<string, mixed>|stdClass,
      *         relationships?: array<string, array<string, mixed>>
      *     },
+     *     meta?: array<string, mixed>,
      *     included?: list<array<string, mixed>>
      * }
      */
@@ -107,9 +125,19 @@ final class DocumentBuilder
             $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context);
         }
 
+        /** @var array<string, string|list<string>> $links */
+        $links = ['self' => $this->links->topLevelSelf($request)];
+        /** @var array<string, mixed> $meta */
+        $meta = [];
+
+        if ($context !== null) {
+            $links = $this->applyTopLevelLinks($context, $links, $request);
+            $meta = $this->applyTopLevelMeta($context, $meta);
+        }
+
         $document = [
             'jsonapi' => ['version' => '1.1'],
-            'links' => ['self' => $this->links->topLevelSelf($request)],
+            'links' => $links,
             'data' => $this->buildResourceObject($type, $model, $criteria, $context),
         ];
 
@@ -118,13 +146,8 @@ final class DocumentBuilder
             $document['included'] = array_values($included);
         }
 
-        if ($context !== null) {
-            $document['links'] = $this->applyTopLevelLinks($context, $document['links'], $request);
-            $meta = $document['meta'] ?? [];
-            $meta = $this->applyTopLevelMeta($context, $meta);
-            if ($meta !== []) {
-                $document['meta'] = $meta;
-            }
+        if ($context !== null && $meta !== []) {
+            $document['meta'] = $meta;
         }
 
         return $document;
@@ -383,6 +406,11 @@ final class DocumentBuilder
         }
     }
 
+    /**
+     * @param array<string, string|list<string>> $links
+     *
+     * @return array<string, string|list<string>>
+     */
     private function applyTopLevelLinks(ProfileContext $context, array $links, Request $request): array
     {
         foreach ($context->documentHooks() as $hook) {
@@ -392,6 +420,11 @@ final class DocumentBuilder
         return $links;
     }
 
+    /**
+     * @param array<string, mixed> $meta
+     *
+     * @return array<string, mixed>
+     */
     private function applyTopLevelMeta(ProfileContext $context, array $meta): array
     {
         foreach ($context->documentHooks() as $hook) {

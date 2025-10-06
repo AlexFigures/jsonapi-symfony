@@ -7,15 +7,38 @@ namespace JsonApi\Symfony\Http\Cache;
 use DateTimeImmutable;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @phpstan-type HeadersConfig array{
+ *     headers?: array{
+ *         public?: bool,
+ *         max_age?: int,
+ *         s_maxage?: int,
+ *         stale_while_revalidate?: int,
+ *         stale_if_error?: int,
+ *         add_age?: bool
+ *     },
+ *     vary?: array{
+ *         accept?: bool,
+ *         accept_language?: bool
+ *     },
+ *     surrogate_keys?: array{
+ *         enabled?: bool,
+ *         header_name?: string
+ *     }
+ * }
+ */
 final class HeadersApplier
 {
     /**
-     * @param array<string, mixed> $config
+     * @param HeadersConfig $config
      */
     public function __construct(array $config)
     {
+        /** @var array{public?: bool, max_age?: int, s_maxage?: int, stale_while_revalidate?: int, stale_if_error?: int, add_age?: bool} $headers */
         $headers = $config['headers'] ?? [];
+        /** @var array{accept?: bool, accept_language?: bool} $vary */
         $vary = $config['vary'] ?? [];
+        /** @var array{enabled?: bool, header_name?: string} $surrogate */
         $surrogate = $config['surrogate_keys'] ?? [];
 
         $this->public = (bool) ($headers['public'] ?? true);
@@ -81,9 +104,7 @@ final class HeadersApplier
             $cacheControl[] = sprintf('stale-if-error=%d', $this->staleIfError);
         }
 
-        if ($cacheControl !== []) {
-            $response->headers->set('Cache-Control', implode(', ', $cacheControl));
-        }
+        $response->headers->set('Cache-Control', implode(', ', $cacheControl));
 
         $vary = [];
         if ($this->varyAccept) {

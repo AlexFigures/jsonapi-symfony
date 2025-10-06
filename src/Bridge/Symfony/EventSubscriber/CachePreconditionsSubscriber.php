@@ -17,10 +17,16 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
+/**
+ * @phpstan-type CachePreconditionsConfig array{
+ *     enabled?: bool,
+ *     etag?: array{weak_for_collections?: bool}
+ * }
+ */
 final class CachePreconditionsSubscriber implements EventSubscriberInterface
 {
     /**
-     * @param array<string, mixed> $config
+     * @param CachePreconditionsConfig $config
      */
     public function __construct(
         array $config,
@@ -31,7 +37,8 @@ final class CachePreconditionsSubscriber implements EventSubscriberInterface
         private readonly HeadersApplier $headers,
         private readonly SurrogateKeyBuilder $surrogates,
     ) {
-        $this->enabled = (bool) ($config['enabled'] ?? true);
+        $this->enabled = $config['enabled'] ?? true;
+        /** @var array{weak_for_collections?: bool} $etagConfig */
         $etagConfig = $config['etag'] ?? [];
         $this->weakForCollections = (bool) ($etagConfig['weak_for_collections'] ?? true);
     }
@@ -110,7 +117,7 @@ final class CachePreconditionsSubscriber implements EventSubscriberInterface
         return $request->attributes->get('_route') === 'jsonapi.collection';
     }
 
-    private function resolveLastModified(Request $request, Response $response): ?DateTimeImmutable
+    private function resolveLastModified(Request $request, Response $response): DateTimeImmutable
     {
         return $this->lastModified->resolve($request, $response);
     }

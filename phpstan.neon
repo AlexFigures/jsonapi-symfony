@@ -5,7 +5,6 @@ parameters:
     level: 8
     paths:
         - src
-        - tests
     bootstrapFiles:
         - stubs/doctrine.php
         - tests/bootstrap.php

@@ -24,14 +24,38 @@ final class ProfileNegotiator
 
     private bool $emitLinkHeader;
 
+    /**
+     * @param list<string>                    $enabledByDefault
+     * @param array<string, list<string>>     $perType
+     * @param array{require_known_profiles?: bool, echo_profiles_in_content_type?: bool, link_header?: bool} $negotiation
+     */
     public function __construct(
         private readonly ProfileRegistry $registry,
         array $enabledByDefault = [],
         array $perType = [],
         array $negotiation = []
     ) {
-        $this->enabledByDefault = array_values(array_unique($enabledByDefault));
-        $this->perType = $perType;
+        $normalizedDefault = [];
+        foreach ($enabledByDefault as $uri) {
+            if ($uri !== '') {
+                $normalizedDefault[] = $uri;
+            }
+        }
+        $this->enabledByDefault = array_values(array_unique($normalizedDefault));
+
+        $normalizedPerType = [];
+        foreach ($perType as $type => $uris) {
+            $normalizedUris = [];
+            foreach ($uris as $uri) {
+                if ($uri !== '') {
+                    $normalizedUris[] = $uri;
+                }
+            }
+
+            $normalizedPerType[$type] = $normalizedUris;
+        }
+        $this->perType = $normalizedPerType;
+
         $this->requireKnownProfiles = (bool) ($negotiation['require_known_profiles'] ?? false);
         $this->echoProfilesInContentType = (bool) ($negotiation['echo_profiles_in_content_type'] ?? true);
         $this->emitLinkHeader = (bool) ($negotiation['link_header'] ?? true);
@@ -40,6 +64,7 @@ final class ProfileNegotiator
     public function negotiate(Request $request): ProfileContext
     {
         $sources = [];
+        /** @var list<string> $activeUris */
         $activeUris = [];
 
         foreach ($this->enabledByDefault as $uri) {
@@ -62,7 +87,9 @@ final class ProfileNegotiator
 
         $acceptHeader = $request->headers->get('Accept');
         $acceptProfiles = $this->extractProfiles($acceptHeader);
+        /** @var list<string> $disabled */
         $disabled = [];
+        /** @var list<string> $resolvedAccept */
         $resolvedAccept = [];
         if ($acceptProfiles !== []) {
             foreach ($acceptProfiles as $uri) {
@@ -92,6 +119,7 @@ final class ProfileNegotiator
                     unset($activeUris[$index]);
                 }
             }
+            /** @var list<string> $activeUris */
             $activeUris = array_values($activeUris);
             $sources['disabled'] = $disabled;
         }
@@ -101,7 +129,9 @@ final class ProfileNegotiator
         foreach ($this->perType as $type => $uris) {
             $resolved = $this->resolveProfiles($uris);
             if ($resolved !== []) {
-                $perTypeProfiles[$type] = array_values($resolved);
+                /** @var list<ProfileInterface> $profilesForType */
+                $profilesForType = array_values($resolved);
+                $perTypeProfiles[$type] = $profilesForType;
             }
         }
 
@@ -140,7 +170,7 @@ final class ProfileNegotiator
                 continue;
             }
 
-            foreach (preg_split('/\s+/', $raw) as $uri) {
+            foreach (preg_split('/\s+/', $raw) ?: [] as $uri) {
                 $uri = trim($uri);
                 if ($uri !== '') {
                     $profiles[] = $uri;
@@ -152,6 +182,8 @@ final class ProfileNegotiator
     }
 
     /**
+     * @param list<string> $uris
+     *
      * @return list<string>
      */
     private function filterKnown(array $uris, ?string $headerValue): array
@@ -180,6 +212,9 @@ final class ProfileNegotiator
         return $known;
     }
 
+    /**
+     * @param list<string> $uris
+     */
     private function appendUri(array &$uris, string $uri): void
     {
         if (!in_array($uri, $uris, true)) {

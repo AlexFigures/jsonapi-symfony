@@ -7,10 +7,16 @@ namespace JsonApi\Symfony\Profile\Builtin;
 use JsonApi\Symfony\Profile\Descriptor\ProfileDescriptor;
 use JsonApi\Symfony\Profile\ProfileInterface;
 
+/**
+ * @phpstan-type SoftDeleteConfig array{documentation?: string}
+ */
 final class SoftDeleteProfile implements ProfileInterface
 {
     public const URI = 'urn:jsonapi:profile:soft-delete';
 
+    /**
+     * @param SoftDeleteConfig $config
+     */
     public function __construct(private readonly array $config = [])
     {
     }

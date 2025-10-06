@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Tests\Unit\Profile;
 
+use JsonApi\Symfony\Contract\Data\ChangeSet;
+use JsonApi\Symfony\Contract\Data\ResourceIdentifier;
 use JsonApi\Symfony\Profile\Hook\DocumentHook;
 use JsonApi\Symfony\Profile\Hook\QueryHook;
 use JsonApi\Symfony\Profile\Hook\ReadHook;
@@ -12,8 +14,6 @@ use JsonApi\Symfony\Profile\Hook\WriteHook;
 use JsonApi\Symfony\Profile\ProfileContext;
 use JsonApi\Symfony\Tests\Util\FakeProfile;
 use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Http\Write\ChangeSet;
-use JsonApi\Symfony\Http\Relationship\ResourceIdentifier;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;

@@ -11,6 +11,22 @@ use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use LogicException;
 
+/**
+ * @phpstan-type OpenApiServer array{url: string}
+ * @phpstan-type OpenApiTag array{name: string, description?: string}
+ * @phpstan-type OpenApiSchema array<string, mixed>
+ * @phpstan-type OpenApiPaths array<string, OpenApiSchema>
+ * @phpstan-type OpenApiComponents array{schemas: array<string, OpenApiSchema>}
+ * @phpstan-type OpenApiDocument array{
+ *     openapi: '3.1.0',
+ *     info: array{title: string, version: string},
+ *     servers: list<OpenApiServer>,
+ *     tags: list<OpenApiTag>,
+ *     paths: array<string, OpenApiSchema>,
+ *     components: OpenApiComponents
+ * }
+ */
+
 final class OpenApiSpecGenerator
 {
     /**
@@ -25,16 +41,19 @@ final class OpenApiSpecGenerator
     }
 
     /**
-     * @return array<string, mixed>
+     * @return OpenApiDocument
      */
     public function generate(): array
     {
-        if (($this->config['enabled'] ?? false) !== true) {
+        if (!$this->config['enabled']) {
             throw new LogicException('OpenAPI generator is disabled.');
         }
 
+        /** @var array<string, OpenApiSchema> $schemas */
         $schemas = $this->baseSchemas();
+        /** @var array<string, OpenApiSchema> $paths */
         $paths = [];
+        /** @var list<OpenApiTag> $tags */
         $tags = [];
 
         foreach ($this->registry->all() as $metadata) {
@@ -52,35 +71,40 @@ final class OpenApiSpecGenerator
             $paths = $this->mergePaths($paths, $this->buildResourcePaths($metadata, $names));
             $paths = $this->mergePaths($paths, $this->buildRelationshipPaths($metadata));
 
-            $tags[] = array_filter([
-                'name' => $metadata->type,
-                'description' => $metadata->description,
-            ], static fn ($value) => $value !== null && $value !== '');
+            $tag = ['name' => $metadata->type];
+            if ($metadata->description !== null && $metadata->description !== '') {
+                $tag['description'] = $metadata->description;
+            }
+
+            $tags[] = $tag;
         }
 
         ksort($paths);
         ksort($schemas);
 
-        return array_filter([
+        /** @var OpenApiComponents $components */
+        $components = [
+            'schemas' => $schemas,
+        ];
+
+        return [
             'openapi' => '3.1.0',
             'info' => [
-                'title' => $this->config['title'] ?? 'API',
-                'version' => $this->config['version'] ?? '1.0.0',
+                'title' => $this->config['title'],
+                'version' => $this->config['version'],
             ],
             'servers' => array_map(
                 static fn (string $url): array => ['url' => $url],
-                $this->config['servers'] ?? [],
+                $this->config['servers'],
             ),
             'tags' => $tags,
             'paths' => $paths,
-            'components' => [
-                'schemas' => $schemas,
-            ],
-        ]);
+            'components' => $components,
+        ];
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, OpenApiSchema>
      */
     private function baseSchemas(): array
     {
@@ -127,10 +151,10 @@ final class OpenApiSpecGenerator
     }
 
     /**
-     * @param array<string, mixed> $paths
-     * @param array<string, mixed> $additional
+     * @param array<string, OpenApiSchema> $paths
+     * @param array<string, OpenApiSchema> $additional
      *
-     * @return array<string, mixed>
+     * @return array<string, OpenApiSchema>
      */
     private function mergePaths(array $paths, array $additional): array
     {
@@ -167,7 +191,7 @@ final class OpenApiSpecGenerator
     /**
      * @param array{identifier: string, resource: string, resourceDocument: string, nullableResourceDocument: string, collectionDocument: string} $names
      *
-     * @return array<string, mixed>
+     * @return array<string, OpenApiSchema>
      */
     private function buildCollectionPaths(ResourceMetadata $metadata, array $names): array
     {
@@ -232,7 +256,7 @@ final class OpenApiSpecGenerator
     /**
      * @param array{identifier: string, resource: string, resourceDocument: string, nullableResourceDocument: string, collectionDocument: string} $names
      *
-     * @return array<string, mixed>
+     * @return array<string, OpenApiSchema>
      */
     private function buildResourcePaths(ResourceMetadata $metadata, array $names): array
     {
@@ -294,7 +318,7 @@ final class OpenApiSpecGenerator
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<string, OpenApiSchema>
      */
     private function buildRelationshipPaths(ResourceMetadata $metadata): array
     {
@@ -335,6 +359,9 @@ final class OpenApiSpecGenerator
         return $paths;
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function buildRelationshipGetOperation(RelationshipMetadata $relationship, string $tag, string $relationshipRef): array
     {
         return [
@@ -358,6 +385,11 @@ final class OpenApiSpecGenerator
         ];
     }
 
+    /**
+     * @param array<int, OpenApiSchema> $responses
+     *
+     * @return OpenApiSchema
+     */
     private function buildRelationshipWriteOperation(
         RelationshipMetadata $relationship,
         string $tag,
@@ -386,6 +418,9 @@ final class OpenApiSpecGenerator
         ];
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function buildRelatedCollectionOperation(RelationshipMetadata $relationship, string $tag): array
     {
         $target = $this->resolveRelationshipTarget($relationship);
@@ -414,6 +449,9 @@ final class OpenApiSpecGenerator
         ];
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function buildRelatedResourceOperation(RelationshipMetadata $relationship, string $tag): array
     {
         $target = $this->resolveRelationshipTarget($relationship);
@@ -443,16 +481,16 @@ final class OpenApiSpecGenerator
     }
 
     /**
-     * @return array<string, array<string, mixed>>
+     * @return array<int, OpenApiSchema>
      */
     private function relationshipWriteResponses(string $relationshipRef): array
     {
         if ($this->relationshipWriteMode === '204') {
-            return ['204' => ['description' => 'Relationship updated']];
+            return [204 => ['description' => 'Relationship updated']];
         }
 
         return [
-            '200' => [
+            200 => [
                 'description' => 'Relationship updated',
                 'content' => [
                     MediaType::JSON_API => [
@@ -460,7 +498,7 @@ final class OpenApiSpecGenerator
                     ],
                 ],
             ],
-            '204' => ['description' => 'Relationship updated'],
+            204 => ['description' => 'Relationship updated'],
         ];
     }
 
@@ -473,6 +511,9 @@ final class OpenApiSpecGenerator
         );
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function buildIdentifierSchema(ResourceMetadata $metadata): array
     {
         $required = ['type'];
@@ -497,6 +538,9 @@ final class OpenApiSpecGenerator
         ];
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function buildResourceSchema(ResourceMetadata $metadata): array
     {
         $attributes = [];
@@ -543,6 +587,9 @@ final class OpenApiSpecGenerator
         ];
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function buildResourceDocumentSchema(string $resourceSchemaName, bool $nullable): array
     {
         $dataSchema = ['$ref' => '#/components/schemas/' . $resourceSchemaName];
@@ -567,6 +614,9 @@ final class OpenApiSpecGenerator
         ];
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function buildCollectionDocumentSchema(string $resourceSchemaName): array
     {
         return [
@@ -585,6 +635,9 @@ final class OpenApiSpecGenerator
         ];
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function attributeSchema(AttributeMetadata $attribute): array
     {
         if ($attribute->types === []) {
@@ -604,6 +657,9 @@ final class OpenApiSpecGenerator
         return $schema;
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function relationshipSchema(RelationshipMetadata $relationship): array
     {
         $target = $this->resolveRelationshipTarget($relationship);
@@ -647,6 +703,9 @@ final class OpenApiSpecGenerator
         return $this->registry->getByClass($relationship->targetClass)?->type;
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function mapType(string $type): array
     {
         $normalized = strtolower($type);
@@ -690,6 +749,9 @@ final class OpenApiSpecGenerator
         return ['type' => 'object'];
     }
 
+    /**
+     * @return OpenApiSchema
+     */
     private function relationshipDocumentSchema(ResourceMetadata $resource, RelationshipMetadata $relationship): array
     {
         $target = $this->resolveRelationshipTarget($relationship);
@@ -743,7 +805,7 @@ final class OpenApiSpecGenerator
     }
 
     /**
-     * @return array<string, string|array<string, mixed>>
+     * @return array<string, string|bool|array<string, mixed>>
      */
     private function idParameter(): array
     {
