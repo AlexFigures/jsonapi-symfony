@@ -73,6 +73,17 @@ final class AtomicValidator
             $ref = $this->refFromHref($operation->href, $operation->pointer . '/href');
         }
 
+        $typePointer = $operation->ref !== null ? $operation->pointer . '/ref/type' : $operation->pointer . '/href';
+
+        if (!$this->registry->hasType($ref->type)) {
+            throw new BadRequestException('Unknown resource type.', [
+                $this->errors->invalidPointer(
+                    $typePointer,
+                    sprintf('Resource type "%s" is not recognised.', $ref->type)
+                ),
+            ]);
+        }
+
         $metadata = $this->registry->getByType($ref->type);
 
         if ($ref->relationship !== null) {
