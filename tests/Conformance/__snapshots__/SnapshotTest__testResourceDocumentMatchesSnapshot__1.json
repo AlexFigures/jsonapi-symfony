@@ -1,0 +1,34 @@
+{
+    "jsonapi": {
+        "version": "1.1"
+    },
+    "links": {
+        "self": "http://localhost/api/articles/<ID>"
+    },
+    "data": {
+        "type": "articles",
+        "id": "<ID>",
+        "links": {
+            "self": "http://localhost/api/articles/<ID>"
+        },
+        "attributes": {
+            "id": "<ID>",
+            "title": "Article 01",
+            "createdAt": "<TIMESTAMP>"
+        },
+        "relationships": {
+            "author": {
+                "links": {
+                    "self": "http://localhost/api/articles/<ID>/relationships/author",
+                    "related": "http://localhost/api/articles/<ID>/author"
+                }
+            },
+            "tags": {
+                "links": {
+                    "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                    "related": "http://localhost/api/articles/<ID>/tags"
+                }
+            }
+        }
+    }
+}

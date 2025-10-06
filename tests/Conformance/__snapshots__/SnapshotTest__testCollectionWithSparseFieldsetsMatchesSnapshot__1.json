@@ -1,0 +1,167 @@
+{
+    "jsonapi": {
+        "version": "1.1"
+    },
+    "links": {
+        "self": "http://localhost/api/articles?fields%5Barticles%5D=title",
+        "first": "http://localhost/api/articles?fields%5Barticles%5D=title&page%5Bnumber%5D=<PAGE>&page%5Bsize%5D=25",
+        "last": "http://localhost/api/articles?fields%5Barticles%5D=title&page%5Bnumber%5D=<PAGE>&page%5Bsize%5D=25"
+    },
+    "data": [
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 01"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 02"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 03"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 04"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 05"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 06"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 07"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 08"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 09"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 10"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 11"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 12"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 13"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 14"
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "title": "Article 15"
+            }
+        }
+    ],
+    "meta": {
+        "total": 15,
+        "page": 1,
+        "size": 25
+    }
+}

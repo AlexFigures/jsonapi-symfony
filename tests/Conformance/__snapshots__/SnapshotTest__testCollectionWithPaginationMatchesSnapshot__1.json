@@ -1,0 +1,70 @@
+{
+    "jsonapi": {
+        "version": "1.1"
+    },
+    "links": {
+        "self": "http://localhost/api/articles?page%5Bnumber%5D=<PAGE>&page%5Bsize%5D=2",
+        "first": "http://localhost/api/articles?page%5Bnumber%5D=<PAGE>&page%5Bsize%5D=2",
+        "last": "http://localhost/api/articles?page%5Bnumber%5D=<PAGE>&page%5Bsize%5D=2",
+        "next": "http://localhost/api/articles?page%5Bnumber%5D=<PAGE>&page%5Bsize%5D=2"
+    },
+    "data": [
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 01",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 02",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        }
+    ],
+    "meta": {
+        "total": 15,
+        "page": 1,
+        "size": 2
+    }
+}

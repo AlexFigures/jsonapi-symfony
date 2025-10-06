@@ -1,0 +1,407 @@
+{
+    "jsonapi": {
+        "version": "1.1"
+    },
+    "links": {
+        "self": "http://localhost/api/articles",
+        "first": "http://localhost/api/articles?page%5Bnumber%5D=<PAGE>&page%5Bsize%5D=25",
+        "last": "http://localhost/api/articles?page%5Bnumber%5D=<PAGE>&page%5Bsize%5D=25"
+    },
+    "data": [
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 01",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 02",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 03",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 04",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 05",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 06",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 07",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 08",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 09",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 10",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 11",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 12",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 13",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 14",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        },
+        {
+            "type": "articles",
+            "id": "<ID>",
+            "links": {
+                "self": "http://localhost/api/articles/<ID>"
+            },
+            "attributes": {
+                "id": "<ID>",
+                "title": "Article 15",
+                "createdAt": "<TIMESTAMP>"
+            },
+            "relationships": {
+                "author": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/author",
+                        "related": "http://localhost/api/articles/<ID>/author"
+                    }
+                },
+                "tags": {
+                    "links": {
+                        "self": "http://localhost/api/articles/<ID>/relationships/tags",
+                        "related": "http://localhost/api/articles/<ID>/tags"
+                    }
+                }
+            }
+        }
+    ],
+    "meta": {
+        "total": 15,
+        "page": 1,
+        "size": 25
+    }
+}

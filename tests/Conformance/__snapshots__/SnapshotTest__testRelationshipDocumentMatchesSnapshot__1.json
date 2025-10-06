@@ -1,0 +1,12 @@
+{
+    "jsonapi": {
+        "version": "1.1"
+    },
+    "links": {
+        "self": "http://localhost/api/articles/<ID>/relationships/author"
+    },
+    "data": {
+        "type": "authors",
+        "id": "<ID>"
+    }
+}

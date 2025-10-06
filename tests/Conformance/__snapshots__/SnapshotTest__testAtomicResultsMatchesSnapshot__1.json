@@ -1,0 +1,32 @@
+{
+    "atomic:results": [
+        {
+            "data": {
+                "type": "articles",
+                "id": "<ID>",
+                "links": {
+                    "self": "http://localhost/api/articles/<UUID>"
+                },
+                "attributes": {
+                    "id": "<ID>",
+                    "title": "Snapshot Test Article",
+                    "createdAt": "<TIMESTAMP>"
+                },
+                "relationships": {
+                    "author": {
+                        "links": {
+                            "self": "http://localhost/api/articles/<UUID>/relationships/author",
+                            "related": "http://localhost/api/articles/<UUID>/author"
+                        }
+                    },
+                    "tags": {
+                        "links": {
+                            "self": "http://localhost/api/articles/<UUID>/relationships/tags",
+                            "related": "http://localhost/api/articles/<UUID>/tags"
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
