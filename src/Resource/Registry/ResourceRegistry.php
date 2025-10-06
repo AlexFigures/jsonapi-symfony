@@ -33,6 +33,11 @@ final class ResourceRegistry implements ResourceRegistryInterface
     private array $metadataByClass = [];
 
     /**
+     * @var list<ResourceMetadata>
+     */
+    private array $metadata = [];
+
+    /**
      * @param iterable<object|string> $resources
      */
     public function __construct(iterable $resources)
@@ -60,6 +65,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
 
             $this->metadataByType[$metadata->type] = $metadata;
             $this->metadataByClass[$metadata->class] = $metadata;
+            $this->metadata[] = $metadata;
         }
     }
 
@@ -80,6 +86,14 @@ final class ResourceRegistry implements ResourceRegistryInterface
     public function getByClass(string $class): ?ResourceMetadata
     {
         return $this->metadataByClass[$class] ?? null;
+    }
+
+    /**
+     * @return list<ResourceMetadata>
+     */
+    public function all(): array
+    {
+        return $this->metadata;
     }
 
     /**
@@ -131,6 +145,8 @@ final class ResourceRegistry implements ResourceRegistryInterface
             $relationships,
             $resource->exposeId,
             $idPropertyPath,
+            $resource->routePrefix,
+            $resource->description,
         );
     }
 
@@ -153,7 +169,16 @@ final class ResourceRegistry implements ResourceRegistryInterface
                 throw new LogicException(sprintf('Duplicate attribute "%s" detected on %s::%s.', $name, $member->getDeclaringClass()->getName(), $member->getName()));
             }
 
-            $attributes[$name] = new AttributeMetadata($name, $propertyPath, $instance->readable, $instance->writable);
+            [$types, $nullable] = $this->guessAttributeTypes($member);
+
+            $attributes[$name] = new AttributeMetadata(
+                $name,
+                $propertyPath,
+                $instance->readable,
+                $instance->writable,
+                $types,
+                $nullable,
+            );
         }
 
         return $attributes;
@@ -200,6 +225,49 @@ final class ResourceRegistry implements ResourceRegistryInterface
         }
 
         return $relationships;
+    }
+
+    /**
+     * @return array{0: list<string>, 1: bool}
+     */
+    private function guessAttributeTypes(ReflectionProperty|ReflectionMethod $member): array
+    {
+        $type = $member instanceof ReflectionProperty ? $member->getType() : $member->getReturnType();
+
+        if ($type === null) {
+            return [[], true];
+        }
+
+        $nullable = $type->allowsNull();
+        $types = [];
+
+        if ($type instanceof ReflectionNamedType) {
+            if ($type->getName() !== 'null') {
+                $types[] = $type->getName();
+            }
+        } elseif ($type instanceof ReflectionUnionType) {
+            foreach ($type->getTypes() as $inner) {
+                if (!$inner instanceof ReflectionNamedType) {
+                    continue;
+                }
+
+                if ($inner->getName() === 'null') {
+                    $nullable = true;
+
+                    continue;
+                }
+
+                $types[] = $inner->getName();
+            }
+        } elseif ($type instanceof ReflectionIntersectionType) {
+            foreach ($type->getTypes() as $inner) {
+                if ($inner instanceof ReflectionNamedType && !$inner->isBuiltin()) {
+                    $types[] = $inner->getName();
+                }
+            }
+        }
+
+        return [$types, $nullable];
     }
 
     private function guessName(ReflectionProperty|ReflectionMethod $member, string $propertyPath): string

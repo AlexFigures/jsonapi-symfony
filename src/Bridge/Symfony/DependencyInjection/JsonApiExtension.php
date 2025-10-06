@@ -51,6 +51,7 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.profiles.rel_counts', $config['profiles']['rel_counts']);
         $container->setParameter('jsonapi.dx', $config['dx']);
         $container->setParameter('jsonapi.docs.generator', $config['docs']['generator']);
+        $container->setParameter('jsonapi.docs.generator.openapi', $config['docs']['generator']['openapi']);
         $container->setParameter('jsonapi.release', $config['release']);
 
         $this->registerAutoconfiguration($container);

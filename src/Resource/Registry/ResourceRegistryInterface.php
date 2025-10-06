@@ -13,4 +13,9 @@ interface ResourceRegistryInterface
     public function hasType(string $type): bool;
 
     public function getByClass(string $class): ?ResourceMetadata;
+
+    /**
+     * @return list<ResourceMetadata>
+     */
+    public function all(): array;
 }

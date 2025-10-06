@@ -61,6 +61,11 @@ final class LinkageBuilderTest extends TestCase
                     default => null,
                 };
             }
+
+            public function all(): array
+            {
+                return [$this->article, $this->author];
+            }
         };
 
         $reader = new class implements RelationshipReader {
@@ -134,6 +139,11 @@ final class LinkageBuilderTest extends TestCase
                     CommentResource::class => $this->comment,
                     default => null,
                 };
+            }
+
+            public function all(): array
+            {
+                return [$this->article, $this->comment];
             }
         };
 

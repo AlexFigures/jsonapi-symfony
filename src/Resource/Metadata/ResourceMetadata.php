@@ -22,6 +22,8 @@ final class ResourceMetadata
         public array $relationships,
         public bool $exposeId = true,
         public ?string $idPropertyPath = null,
+        public ?string $routePrefix = null,
+        public ?string $description = null,
     ) {
     }
 }

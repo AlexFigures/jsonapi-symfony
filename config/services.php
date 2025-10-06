@@ -19,11 +19,13 @@ use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
 use JsonApi\Symfony\Http\Controller\CollectionController;
 use JsonApi\Symfony\Http\Controller\CreateResourceController;
 use JsonApi\Symfony\Http\Controller\DeleteResourceController;
+use JsonApi\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
 use JsonApi\Symfony\Http\Controller\RelatedController;
 use JsonApi\Symfony\Http\Controller\RelationshipGetController;
 use JsonApi\Symfony\Http\Controller\RelationshipWriteController;
 use JsonApi\Symfony\Http\Controller\ResourceController;
 use JsonApi\Symfony\Http\Controller\UpdateResourceController;
+use JsonApi\Symfony\Http\Controller\OpenApiController;
 use JsonApi\Symfony\Http\Document\DocumentBuilder;
 use JsonApi\Symfony\Http\Error\CorrelationIdProvider;
 use JsonApi\Symfony\Http\Error\ErrorBuilder;
@@ -294,6 +296,25 @@ return static function (ContainerConfigurator $configurator): void {
             '%jsonapi.relationships.linkage_in_resource%',
             service(LimitsEnforcer::class),
         ])
+    ;
+
+    $services
+        ->set(OpenApiSpecGenerator::class)
+        ->args([
+            service(ResourceRegistryInterface::class),
+            '%jsonapi.docs.generator.openapi%',
+            '%jsonapi.route_prefix%',
+            '%jsonapi.relationships.write_response%',
+        ])
+    ;
+
+    $services
+        ->set(OpenApiController::class)
+        ->args([
+            service(OpenApiSpecGenerator::class),
+            '%jsonapi.docs.generator.openapi%',
+        ])
+        ->tag('controller.service_arguments')
     ;
 
     $services
