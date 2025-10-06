@@ -12,6 +12,7 @@ use JsonApi\Symfony\Http\Request\PaginationConfig;
 use JsonApi\Symfony\Query\Pagination;
 use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use LogicException;
 use Symfony\Component\HttpFoundation\Request;
 
 final class LinkageBuilder
@@ -92,7 +93,19 @@ final class LinkageBuilder
             return $relationship->targetType;
         }
 
-        return $default;
+        if ($relationship->targetClass !== null) {
+            $metadata = $this->registry->getByClass($relationship->targetClass);
+
+            if ($metadata !== null) {
+                return $metadata->type;
+            }
+        }
+
+        if ($this->registry->hasType($default)) {
+            return $default;
+        }
+
+        throw new LogicException(sprintf('Unable to determine target type for relationship "%s".', $relationship->name));
     }
 
     private function parsePagination(Request $request): Pagination
