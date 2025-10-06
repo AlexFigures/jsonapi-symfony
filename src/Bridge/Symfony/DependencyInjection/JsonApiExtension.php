@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Bridge\Symfony\DependencyInjection;
 
+use JsonApi\Symfony\Profile\ProfileInterface;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ChildDefinition;
@@ -39,6 +40,12 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.atomic.return_policy', $config['atomic']['return_policy']);
         $container->setParameter('jsonapi.atomic.allow_href', $config['atomic']['allow_href']);
         $container->setParameter('jsonapi.atomic.lid.accept_in_resource_and_identifier', $config['atomic']['lid']['accept_in_resource_and_identifier']);
+        $container->setParameter('jsonapi.profiles.negotiation', $config['profiles']['negotiation']);
+        $container->setParameter('jsonapi.profiles.enabled_by_default', $config['profiles']['enabled_by_default']);
+        $container->setParameter('jsonapi.profiles.per_type', $config['profiles']['per_type']);
+        $container->setParameter('jsonapi.profiles.soft_delete', $config['profiles']['soft_delete']);
+        $container->setParameter('jsonapi.profiles.audit_trail', $config['profiles']['audit_trail']);
+        $container->setParameter('jsonapi.profiles.rel_counts', $config['profiles']['rel_counts']);
 
         $this->registerAutoconfiguration($container);
 
@@ -57,5 +64,8 @@ final class JsonApiExtension extends Extension
                 $definition->addTag('jsonapi.resource', ['type' => $attribute->type]);
             }
         );
+
+        $container->registerForAutoconfiguration(ProfileInterface::class)
+            ->addTag('jsonapi.profile');
     }
 }
