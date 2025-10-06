@@ -65,8 +65,18 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
             return;
         }
 
-        if ($this->mediaType !== $this->normalizeMediaType($contentType)) {
+        $normalized = $this->normalizeMediaType($contentType);
+
+        if ($this->mediaType !== $normalized) {
             throw new UnsupportedMediaTypeException($contentType, 'JSON:API requires the "application/vnd.api+json" media type.');
+        }
+
+        // JSON:API spec: servers MUST respond with 415 if media type parameters other than ext or profile are present
+        if ($this->hasUnsupportedParameters($contentType)) {
+            throw new UnsupportedMediaTypeException(
+                $contentType,
+                'JSON:API media type must not have parameters other than "ext" or "profile".'
+            );
         }
     }
 
@@ -77,13 +87,26 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $foundJsonApi = false;
         foreach (explode(',', $accept) as $part) {
-            if ($this->mediaType === $this->normalizeMediaType($part)) {
-                return;
+            $normalized = $this->normalizeMediaType($part);
+
+            if ($this->mediaType === $normalized) {
+                $foundJsonApi = true;
+
+                // JSON:API spec: servers MUST respond with 406 if media type parameters other than ext or profile are present
+                if ($this->hasUnsupportedParameters($part)) {
+                    throw new NotAcceptableException(
+                        $accept,
+                        'JSON:API media type in Accept header must not have parameters other than "ext" or "profile".'
+                    );
+                }
             }
         }
 
-        throw new NotAcceptableException($accept, 'Requested representation is not available in application/vnd.api+json.');
+        if (!$foundJsonApi) {
+            throw new NotAcceptableException($accept, 'Requested representation is not available in application/vnd.api+json.');
+        }
     }
 
     private function normalizeMediaType(string $value): string
@@ -96,6 +119,47 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         }
 
         return substr($normalized, 0, $semicolonPosition);
+    }
+
+    /**
+     * Check if media type has parameters other than 'ext' or 'profile'.
+     * According to JSON:API spec, only 'ext' and 'profile' parameters are allowed.
+     */
+    private function hasUnsupportedParameters(string $mediaType): bool
+    {
+        $semicolonPosition = strpos($mediaType, ';');
+
+        if ($semicolonPosition === false) {
+            return false;
+        }
+
+        // Extract parameters part
+        $parametersString = substr($mediaType, $semicolonPosition + 1);
+
+        // Parse parameters
+        $parts = array_map('trim', explode(';', $parametersString));
+
+        foreach ($parts as $part) {
+            if ($part === '') {
+                continue;
+            }
+
+            // Extract parameter name (before '=')
+            $equalPosition = strpos($part, '=');
+            if ($equalPosition === false) {
+                // Parameter without value is unsupported
+                return true;
+            }
+
+            $paramName = trim(substr($part, 0, $equalPosition));
+
+            // Only 'ext' and 'profile' are allowed
+            if ($paramName !== 'ext' && $paramName !== 'profile') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function addVaryAccept(Response $response): void

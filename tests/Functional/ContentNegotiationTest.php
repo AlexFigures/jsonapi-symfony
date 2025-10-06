@@ -63,6 +63,125 @@ final class ContentNegotiationTest extends TestCase
         self::assertSame('Accept', $response->headers->get('Vary'));
     }
 
+    public function testContentTypeWithCharsetParameterTriggers415(): void
+    {
+        $request = Request::create('/articles', 'POST', server: [
+            'CONTENT_TYPE' => 'application/vnd.api+json; charset=utf-8',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $this->expectException(JsonApiHttpException::class);
+        $this->expectExceptionMessage('JSON:API media type must not have parameters other than "ext" or "profile".');
+
+        $this->subscriber->onKernelRequest($event);
+    }
+
+    public function testContentTypeWithVersionParameterTriggers415(): void
+    {
+        $request = Request::create('/articles', 'POST', server: [
+            'CONTENT_TYPE' => 'application/vnd.api+json; version=1.0',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $this->expectException(JsonApiHttpException::class);
+        $this->expectExceptionMessage('JSON:API media type must not have parameters other than "ext" or "profile".');
+
+        $this->subscriber->onKernelRequest($event);
+    }
+
+    public function testContentTypeWithExtParameterIsAllowed(): void
+    {
+        $request = Request::create('/articles', 'POST', server: [
+            'CONTENT_TYPE' => 'application/vnd.api+json; ext="https://jsonapi.org/ext/atomic"',
+            'HTTP_ACCEPT' => 'application/vnd.api+json',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        // Should not throw exception
+        $this->subscriber->onKernelRequest($event);
+
+        self::assertTrue(true); // Assert that no exception was thrown
+    }
+
+    public function testContentTypeWithProfileParameterIsAllowed(): void
+    {
+        $request = Request::create('/articles', 'POST', server: [
+            'CONTENT_TYPE' => 'application/vnd.api+json; profile="https://example.com/profile"',
+            'HTTP_ACCEPT' => 'application/vnd.api+json',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        // Should not throw exception
+        $this->subscriber->onKernelRequest($event);
+
+        self::assertTrue(true); // Assert that no exception was thrown
+    }
+
+    public function testAcceptWithCharsetParameterTriggers406(): void
+    {
+        $request = Request::create('/articles', 'GET', server: [
+            'HTTP_ACCEPT' => 'application/vnd.api+json; charset=utf-8',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $this->expectException(JsonApiHttpException::class);
+        $this->expectExceptionMessage('JSON:API media type in Accept header must not have parameters other than "ext" or "profile".');
+
+        $this->subscriber->onKernelRequest($event);
+    }
+
+    public function testAcceptWithVersionParameterTriggers406(): void
+    {
+        $request = Request::create('/articles', 'GET', server: [
+            'HTTP_ACCEPT' => 'application/vnd.api+json; version=1.0',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $this->expectException(JsonApiHttpException::class);
+        $this->expectExceptionMessage('JSON:API media type in Accept header must not have parameters other than "ext" or "profile".');
+
+        $this->subscriber->onKernelRequest($event);
+    }
+
+    public function testAcceptWithExtParameterIsAllowed(): void
+    {
+        $request = Request::create('/articles', 'GET', server: [
+            'HTTP_ACCEPT' => 'application/vnd.api+json; ext="https://jsonapi.org/ext/atomic"',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        // Should not throw exception
+        $this->subscriber->onKernelRequest($event);
+
+        self::assertTrue(true); // Assert that no exception was thrown
+    }
+
+    public function testAcceptWithProfileParameterIsAllowed(): void
+    {
+        $request = Request::create('/articles', 'GET', server: [
+            'HTTP_ACCEPT' => 'application/vnd.api+json; profile="https://example.com/profile"',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        // Should not throw exception
+        $this->subscriber->onKernelRequest($event);
+
+        self::assertTrue(true); // Assert that no exception was thrown
+    }
+
+    public function testAcceptWithMultipleUnsupportedParametersTriggers406(): void
+    {
+        $request = Request::create('/articles', 'GET', server: [
+            'HTTP_ACCEPT' => 'application/vnd.api+json; charset=utf-8; version=1.0',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $this->expectException(JsonApiHttpException::class);
+        $this->expectExceptionMessage('JSON:API media type in Accept header must not have parameters other than "ext" or "profile".');
+
+        $this->subscriber->onKernelRequest($event);
+    }
+
     private function createKernel(): HttpKernelInterface
     {
         return new class () implements HttpKernelInterface {

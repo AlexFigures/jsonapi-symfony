@@ -1,4 +1,4 @@
-.PHONY: test stan cs-fix rector install mutation deptrac bc-check
+.PHONY: test stan cs-fix rector install mutation deptrac bc-check stress-mem stress-perf qa-full
 
 COMPOSER ?= composer
 COMPOSER_LOCK := $(wildcard composer.lock)
@@ -34,3 +34,18 @@ bc-check: vendor/autoload.php
 	else \
 		echo "No git tags found; skipping BC check."; \
 	fi
+
+stress-mem: vendor/autoload.php
+	@echo "Running memory stress tests..."
+	php scripts/stress/run.php --profile=mem
+
+stress-perf: vendor/autoload.php
+	@echo "Running performance stress tests..."
+	php scripts/stress/run.php --profile=perf
+
+stress: vendor/autoload.php
+	@echo "Running all stress tests..."
+	php scripts/stress/run.php --profile=all
+
+qa-full: test stan mutation deptrac bc-check
+	@echo "✅ All QA checks passed!"

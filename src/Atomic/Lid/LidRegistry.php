@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Atomic\Lid;
 
+use JsonApi\Symfony\Http\Exception\BadRequestException;
+
 final class LidRegistry
 {
     /**
@@ -25,6 +27,14 @@ final class LidRegistry
         if (!isset($this->entries[$lid])) {
             $this->entries[$lid] = ['type' => $type, 'id' => $id];
             return;
+        }
+
+        // Check if LID was already associated with a different ID
+        $existingId = $this->entries[$lid]['id'];
+        if ($existingId !== null && $existingId !== $id) {
+            throw new BadRequestException(
+                sprintf('Duplicate local identifier "%s". Each lid must be unique within an atomic operations request.', $lid)
+            );
         }
 
         $this->entries[$lid]['type'] = $type;

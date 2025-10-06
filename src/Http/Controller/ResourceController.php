@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route(path: '/api/{type}/{id}', name: 'jsonapi.resource', methods: ['GET'])]
+#[Route(path: '/api/{type}/{id}', name: 'jsonapi.resource', methods: ['GET', 'HEAD'])]
 final class ResourceController
 {
     public function __construct(
@@ -40,16 +40,21 @@ final class ResourceController
 
         $document = $this->document->buildResource($type, $model, $criteria, $request);
 
-        return $this->createResponse($document);
+        return $this->createResponse($document, $request->isMethod('HEAD'));
     }
 
     /**
      * @param array<string, mixed> $document
      */
-    private function createResponse(array $document): JsonResponse
+    private function createResponse(array $document, bool $isHead = false): JsonResponse
     {
         $response = new JsonResponse($document, Response::HTTP_OK);
         $response->headers->set('Content-Type', 'application/vnd.api+json');
+
+        // For HEAD requests, clear the content but keep all headers
+        if ($isHead) {
+            $response->setContent('');
+        }
 
         return $response;
     }

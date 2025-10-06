@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
-#[Route(path: '/api/{type}/{id}/{rel}', methods: ['GET'], name: 'jsonapi.related')]
+#[Route(path: '/api/{type}/{id}/{rel}', methods: ['GET', 'HEAD'], name: 'jsonapi.related')]
 final class RelatedController
 {
     public function __construct(
@@ -69,10 +69,17 @@ final class RelatedController
             }
         }
 
-        return new JsonResponse(
+        $response = new JsonResponse(
             $document,
             JsonResponse::HTTP_OK,
             ['Content-Type' => MediaType::JSON_API],
         );
+
+        // For HEAD requests, clear the content but keep all headers
+        if ($request->isMethod('HEAD')) {
+            $response->setContent('');
+        }
+
+        return $response;
     }
 }

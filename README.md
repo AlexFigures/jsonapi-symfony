@@ -1,6 +1,14 @@
-# JsonApiBundle (Stage 2)
+# JsonApiBundle
 
-A DX-first Symfony 7 bundle scaffold for building fully compliant JSON:API 1.1 backends.
+[![CI](https://github.com/AlexFigures/jsonapi-symfony/workflows/CI/badge.svg)](https://github.com/AlexFigures/jsonapi-symfony/actions)
+[![PHPStan Level 8](https://img.shields.io/badge/PHPStan-level%208-brightgreen.svg)](https://phpstan.org/)
+[![Mutation Score](https://img.shields.io/badge/MSI-38.74%25-red.svg)](docs/reliability/mutation-testing-report.md)
+[![Coverage](https://img.shields.io/badge/coverage-69.31%25-yellow.svg)](docs/reliability/mutation-testing-report.md)
+[![Spec Conformance](https://img.shields.io/badge/JSON:API-65%25-yellow.svg)](docs/conformance/spec-coverage.md)
+[![Quality](https://img.shields.io/badge/quality-61%25-yellow.svg)](docs/QA_AUDIT_REPORT.md)
+[![PHP Version](https://img.shields.io/badge/php-%5E8.2-blue.svg)](https://www.php.net/)
+[![Symfony Version](https://img.shields.io/badge/symfony-%5E7.1-blue.svg)](https://symfony.com/)
+
 
 ## Installation
 
@@ -142,5 +150,3 @@ Example response:
   }
 }
 ```
-
-Upcoming stages will introduce relationship writes, Doctrine persistence adapters, and full JSON:API error documents.

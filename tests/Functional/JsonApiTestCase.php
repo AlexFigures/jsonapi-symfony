@@ -359,8 +359,8 @@ abstract class JsonApiTestCase extends TestCase
         $validator = new InputDocumentValidator($registry, $writeConfig, $errorMapper);
         $changeSetFactory = new ChangeSetFactory($registry);
         $this->changeSetFactory = $changeSetFactory;
-        $persister = new InMemoryPersister($repository, $registry, $accessor);
         $transactionManager = new InMemoryTransactionManager();
+        $persister = new InMemoryPersister($repository, $registry, $transactionManager, $accessor);
         $relationshipReader = new InMemoryRelationshipReader($registry, $repository, $accessor);
         $existenceChecker = new InMemoryExistenceChecker($repository);
         $relationshipUpdater = new InMemoryRelationshipUpdater($registry, $repository);

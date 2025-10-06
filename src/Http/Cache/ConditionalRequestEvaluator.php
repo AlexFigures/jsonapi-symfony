@@ -158,7 +158,7 @@ final class ConditionalRequestEvaluator
             }
 
             if (!$matched) {
-                $error = $this->errors->invalidHeader('If-Match', 'The supplied If-Match validator does not match the current resource state.');
+                $error = $this->errors->invalidHeader('If-Match', 'The supplied If-Match validator does not match the current resource state.', '412');
 
                 throw new PreconditionFailedException([$error]);
             }
@@ -168,7 +168,7 @@ final class ConditionalRequestEvaluator
         if ($this->enableIfUnmodifiedSince && $lastModified !== null && $ifUnmodifiedSince !== null) {
             $date = strtotime($ifUnmodifiedSince);
             if ($date !== false && $lastModified->getTimestamp() > $date) {
-                $error = $this->errors->invalidHeader('If-Unmodified-Since', 'The resource has been modified since the provided timestamp.');
+                $error = $this->errors->invalidHeader('If-Unmodified-Since', 'The resource has been modified since the provided timestamp.', '412');
 
                 throw new PreconditionFailedException([$error]);
             }

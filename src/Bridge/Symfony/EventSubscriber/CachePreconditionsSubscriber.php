@@ -64,7 +64,19 @@ final class CachePreconditionsSubscriber implements EventSubscriberInterface
         $response = $event->getResponse();
 
         if ($this->requiresPreconditions($request)) {
-            $this->conditional->evaluate($request, $response, null, null);
+            // For write operations, we need to generate ETag from the current resource state
+            // to validate If-Match and If-Unmodified-Since headers
+            if ($this->isJsonApiResponse($response)) {
+                $cacheKey = $this->cacheKeyBuilder->build($request);
+                $weak = false; // Always use strong ETag for write operations
+                $etag = $this->etagGenerator->generate($request, $response, $cacheKey, $weak);
+                $lastModified = $this->resolveLastModified($request, $response);
+
+                $this->conditional->evaluate($request, $response, $etag, $lastModified, $weak);
+            } else {
+                // If response is not JSON:API (e.g., error response), evaluate without ETag
+                $this->conditional->evaluate($request, $response, null, null);
+            }
 
             return;
         }

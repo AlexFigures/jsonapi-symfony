@@ -21,6 +21,7 @@ final class InMemoryPersister implements ResourcePersister
     public function __construct(
         private readonly InMemoryRepository $repository,
         private readonly ResourceRegistryInterface $registry,
+        private readonly ?InMemoryTransactionManager $transactionManager = null,
         ?PropertyAccessorInterface $accessor = null,
     ) {
         $this->accessor = $accessor ?? PropertyAccess::createPropertyAccessor();
@@ -41,6 +42,11 @@ final class InMemoryPersister implements ResourcePersister
 
         $this->repository->save($type, $model);
 
+        // Register rollback callback
+        $this->transactionManager?->onRollback(function () use ($type, $id): void {
+            $this->repository->remove($type, $id);
+        });
+
         return $model;
     }
 
@@ -51,8 +57,16 @@ final class InMemoryPersister implements ResourcePersister
             throw new NotFoundException(sprintf('Resource "%s" with id "%s" was not found.', $type, $id));
         }
 
+        // Store original state for rollback
+        $originalModel = clone $model;
+
         $this->applyAttributes($model, $changes);
         $this->repository->save($type, $model);
+
+        // Register rollback callback
+        $this->transactionManager?->onRollback(function () use ($type, $originalModel): void {
+            $this->repository->save($type, $originalModel);
+        });
 
         return $model;
     }
@@ -63,7 +77,17 @@ final class InMemoryPersister implements ResourcePersister
             throw new NotFoundException(sprintf('Resource "%s" with id "%s" was not found.', $type, $id));
         }
 
+        // Store model for rollback
+        $deletedModel = $this->repository->get($type, $id);
+
         $this->repository->remove($type, $id);
+
+        // Register rollback callback
+        if ($deletedModel !== null) {
+            $this->transactionManager?->onRollback(function () use ($type, $deletedModel): void {
+                $this->repository->save($type, $deletedModel);
+            });
+        }
     }
 
     private function applyAttributes(object $model, ChangeSet $changes): void

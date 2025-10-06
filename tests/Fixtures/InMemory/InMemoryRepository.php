@@ -98,12 +98,20 @@ final class InMemoryRepository implements ResourceRepository
 
     public function createPrototype(string $type): object
     {
+        $metadata = $this->registry->getByType($type);
+        $reflection = new ReflectionClass($metadata->class);
+
+        // Special handling for Article which requires constructor parameters
+        if ($metadata->class === Article::class) {
+            // Create with minimal required parameters
+            $dummyAuthor = new Author('temp-author-id', 'Temp Author');
+            return new Article('temp-id', 'Temp Title', new DateTimeImmutable(), $dummyAuthor);
+        }
+
+        // For other types, try to clone existing or create without constructor
         if (isset($this->data[$type]) && $this->data[$type] !== []) {
             return clone $this->data[$type][0];
         }
-
-        $metadata = $this->registry->getByType($type);
-        $reflection = new ReflectionClass($metadata->class);
 
         return $reflection->newInstanceWithoutConstructor();
     }
@@ -140,6 +148,11 @@ final class InMemoryRepository implements ResourceRepository
         }
 
         return $results;
+    }
+
+    public function count(string $type): int
+    {
+        return count($this->data[$type] ?? []);
     }
 
     /**

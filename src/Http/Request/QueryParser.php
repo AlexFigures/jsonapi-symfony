@@ -6,6 +6,7 @@ namespace JsonApi\Symfony\Http\Request;
 
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Error\ErrorObject;
+use JsonApi\Symfony\Http\Error\ErrorSource;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Query\Criteria;
@@ -102,7 +103,24 @@ final class QueryParser
                 continue;
             }
 
-            $metadata = $this->requireResourceMetadata($resourceType);
+            // Validate resource type exists (for query parameters, this should be 400, not 404)
+            if (!$this->registry->hasType($resourceType)) {
+                $error = $this->errors->unknownType($resourceType);
+                // Override status to 400 for query parameter context
+                $error = new ErrorObject(
+                    id: $error->id,
+                    aboutLink: $error->aboutLink,
+                    status: '400',
+                    code: $error->code,
+                    title: $error->title,
+                    detail: $error->detail,
+                    source: new ErrorSource(parameter: sprintf('fields[%s]', $resourceType)),
+                    meta: $error->meta,
+                );
+                $this->throwBadRequest($error);
+            }
+
+            $metadata = $this->registry->getByType($resourceType);
             $allowed = array_merge(array_keys($metadata->attributes), array_keys($metadata->relationships));
             if ($metadata->exposeId) {
                 $allowed[] = 'id';

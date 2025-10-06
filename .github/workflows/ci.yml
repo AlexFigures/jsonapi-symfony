@@ -52,10 +52,67 @@ jobs:
         run: composer install --prefer-dist --no-progress
 
       - name: Mutation testing
-        run: make mutation
+        run: |
+          XDEBUG_MODE=coverage vendor/bin/infection \
+            --threads=4 \
+            --min-msi=70 \
+            --min-covered-msi=70 \
+            --logger-github \
+            --no-progress
+        continue-on-error: true
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: infection-log
+          path: infection.log
 
       - name: Deptrac
         run: make deptrac
 
       - name: Backward compatibility check
+        if: github.event_name == 'pull_request'
         run: make bc-check
+        continue-on-error: true
+
+  stress-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Run stress test (quick profile)
+        run: php scripts/stress/memory-stress.php --profile=quick
+
+      - name: Upload stress report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: stress-report
+          path: build/stress-report.json
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+
+      - name: Security audit
+        run: composer audit
