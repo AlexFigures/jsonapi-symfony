@@ -139,4 +139,26 @@ final class AtomicOperationsTest extends JsonApiTestCase
         $this->expectException(BadRequestException::class);
         $controller($request);
     }
+
+    public function testUnknownResourceTypeViaHrefTriggersBadRequest(): void
+    {
+        $controller = $this->atomicController();
+
+        $payload = [
+            'atomic:operations' => [
+                [
+                    'op' => 'remove',
+                    'href' => '/api/aliens/42',
+                ],
+            ],
+        ];
+
+        $request = Request::create('/api/operations', 'POST', server: [
+            'CONTENT_TYPE' => MediaType::JSON_API_ATOMIC,
+            'HTTP_ACCEPT' => MediaType::JSON_API_ATOMIC,
+        ], content: json_encode($payload, \JSON_THROW_ON_ERROR));
+
+        $this->expectException(BadRequestException::class);
+        $controller($request);
+    }
 }
