@@ -85,6 +85,9 @@ final class Configuration implements ConfigurationInterface
         $this->addCacheSection($children);
         $this->addLimitsSection($children);
         $this->addPerformanceSection($children);
+        $this->addDxSection($children);
+        $this->addDocsSection($children);
+        $this->addReleaseSection($children);
         $atomic = $children->arrayNode('atomic')->addDefaultsIfNotSet();
         $atomicChildren = $atomic->children();
         $atomicChildren->booleanNode('enabled')->defaultFalse()->end();
@@ -233,5 +236,93 @@ final class Configuration implements ConfigurationInterface
         $doctrine->end();
         $performanceChildren->booleanNode('head_enabled')->defaultTrue()->end();
         $performance->end();
+    }
+
+    private function addDxSection(NodeBuilder $root): void
+    {
+        $dx = $root->arrayNode('dx')->addDefaultsIfNotSet();
+        $dxChildren = $dx->children();
+
+        $dxChildren->booleanNode('dev_toolbar')->defaultTrue()->end();
+
+        $sandbox = $dxChildren->arrayNode('sandbox')->addDefaultsIfNotSet();
+        $sandboxChildren = $sandbox->children();
+        $sandboxChildren->booleanNode('enabled')->defaultTrue()->end();
+        $sandboxChildren->scalarNode('route')->defaultValue('/_jsonapi/sandbox')->end();
+        $sandbox->end();
+
+        $doctor = $dxChildren->arrayNode('doctor')->addDefaultsIfNotSet();
+        $doctorChildren = $doctor->children();
+        $doctorChildren->booleanNode('enabled')->defaultTrue()->end();
+        $doctorChildren
+            ->arrayNode('rules')
+            ->scalarPrototype()->end()
+            ->defaultValue([
+                'negotiation.vary.accept',
+                'errors.listener.registered',
+                'profiles.per_type.known',
+                'filters.whitelist.coverage',
+                'pagination.cursor.sort_key.stable',
+            ])
+            ->end()
+        ;
+        $doctor->end();
+
+        $maker = $dxChildren->arrayNode('maker')->addDefaultsIfNotSet();
+        $makerChildren = $maker->children();
+        $defaults = $makerChildren->arrayNode('defaults')->addDefaultsIfNotSet();
+        $defaultsChildren = $defaults->children();
+        $defaultsChildren->scalarNode('namespace')->defaultValue('App\\JsonApi')->end();
+        $defaultsChildren->scalarNode('resource_type_prefix')->defaultValue('')->end();
+        $defaults->end();
+        $maker->end();
+
+        $dx->end();
+    }
+
+    private function addDocsSection(NodeBuilder $root): void
+    {
+        $docs = $root->arrayNode('docs')->addDefaultsIfNotSet();
+        $docsChildren = $docs->children();
+
+        $generator = $docsChildren->arrayNode('generator')->addDefaultsIfNotSet();
+        $generatorChildren = $generator->children();
+
+        $openApi = $generatorChildren->arrayNode('openapi')->addDefaultsIfNotSet();
+        $openApiChildren = $openApi->children();
+        $openApiChildren->booleanNode('enabled')->defaultTrue()->end();
+        $openApiChildren->scalarNode('route')->defaultValue('/_jsonapi/openapi.json')->end();
+        $openApiChildren->scalarNode('title')->defaultValue('My API')->end();
+        $openApiChildren->scalarNode('version')->defaultValue('1.0.0')->end();
+        $openApiChildren
+            ->arrayNode('servers')
+            ->scalarPrototype()->end()
+            ->defaultValue(['https://api.example.com'])
+            ->end()
+        ;
+        $openApi->end();
+
+        $jsonSchema = $generatorChildren->arrayNode('json_schema')->addDefaultsIfNotSet();
+        $jsonSchemaChildren = $jsonSchema->children();
+        $jsonSchemaChildren->booleanNode('enabled')->defaultTrue()->end();
+        $jsonSchemaChildren->scalarNode('route')->defaultValue('/_jsonapi/schemas')->end();
+        $jsonSchemaChildren->booleanNode('include_profiles')->defaultTrue()->end();
+        $jsonSchema->end();
+
+        $generator->end();
+        $docs->end();
+    }
+
+    private function addReleaseSection(NodeBuilder $root): void
+    {
+        $release = $root->arrayNode('release')->addDefaultsIfNotSet();
+        $releaseChildren = $release->children();
+
+        $releaseChildren->enumNode('semver')->values(['strict', 'relaxed'])->defaultValue('strict')->end();
+        $releaseChildren->scalarNode('bc_policy')->defaultValue('minor-no-break')->end();
+        $releaseChildren->scalarNode('min_php')->defaultValue('8.2')->end();
+        $releaseChildren->scalarNode('min_symfony')->defaultValue('7.1')->end();
+
+        $release->end();
     }
 }
