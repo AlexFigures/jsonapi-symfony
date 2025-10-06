@@ -7,6 +7,7 @@ parameters:
         - src
         - tests
     bootstrapFiles:
+        - stubs/doctrine.php
         - tests/bootstrap.php
     treatPhpDocTypesAsCertain: true
     checkMissingIterableValueType: true

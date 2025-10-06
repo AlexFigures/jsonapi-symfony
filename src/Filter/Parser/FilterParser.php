@@ -21,7 +21,7 @@ use JsonApi\Symfony\Filter\Ast\NullCheck;
 final class FilterParser
 {
     /**
-     * @param array<string, mixed> $rawFilters
+     * @param array<array-key, mixed> $rawFilters
      */
     public function parse(array $rawFilters): ?Node
     {
@@ -29,7 +29,7 @@ final class FilterParser
     }
 
     /**
-     * @param array<string, mixed> $raw
+     * @param array<array-key, mixed> $raw
      */
     private function parseGroup(array $raw): ?Node
     {
@@ -106,9 +106,7 @@ final class FilterParser
         } elseif ($raw === []) {
             return null;
         } elseif ($this->isList($raw)) {
-            if ($raw !== []) {
-                $nodes[] = new Comparison($field, 'in', array_values($raw));
-            }
+            $nodes[] = new Comparison($field, 'in', array_values($raw));
         } else {
             foreach ($raw as $operator => $value) {
                 if (!is_string($operator)) {
@@ -210,6 +208,9 @@ final class FilterParser
         return (bool) $value;
     }
 
+    /**
+     * @param array<mixed> $value
+     */
     private function isList(array $value): bool
     {
         if ($value === []) {
@@ -219,6 +220,9 @@ final class FilterParser
         return array_keys($value) === range(0, count($value) - 1);
     }
 
+    /**
+     * @param array<mixed> $value
+     */
     private function isAssoc(array $value): bool
     {
         return !$this->isList($value);

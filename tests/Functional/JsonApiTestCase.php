@@ -7,6 +7,17 @@ namespace JsonApi\Symfony\Tests\Functional;
 use JsonApi\Symfony\Contract\Data\ResourcePersister;
 use JsonApi\Symfony\Contract\Data\ResourceRepository;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
+use JsonApi\Symfony\Atomic\AtomicConfig;
+use JsonApi\Symfony\Atomic\Execution\AtomicTransaction;
+use JsonApi\Symfony\Atomic\Execution\Handlers\AddHandler;
+use JsonApi\Symfony\Atomic\Execution\Handlers\RelationshipOps;
+use JsonApi\Symfony\Atomic\Execution\Handlers\RemoveHandler;
+use JsonApi\Symfony\Atomic\Execution\Handlers\UpdateHandler;
+use JsonApi\Symfony\Atomic\Execution\OperationDispatcher;
+use JsonApi\Symfony\Atomic\Parser\AtomicRequestParser;
+use JsonApi\Symfony\Atomic\Result\ResultBuilder;
+use JsonApi\Symfony\Atomic\Validation\AtomicValidator;
+use JsonApi\Symfony\Bridge\Symfony\Controller\AtomicController;
 use JsonApi\Symfony\Http\Controller\CollectionController;
 use JsonApi\Symfony\Http\Controller\CreateResourceController;
 use JsonApi\Symfony\Http\Controller\DeleteResourceController;
@@ -26,6 +37,7 @@ use JsonApi\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
 use JsonApi\Symfony\Http\Request\PaginationConfig;
 use JsonApi\Symfony\Http\Request\QueryParser;
 use JsonApi\Symfony\Http\Request\SortingWhitelist;
+use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Http\Write\InputDocumentValidator;
@@ -74,6 +86,7 @@ abstract class JsonApiTestCase extends TestCase
     private ?RelatedController $relatedController = null;
     private ?RelationshipGetController $relationshipGetController = null;
     private ?RelationshipWriteController $relationshipWriteController = null;
+    private ?AtomicController $atomicController = null;
     private ?ErrorMapper $errorMapper = null;
     private ?ConstraintViolationMapper $violationMapper = null;
     private ?LinkGenerator $linkGenerator = null;
@@ -150,6 +163,15 @@ abstract class JsonApiTestCase extends TestCase
         \assert($this->relationshipWriteController instanceof RelationshipWriteController);
 
         return $this->relationshipWriteController;
+    }
+
+    protected function atomicController(): AtomicController
+    {
+        $this->boot();
+
+        \assert($this->atomicController instanceof AtomicController);
+
+        return $this->atomicController;
     }
 
     protected function linkGenerator(): LinkGenerator
@@ -346,6 +368,19 @@ abstract class JsonApiTestCase extends TestCase
         $relationshipResponseConfig = new WriteRelationshipsResponseConfig('linkage');
         $relationshipValidator = new RelationshipDocumentValidator($registry, $existenceChecker, $errorMapper);
 
+        $atomicConfig = new AtomicConfig(true, '/api/operations', true, 100, 'auto', true, true, '/api');
+        $mediaNegotiator = new MediaTypeNegotiator($atomicConfig);
+        $atomicParser = new AtomicRequestParser($atomicConfig, $errorMapper);
+        $atomicValidator = new AtomicValidator($atomicConfig, $registry, $errorMapper);
+        $atomicTransaction = new AtomicTransaction($transactionManager);
+        $addHandler = new AddHandler($persister, $changeSetFactory, $registry, $accessor);
+        $updateHandler = new UpdateHandler($persister, $changeSetFactory, $registry, $accessor, $errorMapper);
+        $removeHandler = new RemoveHandler($persister, $errorMapper);
+        $relationshipOps = new RelationshipOps($relationshipUpdater, $registry, $errorMapper);
+        $resultBuilder = new ResultBuilder($atomicConfig, $document);
+        $dispatcher = new OperationDispatcher($atomicTransaction, $addHandler, $updateHandler, $removeHandler, $relationshipOps, $resultBuilder);
+        $atomicController = new AtomicController($atomicParser, $atomicValidator, $dispatcher, $mediaNegotiator);
+
         $this->registry = $registry;
         $this->repository = $repository;
         $this->parser = $parser;
@@ -361,6 +396,7 @@ abstract class JsonApiTestCase extends TestCase
         $this->relatedController = new RelatedController($registry, $relationshipReader, $parser, $document);
         $this->relationshipGetController = new RelationshipGetController($linkageBuilder);
         $this->relationshipWriteController = new RelationshipWriteController($relationshipValidator, $relationshipUpdater, $linkageBuilder, $relationshipResponseConfig, $errorMapper);
+        $this->atomicController = $atomicController;
 
         $this->errorMapper = $errorMapper;
         $this->violationMapper = $violationMapper;

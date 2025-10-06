@@ -9,6 +9,7 @@ use JsonApi\Symfony\Http\Error\ErrorObject;
 final class MethodNotAllowedException extends JsonApiHttpException
 {
     /**
+     * @param list<string>      $allowedMethods
      * @param list<ErrorObject> $errors
      */
     public function __construct(
