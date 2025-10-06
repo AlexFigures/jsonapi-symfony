@@ -7,10 +7,16 @@ namespace JsonApi\Symfony\Profile\Builtin;
 use JsonApi\Symfony\Profile\Descriptor\ProfileDescriptor;
 use JsonApi\Symfony\Profile\ProfileInterface;
 
+/**
+ * @phpstan-type AuditTrailConfig array{documentation?: string}
+ */
 final class AuditTrailProfile implements ProfileInterface
 {
     public const URI = 'urn:jsonapi:profile:audit-trail';
 
+    /**
+     * @param AuditTrailConfig $config
+     */
     public function __construct(private readonly array $config = [])
     {
     }

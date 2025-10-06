@@ -80,7 +80,10 @@ final class ProfileNegotiationSubscriber implements EventSubscriberInterface
     private function withProfileParameter(string $contentType, array $profiles): string
     {
         $parts = array_map('trim', explode(';', $contentType));
-        $type = array_shift($parts) ?? $contentType;
+        $type = array_shift($parts);
+        if ($type === '') {
+            $type = $contentType;
+        }
         $parameters = [];
 
         foreach ($parts as $part) {

@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class LastModifiedResolver
 {
-    public function resolve(Request $request, Response $response): ?DateTimeImmutable
+    public function resolve(Request $request, Response $response): DateTimeImmutable
     {
         $header = $response->headers->get('Last-Modified');
         if ($header !== null) {

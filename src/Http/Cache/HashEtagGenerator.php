@@ -7,15 +7,27 @@ namespace JsonApi\Symfony\Http\Cache;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @phpstan-type HashEtagConfig array{
+ *     etag?: array{hash_algo?: string},
+ *     hash_algo?: string
+ * }
+ */
 final class HashEtagGenerator implements EtagGeneratorInterface
 {
     /**
-     * @param array<string, mixed> $config
+     * @param HashEtagConfig $config
      */
     public function __construct(array $config = [])
     {
         $source = $config['etag'] ?? $config;
-        $this->algorithm = (string) ($source['hash_algo'] ?? 'xxh3');
+        $hashAlgo = $source['hash_algo'] ?? null;
+        $algorithm = is_string($hashAlgo) && $hashAlgo !== '' ? $hashAlgo : 'xxh3';
+        if (!in_array($algorithm, hash_algos(), true)) {
+            $algorithm = 'sha256';
+        }
+
+        $this->algorithm = $algorithm;
     }
 
     private string $algorithm;
@@ -24,15 +36,10 @@ final class HashEtagGenerator implements EtagGeneratorInterface
     {
         $content = $response->getContent();
         if ($content === false) {
-            $content = '';
-        }
-
-        $payload = $cacheKey . '\n' . $content;
-        $hash = hash($this->algorithm, $payload, false);
-        if ($hash === false) {
             return null;
         }
 
-        return $hash;
+        $payload = $cacheKey . '\n' . $content;
+        return hash($this->algorithm, $payload, false);
     }
 }

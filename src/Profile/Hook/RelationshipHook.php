@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Profile\Hook;
 
-use JsonApi\Symfony\Http\Relationship\ResourceIdentifier;
+use JsonApi\Symfony\Contract\Data\ResourceIdentifier;
 use JsonApi\Symfony\Profile\ProfileContext;
 
 interface RelationshipHook

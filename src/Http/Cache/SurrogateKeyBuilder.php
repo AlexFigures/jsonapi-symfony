@@ -6,17 +6,32 @@ namespace JsonApi\Symfony\Http\Cache;
 
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * @phpstan-type SurrogateKeyConfig array{
+ *     surrogate_keys?: array{
+ *         format?: array{resource?: string, collection?: string, relationship?: string}
+ *     },
+ *     format?: array{resource?: string, collection?: string, relationship?: string}
+ * }
+ */
 final class SurrogateKeyBuilder
 {
     /**
-     * @param array<string, mixed> $config
+     * @param SurrogateKeyConfig $config
      */
     public function __construct(array $config = [])
     {
-        $format = $config['surrogate_keys']['format'] ?? ($config['format'] ?? []);
-        $this->resourceFormat = $format['resource'] ?? '{type}:{id}';
-        $this->collectionFormat = $format['collection'] ?? '{type}';
-        $this->relationshipFormat = $format['relationship'] ?? '{type}:{id}:{rel}';
+        if (isset($config['surrogate_keys']['format'])) {
+            $format = $config['surrogate_keys']['format'];
+        } elseif (isset($config['format'])) {
+            $format = $config['format'];
+        } else {
+            $format = [];
+        }
+
+        $this->resourceFormat = isset($format['resource']) ? (string) $format['resource'] : '{type}:{id}';
+        $this->collectionFormat = isset($format['collection']) ? (string) $format['collection'] : '{type}';
+        $this->relationshipFormat = isset($format['relationship']) ? (string) $format['relationship'] : '{type}:{id}:{rel}';
     }
 
     private string $resourceFormat;
@@ -25,12 +40,20 @@ final class SurrogateKeyBuilder
 
     private string $relationshipFormat;
 
+    /**
+     * @return list<string>
+     */
     public function build(Request $request): array
     {
-        $route = (string) $request->attributes->get('_route', '');
-        $type = (string) $request->attributes->get('type', '');
-        $id = (string) $request->attributes->get('id', '');
-        $relationship = (string) $request->attributes->get('relationship', '');
+        $route = $request->attributes->get('_route');
+        $type = $request->attributes->get('type');
+        $id = $request->attributes->get('id');
+        $relationship = $request->attributes->get('relationship');
+
+        $route = is_string($route) ? $route : '';
+        $type = is_string($type) ? $type : '';
+        $id = is_scalar($id) ? (string) $id : '';
+        $relationship = is_scalar($relationship) ? (string) $relationship : '';
 
         if ($route === 'jsonapi.collection') {
             return $type === '' ? [] : [$this->format($this->collectionFormat, $type, $id, $relationship)];
