@@ -11,6 +11,11 @@ final class AttributeMetadata
         public ?string $propertyPath = null,
         public bool $readable = true,
         public bool $writable = true,
+        /**
+         * @var list<string>
+         */
+        public array $types = [],
+        public bool $nullable = true,
     ) {
     }
 }

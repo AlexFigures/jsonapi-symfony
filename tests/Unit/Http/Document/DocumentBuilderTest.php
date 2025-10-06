@@ -74,6 +74,11 @@ final class DocumentBuilderTest extends TestCase
                     default => null,
                 };
             }
+
+            public function all(): array
+            {
+                return [$this->article, $this->comment];
+            }
         };
 
         $urls = new class () implements UrlGeneratorInterface {
