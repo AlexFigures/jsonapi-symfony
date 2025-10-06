@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
 use JsonApi\Symfony\Http\Controller\CollectionController;
 use JsonApi\Symfony\Http\Controller\CreateResourceController;
 use JsonApi\Symfony\Http\Controller\DeleteResourceController;
@@ -27,6 +28,11 @@ use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Http\Write\InputDocumentValidator;
 use JsonApi\Symfony\Http\Write\RelationshipDocumentValidator;
 use JsonApi\Symfony\Http\Write\WriteConfig;
+use JsonApi\Symfony\Profile\Builtin\AuditTrailProfile;
+use JsonApi\Symfony\Profile\Builtin\RelationshipCountsProfile;
+use JsonApi\Symfony\Profile\Builtin\SoftDeleteProfile;
+use JsonApi\Symfony\Profile\Negotiation\ProfileNegotiator;
+use JsonApi\Symfony\Profile\ProfileRegistry;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use JsonApi\Symfony\Contract\Data\ExistenceChecker;
@@ -49,6 +55,55 @@ return static function (ContainerConfigurator $configurator): void {
             '%jsonapi.media_type%',
         ])
         ->tag('kernel.event_subscriber')
+    ;
+
+    $services
+        ->set(ProfileRegistry::class)
+        ->args([
+            tagged_iterator('jsonapi.profile'),
+        ])
+    ;
+
+    $services
+        ->set(ProfileNegotiator::class)
+        ->args([
+            service(ProfileRegistry::class),
+            '%jsonapi.profiles.enabled_by_default%',
+            '%jsonapi.profiles.per_type%',
+            '%jsonapi.profiles.negotiation%',
+        ])
+    ;
+
+    $services
+        ->set(ProfileNegotiationSubscriber::class)
+        ->args([
+            service(ProfileNegotiator::class),
+        ])
+        ->tag('kernel.event_subscriber')
+    ;
+
+    $services
+        ->set(SoftDeleteProfile::class)
+        ->args([
+            '%jsonapi.profiles.soft_delete%',
+        ])
+        ->tag('jsonapi.profile')
+    ;
+
+    $services
+        ->set(AuditTrailProfile::class)
+        ->args([
+            '%jsonapi.profiles.audit_trail%',
+        ])
+        ->tag('jsonapi.profile')
+    ;
+
+    $services
+        ->set(RelationshipCountsProfile::class)
+        ->args([
+            '%jsonapi.profiles.rel_counts%',
+        ])
+        ->tag('jsonapi.profile')
     ;
 
     $services
