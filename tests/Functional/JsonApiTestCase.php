@@ -379,7 +379,7 @@ abstract class JsonApiTestCase extends TestCase
         $relationshipOps = new RelationshipOps($relationshipUpdater, $registry, $errorMapper);
         $resultBuilder = new ResultBuilder($atomicConfig, $document);
         $dispatcher = new OperationDispatcher($atomicTransaction, $addHandler, $updateHandler, $removeHandler, $relationshipOps, $resultBuilder);
-        $atomicController = new AtomicController($atomicParser, $atomicValidator, $dispatcher, $resultBuilder, $mediaNegotiator);
+        $atomicController = new AtomicController($atomicParser, $atomicValidator, $dispatcher, $mediaNegotiator);
 
         $this->registry = $registry;
         $this->repository = $repository;

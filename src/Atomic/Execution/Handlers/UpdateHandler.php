@@ -12,6 +12,7 @@ use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 final class UpdateHandler
@@ -34,14 +35,19 @@ final class UpdateHandler
             ]);
         }
 
-        $type = $operation->ref?->type ?? $data['type'] ?? null;
-        if (!is_string($type)) {
+        $type = $operation->ref?->type;
+        if ($type === null && isset($data['type']) && is_string($data['type']) && $data['type'] !== '') {
+            $type = $data['type'];
+        }
+
+        if ($type === null) {
             throw new BadRequestException('Unable to resolve resource type for update operation.');
         }
 
+        /** @var array<string, mixed> $data */
         $id = $this->resolveIdentifier($operation, $data, $lids);
 
-        $attributes = $data['attributes'] ?? [];
+        $attributes = $data['attributes'] ?? null;
         if ($attributes === null) {
             $attributes = [];
         }
@@ -50,12 +56,18 @@ final class UpdateHandler
             throw new BadRequestException('Resource attributes must be an object.');
         }
 
+        /** @var array<string, mixed> $attributes */
         $changes = $this->changeSet->fromAttributes($type, $attributes);
         $model = $this->persister->update($type, $id, $changes);
 
         $metadata = $this->registry->getByType($type);
         $idProperty = $metadata->idPropertyPath ?? 'id';
         $idValue = $this->accessor->getValue($model, $idProperty);
+
+        if (!is_scalar($idValue) && !($idValue instanceof Stringable)) {
+            throw new BadRequestException('Unable to resolve resource identifier for persisted model.');
+        }
+
         $resolvedId = (string) $idValue;
 
         return OperationOutcome::forResource($type, $resolvedId, $model);

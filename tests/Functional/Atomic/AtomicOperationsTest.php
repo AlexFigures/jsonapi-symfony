@@ -42,12 +42,26 @@ final class AtomicOperationsTest extends JsonApiTestCase
         self::assertSame(MediaType::JSON_API_ATOMIC, $response->headers->get('Content-Type'));
 
         $decoded = json_decode((string) $response->getContent(), true, flags: \JSON_THROW_ON_ERROR);
-        self::assertIsArray($decoded);
+        if (!is_array($decoded)) {
+            self::fail('Response payload must decode to an array.');
+        }
+        /** @var array<string, mixed> $decoded */
         self::assertArrayHasKey('atomic:results', $decoded);
-        self::assertCount(1, $decoded['atomic:results']);
-        self::assertArrayHasKey('data', $decoded['atomic:results'][0]);
-        self::assertSame('authors', $decoded['atomic:results'][0]['data']['type']);
-        self::assertNotEmpty($decoded['atomic:results'][0]['data']['id']);
+        $results = $decoded['atomic:results'];
+        if (!is_array($results) || !array_is_list($results)) {
+            self::fail('Atomic results must be represented as a list.');
+        }
+        /** @var list<array<string, mixed>> $results */
+        self::assertCount(1, $results);
+        $firstResult = $results[0];
+        self::assertArrayHasKey('data', $firstResult);
+        $data = $firstResult['data'];
+        if (!is_array($data)) {
+            self::fail('Atomic result data must be an object.');
+        }
+        self::assertSame('authors', $data['type']);
+        self::assertArrayHasKey('id', $data);
+        self::assertNotEmpty($data['id']);
     }
 
     public function testMissingAtomicExtensionInContentTypeTriggers415(): void

@@ -74,15 +74,10 @@ final class AtomicValidator
         }
 
         $metadata = $this->registry->getByType($ref->type);
-        if (!$metadata instanceof ResourceMetadata) {
-            throw new BadRequestException('Unknown resource type.', [
-                $this->errors->invalidPointer($operation->pointer . '/ref/type', sprintf('Resource type "%s" is not recognized.', $ref->type)),
-            ]);
-        }
 
         if ($ref->relationship !== null) {
             $relationship = $metadata->relationships[$ref->relationship] ?? null;
-            if (!$relationship instanceof RelationshipMetadata) {
+            if ($relationship === null) {
                 throw new BadRequestException('Unknown relationship.', [
                     $this->errors->invalidPointer($operation->pointer . '/ref/relationship', sprintf('Relationship "%s" is not defined for resource "%s".', $ref->relationship, $ref->type)),
                 ]);
@@ -135,9 +130,15 @@ final class AtomicValidator
             $data = $operation->data;
             \assert(is_array($data));
             $dataType = $data['type'] ?? null;
-            if ($dataType !== null && $dataType !== $ref->type) {
+            if ($dataType !== null && (!is_string($dataType) || $dataType === '')) {
+                throw new BadRequestException('Invalid resource type.', [
+                    $this->errors->invalidPointer($operation->pointer . '/data/type', 'When present, the "type" member MUST be a non-empty string.'),
+                ]);
+            }
+
+            if (is_string($dataType) && $dataType !== $ref->type) {
                 throw new BadRequestException('Type mismatch.', [
-                    $this->errors->invalidPointer($operation->pointer . '/data/type', sprintf('Resource type must be "%s", got "%s".', $ref->type, (string) $dataType)),
+                    $this->errors->invalidPointer($operation->pointer . '/data/type', sprintf('Resource type must be "%s", got "%s".', $ref->type, $dataType)),
                 ]);
             }
         }
@@ -154,6 +155,13 @@ final class AtomicValidator
 
     private function validateRelationshipData(Operation $operation, RelationshipMetadata $relationship, LidRegistry $lids): void
     {
+        $targetType = $relationship->targetType;
+        if ($targetType === null) {
+            throw new BadRequestException('Relationship target type is not configured.', [
+                $this->errors->invalidPointer($operation->pointer . '/ref/relationship', sprintf('Relationship "%s" is missing a target type.', $relationship->name)),
+            ]);
+        }
+
         if ($relationship->toMany) {
             if ($operation->op === 'remove' || $operation->op === 'add' || $operation->op === 'update') {
                 if (!is_array($operation->data) || !array_is_list($operation->data)) {
@@ -163,7 +171,7 @@ final class AtomicValidator
                 }
 
                 foreach ($operation->data as $index => $identifier) {
-                    $this->validateResourceIdentifier($operation, $identifier, $relationship->targetType, sprintf('%s/data/%d', $operation->pointer, $index), $lids);
+                    $this->validateResourceIdentifier($operation, $identifier, $targetType, sprintf('%s/data/%d', $operation->pointer, $index), $lids);
                 }
 
                 return;
@@ -179,7 +187,7 @@ final class AtomicValidator
                 return;
             }
 
-            $this->validateResourceIdentifier($operation, $operation->data, $relationship->targetType, $operation->pointer . '/data', $lids);
+            $this->validateResourceIdentifier($operation, $operation->data, $targetType, $operation->pointer . '/data', $lids);
         }
     }
 

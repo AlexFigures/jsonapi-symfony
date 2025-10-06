@@ -14,9 +14,6 @@ use JsonApi\Symfony\Atomic\Result\ResultBuilder;
 
 final class OperationDispatcher
 {
-    /**
-     * @param list<Operation> $operations
-     */
     public function __construct(
         private readonly AtomicTransaction $transaction,
         private readonly AddHandler $add,

@@ -11,6 +11,7 @@ use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 final class AddHandler
@@ -30,12 +31,16 @@ final class AddHandler
             throw new BadRequestException('The "data" member MUST be present for add operations.');
         }
 
-        $type = $operation->ref?->type ?? $data['type'] ?? null;
-        if (!is_string($type)) {
+        $type = $operation->ref?->type;
+        if ($type === null && isset($data['type']) && is_string($data['type']) && $data['type'] !== '') {
+            $type = $data['type'];
+        }
+
+        if ($type === null) {
             throw new BadRequestException('Unable to resolve resource type for add operation.');
         }
 
-        $attributes = $data['attributes'] ?? [];
+        $attributes = $data['attributes'] ?? null;
         if ($attributes === null) {
             $attributes = [];
         }
@@ -44,6 +49,7 @@ final class AddHandler
             throw new BadRequestException('Resource attributes must be an object.');
         }
 
+        /** @var array<string, mixed> $attributes */
         $changes = $this->changeSet->fromAttributes($type, $attributes);
 
         $clientId = null;
@@ -56,6 +62,11 @@ final class AddHandler
         $metadata = $this->registry->getByType($type);
         $idProperty = $metadata->idPropertyPath ?? 'id';
         $idValue = $this->accessor->getValue($model, $idProperty);
+
+        if (!is_scalar($idValue) && !($idValue instanceof Stringable)) {
+            throw new BadRequestException('Unable to resolve resource identifier for persisted model.');
+        }
+
         $id = (string) $idValue;
 
         if (isset($data['lid']) && is_string($data['lid']) && $data['lid'] !== '') {

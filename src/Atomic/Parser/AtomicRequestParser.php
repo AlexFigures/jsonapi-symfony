@@ -99,6 +99,7 @@ final class AtomicRequestParser
                 ]);
             }
 
+            /** @var array<string, mixed> $meta */
             $parsed[] = new Operation($op, $ref, $href, $data, $meta, $pointer);
         }
 

@@ -98,9 +98,9 @@ final class InputDocumentValidator
         $metadata = $this->registry->getByType($routeType);
         $attributeErrors = [];
 
-        foreach ($attributes as $name => $_) {
-            if (!is_string($name) || $name === '') {
-                $attributeErrors[] = $this->errors->invalidPointer('/data/attributes', 'Attribute names must be strings.');
+        foreach (array_keys($attributes) as $name) {
+            if ($name === '') {
+                $attributeErrors[] = $this->errors->invalidPointer('/data/attributes', 'Attribute names must be non-empty strings.');
                 continue;
             }
 

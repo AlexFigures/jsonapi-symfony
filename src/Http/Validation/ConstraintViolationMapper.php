@@ -6,8 +6,6 @@ namespace JsonApi\Symfony\Http\Validation;
 
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Error\ErrorObject;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\Validator\ConstraintViolationInterface;
@@ -30,10 +28,7 @@ final class ConstraintViolationMapper
         $errors = [];
 
         foreach ($violations as $violation) {
-            if (!$violation instanceof ConstraintViolationInterface) {
-                continue;
-            }
-
+            /** @var ConstraintViolationInterface $violation */
             [$pointer, $meta] = $this->pointerFor($metadata, (string) $violation->getPropertyPath());
             $errors[] = $this->errors->validationError($pointer, (string) $violation->getMessage(), $meta);
         }
@@ -97,10 +92,6 @@ final class ConstraintViolationMapper
     {
         $attributeMap = [];
         foreach ($metadata->attributes as $attribute) {
-            if (!$attribute instanceof AttributeMetadata) {
-                continue;
-            }
-
             $attributeName = $attribute->name;
             $propertyPath = $attribute->propertyPath ?? $attributeName;
             $attributeMap[$attributeName] = sprintf('/data/attributes/%s', $attributeName);
@@ -109,10 +100,6 @@ final class ConstraintViolationMapper
 
         $relationshipMap = [];
         foreach ($metadata->relationships as $relationship) {
-            if (!$relationship instanceof RelationshipMetadata) {
-                continue;
-            }
-
             $relationshipName = $relationship->name;
             $propertyPath = $relationship->propertyPath ?? $relationshipName;
             $pointer = sprintf('/data/relationships/%s/data', $relationshipName);

@@ -39,6 +39,11 @@ final class RelationshipOps
 
         $id = $this->resolveId($operation, $lids);
 
+        $targetType = $relationship->targetType;
+        if ($targetType === null) {
+            throw new BadRequestException('Relationship metadata is missing a target type.');
+        }
+
         if ($relationship->toMany) {
             $data = $operation->data;
             if (!is_array($data) || !array_is_list($data)) {
@@ -49,7 +54,7 @@ final class RelationshipOps
 
             $identifiers = [];
             foreach ($data as $index => $identifier) {
-                $identifiers[] = $this->identifierFromArray($identifier, sprintf('%s/data/%d', $operation->pointer, $index), $relationship->targetType, $lids);
+                $identifiers[] = $this->identifierFromArray($identifier, sprintf('%s/data/%d', $operation->pointer, $index), $targetType, $lids);
             }
 
             if ($operation->op === 'add') {
@@ -75,7 +80,7 @@ final class RelationshipOps
             return OperationOutcome::empty();
         }
 
-        $identifier = $this->identifierFromArray($operation->data, $operation->pointer . '/data', $relationship->targetType, $lids);
+        $identifier = $this->identifierFromArray($operation->data, $operation->pointer . '/data', $targetType, $lids);
         $this->relationships->replaceToOne($ref->type, $id, $ref->relationship, $identifier);
 
         return OperationOutcome::empty();

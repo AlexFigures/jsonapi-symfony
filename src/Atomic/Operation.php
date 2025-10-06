@@ -9,6 +9,9 @@ namespace JsonApi\Symfony\Atomic;
  */
 final class Operation
 {
+    /**
+     * @param array<string, mixed> $meta
+     */
     public function __construct(
         public readonly string $op,
         public readonly ?Ref $ref,

@@ -7,7 +7,6 @@ namespace JsonApi\Symfony\Bridge\Symfony\Controller;
 use JsonApi\Symfony\Atomic\Execution\OperationDispatcher;
 use JsonApi\Symfony\Atomic\Parser\AtomicRequestParser;
 use JsonApi\Symfony\Atomic\Validation\AtomicValidator;
-use JsonApi\Symfony\Atomic\Result\ResultBuilder;
 use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,7 +21,6 @@ final class AtomicController
         private readonly AtomicRequestParser $parser,
         private readonly AtomicValidator $validator,
         private readonly OperationDispatcher $dispatcher,
-        private readonly ResultBuilder $results,
         private readonly MediaTypeNegotiator $negotiator,
     ) {
     }
