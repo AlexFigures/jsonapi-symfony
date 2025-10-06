@@ -82,6 +82,52 @@ final class Configuration implements ConfigurationInterface
         $errorsChildren->scalarNode('locale')->defaultNull()->end();
         $errors->end();
 
+        $profiles = $children->arrayNode('profiles')->addDefaultsIfNotSet();
+        $profilesChildren = $profiles->children();
+
+        $negotiation = $profilesChildren->arrayNode('negotiation')->addDefaultsIfNotSet();
+        $negotiationChildren = $negotiation->children();
+        $negotiationChildren->booleanNode('require_known_profiles')->defaultFalse()->end();
+        $negotiationChildren->booleanNode('echo_profiles_in_content_type')->defaultTrue()->end();
+        $negotiationChildren->booleanNode('link_header')->defaultTrue()->end();
+        $negotiation->end();
+
+        $profilesChildren->arrayNode('enabled_by_default')->scalarPrototype()->end()->defaultValue([]);
+
+        $perType = $profilesChildren->arrayNode('per_type')->useAttributeAsKey('type')->arrayPrototype();
+        $perType->scalarPrototype()->end();
+        $perType->end();
+
+        $softDelete = $profilesChildren->arrayNode('soft_delete')->addDefaultsIfNotSet();
+        $softDeleteChildren = $softDelete->children();
+        $softDeleteChildren->scalarNode('field')->defaultValue('deletedAt')->end();
+        $softDeleteChildren->enumNode('strategy')->values(['timestamp', 'boolean'])->defaultValue('timestamp')->end();
+        $softDeleteChildren->enumNode('default_visibility')->values(['exclude', 'include', 'only'])->defaultValue('exclude')->end();
+        $queryFlags = $softDeleteChildren->arrayNode('query_flags')->addDefaultsIfNotSet();
+        $queryFlagsChildren = $queryFlags->children();
+        $queryFlagsChildren->scalarNode('with_deleted')->defaultValue('withDeleted')->end();
+        $queryFlagsChildren->scalarNode('only_deleted')->defaultValue('onlyDeleted')->end();
+        $queryFlags->end();
+        $softDeleteChildren->enumNode('delete_semantics')->values(['soft', 'hard'])->defaultValue('soft')->end();
+        $softDelete->end();
+
+        $audit = $profilesChildren->arrayNode('audit_trail')->addDefaultsIfNotSet();
+        $auditChildren = $audit->children();
+        $auditChildren->scalarNode('created_at')->defaultValue('createdAt')->end();
+        $auditChildren->scalarNode('updated_at')->defaultValue('updatedAt')->end();
+        $auditChildren->scalarNode('created_by')->defaultNull()->end();
+        $auditChildren->scalarNode('updated_by')->defaultNull()->end();
+        $auditChildren->booleanNode('expose_in_meta')->defaultTrue()->end();
+        $audit->end();
+
+        $relationshipCounts = $profilesChildren->arrayNode('rel_counts')->addDefaultsIfNotSet();
+        $relationshipCountsChildren = $relationshipCounts->children();
+        $relationshipCountsChildren->scalarNode('relationship_meta_key')->defaultValue('count')->end();
+        $relationshipCountsChildren->booleanNode('compute_in_related_endpoints')->defaultTrue()->end();
+        $relationshipCounts->end();
+
+        $profiles->end();
+
         return $treeBuilder;
     }
 }

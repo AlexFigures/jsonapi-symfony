@@ -6,6 +6,7 @@ namespace JsonApi\Symfony\Http\Document;
 
 use JsonApi\Symfony\Contract\Data\Slice;
 use JsonApi\Symfony\Http\Link\LinkGenerator;
+use JsonApi\Symfony\Profile\ProfileContext;
 use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
 use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
@@ -43,11 +44,12 @@ final class DocumentBuilder
         $included = [];
         $visited = [];
         $includeTree = $this->buildIncludeTree($criteria);
+        $context = ProfileContext::fromRequest($request);
 
         foreach ($models as $model) {
-            $data[] = $this->buildResourceObject($type, $model, $criteria);
+            $data[] = $this->buildResourceObject($type, $model, $criteria, $context);
             if ($includeTree !== []) {
-                $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited);
+                $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context);
             }
         }
 
@@ -67,6 +69,11 @@ final class DocumentBuilder
 
         if ($included !== []) {
             $document['included'] = array_values($included);
+        }
+
+        if ($context !== null) {
+            $document['links'] = $this->applyTopLevelLinks($context, $document['links'], $request);
+            $document['meta'] = $this->applyTopLevelMeta($context, $document['meta']);
         }
 
         return $document;
@@ -91,19 +98,29 @@ final class DocumentBuilder
         $includeTree = $this->buildIncludeTree($criteria);
         $included = [];
         $visited = [];
+        $context = ProfileContext::fromRequest($request);
 
         if ($includeTree !== []) {
-            $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited);
+            $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context);
         }
 
         $document = [
             'jsonapi' => ['version' => '1.1'],
             'links' => ['self' => $this->links->topLevelSelf($request)],
-            'data' => $this->buildResourceObject($type, $model, $criteria),
+            'data' => $this->buildResourceObject($type, $model, $criteria, $context),
         ];
 
         if ($included !== []) {
             $document['included'] = array_values($included);
+        }
+
+        if ($context !== null) {
+            $document['links'] = $this->applyTopLevelLinks($context, $document['links'], $request);
+            $meta = $document['meta'] ?? [];
+            $meta = $this->applyTopLevelMeta($context, $meta);
+            if ($meta !== []) {
+                $document['meta'] = $meta;
+            }
         }
 
         return $document;
@@ -118,7 +135,7 @@ final class DocumentBuilder
      *     relationships?: array<string, array<string, mixed>>
      * }
      */
-    private function buildResourceObject(string $type, object $model, Criteria $criteria): array
+    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null): array
     {
         $metadata = $this->registry->getByType($type);
         $fields = $criteria->fields[$type] ?? null;
@@ -135,7 +152,7 @@ final class DocumentBuilder
 
         $resource['attributes'] = $attributes === [] ? new stdClass() : $attributes;
 
-        $relationships = $this->buildRelationships($metadata, $model, $criteria, $id);
+        $relationships = $this->buildRelationships($metadata, $model, $criteria, $id, $context);
         if ($relationships !== []) {
             $resource['relationships'] = $relationships;
         }
@@ -173,7 +190,7 @@ final class DocumentBuilder
     /**
      * @return array<string, array<string, mixed>>
      */
-    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id): array
+    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id, ?ProfileContext $context): array
     {
         $relationships = [];
         $fields = $criteria->fields[$metadata->type] ?? null;
@@ -197,6 +214,12 @@ final class DocumentBuilder
             }
 
             $relationships[$name] = $data;
+        }
+
+        if ($relationships !== [] && $context !== null) {
+            foreach ($context->documentHooks() as $hook) {
+                $hook->onResourceRelationships($context, $metadata, $relationships, $model);
+            }
         }
 
         return $relationships;
@@ -287,7 +310,7 @@ final class DocumentBuilder
      * @param array<string, array<string, mixed>> $included
      * @param array<string, bool>                 $visited
      */
-    private function gatherIncluded(string $type, object $model, array $includeTree, Criteria $criteria, array &$included, array &$visited): void
+    private function gatherIncluded(string $type, object $model, array $includeTree, Criteria $criteria, array &$included, array &$visited, ?ProfileContext $context): void
     {
         if ($includeTree === []) {
             return;
@@ -333,7 +356,7 @@ final class DocumentBuilder
                     $relatedType = $metadataForClass->type;
                 }
 
-                $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria);
+                $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria, $context);
                 $typeValue = $resource['type'];
                 $idValue = $resource['id'];
 
@@ -347,13 +370,31 @@ final class DocumentBuilder
                     $visited[$identifier] = true;
                     $included[$identifier] = $resource;
                     if ($children !== []) {
-                        $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited);
+                        $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context);
                     }
                 } elseif ($children !== []) {
-                    $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited);
+                    $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context);
                 }
             }
         }
+    }
+
+    private function applyTopLevelLinks(ProfileContext $context, array $links, Request $request): array
+    {
+        foreach ($context->documentHooks() as $hook) {
+            $hook->onTopLevelLinks($context, $links, $request);
+        }
+
+        return $links;
+    }
+
+    private function applyTopLevelMeta(ProfileContext $context, array $meta): array
+    {
+        foreach ($context->documentHooks() as $hook) {
+            $hook->onTopLevelMeta($context, $meta);
+        }
+
+        return $meta;
     }
 
     /**
