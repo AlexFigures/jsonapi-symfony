@@ -35,13 +35,8 @@ final class QueryParser
 
     private function parsePagination(Request $request): Pagination
     {
-        $page = $request->query->all('page');
-        if (!is_array($page)) {
-            $page = $request->query->all()['page'] ?? [];
-            if (!is_array($page)) {
-                $page = [];
-            }
-        }
+        /** @var array<string, mixed> $page */
+        $page = (array) $request->query->all('page');
 
         $number = $page['number'] ?? 1;
         $size = $page['size'] ?? $this->paginationConfig->defaultSize;
@@ -68,6 +63,7 @@ final class QueryParser
      */
     private function parseFields(Request $request): array
     {
+        /** @var array<string, mixed> $query */
         $query = $request->query->all();
         $fields = [];
 
@@ -79,7 +75,7 @@ final class QueryParser
             throw new BadRequestHttpException('fields parameter must be an array keyed by resource type.');
         }
 
-        /** @var array<string, mixed> $rawFields */
+        /** @var array<int|string, mixed> $rawFields */
         $rawFields = $query['fields'];
 
         foreach ($rawFields as $resourceType => $list) {

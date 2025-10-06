@@ -12,6 +12,7 @@ final class Relationship
     public function __construct(
         public readonly bool $toMany = false,
         public readonly ?string $inverse = null,
+        public readonly ?string $targetType = null,
     ) {
     }
 }

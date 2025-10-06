@@ -19,6 +19,8 @@ final class InputDocumentValidator
     }
 
     /**
+     * @param array<int|string, mixed> $payload
+     *
      * @return array{type: string, id: ?string, attributes: array<string, mixed>, relationships: array<string, mixed>}
      */
     public function validateAndExtract(string $routeType, ?string $routeId, array $payload, string $method): array
@@ -72,7 +74,7 @@ final class InputDocumentValidator
                 throw new BadRequestException('The "relationships" member must be an object.');
             }
 
-            /** @var array<string, mixed> $relationships */
+            /** @var array<int|string, mixed> $relationships */
             $relationships = $data['relationships'];
 
             if ($relationships !== [] && !$this->config->allowRelationshipWrites) {
@@ -82,6 +84,9 @@ final class InputDocumentValidator
             if ($relationships !== [] && array_is_list($relationships)) {
                 throw new BadRequestException('The "relationships" member must be an object.');
             }
+
+            /** @var array<string, mixed> $relationships */
+            $relationships = $relationships;
         }
 
         $attributes = [];
@@ -90,13 +95,16 @@ final class InputDocumentValidator
                 throw new BadRequestException('The "attributes" member must be an object.');
             }
 
-            /** @var array<string, mixed> $attributes */
+            /** @var array<int|string, mixed> $attributes */
             $attributes = $data['attributes'];
         }
 
         if ($attributes !== [] && array_is_list($attributes)) {
             throw new BadRequestException('The "attributes" member must be an object.');
         }
+
+        /** @var array<string, mixed> $attributes */
+        $attributes = $attributes;
 
         $metadata = $this->registry->getByType($routeType);
 

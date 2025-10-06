@@ -35,7 +35,7 @@ final class Article
         return $this->createdAt;
     }
 
-    #[Relationship]
+    #[Relationship(targetType: 'authors')]
     public function getAuthor(): Author
     {
         return $this->author;
@@ -44,7 +44,7 @@ final class Article
     /**
      * @return list<Tag>
      */
-    #[Relationship(toMany: true)]
+    #[Relationship(toMany: true, targetType: 'tags')]
     public function getTags(): array
     {
         return $this->tags;

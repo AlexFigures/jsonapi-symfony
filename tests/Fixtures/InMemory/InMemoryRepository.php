@@ -19,6 +19,7 @@ use JsonApi\Symfony\Tests\Fixtures\Model\Author;
 use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
 use ReflectionClass;
 use RuntimeException;
+use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
@@ -27,7 +28,7 @@ final class InMemoryRepository implements ResourceRepository
     private PropertyAccessorInterface $accessor;
 
     /**
-     * @var array<string, list<object>>
+     * @var array<string, array<int, object>>
      */
     private array $data = [];
 
@@ -53,13 +54,18 @@ final class InMemoryRepository implements ResourceRepository
     {
         $metadata = $this->registry->getByType($type);
         $path = $metadata->idPropertyPath ?? 'id';
-        $id = (string) $this->accessor->getValue($model, $path);
+        $idValue = $this->accessor->getValue($model, $path);
+        $id = $this->stringifyId($idValue);
+        if ($id === null) {
+            throw new RuntimeException(sprintf('Unable to determine identifier for %s.', $type));
+        }
 
         $this->data[$type] ??= [];
 
         foreach ($this->data[$type] as $index => $existing) {
             $existingId = $this->accessor->getValue($existing, $path);
-            if ((string) $existingId === $id) {
+            $existingIdString = $this->stringifyId($existingId);
+            if ($existingIdString !== null && $existingIdString === $id) {
                 $this->data[$type][$index] = $model;
 
                 return;
@@ -80,7 +86,8 @@ final class InMemoryRepository implements ResourceRepository
 
         foreach ($this->data[$type] as $index => $existing) {
             $existingId = $this->accessor->getValue($existing, $path);
-            if ((string) $existingId === $id) {
+            $existingIdString = $this->stringifyId($existingId);
+            if ($existingIdString !== null && $existingIdString === $id) {
                 unset($this->data[$type][$index]);
                 $this->data[$type] = array_values($this->data[$type]);
 
@@ -103,7 +110,7 @@ final class InMemoryRepository implements ResourceRepository
 
     public function findCollection(string $type, Criteria $criteria): Slice
     {
-        $items = $this->data[$type] ?? [];
+        $items = array_values($this->data[$type] ?? []);
         $items = $this->applySort($type, $items, $criteria->sort);
 
         $total = count($items);
@@ -113,7 +120,7 @@ final class InMemoryRepository implements ResourceRepository
 
         $items = array_slice($items, $offset, $size);
 
-        return new Slice(array_values($items), $number, $size, $total);
+        return new Slice($items, $number, $size, $total);
     }
 
     public function findOne(string $type, string $id, Criteria $criteria): ?object
@@ -136,7 +143,7 @@ final class InMemoryRepository implements ResourceRepository
     }
 
     /**
-     * @param list<object> $items
+     * @param list<object>  $items
      * @param list<Sorting> $sorting
      *
      * @return list<object>
@@ -248,9 +255,28 @@ final class InMemoryRepository implements ResourceRepository
 
         foreach ($this->data[$type] as $model) {
             $value = $this->accessor->getValue($model, $path);
-            if ((string) $value === $id) {
+            $stringValue = $this->stringifyId($value);
+            if ($stringValue !== null && $stringValue === $id) {
                 return $model;
             }
+        }
+
+        return null;
+    }
+
+    public function propertyAccessor(): PropertyAccessorInterface
+    {
+        return $this->accessor;
+    }
+
+    private function stringifyId(mixed $value): ?string
+    {
+        if (is_int($value) || is_string($value) || $value instanceof Stringable) {
+            return (string) $value;
+        }
+
+        if (is_float($value)) {
+            return (string) $value;
         }
 
         return null;

@@ -8,8 +8,8 @@ use JsonApi\Symfony\Contract\Data\ResourcePersister;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Http\Document\DocumentBuilder;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
+use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Http\Write\InputDocumentValidator;
@@ -63,14 +63,14 @@ final class UpdateResourceController
             throw JsonApiHttpException::unsupportedMediaType('JSON:API requires the "application/vnd.api+json" media type.');
         }
 
-        $content = $request->getContent();
+        $content = (string) $request->getContent();
 
-        if ($content === false || $content === '') {
+        if ($content === '') {
             throw new BadRequestException('Request body must not be empty.');
         }
 
         $decoded = json_decode($content, true);
-        if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+        if ($decoded === null && json_last_error() !== \JSON_ERROR_NONE) {
             throw new BadRequestException(sprintf('Malformed JSON: %s.', json_last_error_msg()));
         }
 

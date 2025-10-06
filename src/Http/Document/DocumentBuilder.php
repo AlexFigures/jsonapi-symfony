@@ -22,11 +22,20 @@ final class DocumentBuilder
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
         private readonly LinkGenerator $links,
+        private readonly string $relationshipLinkageMode = 'when_included',
     ) {
     }
 
     /**
      * @param list<object> $models
+     *
+     * @return array{
+     *     jsonapi: array{version: string},
+     *     links: array<string, string>,
+     *     data: list<array<string, mixed>>,
+     *     meta: array{total: int, page: int, size: int},
+     *     included?: list<array<string, mixed>>
+     * }
      */
     public function buildCollection(string $type, array $models, Criteria $criteria, Slice $slice, Request $request): array
     {
@@ -63,6 +72,20 @@ final class DocumentBuilder
         return $document;
     }
 
+    /**
+     * @return array{
+     *     jsonapi: array{version: string},
+     *     links: array<string, string>,
+     *     data: array{
+     *         type: string,
+     *         id: string,
+     *         links: array<string, string>,
+     *         attributes: array<string, mixed>|stdClass,
+     *         relationships?: array<string, array<string, mixed>>
+     *     },
+     *     included?: list<array<string, mixed>>
+     * }
+     */
     public function buildResource(string $type, object $model, Criteria $criteria, Request $request): array
     {
         $includeTree = $this->buildIncludeTree($criteria);
@@ -86,6 +109,15 @@ final class DocumentBuilder
         return $document;
     }
 
+    /**
+     * @return array{
+     *     type: string,
+     *     id: string,
+     *     links: array<string, string>,
+     *     attributes: array<string, mixed>|stdClass,
+     *     relationships?: array<string, array<string, mixed>>
+     * }
+     */
     private function buildResourceObject(string $type, object $model, Criteria $criteria): array
     {
         $metadata = $this->registry->getByType($type);
@@ -102,6 +134,11 @@ final class DocumentBuilder
         ];
 
         $resource['attributes'] = $attributes === [] ? new stdClass() : $attributes;
+
+        $relationships = $this->buildRelationships($metadata, $model, $criteria, $id);
+        if ($relationships !== []) {
+            $resource['relationships'] = $relationships;
+        }
 
         return $resource;
     }
@@ -134,7 +171,119 @@ final class DocumentBuilder
     }
 
     /**
-     * @param array<string, array<string, mixed>> $includeTree
+     * @return array<string, array<string, mixed>>
+     */
+    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id): array
+    {
+        $relationships = [];
+        $fields = $criteria->fields[$metadata->type] ?? null;
+        $restrict = $fields !== null;
+
+        foreach ($metadata->relationships as $name => $relationship) {
+            if ($restrict && !in_array($name, $fields, true)) {
+                continue;
+            }
+
+            $data = [
+                'links' => [
+                    'self' => $this->links->relationshipSelf($metadata->type, $id, $name),
+                    'related' => $this->links->relationshipRelated($metadata->type, $id, $name),
+                ],
+            ];
+
+            if ($this->shouldIncludeRelationshipData($criteria, $metadata->type, $name)) {
+                $linkage = $this->resolveRelationshipLinkage($relationship, $model);
+                $data['data'] = $linkage;
+            }
+
+            $relationships[$name] = $data;
+        }
+
+        return $relationships;
+    }
+
+    private function shouldIncludeRelationshipData(Criteria $criteria, string $type, string $relationship): bool
+    {
+        return match ($this->relationshipLinkageMode) {
+            'always' => true,
+            'never' => false,
+            default => $this->isRelationshipRequested($criteria, $type, $relationship),
+        };
+    }
+
+    private function isRelationshipRequested(Criteria $criteria, string $type, string $relationship): bool
+    {
+        $fields = $criteria->fields[$type] ?? null;
+        if ($fields !== null && in_array($relationship, $fields, true)) {
+            return true;
+        }
+
+        foreach ($criteria->include as $path) {
+            if ($path === $relationship || str_starts_with($path, $relationship . '.')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array{type: string, id: string}|list<array{type: string, id: string}>|null
+     */
+    private function resolveRelationshipLinkage(RelationshipMetadata $relationship, object $model): array|null
+    {
+        $propertyPath = $relationship->propertyPath ?? $relationship->name;
+        $related = $this->accessor->getValue($model, $propertyPath);
+
+        if ($relationship->toMany) {
+            if ($related === null) {
+                return [];
+            }
+
+            $items = $this->normalizeToMany($related);
+            $identifiers = [];
+
+            foreach ($items as $item) {
+                $identifier = $this->buildIdentifier($relationship, $item);
+                if ($identifier !== null) {
+                    $identifiers[] = $identifier;
+                }
+            }
+
+            return $identifiers;
+        }
+
+        if ($related === null || !is_object($related)) {
+            return null;
+        }
+
+        return $this->buildIdentifier($relationship, $related);
+    }
+
+    /**
+     * @return array{type: string, id: string}|null
+     */
+    private function buildIdentifier(RelationshipMetadata $relationship, object $related): ?array
+    {
+        $targetType = $relationship->targetType;
+
+        if ($targetType === null) {
+            $targetMetadata = $this->registry->getByClass($related::class);
+            if ($targetMetadata === null) {
+                return null;
+            }
+
+            $targetType = $targetMetadata->type;
+        }
+
+        $targetMetadata = $this->registry->getByType($targetType);
+        $id = $this->resolveId($targetMetadata, $related);
+
+        return ['type' => $targetType, 'id' => $id];
+    }
+
+    /**
+     * @param array<string, mixed>                $includeTree
      * @param array<string, array<string, mixed>> $included
      * @param array<string, bool>                 $visited
      */
@@ -147,6 +296,13 @@ final class DocumentBuilder
         $metadata = $this->registry->getByType($type);
 
         foreach ($includeTree as $relationshipName => $children) {
+            if (!is_array($children)) {
+                continue;
+            }
+
+            /** @var array<string, mixed> $children */
+            $children = $children;
+
             if (!isset($metadata->relationships[$relationshipName])) {
                 continue;
             }
@@ -178,7 +334,14 @@ final class DocumentBuilder
                 }
 
                 $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria);
-                $identifier = $resource['type'] . ':' . $resource['id'];
+                $typeValue = $resource['type'];
+                $idValue = $resource['id'];
+
+                if ($typeValue === '' || $idValue === '') {
+                    continue;
+                }
+
+                $identifier = $typeValue . ':' . $idValue;
 
                 if (!isset($visited[$identifier])) {
                     $visited[$identifier] = true;
@@ -194,7 +357,7 @@ final class DocumentBuilder
     }
 
     /**
-     * @return array<string, array<string, mixed>>
+     * @return array<string, mixed>
      */
     private function buildIncludeTree(Criteria $criteria): array
     {
@@ -204,10 +367,13 @@ final class DocumentBuilder
             $segments = explode('.', $path);
             $cursor = &$tree;
             foreach ($segments as $segment) {
-                if (!isset($cursor[$segment])) {
+                if (!isset($cursor[$segment]) || !is_array($cursor[$segment])) {
                     $cursor[$segment] = [];
                 }
-                $cursor = &$cursor[$segment];
+
+                /** @var array<string, mixed> $next */
+                $next = &$cursor[$segment];
+                $cursor = &$next;
             }
             unset($cursor);
         }
@@ -238,7 +404,7 @@ final class DocumentBuilder
     private function normalizeAttributeValue(mixed $value): mixed
     {
         if ($value instanceof \DateTimeInterface) {
-            return $value->format(DATE_ATOM);
+            return $value->format(\DATE_ATOM);
         }
 
         if ($value instanceof Stringable) {
@@ -254,13 +420,13 @@ final class DocumentBuilder
     private function normalizeToMany(mixed $value): array
     {
         if (is_array($value)) {
-            return array_values(array_filter($value, static fn ($item) => $item !== null));
+            return array_values(array_filter($value, static fn ($item) => is_object($item)));
         }
 
         if ($value instanceof \Traversable) {
             $result = [];
             foreach ($value as $item) {
-                if ($item !== null) {
+                if (is_object($item)) {
                     $result[] = $item;
                 }
             }

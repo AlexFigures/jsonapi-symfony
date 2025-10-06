@@ -16,7 +16,8 @@ final class FieldsTest extends JsonApiTestCase
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
 
-        $document = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        /** @var array{data: array{attributes: array<string, mixed>}} $document */
+        $document = $this->decode($response);
 
         self::assertSame(['title'], array_keys($document['data']['attributes']));
     }

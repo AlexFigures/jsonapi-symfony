@@ -18,8 +18,6 @@ final class SortingWhitelist
      */
     public function allowedFor(string $type): array
     {
-        $fields = $this->map[$type] ?? [];
-
-        return array_values($fields);
+        return $this->map[$type] ?? [];
     }
 }

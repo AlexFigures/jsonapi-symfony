@@ -12,6 +12,7 @@ final class RelationshipMetadata
         public ?string $targetType = null,
         public ?string $propertyPath = null,
         public ?string $targetClass = null,
+        public bool $nullable = true,
     ) {
     }
 }
