@@ -32,6 +32,13 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.errors.add_correlation_id', $config['errors']['add_correlation_id']);
         $container->setParameter('jsonapi.errors.default_title_map', $config['errors']['default_title_map']);
         $container->setParameter('jsonapi.errors.locale', $config['errors']['locale']);
+        $container->setParameter('jsonapi.atomic.enabled', $config['atomic']['enabled']);
+        $container->setParameter('jsonapi.atomic.endpoint', $config['atomic']['endpoint']);
+        $container->setParameter('jsonapi.atomic.require_ext_header', $config['atomic']['require_ext_header']);
+        $container->setParameter('jsonapi.atomic.max_operations', $config['atomic']['max_operations']);
+        $container->setParameter('jsonapi.atomic.return_policy', $config['atomic']['return_policy']);
+        $container->setParameter('jsonapi.atomic.allow_href', $config['atomic']['allow_href']);
+        $container->setParameter('jsonapi.atomic.lid.accept_in_resource_and_identifier', $config['atomic']['lid']['accept_in_resource_and_identifier']);
 
         $this->registerAutoconfiguration($container);
 

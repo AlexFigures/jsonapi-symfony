@@ -82,6 +82,20 @@ final class Configuration implements ConfigurationInterface
         $errorsChildren->scalarNode('locale')->defaultNull()->end();
         $errors->end();
 
+        $atomic = $children->arrayNode('atomic')->addDefaultsIfNotSet();
+        $atomicChildren = $atomic->children();
+        $atomicChildren->booleanNode('enabled')->defaultFalse()->end();
+        $atomicChildren->scalarNode('endpoint')->defaultValue('/api/operations')->end();
+        $atomicChildren->booleanNode('require_ext_header')->defaultTrue()->end();
+        $atomicChildren->integerNode('max_operations')->min(1)->defaultValue(100)->end();
+        $atomicChildren->enumNode('return_policy')->values(['auto', 'none', 'always'])->defaultValue('auto')->end();
+        $atomicChildren->booleanNode('allow_href')->defaultTrue()->end();
+        $lid = $atomicChildren->arrayNode('lid')->addDefaultsIfNotSet();
+        $lidChildren = $lid->children();
+        $lidChildren->booleanNode('accept_in_resource_and_identifier')->defaultTrue()->end();
+        $lid->end();
+        $atomicChildren->end();
+
         return $treeBuilder;
     }
 }

@@ -2,6 +2,17 @@
 
 declare(strict_types=1);
 
+use JsonApi\Symfony\Atomic\AtomicConfig;
+use JsonApi\Symfony\Atomic\Execution\AtomicTransaction;
+use JsonApi\Symfony\Atomic\Execution\Handlers\AddHandler;
+use JsonApi\Symfony\Atomic\Execution\Handlers\RelationshipOps;
+use JsonApi\Symfony\Atomic\Execution\Handlers\RemoveHandler;
+use JsonApi\Symfony\Atomic\Execution\Handlers\UpdateHandler;
+use JsonApi\Symfony\Atomic\Execution\OperationDispatcher;
+use JsonApi\Symfony\Atomic\Parser\AtomicRequestParser;
+use JsonApi\Symfony\Atomic\Result\ResultBuilder;
+use JsonApi\Symfony\Atomic\Validation\AtomicValidator;
+use JsonApi\Symfony\Bridge\Symfony\Controller\AtomicController;
 use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
 use JsonApi\Symfony\Http\Controller\CollectionController;
 use JsonApi\Symfony\Http\Controller\CreateResourceController;
@@ -17,6 +28,7 @@ use JsonApi\Symfony\Http\Error\ErrorBuilder;
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Error\JsonApiExceptionListener;
 use JsonApi\Symfony\Http\Link\LinkGenerator;
+use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use JsonApi\Symfony\Http\Request\PaginationConfig;
 use JsonApi\Symfony\Http\Request\QueryParser;
 use JsonApi\Symfony\Http\Request\SortingWhitelist;
@@ -32,6 +44,8 @@ use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use JsonApi\Symfony\Contract\Data\ExistenceChecker;
 use JsonApi\Symfony\Contract\Data\RelationshipReader;
 use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
+use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -192,6 +206,109 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
+        ->set(AtomicConfig::class)
+        ->args([
+            '%jsonapi.atomic.enabled%',
+            '%jsonapi.atomic.endpoint%',
+            '%jsonapi.atomic.require_ext_header%',
+            '%jsonapi.atomic.max_operations%',
+            '%jsonapi.atomic.return_policy%',
+            '%jsonapi.atomic.allow_href%',
+            '%jsonapi.atomic.lid.accept_in_resource_and_identifier%',
+            '%jsonapi.route_prefix%',
+        ])
+    ;
+
+    $services
+        ->set(MediaTypeNegotiator::class)
+        ->args([
+            service(AtomicConfig::class),
+        ])
+    ;
+
+    $services
+        ->set(AtomicRequestParser::class)
+        ->args([
+            service(AtomicConfig::class),
+            service(ErrorMapper::class),
+        ])
+    ;
+
+    $services
+        ->set(AtomicValidator::class)
+        ->args([
+            service(AtomicConfig::class),
+            service(ResourceRegistryInterface::class),
+            service(ErrorMapper::class),
+        ])
+    ;
+
+    $services
+        ->set(AtomicTransaction::class)
+        ->args([
+            service(TransactionManager::class),
+        ])
+    ;
+
+    $services
+        ->set(AddHandler::class)
+        ->args([
+            service(ResourcePersister::class),
+            service(ChangeSetFactory::class),
+            service(ResourceRegistryInterface::class),
+            service(PropertyAccessorInterface::class),
+        ])
+    ;
+
+    $services
+        ->set(UpdateHandler::class)
+        ->args([
+            service(ResourcePersister::class),
+            service(ChangeSetFactory::class),
+            service(ResourceRegistryInterface::class),
+            service(PropertyAccessorInterface::class),
+            service(ErrorMapper::class),
+        ])
+    ;
+
+    $services
+        ->set(RemoveHandler::class)
+        ->args([
+            service(ResourcePersister::class),
+            service(ErrorMapper::class),
+        ])
+    ;
+
+    $services
+        ->set(RelationshipOps::class)
+        ->args([
+            service(RelationshipUpdater::class),
+            service(ResourceRegistryInterface::class),
+            service(ErrorMapper::class),
+        ])
+    ;
+
+    $services
+        ->set(ResultBuilder::class)
+        ->args([
+            service(AtomicConfig::class),
+            service(DocumentBuilder::class),
+        ])
+    ;
+
+    $services
+        ->set(OperationDispatcher::class)
+        ->args([
+            service(AtomicTransaction::class),
+            service(AddHandler::class),
+            service(UpdateHandler::class),
+            service(RemoveHandler::class),
+            service(RelationshipOps::class),
+            service(ResultBuilder::class),
+        ])
+    ;
+
+    $services
         ->set(CollectionController::class)
         ->autowire()
         ->autoconfigure()
@@ -242,6 +359,13 @@ return static function (ContainerConfigurator $configurator): void {
 
     $services
         ->set(RelationshipWriteController::class)
+        ->autowire()
+        ->autoconfigure()
+        ->tag('controller.service_arguments')
+    ;
+
+    $services
+        ->set(AtomicController::class)
         ->autowire()
         ->autoconfigure()
         ->tag('controller.service_arguments')
