@@ -179,4 +179,28 @@ final class ErrorMapper
     {
         return $this->builder->create('500', ErrorCodes::INTERNAL_SERVER_ERROR, null, $detail);
     }
+
+    public function httpException(int $status, string $detail): ErrorObject
+    {
+        return $this->builder->create(
+            (string) $status,
+            $this->resolveHttpErrorCode($status),
+            null,
+            $detail === '' ? null : $detail,
+        );
+    }
+
+    private function resolveHttpErrorCode(int $status): string
+    {
+        return match ($status) {
+            400 => ErrorCodes::INVALID_PARAMETER,
+            403 => ErrorCodes::FORBIDDEN,
+            404 => ErrorCodes::RESOURCE_NOT_FOUND,
+            405 => ErrorCodes::METHOD_NOT_ALLOWED,
+            409 => ErrorCodes::CONFLICT,
+            422 => ErrorCodes::VALIDATION_ERROR,
+            500 => ErrorCodes::INTERNAL_SERVER_ERROR,
+            default => sprintf('http-%d', $status),
+        };
+    }
 }

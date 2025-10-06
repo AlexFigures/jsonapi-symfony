@@ -109,6 +109,11 @@ final class JsonApiExceptionListener implements EventSubscriberInterface
             }
         }
 
+        if ($errors === [] && $throwable instanceof HttpExceptionInterface) {
+            $status = $this->determineStatus($throwable) ?? $status;
+            $errors = [$this->errors->httpException($status, $throwable->getMessage())];
+        }
+
         if ($errors === []) {
             $errors = [$this->errors->internal()];
             $status = $this->determineStatus($throwable) ?? 500;
@@ -159,7 +164,7 @@ final class JsonApiExceptionListener implements EventSubscriberInterface
         }
 
         if ($throwable instanceof HttpExceptionInterface) {
-            return [$this->errors->internal($throwable->getMessage())];
+            return [$this->errors->httpException($throwable->getStatusCode(), $throwable->getMessage())];
         }
 
         return [];
