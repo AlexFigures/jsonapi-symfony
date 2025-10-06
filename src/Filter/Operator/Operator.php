@@ -26,6 +26,9 @@ interface Operator
     /**
      * Compile a comparison node into a Doctrine expression fragment.
      */
+    /**
+     * @param list<mixed> $values
+     */
     public function compile(
         string $rootAlias,
         string $dqlField,

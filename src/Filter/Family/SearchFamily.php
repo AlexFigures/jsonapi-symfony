@@ -8,6 +8,9 @@ use JsonApi\Symfony\Filter\Ast\Node;
 
 final class SearchFamily implements Family
 {
+    /**
+     * @param list<string> $fields
+     */
     public function __construct(
         private readonly array $fields,
     ) {
@@ -15,6 +18,10 @@ final class SearchFamily implements Family
 
     public function build(array $raw): ?Node
     {
+        if ($this->fields === []) {
+            return null;
+        }
+
         // Placeholder implementation; proper full-text expansion to follow.
         return null;
     }

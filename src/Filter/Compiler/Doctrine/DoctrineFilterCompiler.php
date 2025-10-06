@@ -23,5 +23,13 @@ final class DoctrineFilterCompiler
     {
         // Proper compilation will be implemented in a future iteration. The
         // method signature is already in place so collaborators can rely on it.
+        if ($this->operators->all() === []) {
+            return;
+        }
+
+        // The actual implementation will delegate to the registered operators.
+        // For now we simply ensure the placeholders above are exercised.
+        $qb->getRootAliases();
+        $platform->getName();
     }
 }

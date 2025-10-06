@@ -160,6 +160,9 @@ final class ErrorMapper
         return $this->builder->create('403', ErrorCodes::FORBIDDEN, null, $detail);
     }
 
+    /**
+     * @param list<string> $allowed
+     */
     public function methodNotAllowed(array $allowed): ErrorObject
     {
         return $this->builder->create(
@@ -170,6 +173,9 @@ final class ErrorMapper
         );
     }
 
+    /**
+     * @param array<string, mixed> $meta
+     */
     public function validationError(string $pointer, string $detail, array $meta = []): ErrorObject
     {
         return $this->builder->fromPointer('422', ErrorCodes::VALIDATION_ERROR, null, $detail, $pointer, $meta);

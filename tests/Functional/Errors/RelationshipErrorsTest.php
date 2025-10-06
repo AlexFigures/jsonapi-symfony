@@ -30,8 +30,14 @@ final class RelationshipErrorsTest extends JsonApiTestCase
         }
 
         $errors = $this->assertErrors($response, 409);
-        self::assertSame('type-mismatch', $errors[0]['code']);
-        $this->assertErrorPointer($errors[0], '/data/type');
+        self::assertNotEmpty($errors);
+        $first = $errors[0] ?? null;
+        if (!is_array($first)) {
+            self::fail('Error entries must be arrays.');
+        }
+        /** @var array<string, mixed> $first */
+        self::assertSame('type-mismatch', $first['code']);
+        $this->assertErrorPointer($first, '/data/type');
     }
 
     public function testMethodNotAllowedForToOneRelationship(): void
@@ -54,7 +60,13 @@ final class RelationshipErrorsTest extends JsonApiTestCase
         }
 
         $errors = $this->assertErrors($response, 405);
-        self::assertSame('method-not-allowed', $errors[0]['code']);
+        self::assertNotEmpty($errors);
+        $first = $errors[0] ?? null;
+        if (!is_array($first)) {
+            self::fail('Error entries must be arrays.');
+        }
+        /** @var array<string, mixed> $first */
+        self::assertSame('method-not-allowed', $first['code']);
         self::assertSame('PATCH', $response->headers->get('Allow'));
     }
 
@@ -80,8 +92,16 @@ final class RelationshipErrorsTest extends JsonApiTestCase
         }
 
         $errors = $this->assertErrors($response, 404);
-        self::assertSame('resource-not-found', $errors[0]['code']);
-        $this->assertErrorPointer($errors[0], '/data/0');
-        self::assertStringContainsString('999', (string) ($errors[0]['detail'] ?? ''));
+        self::assertNotEmpty($errors);
+        $first = $errors[0] ?? null;
+        if (!is_array($first)) {
+            self::fail('Error entries must be arrays.');
+        }
+        /** @var array<string, mixed> $first */
+        self::assertSame('resource-not-found', $first['code']);
+        $this->assertErrorPointer($first, '/data/0');
+        $detail = $first['detail'] ?? null;
+        self::assertIsString($detail);
+        self::assertStringContainsString('999', $detail);
     }
 }

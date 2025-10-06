@@ -47,6 +47,9 @@ trait JsonApiResponseAsserts
         return $errors;
     }
 
+    /**
+     * @param array<string, mixed> $error
+     */
     protected function assertErrorPointer(array $error, string $pointer): void
     {
         Assert::assertArrayHasKey('source', $error, 'Error must contain a source member.');
@@ -54,6 +57,9 @@ trait JsonApiResponseAsserts
         Assert::assertSame($pointer, $error['source']['pointer'] ?? null);
     }
 
+    /**
+     * @param array<string, mixed> $error
+     */
     protected function assertErrorParameter(array $error, string $parameter): void
     {
         Assert::assertArrayHasKey('source', $error);
@@ -61,6 +67,9 @@ trait JsonApiResponseAsserts
         Assert::assertSame($parameter, $error['source']['parameter'] ?? null);
     }
 
+    /**
+     * @param array<string, mixed> $error
+     */
     protected function assertErrorHeader(array $error, string $header): void
     {
         Assert::assertArrayHasKey('source', $error);
