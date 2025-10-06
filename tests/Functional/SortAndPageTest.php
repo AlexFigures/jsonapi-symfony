@@ -20,7 +20,8 @@ final class SortAndPageTest extends JsonApiTestCase
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
 
-        $document = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        /** @var array{data: list<array<string, mixed>>, links: array<string, string>} $document */
+        $document = $this->decode($response);
 
         self::assertCount(5, $document['data']);
         self::assertSame('10', $document['data'][0]['id']);

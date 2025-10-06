@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Tests\Functional;
 
-use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Exception\ConflictException;
 use JsonApi\Symfony\Http\Exception\ForbiddenException;
 use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
+use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Query\Criteria;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -33,7 +33,8 @@ final class ResourceWriteTest extends JsonApiTestCase
         self::assertSame(201, $response->getStatusCode());
         self::assertSame(MediaType::JSON_API, $response->headers->get('Content-Type'));
 
-        $document = json_decode((string) $response->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        /** @var array{data: array{id: string, type: string, attributes: array<string, mixed>, links: array<string, string>}} $document */
+        $document = $this->decode($response);
         $id = $document['data']['id'];
 
         self::assertNotEmpty($id);
@@ -61,7 +62,8 @@ final class ResourceWriteTest extends JsonApiTestCase
 
         self::assertSame(201, $response->getStatusCode());
 
-        $document = json_decode((string) $response->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        /** @var array{data: array{id: string, attributes: array<string, mixed>}} $document */
+        $document = $this->decode($response);
         self::assertSame('author-123', $document['data']['id']);
         self::assertSame('Client Author', $document['data']['attributes']['name']);
 
@@ -85,7 +87,8 @@ final class ResourceWriteTest extends JsonApiTestCase
 
         self::assertSame(200, $response->getStatusCode());
 
-        $document = json_decode((string) $response->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        /** @var array{data: array{attributes: array<string, mixed>}} $document */
+        $document = $this->decode($response);
         self::assertSame('Updated title', $document['data']['attributes']['title']);
     }
 
@@ -214,7 +217,7 @@ final class ResourceWriteTest extends JsonApiTestCase
 
     public function testUnsupportedMediaTypeResultsIn415(): void
     {
-        $payload = json_encode(['data' => ['type' => 'articles', 'attributes' => ['title' => 'Invalid']]], JSON_THROW_ON_ERROR);
+        $payload = json_encode(['data' => ['type' => 'articles', 'attributes' => ['title' => 'Invalid']]], \JSON_THROW_ON_ERROR);
         $request = Request::create('/api/articles', 'POST', server: ['CONTENT_TYPE' => 'application/json'], content: $payload);
 
         $this->expectException(JsonApiHttpException::class);
@@ -230,7 +233,7 @@ final class ResourceWriteTest extends JsonApiTestCase
                 'CONTENT_TYPE' => MediaType::JSON_API,
                 'HTTP_ACCEPT' => MediaType::JSON_API,
             ],
-            content: json_encode([['type' => 'articles']], JSON_THROW_ON_ERROR),
+            content: json_encode([['type' => 'articles']], \JSON_THROW_ON_ERROR),
         );
 
         $this->expectException(BadRequestException::class);
@@ -246,7 +249,7 @@ final class ResourceWriteTest extends JsonApiTestCase
                 'CONTENT_TYPE' => MediaType::JSON_API,
                 'HTTP_ACCEPT' => MediaType::JSON_API,
             ],
-            content: json_encode([['type' => 'articles']], JSON_THROW_ON_ERROR),
+            content: json_encode([['type' => 'articles']], \JSON_THROW_ON_ERROR),
         );
 
         $this->expectException(BadRequestException::class);
@@ -258,7 +261,7 @@ final class ResourceWriteTest extends JsonApiTestCase
      */
     private function jsonRequest(string $method, string $uri, array $payload): Request
     {
-        $json = json_encode($payload, JSON_THROW_ON_ERROR);
+        $json = json_encode($payload, \JSON_THROW_ON_ERROR);
 
         return Request::create(
             $uri,

@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Bridge\Symfony\DependencyInjection;
 
 use JsonApi\Symfony\Http\Negotiation\MediaType;
+use LogicException;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\IntegerNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeBuilder;
+use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -19,53 +22,57 @@ final class Configuration implements ConfigurationInterface
         /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->getRootNode();
 
-        /** @var NodeBuilder $children */
         $children = $rootNode->children();
-        $children->booleanNode('strict_content_negotiation')
-            ->defaultTrue()
-        ;
 
-        /** @var NodeBuilder $children */
-        $children = $rootNode->children();
-        $children->scalarNode('media_type')
-            ->defaultValue(MediaType::JSON_API)
-        ;
+        $children->booleanNode('strict_content_negotiation')->defaultTrue()->end();
 
-        $children->scalarNode('route_prefix')
-            ->defaultValue('/api')
-        ;
+        /** @var ScalarNodeDefinition $mediaType */
+        $mediaType = $children->scalarNode('media_type');
+        $mediaType->defaultValue(MediaType::JSON_API)->end();
 
-        $children->arrayNode('pagination')
-            ->addDefaultsIfNotSet()
-            ->children()
-                ->integerNode('default_size')->min(1)->defaultValue(25)->end()
-                ->integerNode('max_size')->min(1)->defaultValue(100)->end()
-            ->end()
-        ;
+        /** @var ScalarNodeDefinition $routePrefix */
+        $routePrefix = $children->scalarNode('route_prefix');
+        $routePrefix->defaultValue('/api')->end();
 
-        $children->arrayNode('sorting')
-            ->addDefaultsIfNotSet()
-            ->children()
-                ->arrayNode('whitelist')
-                    ->useAttributeAsKey('type')
-                    ->arrayPrototype()
-                        ->scalarPrototype()->end()
-                    ->end()
-                ->end()
-            ->end()
-        ;
+        $pagination = $children->arrayNode('pagination')->addDefaultsIfNotSet();
+        $paginationChildren = $pagination->children();
 
-        $children->arrayNode('write')
-            ->addDefaultsIfNotSet()
-            ->children()
-                ->booleanNode('allow_relationship_writes')->defaultFalse()->end()
-                ->arrayNode('client_generated_ids')
-                    ->useAttributeAsKey('type')
-                    ->booleanPrototype()->end()
-                    ->defaultValue([])
-                ->end()
-            ->end()
-        ;
+        /** @var IntegerNodeDefinition $defaultSize */
+        $defaultSize = $paginationChildren->integerNode('default_size');
+        $defaultSize->min(1)->defaultValue(25)->end();
+
+        /** @var IntegerNodeDefinition $maxSize */
+        $maxSize = $paginationChildren->integerNode('max_size');
+        $maxSize->min(1)->defaultValue(100)->end();
+
+        $pagination->end();
+
+        $sorting = $children->arrayNode('sorting')->addDefaultsIfNotSet();
+        $sortingChildren = $sorting->children();
+
+        $whitelist = $sortingChildren->arrayNode('whitelist')->useAttributeAsKey('type');
+        $whitelistPrototype = $whitelist->arrayPrototype();
+        $whitelistPrototype->scalarPrototype()->end();
+        $whitelistPrototype->end();
+        $whitelist->end();
+        $sorting->end();
+
+        $write = $children->arrayNode('write')->addDefaultsIfNotSet();
+        $writeChildren = $write->children();
+
+        $writeChildren->booleanNode('allow_relationship_writes')->defaultFalse()->end();
+        $clientGeneratedIds = $writeChildren->arrayNode('client_generated_ids')->useAttributeAsKey('type');
+        $clientGeneratedIds->booleanPrototype()->end();
+        $clientGeneratedIds->defaultValue([]);
+        $clientGeneratedIds->end();
+        $write->end();
+
+        $relationships = $children->arrayNode('relationships')->addDefaultsIfNotSet();
+        $relationshipsChildren = $relationships->children();
+
+        $relationshipsChildren->enumNode('write_response')->values(['linkage', '204'])->defaultValue('linkage')->end();
+        $relationshipsChildren->enumNode('linkage_in_resource')->values(['never', 'when_included', 'always'])->defaultValue('when_included')->end();
+        $relationships->end();
 
         return $treeBuilder;
     }

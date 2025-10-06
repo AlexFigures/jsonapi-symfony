@@ -16,12 +16,13 @@ final class IncludeTest extends JsonApiTestCase
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
 
-        $document = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        /** @var array{included: list<array<string, mixed>>} $document */
+        $document = $this->decode($response);
 
-        self::assertArrayHasKey('included', $document);
-        self::assertCount(3, $document['included']);
+        $included = $document['included'];
+        self::assertCount(3, $included);
 
-        $types = array_column($document['included'], 'type');
+        $types = array_column($included, 'type');
         self::assertContains('authors', $types);
         self::assertContains('tags', $types);
     }

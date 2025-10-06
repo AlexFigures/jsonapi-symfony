@@ -17,7 +17,8 @@ final class CollectionGetTest extends JsonApiTestCase
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
         self::assertSame('application/vnd.api+json', $response->headers->get('Content-Type'));
 
-        $document = json_decode((string) $response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        /** @var array{data: list<array<string, mixed>>, links: array<string, string>, meta: array{total: int, page: int, size: int}} $document */
+        $document = $this->decode($response);
 
         self::assertArrayHasKey('data', $document);
         self::assertCount(15, $document['data']);

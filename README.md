@@ -74,6 +74,9 @@ Stage 2 ships fully functional read endpoints and foundational writes:
 
 * Attribute-driven metadata registry with automatic discovery of attributes and relationships.
 * `GET /api/{type}` and `GET /api/{type}/{id}` controllers with JSON:API 1.1 compliant documents.
+* Relationship endpoints for `GET /api/{type}/{id}/relationships/{relationship}` and
+  `GET /api/{type}/{id}/{relationship}` with linkage validation, configurable responses, and
+  metadata support.
 * Query parsing for `include`, `fields[TYPE]`, `sort`, `page[number]`, and `page[size]` with robust validation.
 * Pagination helpers generating `self`, `first`, `prev`, `next`, and `last` links that retain other query parameters.
 * Document builder producing `data`, `included`, `links`, `meta`, and `jsonapi.version` for any combination of sparse fieldsets and includes.

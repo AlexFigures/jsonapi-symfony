@@ -11,8 +11,9 @@ namespace JsonApi\Symfony\Resource\Metadata;
 final class ResourceMetadata
 {
     /**
-     * @param AttributeMap        $attributes
-     * @param RelationshipMap     $relationships
+     * @param AttributeMap    $attributes
+     * @param RelationshipMap $relationships
+     * @param class-string    $class
      */
     public function __construct(
         public string $type,

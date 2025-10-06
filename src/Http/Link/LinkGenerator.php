@@ -28,11 +28,30 @@ final class LinkGenerator
         );
     }
 
+    public function relationshipSelf(string $type, string $id, string $relationship): string
+    {
+        return $this->urls->generate(
+            'jsonapi.relationship.get',
+            ['type' => $type, 'id' => $id, 'rel' => $relationship],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+    }
+
+    public function relationshipRelated(string $type, string $id, string $relationship): string
+    {
+        return $this->urls->generate(
+            'jsonapi.related',
+            ['type' => $type, 'id' => $id, 'rel' => $relationship],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
+    }
+
     /**
      * @return array<string, string>
      */
     public function collectionPagination(string $type, Pagination $pagination, int $total, Request $request): array
     {
+        /** @var array<string, mixed> $query */
         $query = $request->query->all();
         $links = [];
         $size = $pagination->size;
@@ -58,6 +77,10 @@ final class LinkGenerator
      */
     private function generateCollectionUrl(string $type, int $number, int $size, array $query): string
     {
+        if (!isset($query['page']) || !is_array($query['page'])) {
+            $query['page'] = [];
+        }
+
         $query['page']['number'] = $number;
         $query['page']['size'] = $size;
         $query['type'] = $type;

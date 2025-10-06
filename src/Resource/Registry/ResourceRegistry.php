@@ -14,6 +14,7 @@ use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use LogicException;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionIntersectionType;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionProperty;
@@ -37,7 +38,11 @@ final class ResourceRegistry implements ResourceRegistryInterface
     public function __construct(iterable $resources)
     {
         foreach ($resources as $type => $resource) {
+            /** @var class-string $class */
             $class = is_object($resource) ? $resource::class : (string) $resource;
+            if (!class_exists($class)) {
+                throw new LogicException(sprintf('Resource class "%s" does not exist.', $class));
+            }
             $metadata = $this->buildMetadata($class);
 
             if (is_string($type) && $type !== $metadata->type) {
@@ -77,6 +82,9 @@ final class ResourceRegistry implements ResourceRegistryInterface
         return $this->metadataByClass[$class] ?? null;
     }
 
+    /**
+     * @param class-string $class
+     */
     private function buildMetadata(string $class): ResourceMetadata
     {
         $reflection = new ReflectionClass($class);
@@ -171,12 +179,23 @@ final class ResourceRegistry implements ResourceRegistryInterface
             }
 
             $targetClass = $this->guessTargetClass($member);
+            $nullable = true;
+            if (!$instance->toMany) {
+                $type = $member instanceof ReflectionProperty ? $member->getType() : $member->getReturnType();
+                if ($type !== null) {
+                    $nullable = $type->allowsNull();
+                }
+            }
+
+            $targetType = $instance->targetType ?? $this->guessTargetType($targetClass);
+
             $relationships[$name] = new RelationshipMetadata(
                 $name,
                 $instance->toMany,
-                $this->guessTargetType($targetClass),
+                $targetType,
                 $propertyPath,
                 $targetClass,
+                $nullable,
             );
         }
 
@@ -230,7 +249,15 @@ final class ResourceRegistry implements ResourceRegistryInterface
 
         if ($type instanceof ReflectionUnionType) {
             foreach ($type->getTypes() as $inner) {
-                if (!$inner->isBuiltin()) {
+                if ($inner instanceof ReflectionNamedType && !$inner->isBuiltin()) {
+                    return $inner->getName();
+                }
+            }
+        }
+
+        if ($type instanceof ReflectionIntersectionType) {
+            foreach ($type->getTypes() as $inner) {
+                if ($inner instanceof ReflectionNamedType && !$inner->isBuiltin()) {
                     return $inner->getName();
                 }
             }

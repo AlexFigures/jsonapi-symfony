@@ -9,13 +9,13 @@ use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Http\Document\DocumentBuilder;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Exception\ForbiddenException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
+use JsonApi\Symfony\Http\Exception\NotFoundException;
+use JsonApi\Symfony\Http\Link\LinkGenerator;
 use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Http\Write\InputDocumentValidator;
 use JsonApi\Symfony\Http\Write\WriteConfig;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
 use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -58,6 +58,15 @@ final class CreateResourceController
             return $this->persister->create($type, $changes, $input['id']);
         });
 
+        /**
+         * @var array{
+         *     data: array{
+         *         id: string,
+         *         links: array<string, string>,
+         *         type: string
+         *     }
+         * } $document
+         */
         $document = $this->document->buildResource($type, $model, new Criteria(), $request);
         $self = $document['data']['links']['self'] ?? $this->links->resourceSelf($type, $document['data']['id']);
 
@@ -81,14 +90,14 @@ final class CreateResourceController
             throw JsonApiHttpException::unsupportedMediaType('JSON:API requires the "application/vnd.api+json" media type.');
         }
 
-        $content = $request->getContent();
+        $content = (string) $request->getContent();
 
-        if ($content === false || $content === '') {
+        if ($content === '') {
             throw new BadRequestException('Request body must not be empty.');
         }
 
         $decoded = json_decode($content, true);
-        if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+        if ($decoded === null && json_last_error() !== \JSON_ERROR_NONE) {
             throw new BadRequestException(sprintf('Malformed JSON: %s.', json_last_error_msg()));
         }
 
