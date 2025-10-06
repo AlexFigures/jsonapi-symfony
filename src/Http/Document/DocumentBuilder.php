@@ -6,6 +6,7 @@ namespace JsonApi\Symfony\Http\Document;
 
 use JsonApi\Symfony\Contract\Data\Slice;
 use JsonApi\Symfony\Http\Link\LinkGenerator;
+use JsonApi\Symfony\Http\Safety\LimitsEnforcer;
 use JsonApi\Symfony\Profile\ProfileContext;
 use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
@@ -24,6 +25,7 @@ final class DocumentBuilder
         private readonly PropertyAccessorInterface $accessor,
         private readonly LinkGenerator $links,
         private readonly string $relationshipLinkageMode = 'when_included',
+        private readonly ?LimitsEnforcer $limits = null,
     ) {
     }
 
@@ -68,6 +70,7 @@ final class DocumentBuilder
         ];
 
         if ($included !== []) {
+            $this->limits?->assertIncludedCount(count($included));
             $document['included'] = array_values($included);
         }
 
@@ -111,6 +114,7 @@ final class DocumentBuilder
         ];
 
         if ($included !== []) {
+            $this->limits?->assertIncludedCount(count($included));
             $document['included'] = array_values($included);
         }
 

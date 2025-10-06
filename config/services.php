@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
 use JsonApi\Symfony\Atomic\AtomicConfig;
 use JsonApi\Symfony\Atomic\Execution\AtomicTransaction;
 use JsonApi\Symfony\Atomic\Execution\Handlers\AddHandler;
@@ -28,7 +29,17 @@ use JsonApi\Symfony\Http\Error\CorrelationIdProvider;
 use JsonApi\Symfony\Http\Error\ErrorBuilder;
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Error\JsonApiExceptionListener;
+use JsonApi\Symfony\Http\Cache\CacheKeyBuilder;
+use JsonApi\Symfony\Http\Cache\ConditionalRequestEvaluator;
+use JsonApi\Symfony\Http\Cache\EtagGeneratorInterface;
+use JsonApi\Symfony\Http\Cache\HashEtagGenerator;
+use JsonApi\Symfony\Http\Cache\HeadersApplier;
+use JsonApi\Symfony\Http\Cache\LastModifiedResolver;
+use JsonApi\Symfony\Http\Cache\SurrogateKeyBuilder;
+use JsonApi\Symfony\Http\Cache\VersionEtagGenerator;
 use JsonApi\Symfony\Http\Link\LinkGenerator;
+use JsonApi\Symfony\Http\Safety\LimitsEnforcer;
+use JsonApi\Symfony\Http\Safety\RequestComplexityScorer;
 use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use JsonApi\Symfony\Http\Request\PaginationConfig;
 use JsonApi\Symfony\Http\Request\QueryParser;
@@ -47,6 +58,9 @@ use JsonApi\Symfony\Profile\Negotiation\ProfileNegotiator;
 use JsonApi\Symfony\Profile\ProfileRegistry;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use JsonApi\Symfony\Invalidation\InvalidationDispatcher;
+use JsonApi\Symfony\Invalidation\NullPurger;
+use JsonApi\Symfony\Invalidation\SurrogatePurgerInterface;
 use JsonApi\Symfony\Contract\Data\ExistenceChecker;
 use JsonApi\Symfony\Contract\Data\RelationshipReader;
 use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
@@ -67,6 +81,83 @@ return static function (ContainerConfigurator $configurator): void {
         ->args([
             '%jsonapi.strict_content_negotiation%',
             '%jsonapi.media_type%',
+        ])
+        ->tag('kernel.event_subscriber')
+    ;
+
+    $services->set(RequestComplexityScorer::class);
+
+    $services
+        ->set(LimitsEnforcer::class)
+        ->args([
+            service(ErrorMapper::class),
+            service(RequestComplexityScorer::class),
+            '%jsonapi.limits%',
+        ])
+    ;
+
+    $services
+        ->set(CacheKeyBuilder::class)
+        ->args([
+            '%jsonapi.cache%',
+        ])
+    ;
+
+    $services
+        ->set(HashEtagGenerator::class)
+        ->args([
+            '%jsonapi.cache%',
+        ])
+    ;
+
+    $services->set(VersionEtagGenerator::class);
+
+    $services->alias(EtagGeneratorInterface::class, HashEtagGenerator::class);
+
+    $services->set(LastModifiedResolver::class);
+
+    $services
+        ->set(ConditionalRequestEvaluator::class)
+        ->args([
+            service(ErrorMapper::class),
+            '%jsonapi.cache%',
+        ])
+    ;
+
+    $services
+        ->set(HeadersApplier::class)
+        ->args([
+            '%jsonapi.cache%',
+        ])
+    ;
+
+    $services
+        ->set(SurrogateKeyBuilder::class)
+        ->args([
+            '%jsonapi.cache%',
+        ])
+    ;
+
+    $services->set(NullPurger::class);
+    $services->alias(SurrogatePurgerInterface::class, NullPurger::class);
+
+    $services
+        ->set(InvalidationDispatcher::class)
+        ->args([
+            service(SurrogatePurgerInterface::class),
+        ])
+    ;
+
+    $services
+        ->set(CachePreconditionsSubscriber::class)
+        ->args([
+            '%jsonapi.cache%',
+            service(CacheKeyBuilder::class),
+            service(EtagGeneratorInterface::class),
+            service(LastModifiedResolver::class),
+            service(ConditionalRequestEvaluator::class),
+            service(HeadersApplier::class),
+            service(SurrogateKeyBuilder::class),
         ])
         ->tag('kernel.event_subscriber')
     ;
@@ -178,6 +269,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(PaginationConfig::class),
             service(SortingWhitelist::class),
             service(ErrorMapper::class),
+            service(LimitsEnforcer::class),
         ])
     ;
 
@@ -200,6 +292,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(PropertyAccessorInterface::class),
             service(LinkGenerator::class),
             '%jsonapi.relationships.linkage_in_resource%',
+            service(LimitsEnforcer::class),
         ])
     ;
 

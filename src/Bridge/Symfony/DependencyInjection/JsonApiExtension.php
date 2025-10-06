@@ -33,6 +33,9 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.errors.add_correlation_id', $config['errors']['add_correlation_id']);
         $container->setParameter('jsonapi.errors.default_title_map', $config['errors']['default_title_map']);
         $container->setParameter('jsonapi.errors.locale', $config['errors']['locale']);
+        $container->setParameter('jsonapi.cache', $config['cache']);
+        $container->setParameter('jsonapi.limits', $config['limits']);
+        $container->setParameter('jsonapi.performance', $config['performance']);
         $container->setParameter('jsonapi.atomic.enabled', $config['atomic']['enabled']);
         $container->setParameter('jsonapi.atomic.endpoint', $config['atomic']['endpoint']);
         $container->setParameter('jsonapi.atomic.require_ext_header', $config['atomic']['require_ext_header']);

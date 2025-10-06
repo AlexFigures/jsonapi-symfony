@@ -13,6 +13,7 @@ use JsonApi\Symfony\Query\Pagination;
 use JsonApi\Symfony\Query\Sorting;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use JsonApi\Symfony\Http\Safety\LimitsEnforcer;
 use Symfony\Component\HttpFoundation\Request;
 
 final class QueryParser
@@ -22,6 +23,7 @@ final class QueryParser
         private readonly PaginationConfig $paginationConfig,
         private readonly SortingWhitelist $sortingWhitelist,
         private readonly ErrorMapper $errors,
+        private readonly ?LimitsEnforcer $limits = null,
     ) {
     }
 
@@ -33,6 +35,8 @@ final class QueryParser
         $criteria->fields = $this->parseFields($request);
         $criteria->include = $this->parseInclude($type, $request);
         $criteria->sort = $this->parseSort($type, $request);
+
+        $this->limits?->enforce($type, $criteria);
 
         return $criteria;
     }

@@ -27,6 +27,11 @@ final class ErrorTitles
         ErrorCodes::VALIDATION_ERROR => 'Validation error',
         ErrorCodes::PAGE_SIZE_TOO_LARGE => 'Page size too large',
         ErrorCodes::SORT_FIELD_NOT_ALLOWED => 'Sort field not allowed',
+        ErrorCodes::INVALID_HEADER => 'Invalid header',
+        ErrorCodes::PRECONDITION_FAILED => 'Precondition failed',
+        ErrorCodes::PRECONDITION_REQUIRED => 'Precondition required',
+        ErrorCodes::REQUEST_COMPLEXITY_EXCEEDED => 'Request too complex',
+        ErrorCodes::INCLUDED_RESOURCES_LIMIT => 'Included resources limit exceeded',
         ErrorCodes::INTERNAL_SERVER_ERROR => 'Internal server error',
     ];
 }
