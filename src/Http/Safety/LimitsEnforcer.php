@@ -84,7 +84,7 @@ final class LimitsEnforcer
     private function enforcePagination(Criteria $criteria): void
     {
         $pageMax = $this->config['page_max_size'] ?? 0;
-        if ($pageMax > 0 && $criteria->pagination->pageSize > $pageMax) {
+        if ($pageMax > 0 && $criteria->pagination->size > $pageMax) {
             $error = $this->errors->invalidParameter('page[size]', sprintf('Page size cannot be greater than %d.', $pageMax));
 
             throw new BadRequestException('Page size too large.', [$error]);

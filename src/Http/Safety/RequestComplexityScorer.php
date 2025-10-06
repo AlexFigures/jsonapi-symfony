@@ -22,7 +22,7 @@ final class RequestComplexityScorer
         }
 
         $score += count($criteria->sort) * 2;
-        $score += $criteria->pagination->pageSize;
+        $score += $criteria->pagination->size;
 
         return $score;
     }
