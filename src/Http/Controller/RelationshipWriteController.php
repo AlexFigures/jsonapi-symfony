@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Http\Controller;
 
 use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
+use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
+use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Relationship\LinkageBuilder;
 use JsonApi\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
@@ -15,6 +16,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use RuntimeException;
 
 #[Route(path: '/api/{type}/{id}/relationships/{rel}', methods: ['PATCH', 'POST', 'DELETE'], name: 'jsonapi.relationship.write')]
 final class RelationshipWriteController
@@ -24,6 +26,7 @@ final class RelationshipWriteController
         private readonly RelationshipUpdater $updater,
         private readonly LinkageBuilder $linkage,
         private readonly WriteRelationshipsResponseConfig $responseConfig,
+        private readonly ErrorMapper $errors,
     ) {
     }
 
@@ -75,7 +78,7 @@ final class RelationshipWriteController
     {
         $contentType = $request->headers->get('Content-Type');
         if ($contentType !== null && $this->normalizeMediaType($contentType) !== MediaType::JSON_API) {
-            throw JsonApiHttpException::unsupportedMediaType('JSON:API requires the "application/vnd.api+json" media type.');
+            throw new UnsupportedMediaTypeException($contentType, 'JSON:API requires the "application/vnd.api+json" media type.');
         }
 
         $content = (string) $request->getContent();
@@ -86,7 +89,8 @@ final class RelationshipWriteController
 
         $decoded = json_decode($content, true);
         if ($decoded === null && json_last_error() !== \JSON_ERROR_NONE) {
-            throw new BadRequestException(sprintf('Malformed JSON: %s.', json_last_error_msg()));
+            $error = $this->errors->invalidJson(new RuntimeException(sprintf('Malformed JSON: %s.', json_last_error_msg())));
+            throw new BadRequestException('Malformed JSON.', [$error]);
         }
 
         if ($decoded === null) {
@@ -94,7 +98,7 @@ final class RelationshipWriteController
         }
 
         if (!is_array($decoded) || array_is_list($decoded)) {
-            throw new BadRequestException('Request body must be a valid JSON object.');
+            throw new BadRequestException('Request body must be a valid JSON object.', [$this->errors->invalidPointer('/', 'Request body must be a valid JSON object.')]);
         }
 
         /** @var array<string, mixed> $decoded */

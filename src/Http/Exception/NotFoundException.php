@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Exception;
 
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use JsonApi\Symfony\Http\Error\ErrorObject;
 
-final class NotFoundException extends HttpException
+final class NotFoundException extends JsonApiHttpException
 {
-    public function __construct(string $message = 'Not Found')
+    /**
+     * @param list<ErrorObject> $errors
+     * @param array<string, string> $headers
+     */
+    public function __construct(string $message = 'Not Found', array $errors = [], array $headers = [], ?\Throwable $previous = null)
     {
-        parent::__construct(404, $message);
+        parent::__construct(404, $message, $headers, $errors, $previous);
     }
 }

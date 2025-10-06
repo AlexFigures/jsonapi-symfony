@@ -28,6 +28,10 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.write.client_generated_ids', $config['write']['client_generated_ids']);
         $container->setParameter('jsonapi.relationships.write_response', $config['relationships']['write_response']);
         $container->setParameter('jsonapi.relationships.linkage_in_resource', $config['relationships']['linkage_in_resource']);
+        $container->setParameter('jsonapi.errors.expose_debug_meta', $config['errors']['expose_debug_meta']);
+        $container->setParameter('jsonapi.errors.add_correlation_id', $config['errors']['add_correlation_id']);
+        $container->setParameter('jsonapi.errors.default_title_map', $config['errors']['default_title_map']);
+        $container->setParameter('jsonapi.errors.locale', $config['errors']['locale']);
 
         $this->registerAutoconfiguration($container);
 

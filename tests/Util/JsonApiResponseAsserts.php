@@ -29,4 +29,42 @@ trait JsonApiResponseAsserts
         /** @var array<string, mixed> $decoded */
         return $decoded;
     }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    protected function assertErrors(Response $response, int $status): array
+    {
+        $decoded = $this->decode($response);
+
+        Assert::assertSame($status, $response->getStatusCode());
+        Assert::assertArrayHasKey('errors', $decoded, 'JSON:API error document must contain an errors member.');
+        Assert::assertIsArray($decoded['errors']);
+
+        /** @var list<array<string, mixed>> $errors */
+        $errors = $decoded['errors'];
+
+        return $errors;
+    }
+
+    protected function assertErrorPointer(array $error, string $pointer): void
+    {
+        Assert::assertArrayHasKey('source', $error, 'Error must contain a source member.');
+        Assert::assertIsArray($error['source']);
+        Assert::assertSame($pointer, $error['source']['pointer'] ?? null);
+    }
+
+    protected function assertErrorParameter(array $error, string $parameter): void
+    {
+        Assert::assertArrayHasKey('source', $error);
+        Assert::assertIsArray($error['source']);
+        Assert::assertSame($parameter, $error['source']['parameter'] ?? null);
+    }
+
+    protected function assertErrorHeader(array $error, string $header): void
+    {
+        Assert::assertArrayHasKey('source', $error);
+        Assert::assertIsArray($error['source']);
+        Assert::assertSame($header, $error['source']['header'] ?? null);
+    }
 }

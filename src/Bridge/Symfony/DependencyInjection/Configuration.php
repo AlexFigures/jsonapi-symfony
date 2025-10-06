@@ -74,6 +74,14 @@ final class Configuration implements ConfigurationInterface
         $relationshipsChildren->enumNode('linkage_in_resource')->values(['never', 'when_included', 'always'])->defaultValue('when_included')->end();
         $relationships->end();
 
+        $errors = $children->arrayNode('errors')->addDefaultsIfNotSet();
+        $errorsChildren = $errors->children();
+        $errorsChildren->booleanNode('expose_debug_meta')->defaultFalse()->end();
+        $errorsChildren->booleanNode('add_correlation_id')->defaultTrue()->end();
+        $errorsChildren->booleanNode('default_title_map')->defaultTrue()->end();
+        $errorsChildren->scalarNode('locale')->defaultNull()->end();
+        $errors->end();
+
         return $treeBuilder;
     }
 }
