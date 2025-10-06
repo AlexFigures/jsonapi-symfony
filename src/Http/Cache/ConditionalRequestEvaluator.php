@@ -40,7 +40,7 @@ final class ConditionalRequestEvaluator
 
     private bool $enableIfUnmodifiedSince;
 
-    public function evaluate(Request $request, Response $response, ?string $etag, ?DateTimeImmutable $lastModified): void
+    public function evaluate(Request $request, Response $response, ?string $etag, ?DateTimeImmutable $lastModified, bool $weak = false): void
     {
         $method = strtoupper($request->getMethod());
 
@@ -51,7 +51,7 @@ final class ConditionalRequestEvaluator
         }
 
         if (in_array($method, ['PATCH', 'PUT', 'DELETE', 'POST'], true)) {
-            $this->evaluateWriteRequest($request, $etag, $lastModified);
+            $this->evaluateWriteRequest($request, $etag, $lastModified, $weak);
         }
     }
 
@@ -59,8 +59,21 @@ final class ConditionalRequestEvaluator
     {
         $ifNoneMatch = $request->headers->get('If-None-Match');
         if ($this->enableIfNoneMatch && $etag !== null && $ifNoneMatch !== null) {
+            $normalizedEtag = $this->normalizeValidator($etag);
             foreach (explode(',', $ifNoneMatch) as $candidate) {
-                if (trim($candidate) === $etag) {
+                $candidate = trim($candidate);
+                if ($candidate === '') {
+                    continue;
+                }
+
+                if ($candidate === '*') {
+                    $this->setNotModified($response);
+
+                    return;
+                }
+
+                $normalizedCandidate = $this->normalizeValidator($candidate);
+                if ($normalizedEtag !== '' && $normalizedCandidate !== '' && $normalizedCandidate === $normalizedEtag) {
                     $this->setNotModified($response);
 
                     return;
@@ -84,7 +97,7 @@ final class ConditionalRequestEvaluator
         $response->headers->remove('Content-Length');
     }
 
-    private function evaluateWriteRequest(Request $request, ?string $etag, ?DateTimeImmutable $lastModified): void
+    private function evaluateWriteRequest(Request $request, ?string $etag, ?DateTimeImmutable $lastModified, bool $weak): void
     {
         $ifMatch = $request->headers->get('If-Match');
         if ($this->requireIfMatchOnWrite && $ifMatch === null) {
@@ -95,8 +108,31 @@ final class ConditionalRequestEvaluator
 
         if ($this->enableIfMatch && $etag !== null && $ifMatch !== null) {
             $matched = false;
+            $normalizedTarget = $this->normalizeValidator($etag);
             foreach (explode(',', $ifMatch) as $candidate) {
-                if (trim($candidate) === $etag) {
+                $candidate = trim($candidate);
+                if ($candidate === '') {
+                    continue;
+                }
+
+                if ($candidate === '*') {
+                    $matched = true;
+                    break;
+                }
+
+                $normalizedCandidate = $this->normalizeValidator($candidate);
+                if (
+                    $normalizedTarget !== ''
+                    && $normalizedCandidate !== ''
+                    && $normalizedCandidate === $normalizedTarget
+                    && !$weak
+                    && !$this->isWeakValidator($candidate)
+                ) {
+                    $matched = true;
+                    break;
+                }
+
+                if ($candidate === $etag) {
                     $matched = true;
                     break;
                 }
@@ -118,5 +154,25 @@ final class ConditionalRequestEvaluator
                 throw new PreconditionFailedException([$error]);
             }
         }
+    }
+
+    private function normalizeValidator(string $validator): string
+    {
+        $trimmed = trim($validator);
+
+        if ($trimmed === '' || $trimmed === '*') {
+            return $trimmed;
+        }
+
+        if ($this->isWeakValidator($trimmed)) {
+            $trimmed = ltrim(substr($trimmed, 2));
+        }
+
+        return trim($trimmed, '"');
+    }
+
+    private function isWeakValidator(string $validator): bool
+    {
+        return strncasecmp(trim($validator), 'W/', 2) === 0;
     }
 }

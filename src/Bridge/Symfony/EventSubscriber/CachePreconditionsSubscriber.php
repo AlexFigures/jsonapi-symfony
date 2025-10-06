@@ -75,10 +75,10 @@ final class CachePreconditionsSubscriber implements EventSubscriberInterface
         $etag = $this->etagGenerator->generate($request, $response, $cacheKey, $weak);
         $lastModified = $this->resolveLastModified($request, $response);
 
-        $this->conditional->evaluate($request, $response, $etag, $lastModified);
+        $this->conditional->evaluate($request, $response, $etag, $lastModified, $weak);
 
         $surrogateKeys = $this->surrogates->build($request);
-        $this->headers->apply($response, $etag, $lastModified, $surrogateKeys);
+        $this->headers->apply($response, $etag, $lastModified, $surrogateKeys, $weak);
     }
 
     private function requiresPreconditions(Request $request): bool

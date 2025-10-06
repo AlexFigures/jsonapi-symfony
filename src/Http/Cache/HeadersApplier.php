@@ -53,10 +53,10 @@ final class HeadersApplier
     /**
      * @param list<string> $surrogateKeys
      */
-    public function apply(Response $response, ?string $etag, ?DateTimeImmutable $lastModified, array $surrogateKeys = []): void
+    public function apply(Response $response, ?string $etag, ?DateTimeImmutable $lastModified, array $surrogateKeys = [], bool $weak = false): void
     {
         if ($etag !== null) {
-            $response->setEtag($etag, false);
+            $response->setEtag($etag, $weak);
         }
 
         if ($lastModified !== null) {

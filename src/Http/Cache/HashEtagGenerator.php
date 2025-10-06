@@ -33,10 +33,6 @@ final class HashEtagGenerator implements EtagGeneratorInterface
             return null;
         }
 
-        if ($weak) {
-            return sprintf('W/"%s"', $hash);
-        }
-
-        return sprintf('"%s"', $hash);
+        return $hash;
     }
 }

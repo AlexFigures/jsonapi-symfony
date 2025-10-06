@@ -26,10 +26,6 @@ final class VersionEtagGenerator implements EtagGeneratorInterface
             return null;
         }
 
-        if ($weak) {
-            return sprintf('W/"%s"', $normalized);
-        }
-
-        return sprintf('"%s"', $normalized);
+        return $normalized;
     }
 }
