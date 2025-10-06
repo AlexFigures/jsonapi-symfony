@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Bridge\Symfony\EventSubscriber;
 
-use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
+use JsonApi\Symfony\Http\Exception\NotAcceptableException;
+use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -65,7 +66,7 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         }
 
         if ($this->mediaType !== $this->normalizeMediaType($contentType)) {
-            throw JsonApiHttpException::unsupportedMediaType('JSON:API requires the "application/vnd.api+json" media type.');
+            throw new UnsupportedMediaTypeException($contentType, 'JSON:API requires the "application/vnd.api+json" media type.');
         }
     }
 
@@ -82,7 +83,7 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
             }
         }
 
-        throw JsonApiHttpException::notAcceptable('Requested representation is not available in application/vnd.api+json.');
+        throw new NotAcceptableException($accept, 'Requested representation is not available in application/vnd.api+json.');
     }
 
     private function normalizeMediaType(string $value): string

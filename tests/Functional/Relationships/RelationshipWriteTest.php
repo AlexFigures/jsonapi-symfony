@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Tests\Functional\Relationships;
 
 use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
+use JsonApi\Symfony\Http\Exception\MethodNotAllowedException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
+use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use JsonApi\Symfony\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 
 final class RelationshipWriteTest extends JsonApiTestCase
 {
@@ -110,7 +110,7 @@ final class RelationshipWriteTest extends JsonApiTestCase
         ], \JSON_THROW_ON_ERROR);
 
         $request = $this->relationshipRequest('POST', '/api/articles/1/relationships/author', $payload);
-        $this->expectException(MethodNotAllowedHttpException::class);
+        $this->expectException(MethodNotAllowedException::class);
         ($this->relationshipWriteController())($request, 'articles', '1', 'author');
     }
 
@@ -151,7 +151,7 @@ final class RelationshipWriteTest extends JsonApiTestCase
             content: '{}'
         );
 
-        $this->expectException(JsonApiHttpException::class);
+        $this->expectException(UnsupportedMediaTypeException::class);
         ($this->relationshipWriteController())($request, 'articles', '1', 'tags');
     }
 

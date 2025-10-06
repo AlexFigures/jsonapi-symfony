@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Exception;
 
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use JsonApi\Symfony\Http\Error\ErrorObject;
 
-final class ForbiddenException extends HttpException
+final class ForbiddenException extends JsonApiHttpException
 {
-    public function __construct(string $message = 'Forbidden')
+    /**
+     * @param list<ErrorObject> $errors
+     * @param array<string, string> $headers
+     */
+    public function __construct(string $message = 'Forbidden', array $errors = [], array $headers = [], ?\Throwable $previous = null)
     {
-        parent::__construct(403, $message);
+        parent::__construct(403, $message, $headers, $errors, $previous);
     }
 }

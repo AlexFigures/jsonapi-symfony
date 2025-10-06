@@ -4,17 +4,44 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Exception;
 
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use JsonApi\Symfony\Http\Error\ErrorObject;
+use RuntimeException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
-class JsonApiHttpException extends HttpException
+class JsonApiHttpException extends RuntimeException implements HttpExceptionInterface
 {
-    public static function notAcceptable(string $message = 'Not Acceptable'): self
-    {
-        return new self(406, $message);
+    /**
+     * @param list<ErrorObject> $errors
+     * @param array<string, string> $headers
+     */
+    public function __construct(
+        private readonly int $statusCode,
+        string $message = '',
+        private readonly array $headers = [],
+        private readonly array $errors = [],
+        ?\Throwable $previous = null,
+    ) {
+        parent::__construct($message === '' ? (string) $statusCode : $message, 0, $previous);
     }
 
-    public static function unsupportedMediaType(string $message = 'Unsupported Media Type'): self
+    public function getStatusCode(): int
     {
-        return new self(415, $message);
+        return $this->statusCode;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    /**
+     * @return list<ErrorObject>
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
     }
 }

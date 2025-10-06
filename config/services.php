@@ -12,11 +12,15 @@ use JsonApi\Symfony\Http\Controller\RelationshipWriteController;
 use JsonApi\Symfony\Http\Controller\ResourceController;
 use JsonApi\Symfony\Http\Controller\UpdateResourceController;
 use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
+use JsonApi\Symfony\Http\Error\CorrelationIdProvider;
+use JsonApi\Symfony\Http\Error\ErrorBuilder;
+use JsonApi\Symfony\Http\Error\ErrorMapper;
+use JsonApi\Symfony\Http\Error\JsonApiExceptionListener;
 use JsonApi\Symfony\Http\Link\LinkGenerator;
 use JsonApi\Symfony\Http\Request\PaginationConfig;
 use JsonApi\Symfony\Http\Request\QueryParser;
 use JsonApi\Symfony\Http\Request\SortingWhitelist;
+use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
 use JsonApi\Symfony\Http\Relationship\LinkageBuilder;
 use JsonApi\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
@@ -47,7 +51,32 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('kernel.event_subscriber')
     ;
 
-    $services->set(JsonApiHttpException::class)->abstract();
+    $services
+        ->set(ErrorBuilder::class)
+        ->args([
+            '%jsonapi.errors.default_title_map%',
+        ])
+    ;
+
+    $services
+        ->set(ErrorMapper::class)
+        ->args([
+            service(ErrorBuilder::class),
+        ])
+    ;
+
+    $services->set(CorrelationIdProvider::class);
+
+    $services
+        ->set(JsonApiExceptionListener::class)
+        ->args([
+            service(ErrorMapper::class),
+            service(CorrelationIdProvider::class),
+            '%jsonapi.errors.expose_debug_meta%',
+            '%jsonapi.errors.add_correlation_id%',
+        ])
+        ->tag('kernel.event_subscriber')
+    ;
 
     $services
         ->set(ResourceRegistry::class)
@@ -79,6 +108,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(PaginationConfig::class),
             service(SortingWhitelist::class),
+            service(ErrorMapper::class),
         ])
     ;
 
@@ -125,6 +155,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->args([
             service(ResourceRegistryInterface::class),
             service(ExistenceChecker::class),
+            service(ErrorMapper::class),
         ])
     ;
 
@@ -141,6 +172,15 @@ return static function (ContainerConfigurator $configurator): void {
         ->args([
             service(ResourceRegistryInterface::class),
             service(WriteConfig::class),
+            service(ErrorMapper::class),
+        ])
+    ;
+
+    $services
+        ->set(ConstraintViolationMapper::class)
+        ->args([
+            service(ResourceRegistryInterface::class),
+            service(ErrorMapper::class),
         ])
     ;
 

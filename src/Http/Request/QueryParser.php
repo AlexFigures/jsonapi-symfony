@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Request;
 
+use JsonApi\Symfony\Http\Error\ErrorMapper;
+use JsonApi\Symfony\Http\Error\ErrorObject;
+use JsonApi\Symfony\Http\Exception\BadRequestException;
+use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Query\Pagination;
 use JsonApi\Symfony\Query\Sorting;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 final class QueryParser
 {
@@ -18,6 +21,7 @@ final class QueryParser
         private readonly ResourceRegistryInterface $registry,
         private readonly PaginationConfig $paginationConfig,
         private readonly SortingWhitelist $sortingWhitelist,
+        private readonly ErrorMapper $errors,
     ) {
     }
 
@@ -45,14 +49,15 @@ final class QueryParser
         $size = $this->toInt($size, 'page[size]');
 
         if ($number < 1) {
-            throw new BadRequestHttpException('page[number] must be greater than or equal to 1.');
+            $this->throwBadRequest($this->errors->invalidParameter('page[number]', 'page[number] must be greater than or equal to 1.'));
         }
 
-        if ($size < 1 || $size > $this->paginationConfig->maxSize) {
-            throw new BadRequestHttpException(sprintf(
-                'page[size] must be between 1 and %d.',
-                $this->paginationConfig->maxSize
-            ));
+        if ($size < 1) {
+            $this->throwBadRequest($this->errors->invalidParameter('page[size]', 'page[size] must be greater than or equal to 1.'));
+        }
+
+        if ($size > $this->paginationConfig->maxSize) {
+            $this->throwBadRequest($this->errors->pageSizeTooLarge($this->paginationConfig->maxSize));
         }
 
         return new Pagination($number, $size);
@@ -72,7 +77,7 @@ final class QueryParser
         }
 
         if (!is_array($query['fields'])) {
-            throw new BadRequestHttpException('fields parameter must be an array keyed by resource type.');
+            $this->throwBadRequest($this->errors->invalidParameter('fields', 'fields parameter must be an object keyed by resource type.'));
         }
 
         /** @var array<int|string, mixed> $rawFields */
@@ -80,11 +85,11 @@ final class QueryParser
 
         foreach ($rawFields as $resourceType => $list) {
             if (!is_string($resourceType) || $resourceType === '') {
-                throw new BadRequestHttpException('fields parameter keys must be resource types.');
+                $this->throwBadRequest($this->errors->invalidParameter('fields', 'fields parameter keys must be resource types.'));
             }
 
             if (!is_string($list)) {
-                throw new BadRequestHttpException(sprintf('fields[%s] must be a comma separated string.', $resourceType));
+                $this->throwBadRequest($this->errors->invalidParameter(sprintf('fields[%s]', $resourceType), sprintf('fields[%s] must be a comma separated string.', $resourceType)));
             }
 
             $entries = array_values(array_filter(array_map('trim', explode(',', $list)), static fn (string $value): bool => $value !== ''));
@@ -102,7 +107,7 @@ final class QueryParser
             $unique = [];
             foreach ($entries as $entry) {
                 if (!in_array($entry, $allowed, true)) {
-                    throw new BadRequestHttpException(sprintf('Unknown field "%s" for resource type "%s".', $entry, $resourceType));
+                    $this->throwBadRequest($this->errors->unknownField($resourceType, $entry));
                 }
 
                 if (!in_array($entry, $unique, true)) {
@@ -127,7 +132,7 @@ final class QueryParser
         }
 
         if (!is_string($raw)) {
-            throw new BadRequestHttpException('include parameter must be a string.');
+            $this->throwBadRequest($this->errors->invalidParameter('include', 'include parameter must be a string.'));
         }
 
         $paths = [];
@@ -157,7 +162,7 @@ final class QueryParser
         }
 
         if (!is_string($raw)) {
-            throw new BadRequestHttpException('sort parameter must be a string.');
+            $this->throwBadRequest($this->errors->invalidParameter('sort', 'sort parameter must be a string.'));
         }
 
         $allowed = $this->sortingWhitelist->allowedFor($type);
@@ -172,7 +177,7 @@ final class QueryParser
             $field = ltrim($sortField, '-');
 
             if (!in_array($field, $allowed, true)) {
-                throw new BadRequestHttpException(sprintf('Sorting by "%s" is not allowed for "%s".', $field, $type));
+                $this->throwBadRequest($this->errors->sortFieldNotAllowed($type, $field));
             }
 
             $result[] = new Sorting($field, $desc);
@@ -190,7 +195,7 @@ final class QueryParser
             $metadata = $this->requireResourceMetadata($currentType);
 
             if (!isset($metadata->relationships[$segment])) {
-                throw new BadRequestHttpException(sprintf('Unknown relationship "%s" on resource "%s".', $segment, $currentType));
+                $this->throwBadRequest($this->errors->invalidParameter('include', sprintf('Unknown relationship "%s" on resource "%s".', $segment, $currentType)));
             }
 
             $relationship = $metadata->relationships[$segment];
@@ -203,7 +208,7 @@ final class QueryParser
 
             if ($index < count($segments) - 1) {
                 if ($targetType === null) {
-                    throw new BadRequestHttpException(sprintf('Relationship "%s" on resource "%s" cannot be chained without a target type.', $segment, $currentType));
+                    $this->throwBadRequest($this->errors->invalidParameter('include', sprintf('Relationship "%s" on resource "%s" cannot be chained without a target type.', $segment, $currentType)));
                 }
 
                 $currentType = $targetType;
@@ -214,7 +219,7 @@ final class QueryParser
     private function requireResourceMetadata(string $type): ResourceMetadata
     {
         if (!$this->registry->hasType($type)) {
-            throw new BadRequestHttpException(sprintf('Unknown resource type "%s".', $type));
+            throw new NotFoundException('Unknown resource type.', [$this->errors->unknownType($type)]);
         }
 
         return $this->registry->getByType($type);
@@ -227,13 +232,21 @@ final class QueryParser
         }
 
         if (!is_string($value)) {
-            throw new BadRequestHttpException(sprintf('%s must be an integer.', $name));
+            $this->throwBadRequest($this->errors->invalidParameter($name, sprintf('%s must be an integer.', $name)));
         }
 
         if (!preg_match('/^-?\d+$/', $value)) {
-            throw new BadRequestHttpException(sprintf('%s must be an integer.', $name));
+            $this->throwBadRequest($this->errors->invalidParameter($name, sprintf('%s must be an integer.', $name)));
         }
 
         return (int) $value;
+    }
+
+    /**
+     * @throws BadRequestException
+     */
+    private function throwBadRequest(ErrorObject $error): never
+    {
+        throw new BadRequestException('Invalid query parameter.', [$error]);
     }
 }

@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Exception;
 
-use Symfony\Component\HttpKernel\Exception\HttpException;
+use JsonApi\Symfony\Http\Error\ErrorObject;
 
-final class ConflictException extends HttpException
+final class ConflictException extends JsonApiHttpException
 {
-    public function __construct(string $message = 'Conflict')
+    /**
+     * @param list<ErrorObject> $errors
+     * @param array<string, string> $headers
+     */
+    public function __construct(string $message = 'Conflict', array $errors = [], array $headers = [], ?\Throwable $previous = null)
     {
-        parent::__construct(409, $message);
+        parent::__construct(409, $message, $headers, $errors, $previous);
     }
 }

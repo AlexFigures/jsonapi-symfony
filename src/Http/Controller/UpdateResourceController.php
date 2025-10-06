@@ -7,9 +7,12 @@ namespace JsonApi\Symfony\Http\Controller;
 use JsonApi\Symfony\Contract\Data\ResourcePersister;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Http\Document\DocumentBuilder;
+use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
+use JsonApi\Symfony\Http\Exception\UnprocessableEntityException;
+use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
 use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Http\Write\InputDocumentValidator;
@@ -19,6 +22,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Exception\ValidationFailedException;
+use RuntimeException;
 
 #[Route(path: '/api/{type}/{id}', methods: ['PATCH'], name: 'jsonapi.update')]
 final class UpdateResourceController
@@ -30,6 +35,8 @@ final class UpdateResourceController
         private readonly ResourcePersister $persister,
         private readonly TransactionManager $transaction,
         private readonly DocumentBuilder $document,
+        private readonly ErrorMapper $errors,
+        private readonly ConstraintViolationMapper $violationMapper,
     ) {
     }
 
@@ -42,11 +49,17 @@ final class UpdateResourceController
         $payload = $this->decode($request);
         $input = $this->validator->validateAndExtract($type, $id, $payload, 'PATCH');
 
-        $model = $this->transaction->transactional(function () use ($type, $id, $input) {
-            $changes = $this->changes->fromAttributes($type, $input['attributes']);
+        try {
+            $model = $this->transaction->transactional(function () use ($type, $id, $input) {
+                $changes = $this->changes->fromAttributes($type, $input['attributes']);
 
-            return $this->persister->update($type, $id, $changes);
-        });
+                return $this->persister->update($type, $id, $changes);
+            });
+        } catch (ValidationFailedException $exception) {
+            $errors = $this->violationMapper->map($type, $exception->getViolations());
+
+            throw new UnprocessableEntityException('Validation failed.', $errors, previous: $exception);
+        }
 
         $document = $this->document->buildResource($type, $model, new Criteria(), $request);
 
@@ -60,26 +73,23 @@ final class UpdateResourceController
     {
         $contentType = $request->headers->get('Content-Type');
         if ($contentType !== null && MediaType::JSON_API !== $this->normalizeMediaType($contentType)) {
-            throw JsonApiHttpException::unsupportedMediaType('JSON:API requires the "application/vnd.api+json" media type.');
+            throw new UnsupportedMediaTypeException($contentType, 'JSON:API requires the "application/vnd.api+json" media type.');
         }
 
         $content = (string) $request->getContent();
 
         if ($content === '') {
-            throw new BadRequestException('Request body must not be empty.');
+            throw new BadRequestException('Request body must not be empty.', [$this->errors->invalidPointer('/', 'Request body must not be empty.')]);
         }
 
         $decoded = json_decode($content, true);
         if ($decoded === null && json_last_error() !== \JSON_ERROR_NONE) {
-            throw new BadRequestException(sprintf('Malformed JSON: %s.', json_last_error_msg()));
+            $error = $this->errors->invalidJson(new RuntimeException(sprintf('Malformed JSON: %s.', json_last_error_msg())));
+            throw new BadRequestException('Malformed JSON.', [$error]);
         }
 
-        if (!is_array($decoded)) {
-            throw new BadRequestException('Request body must be a valid JSON object.');
-        }
-
-        if (array_is_list($decoded)) {
-            throw new BadRequestException('Request body must be a valid JSON object.');
+        if (!is_array($decoded) || array_is_list($decoded)) {
+            throw new BadRequestException('Request body must be a valid JSON object.', [$this->errors->invalidPointer('/', 'Request body must be a valid JSON object.')]);
         }
 
         /** @var array<string, mixed> $decoded */

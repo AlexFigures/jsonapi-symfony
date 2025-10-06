@@ -1,13 +1,21 @@
-.PHONY: test stan cs-fix rector
+.PHONY: test stan cs-fix rector install
 
-test:
+COMPOSER ?= composer
+COMPOSER_LOCK := $(wildcard composer.lock)
+
+vendor/autoload.php: composer.json $(COMPOSER_LOCK)
+	$(COMPOSER) install
+
+install: vendor/autoload.php
+
+test: vendor/autoload.php
 	vendor/bin/phpunit
 
-stan:
+stan: vendor/autoload.php
 	vendor/bin/phpstan analyse
 
-cs-fix:
+cs-fix: vendor/autoload.php
 	vendor/bin/php-cs-fixer fix
 
-rector:
+rector: vendor/autoload.php
 	vendor/bin/rector process
