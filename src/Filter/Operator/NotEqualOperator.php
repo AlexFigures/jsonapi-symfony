@@ -19,6 +19,15 @@ final class NotEqualOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        throw new \LogicException('NotEqualOperator compilation is not implemented yet.');
+        if ($values === []) {
+            throw new \InvalidArgumentException('NotEqualOperator requires at least one value.');
+        }
+
+        $paramName = 'ne_' . uniqid('', true);
+
+        return new DoctrineExpression(
+            sprintf('%s != :%s', $dqlField, $paramName),
+            [$paramName => $values[0]]
+        );
     }
 }

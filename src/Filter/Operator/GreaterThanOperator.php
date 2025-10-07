@@ -19,6 +19,15 @@ final class GreaterThanOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        throw new \LogicException('GreaterThanOperator compilation is not implemented yet.');
+        if ($values === []) {
+            throw new \InvalidArgumentException('GreaterThanOperator requires at least one value.');
+        }
+
+        $paramName = 'gt_' . uniqid('', true);
+
+        return new DoctrineExpression(
+            sprintf('%s > :%s', $dqlField, $paramName),
+            [$paramName => $values[0]]
+        );
     }
 }

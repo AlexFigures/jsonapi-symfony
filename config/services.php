@@ -57,6 +57,19 @@ use JsonApi\Symfony\Contract\Data\RelationshipReader;
 use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
 use JsonApi\Symfony\Contract\Data\ResourcePersister;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
+use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use JsonApi\Symfony\Filter\Operator\BetweenOperator;
+use JsonApi\Symfony\Filter\Operator\EqualOperator;
+use JsonApi\Symfony\Filter\Operator\GreaterOrEqualOperator;
+use JsonApi\Symfony\Filter\Operator\GreaterThanOperator;
+use JsonApi\Symfony\Filter\Operator\InOperator;
+use JsonApi\Symfony\Filter\Operator\IsNullOperator;
+use JsonApi\Symfony\Filter\Operator\LessOrEqualOperator;
+use JsonApi\Symfony\Filter\Operator\LessThanOperator;
+use JsonApi\Symfony\Filter\Operator\LikeOperator;
+use JsonApi\Symfony\Filter\Operator\NotEqualOperator;
+use JsonApi\Symfony\Filter\Operator\Registry;
+use JsonApi\Symfony\Filter\Parser\FilterParser;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -253,6 +266,8 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
+    $services->set(FilterParser::class);
+
     $services
         ->set(QueryParser::class)
         ->args([
@@ -260,6 +275,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(PaginationConfig::class),
             service(SortingWhitelist::class),
             service(ErrorMapper::class),
+            service(FilterParser::class),
             service(LimitsEnforcer::class),
         ])
     ;
@@ -455,6 +471,34 @@ return static function (ContainerConfigurator $configurator): void {
 
     $services
         ->set('jsonapi.null_transaction_manager', \JsonApi\Symfony\Contract\Tx\NullTransactionManager::class)
+    ;
+
+    // Filter operators
+    $services->set(EqualOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(NotEqualOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(LessThanOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(LessOrEqualOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(GreaterThanOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(GreaterOrEqualOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(LikeOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(InOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(IsNullOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(BetweenOperator::class)->tag('jsonapi.filter.operator');
+
+    // Filter operator registry
+    $services
+        ->set(Registry::class)
+        ->args([
+            tagged_iterator('jsonapi.filter.operator'),
+        ])
+    ;
+
+    // Filter compiler
+    $services
+        ->set(DoctrineFilterCompiler::class)
+        ->args([
+            service(Registry::class),
+        ])
     ;
 
     // Алиасы с низким приоритетом - будут использоваться только если пользователь не предоставил свои реализации

@@ -79,8 +79,11 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $ids = array_map(fn (object $item): string => $this->extractId($item), $related);
         $total = count($ids);
 
-        // TODO: Implement pagination
-        return new SliceIds($ids, 1, $pagination->size, $total);
+        // Apply pagination
+        $offset = ($pagination->number - 1) * $pagination->size;
+        $paginatedIds = array_slice($ids, $offset, $pagination->size);
+
+        return new SliceIds($paginatedIds, $pagination->number, $pagination->size, $total);
     }
 
     public function getRelatedResource(string|object $type, string $idOrRel, ?string $rel = null): ?object
@@ -112,8 +115,13 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
 
         $total = count($items);
 
-        // TODO: Implement pagination and filtering
-        return new Slice($items, 1, $criteria->pagination->size, $total);
+        // Apply pagination
+        $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
+        $paginatedItems = array_slice($items, $offset, $criteria->pagination->size);
+
+        // Note: Filtering and sorting on in-memory collections is not optimal
+        // For production use, consider using QueryBuilder for relationship queries
+        return new Slice($paginatedItems, $criteria->pagination->number, $criteria->pagination->size, $total);
     }
 
     // ==================== RelationshipUpdater ====================

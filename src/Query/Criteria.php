@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Query;
 
+use JsonApi\Symfony\Filter\Ast\Node;
+
 final class Criteria
 {
     /**
@@ -20,6 +22,13 @@ final class Criteria
      * @var list<Sorting>
      */
     public array $sort = [];
+
+    /**
+     * Filter AST (Abstract Syntax Tree) representing the filter query.
+     *
+     * @var Node|null
+     */
+    public ?Node $filter = null;
 
     public Pagination $pagination;
 

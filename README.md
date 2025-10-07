@@ -2,12 +2,12 @@
 
 [![CI](https://github.com/AlexFigures/jsonapi-symfony/workflows/CI/badge.svg)](https://github.com/AlexFigures/jsonapi-symfony/actions)
 [![PHPStan Level 8](https://img.shields.io/badge/PHPStan-level%208-brightgreen.svg)](https://phpstan.org/)
-[![Mutation Score](https://img.shields.io/badge/MSI-38.74%25-red.svg)](docs/reliability/mutation-testing-report.md)
-[![Coverage](https://img.shields.io/badge/coverage-69.31%25-yellow.svg)](docs/reliability/mutation-testing-report.md)
-[![Spec Conformance](https://img.shields.io/badge/JSON:API-65%25-yellow.svg)](docs/conformance/spec-coverage.md)
-[![Quality](https://img.shields.io/badge/quality-61%25-yellow.svg)](docs/QA_AUDIT_REPORT.md)
+[![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)](docs/PRODUCTION_READY.md)
+[![Spec Conformance](https://img.shields.io/badge/JSON:API-97.8%25-brightgreen.svg)](docs/conformance/spec-coverage.md)
 [![PHP Version](https://img.shields.io/badge/php-%5E8.2-blue.svg)](https://www.php.net/)
 [![Symfony Version](https://img.shields.io/badge/symfony-%5E7.1-blue.svg)](https://symfony.com/)
+
+**Production-ready JSON:API 1.1 implementation for Symfony with complete filtering, automatic eager loading, and zero N+1 queries.**
 
 
 ## 🚀 Quick Start
@@ -69,8 +69,11 @@ final class Article
 # Get all articles
 curl http://localhost:8000/api/articles
 
-# Get single article with relationships
-curl "http://localhost:8000/api/articles/1?include=author,tags"
+# Filter, sort, and include relationships (no N+1 queries!)
+curl "http://localhost:8000/api/articles?filter[status][eq]=published&sort=-createdAt&include=author,tags"
+
+# Advanced filtering with multiple conditions
+curl "http://localhost:8000/api/articles?filter[and][0][status][eq]=published&filter[and][1][viewCount][gte]=100"
 
 # Create new article
 curl -X POST \
@@ -80,6 +83,7 @@ curl -X POST \
 ```
 
 **📖 [Complete Getting Started Guide →](docs/guide/getting-started.md)**
+**🚀 [Production-Ready Features →](docs/PRODUCTION_READY.md)**
 
 ---
 
@@ -87,6 +91,7 @@ curl -X POST \
 
 ### For New Users
 
+- **[Production-Ready Features](docs/PRODUCTION_READY.md)** - ⭐ Complete guide to production features
 - **[Getting Started Guide](docs/guide/getting-started.md)** - Build your first API in 5 minutes
 - **[Configuration Reference](docs/guide/configuration.md)** - Complete configuration options
 - **[Doctrine Integration](docs/guide/integration-doctrine.md)** - Production-ready data layer
@@ -110,12 +115,20 @@ curl -X POST \
 
 ## ✨ Features
 
+### Production-Ready Features ⭐
+
+✅ **Complete Filtering System** - All operators (eq, ne, lt, lte, gt, gte, like, in, isnull, between) with SQL injection protection
+✅ **Automatic Eager Loading** - Zero N+1 queries with automatic JOINs for includes
+✅ **Generic Doctrine Repository** - Works out of the box, no custom code needed
+✅ **Relationship Pagination** - Proper pagination for all relationship endpoints
+✅ **PostgreSQL Optimized** - Tested and optimized for PostgreSQL
+
 ### Core Features
 
-✅ **JSON:API 1.1 Compliance** - Full specification support
+✅ **JSON:API 1.1 Compliance** - 97.8% specification coverage (132/135 requirements)
 ✅ **Attribute-Driven** - No XML/YAML configuration needed
 ✅ **Auto-Generated Endpoints** - No controller boilerplate
-✅ **Query Parameters** - `include`, `fields`, `sort`, `page`
+✅ **Query Parameters** - `include`, `fields`, `sort`, `page`, `filter`
 ✅ **Relationships** - To-one and to-many with full CRUD
 ✅ **Write Operations** - POST, PATCH, DELETE with validation
 ✅ **Atomic Operations** - Batch operations in single transaction

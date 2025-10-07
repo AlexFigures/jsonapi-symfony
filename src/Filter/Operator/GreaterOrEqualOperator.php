@@ -19,6 +19,15 @@ final class GreaterOrEqualOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        throw new \LogicException('GreaterOrEqualOperator compilation is not implemented yet.');
+        if ($values === []) {
+            throw new \InvalidArgumentException('GreaterOrEqualOperator requires at least one value.');
+        }
+
+        $paramName = 'gte_' . uniqid('', true);
+
+        return new DoctrineExpression(
+            sprintf('%s >= :%s', $dqlField, $paramName),
+            [$paramName => $values[0]]
+        );
     }
 }

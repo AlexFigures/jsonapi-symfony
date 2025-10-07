@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use JsonApi\Symfony\Contract\Data\ResourceRepository;
 use JsonApi\Symfony\Contract\Data\Slice;
+use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
 use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Query\Sorting;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
@@ -16,16 +17,18 @@ use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
  * Универсальный Doctrine-репозиторий для JSON:API ресурсов.
  *
  * Автоматически обрабатывает:
- * - Фильтрацию (базовая поддержка)
+ * - Фильтрацию (полная поддержка всех операторов)
  * - Сортировку
  * - Пагинацию
  * - Sparse fieldsets (частичная гидратация)
+ * - Eager loading для includes (предотвращение N+1 запросов)
  */
 class GenericDoctrineRepository implements ResourceRepository
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly ResourceRegistryInterface $registry,
+        private readonly DoctrineFilterCompiler $filterCompiler,
     ) {
     }
 
@@ -37,6 +40,15 @@ class GenericDoctrineRepository implements ResourceRepository
         $qb = $this->em->createQueryBuilder()
             ->select('e')
             ->from($entityClass, 'e');
+
+        // Применяем фильтрацию
+        if ($criteria->filter !== null) {
+            $platform = $this->em->getConnection()->getDatabasePlatform();
+            $this->filterCompiler->apply($qb, $criteria->filter, $platform);
+        }
+
+        // Применяем eager loading для includes (предотвращение N+1)
+        $this->applyEagerLoading($qb, $metadata, $criteria->include);
 
         // Применяем сортировку
         $this->applySorting($qb, $criteria->sort);
@@ -65,8 +77,90 @@ class GenericDoctrineRepository implements ResourceRepository
 
     public function findRelated(string $type, string $relationship, array $identifiers): iterable
     {
-        // Базовая реализация - будет расширена позже
-        return [];
+        if ($identifiers === []) {
+            return [];
+        }
+
+        $metadata = $this->registry->getByType($type);
+
+        if (!isset($metadata->relationships[$relationship])) {
+            throw new \InvalidArgumentException(sprintf('Unknown relationship "%s" on resource type "%s".', $relationship, $type));
+        }
+
+        $relationshipMetadata = $metadata->relationships[$relationship];
+        $targetClass = $relationshipMetadata->targetClass;
+
+        if ($targetClass === null) {
+            throw new \InvalidArgumentException(sprintf('Relationship "%s" on resource type "%s" has no target class.', $relationship, $type));
+        }
+
+        $classMetadata = $this->em->getClassMetadata($metadata->class);
+
+        if (!$classMetadata->hasAssociation($relationship)) {
+            throw new \InvalidArgumentException(sprintf('Relationship "%s" is not a Doctrine association on entity "%s".', $relationship, $metadata->class));
+        }
+
+        $associationMapping = $classMetadata->getAssociationMapping($relationship);
+        $isToMany = $classMetadata->isCollectionValuedAssociation($relationship);
+
+        // Build query to fetch related entities
+        $qb = $this->em->createQueryBuilder()
+            ->select('related')
+            ->from($targetClass, 'related');
+
+        if ($isToMany) {
+            // For *ToMany relationships, we need to join back to the source entity
+            // and filter by source IDs
+            $sourceAlias = 'source';
+            $inverseSide = $associationMapping['mappedBy'] ?? $associationMapping['inversedBy'] ?? null;
+
+            if ($inverseSide !== null) {
+                $qb->innerJoin('related.' . $inverseSide, $sourceAlias)
+                   ->where($qb->expr()->in($sourceAlias . '.id', ':sourceIds'))
+                   ->setParameter('sourceIds', $identifiers);
+            } else {
+                // If we can't determine inverse side, fall back to loading all source entities
+                // and extracting related entities (less efficient but works)
+                $sourceEntities = $this->em->getRepository($metadata->class)
+                    ->createQueryBuilder('e')
+                    ->where('e.id IN (:ids)')
+                    ->setParameter('ids', $identifiers)
+                    ->getQuery()
+                    ->getResult();
+
+                $relatedEntities = [];
+                foreach ($sourceEntities as $sourceEntity) {
+                    $related = $classMetadata->getFieldValue($sourceEntity, $relationship);
+                    if ($related !== null) {
+                        foreach ($related as $relatedEntity) {
+                            $relatedEntities[] = $relatedEntity;
+                        }
+                    }
+                }
+
+                return array_unique($relatedEntities, SORT_REGULAR);
+            }
+        } else {
+            // For *ToOne relationships, get the foreign key values from source entities
+            $sourceEntities = $this->em->getRepository($metadata->class)
+                ->createQueryBuilder('e')
+                ->select('IDENTITY(e.' . $relationship . ') as relatedId')
+                ->where('e.id IN (:ids)')
+                ->setParameter('ids', $identifiers)
+                ->getQuery()
+                ->getResult();
+
+            $relatedIds = array_filter(array_column($sourceEntities, 'relatedId'));
+
+            if ($relatedIds === []) {
+                return [];
+            }
+
+            $qb->where($qb->expr()->in('related.id', ':relatedIds'))
+               ->setParameter('relatedIds', $relatedIds);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     private function applySorting(QueryBuilder $qb, array $sorting): void
@@ -87,6 +181,79 @@ class GenericDoctrineRepository implements ResourceRepository
                 ->resetDQLPart('orderBy'); // Remove ORDER BY for count query
 
         return (int) $countQb->getQuery()->getSingleScalarResult();
+    }
+
+    /**
+     * Apply eager loading (JOINs) for included relationships to prevent N+1 queries.
+     *
+     * @param list<string> $includes
+     */
+    private function applyEagerLoading(QueryBuilder $qb, \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata, array $includes): void
+    {
+        if ($includes === []) {
+            return;
+        }
+
+        $classMetadata = $this->em->getClassMetadata($metadata->class);
+        $joinedRelationships = [];
+
+        foreach ($includes as $includePath) {
+            $segments = explode('.', $includePath);
+            $currentAlias = 'e';
+            $currentMetadata = $classMetadata;
+            $currentResourceMetadata = $metadata;
+
+            foreach ($segments as $index => $relationshipName) {
+                // Check if relationship exists in JSON:API metadata
+                if (!isset($currentResourceMetadata->relationships[$relationshipName])) {
+                    // Skip unknown relationships
+                    continue 2;
+                }
+
+                $relationship = $currentResourceMetadata->relationships[$relationshipName];
+
+                // Check if relationship exists in Doctrine metadata
+                if (!$currentMetadata->hasAssociation($relationshipName)) {
+                    // Skip if not a Doctrine association
+                    continue 2;
+                }
+
+                // Create unique alias for this relationship
+                $joinAlias = $relationshipName . '_' . $index;
+                $joinPath = $currentAlias . '.' . $relationshipName;
+
+                // Avoid duplicate joins
+                if (!in_array($joinPath, $joinedRelationships, true)) {
+                    // Use LEFT JOIN to include entities even if relationship is null
+                    $qb->leftJoin($joinPath, $joinAlias);
+                    $qb->addSelect($joinAlias);
+                    $joinedRelationships[] = $joinPath;
+                }
+
+                // Prepare for next segment (nested includes)
+                if ($index < count($segments) - 1) {
+                    $currentAlias = $joinAlias;
+
+                    // Get target entity class
+                    $targetClass = $relationship->targetClass;
+                    if ($targetClass === null) {
+                        // Can't continue without target class
+                        continue 2;
+                    }
+
+                    $currentMetadata = $this->em->getClassMetadata($targetClass);
+
+                    // Get target resource metadata
+                    $targetType = $relationship->targetType;
+                    if ($targetType !== null && $this->registry->hasType($targetType)) {
+                        $currentResourceMetadata = $this->registry->getByType($targetType);
+                    } else {
+                        // Can't continue without resource metadata
+                        continue 2;
+                    }
+                }
+            }
+        }
     }
 }
 

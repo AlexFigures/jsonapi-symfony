@@ -19,6 +19,16 @@ final class BetweenOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        throw new \LogicException('BetweenOperator compilation is not implemented yet.');
+        if (count($values) < 2) {
+            throw new \InvalidArgumentException('BetweenOperator requires exactly two values (min and max).');
+        }
+
+        $paramMin = 'between_min_' . uniqid('', true);
+        $paramMax = 'between_max_' . uniqid('', true);
+
+        return new DoctrineExpression(
+            sprintf('%s BETWEEN :%s AND :%s', $dqlField, $paramMin, $paramMax),
+            [$paramMin => $values[0], $paramMax => $values[1]]
+        );
     }
 }

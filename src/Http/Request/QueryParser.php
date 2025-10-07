@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Request;
 
+use JsonApi\Symfony\Filter\Parser\FilterParser;
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Error\ErrorObject;
 use JsonApi\Symfony\Http\Error\ErrorSource;
@@ -24,6 +25,7 @@ final class QueryParser
         private readonly PaginationConfig $paginationConfig,
         private readonly SortingWhitelist $sortingWhitelist,
         private readonly ErrorMapper $errors,
+        private readonly FilterParser $filterParser,
         private readonly ?LimitsEnforcer $limits = null,
     ) {
     }
@@ -36,6 +38,7 @@ final class QueryParser
         $criteria->fields = $this->parseFields($request);
         $criteria->include = $this->parseInclude($type, $request);
         $criteria->sort = $this->parseSort($type, $request);
+        $criteria->filter = $this->parseFilter($request);
 
         $this->limits?->enforce($type, $criteria);
 
@@ -206,6 +209,37 @@ final class QueryParser
         }
 
         return $result;
+    }
+
+    /**
+     * Parse filter parameter from request.
+     *
+     * @return \JsonApi\Symfony\Filter\Ast\Node|null
+     */
+    private function parseFilter(Request $request): ?\JsonApi\Symfony\Filter\Ast\Node
+    {
+        /** @var array<string, mixed> $query */
+        $query = $request->query->all();
+
+        if (!isset($query['filter'])) {
+            return null;
+        }
+
+        $rawFilter = $query['filter'];
+
+        if (!is_array($rawFilter)) {
+            $this->throwBadRequest($this->errors->invalidParameter('filter', 'filter parameter must be an object.'));
+        }
+
+        if ($rawFilter === []) {
+            return null;
+        }
+
+        try {
+            return $this->filterParser->parse($rawFilter);
+        } catch (\InvalidArgumentException $e) {
+            $this->throwBadRequest($this->errors->invalidParameter('filter', $e->getMessage()));
+        }
     }
 
     private function validateIncludePath(string $rootType, string $path): void

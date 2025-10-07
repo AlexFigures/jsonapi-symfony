@@ -6,6 +6,9 @@ namespace JsonApi\Symfony\Filter\Compiler\Doctrine;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\ORM\QueryBuilder;
+use JsonApi\Symfony\Filter\Ast\Comparison;
+use JsonApi\Symfony\Filter\Ast\Conjunction;
+use JsonApi\Symfony\Filter\Ast\Disjunction;
 use JsonApi\Symfony\Filter\Ast\Node;
 use JsonApi\Symfony\Filter\Operator\Registry;
 
@@ -21,15 +24,118 @@ final class DoctrineFilterCompiler
 
     public function apply(QueryBuilder $qb, Node $ast, AbstractPlatform $platform): void
     {
-        // Proper compilation will be implemented in a future iteration. The
-        // method signature is already in place so collaborators can rely on it.
-        if ($this->operators->all() === []) {
-            return;
+        $rootAliases = $qb->getRootAliases();
+        if ($rootAliases === []) {
+            throw new \LogicException('QueryBuilder must have at least one root alias.');
         }
 
-        // The actual implementation will delegate to the registered operators.
-        // For now we simply ensure the placeholders above are exercised.
-        $qb->getRootAliases();
-        $platform->getName();
+        $rootAlias = $rootAliases[0];
+        $expression = $this->compileNode($ast, $rootAlias, $platform);
+
+        if ($expression !== null) {
+            $qb->andWhere($expression->dql);
+
+            foreach ($expression->parameters as $name => $value) {
+                $qb->setParameter($name, $value);
+            }
+        }
+    }
+
+    /**
+     * Recursively compile AST node into DQL expression.
+     */
+    private function compileNode(Node $node, string $rootAlias, AbstractPlatform $platform): ?\JsonApi\Symfony\Filter\Operator\DoctrineExpression
+    {
+        if ($node instanceof Comparison) {
+            return $this->compileComparison($node, $rootAlias, $platform);
+        }
+
+        if ($node instanceof Conjunction) {
+            return $this->compileConjunction($node, $rootAlias, $platform);
+        }
+
+        if ($node instanceof Disjunction) {
+            return $this->compileDisjunction($node, $rootAlias, $platform);
+        }
+
+        throw new \InvalidArgumentException(sprintf('Unsupported AST node type: %s', get_class($node)));
+    }
+
+    private function compileComparison(Comparison $node, string $rootAlias, AbstractPlatform $platform): \JsonApi\Symfony\Filter\Operator\DoctrineExpression
+    {
+        $operator = $this->operators->get($node->operator);
+
+        if ($operator === null) {
+            throw new \InvalidArgumentException(sprintf('Unknown filter operator: %s', $node->operator));
+        }
+
+        // Build DQL field path (e.g., "e.name" or "e.author.name")
+        $dqlField = $this->buildDqlFieldPath($rootAlias, $node->fieldPath);
+
+        return $operator->compile($rootAlias, $dqlField, $node->values, $platform);
+    }
+
+    private function compileConjunction(Conjunction $node, string $rootAlias, AbstractPlatform $platform): ?\JsonApi\Symfony\Filter\Operator\DoctrineExpression
+    {
+        if ($node->children === []) {
+            return null;
+        }
+
+        $expressions = [];
+        $allParameters = [];
+
+        foreach ($node->children as $child) {
+            $expr = $this->compileNode($child, $rootAlias, $platform);
+            if ($expr !== null) {
+                $expressions[] = $expr->dql;
+                $allParameters = array_merge($allParameters, $expr->parameters);
+            }
+        }
+
+        if ($expressions === []) {
+            return null;
+        }
+
+        $dql = '(' . implode(' AND ', $expressions) . ')';
+
+        return new \JsonApi\Symfony\Filter\Operator\DoctrineExpression($dql, $allParameters);
+    }
+
+    private function compileDisjunction(Disjunction $node, string $rootAlias, AbstractPlatform $platform): ?\JsonApi\Symfony\Filter\Operator\DoctrineExpression
+    {
+        if ($node->children === []) {
+            return null;
+        }
+
+        $expressions = [];
+        $allParameters = [];
+
+        foreach ($node->children as $child) {
+            $expr = $this->compileNode($child, $rootAlias, $platform);
+            if ($expr !== null) {
+                $expressions[] = $expr->dql;
+                $allParameters = array_merge($allParameters, $expr->parameters);
+            }
+        }
+
+        if ($expressions === []) {
+            return null;
+        }
+
+        $dql = '(' . implode(' OR ', $expressions) . ')';
+
+        return new \JsonApi\Symfony\Filter\Operator\DoctrineExpression($dql, $allParameters);
+    }
+
+    /**
+     * Build DQL field path from root alias and field path.
+     *
+     * Examples:
+     * - "name" -> "e.name"
+     * - "author.name" -> "e.author.name" (will need JOIN in repository)
+     */
+    private function buildDqlFieldPath(string $rootAlias, string $fieldPath): string
+    {
+        return $rootAlias . '.' . $fieldPath;
     }
 }

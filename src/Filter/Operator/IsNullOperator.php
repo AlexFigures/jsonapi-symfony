@@ -19,6 +19,17 @@ final class IsNullOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        throw new \LogicException('IsNullOperator compilation is not implemented yet.');
+        // IsNull operator doesn't need values, but if provided, use first value as boolean
+        $isNull = true;
+        if ($values !== [] && is_bool($values[0])) {
+            $isNull = $values[0];
+        }
+
+        $condition = $isNull ? 'IS NULL' : 'IS NOT NULL';
+
+        return new DoctrineExpression(
+            sprintf('%s %s', $dqlField, $condition),
+            []
+        );
     }
 }

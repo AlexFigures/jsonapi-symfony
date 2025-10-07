@@ -19,6 +19,15 @@ final class EqualOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        throw new \LogicException('EqualOperator compilation is not implemented yet.');
+        if ($values === []) {
+            throw new \InvalidArgumentException('EqualOperator requires at least one value.');
+        }
+
+        $paramName = 'eq_' . uniqid('', true);
+
+        return new DoctrineExpression(
+            sprintf('%s = :%s', $dqlField, $paramName),
+            [$paramName => $values[0]]
+        );
     }
 }

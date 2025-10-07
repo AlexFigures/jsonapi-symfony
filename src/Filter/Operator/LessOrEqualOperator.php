@@ -19,6 +19,15 @@ final class LessOrEqualOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        throw new \LogicException('LessOrEqualOperator compilation is not implemented yet.');
+        if ($values === []) {
+            throw new \InvalidArgumentException('LessOrEqualOperator requires at least one value.');
+        }
+
+        $paramName = 'lte_' . uniqid('', true);
+
+        return new DoctrineExpression(
+            sprintf('%s <= :%s', $dqlField, $paramName),
+            [$paramName => $values[0]]
+        );
     }
 }

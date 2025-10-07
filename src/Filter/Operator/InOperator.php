@@ -19,6 +19,15 @@ final class InOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        throw new \LogicException('InOperator compilation is not implemented yet.');
+        if ($values === []) {
+            throw new \InvalidArgumentException('InOperator requires at least one value.');
+        }
+
+        $paramName = 'in_' . uniqid('', true);
+
+        return new DoctrineExpression(
+            sprintf('%s IN (:%s)', $dqlField, $paramName),
+            [$paramName => $values]
+        );
     }
 }

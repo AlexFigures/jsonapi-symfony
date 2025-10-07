@@ -19,6 +19,18 @@ final class LikeOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        throw new \LogicException('LikeOperator compilation is not implemented yet.');
+        if ($values === []) {
+            throw new \InvalidArgumentException('LikeOperator requires at least one value.');
+        }
+
+        $paramName = 'like_' . uniqid('', true);
+
+        // Add wildcards for partial matching
+        $pattern = '%' . $values[0] . '%';
+
+        return new DoctrineExpression(
+            sprintf('%s LIKE :%s', $dqlField, $paramName),
+            [$paramName => $pattern]
+        );
     }
 }
