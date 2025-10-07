@@ -8,15 +8,15 @@ use JsonApi\Symfony\Http\Exception\NotImplementedException;
 
 /**
  * Null Object реализация RelationshipUpdater.
- * 
+ *
  * Используется как дефолтная реализация, когда пользователь
  * не предоставил свою реализацию.
- * 
+ *
  * Выбрасывает NotImplementedException для всех методов.
  */
 final class NullRelationshipUpdater implements RelationshipUpdater
 {
-    public function replaceToOne(object $resource, string $relationship, ?string $relatedId): void
+    public function replaceToOne(string $type, string $id, string $rel, ?ResourceIdentifier $target): void
     {
         throw new NotImplementedException(
             'Relationship updates are not implemented. ' .
@@ -24,7 +24,7 @@ final class NullRelationshipUpdater implements RelationshipUpdater
         );
     }
 
-    public function replaceToMany(object $resource, string $relationship, array $relatedIds): void
+    public function replaceToMany(string $type, string $id, string $rel, array $targets): void
     {
         throw new NotImplementedException(
             'Relationship updates are not implemented. ' .
@@ -32,7 +32,7 @@ final class NullRelationshipUpdater implements RelationshipUpdater
         );
     }
 
-    public function addToMany(object $resource, string $relationship, array $relatedIds): void
+    public function addToMany(string $type, string $id, string $rel, array $targets): void
     {
         throw new NotImplementedException(
             'Relationship updates are not implemented. ' .
@@ -40,7 +40,7 @@ final class NullRelationshipUpdater implements RelationshipUpdater
         );
     }
 
-    public function removeFromToMany(object $resource, string $relationship, array $relatedIds): void
+    public function removeFromToMany(string $type, string $id, string $rel, array $targets): void
     {
         throw new NotImplementedException(
             'Relationship updates are not implemented. ' .

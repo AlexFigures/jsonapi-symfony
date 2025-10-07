@@ -4,34 +4,37 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Contract\Data;
 
+use JsonApi\Symfony\Query\Criteria;
+use JsonApi\Symfony\Query\Pagination;
+
 /**
  * Null Object реализация RelationshipReader.
- * 
+ *
  * Используется как дефолтная реализация, когда пользователь
  * не предоставил свою реализацию.
- * 
+ *
  * Возвращает пустые коллекции для всех методов.
  */
 final class NullRelationshipReader implements RelationshipReader
 {
-    public function getToOneId(object $resource, string $relationship): ?string
+    public function getToOneId(string $type, string $id, string $rel): ?string
     {
         return null;
     }
 
-    public function getToManyIds(object $resource, string $relationship): array
+    public function getToManyIds(string $type, string $id, string $rel, Pagination $pagination): SliceIds
     {
-        return [];
+        return new SliceIds([], 1, $pagination->size, 0);
     }
 
-    public function getRelatedResource(object $resource, string $relationship): ?object
+    public function getRelatedResource(string $type, string $id, string $rel): ?object
     {
         return null;
     }
 
-    public function getRelatedCollection(object $resource, string $relationship): iterable
+    public function getRelatedCollection(string $type, string $id, string $rel, Criteria $criteria): Slice
     {
-        return [];
+        return new Slice([], 1, $criteria->pagination->size, 0);
     }
 }
 
