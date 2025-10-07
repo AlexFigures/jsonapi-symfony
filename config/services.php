@@ -462,7 +462,15 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
+        ->alias(RelationshipReader::class, 'jsonapi.null_relationship_reader')
+    ;
+
+    $services
         ->set('jsonapi.null_relationship_updater', \JsonApi\Symfony\Contract\Data\NullRelationshipUpdater::class)
+    ;
+
+    $services
+        ->alias(RelationshipUpdater::class, 'jsonapi.null_relationship_updater')
     ;
 
     $services
@@ -470,7 +478,15 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
+        ->alias(ResourcePersister::class, 'jsonapi.null_resource_persister')
+    ;
+
+    $services
         ->set('jsonapi.null_transaction_manager', \JsonApi\Symfony\Contract\Tx\NullTransactionManager::class)
+    ;
+
+    $services
+        ->alias(TransactionManager::class, 'jsonapi.null_transaction_manager')
     ;
 
     // Filter operators
