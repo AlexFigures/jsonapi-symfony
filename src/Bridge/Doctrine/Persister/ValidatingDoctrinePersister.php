@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Bridge\Doctrine\Persister;
 
 use Doctrine\ORM\EntityManagerInterface;
+use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
 use JsonApi\Symfony\Contract\Data\ChangeSet;
 use JsonApi\Symfony\Contract\Data\ResourcePersister;
 use JsonApi\Symfony\Http\Exception\ConflictException;
@@ -17,14 +18,17 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * Doctrine Persister с автоматической валидацией через Symfony Validator.
- * 
+ *
  * Расширяет GenericDoctrinePersister, добавляя валидацию перед persist().
- * 
+ *
  * Использует Symfony Validator constraints на Entity:
  * - #[Assert\NotBlank]
  * - #[Assert\Length]
  * - #[Assert\Email]
  * - и т.д.
+ *
+ * Поддерживает сущности с конструкторами, требующими параметры,
+ * через SerializerEntityInstantiator (использует Symfony Serializer, как API Platform).
  */
 final class ValidatingDoctrinePersister implements ResourcePersister
 {
@@ -34,6 +38,7 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         private readonly PropertyAccessorInterface $accessor,
         private readonly ValidatorInterface $validator,
         private readonly ConstraintViolationMapper $violationMapper,
+        private readonly SerializerEntityInstantiator $instantiator,
     ) {
     }
 
@@ -49,20 +54,33 @@ final class ValidatingDoctrinePersister implements ResourcePersister
             );
         }
 
-        // Создаем новую сущность
-        $classMetadata = $this->em->getClassMetadata($entityClass);
-        $entity = $classMetadata->newInstance();
+        // Создаем новую сущность через SerializerEntityInstantiator
+        // Он умеет вызывать конструкторы с параметрами и учитывает SerializationGroups
+        $result = $this->instantiator->instantiate($entityClass, $metadata, $changes, isCreate: true);
+        $entity = $result['entity'];
+        $remainingChanges = $result['remainingChanges'];
 
         $idPath = $metadata->idPropertyPath ?? 'id';
+        $classMetadata = $this->em->getClassMetadata($entityClass);
 
+        // Устанавливаем ID если нужно
         if ($clientId !== null) {
             $this->accessor->setValue($entity, $idPath, $clientId);
         } elseif ($classMetadata->isIdentifierNatural()) {
-            $this->accessor->setValue($entity, $idPath, Uuid::v4()->toRfc4122());
+            // Проверяем, не установлен ли ID уже (например, в конструкторе)
+            try {
+                $currentId = $this->accessor->getValue($entity, $idPath);
+                if ($currentId === null || $currentId === '') {
+                    $this->accessor->setValue($entity, $idPath, Uuid::v4()->toRfc4122());
+                }
+            } catch (\Throwable) {
+                // Если не удалось получить ID, устанавливаем новый
+                $this->accessor->setValue($entity, $idPath, Uuid::v4()->toRfc4122());
+            }
         }
 
-        // Применяем атрибуты с учётом групп сериализации
-        $this->applyAttributes($entity, $metadata, $changes, true);
+        // Применяем оставшиеся атрибуты с учётом групп сериализации
+        $this->applyAttributes($entity, $metadata, $remainingChanges, true);
 
         // Валидация перед persist
         $this->validate($entity, $type);

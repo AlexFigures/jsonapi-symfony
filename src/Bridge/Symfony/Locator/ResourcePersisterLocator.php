@@ -9,10 +9,10 @@ use JsonApi\Symfony\Contract\Data\ResourcePersister;
 use JsonApi\Symfony\Contract\Data\TypedResourcePersister;
 
 /**
- * Locator для поиска подходящего Persister по типу ресурса.
- * 
- * Собирает все зарегистрированные персистеры через tagged_iterator
- * и выбирает подходящий на основе метода supports().
+ * Locator for finding suitable Persister by resource type.
+ *
+ * Collects all registered persisters via tagged_iterator
+ * and selects the appropriate one based on the supports() method.
  */
 final class ResourcePersisterLocator implements ResourcePersister
 {
@@ -48,7 +48,7 @@ final class ResourcePersisterLocator implements ResourcePersister
             }
         }
 
-        // Используем fallback (может быть NullObject или generic Doctrine persister)
+        // Use fallback (can be NullObject or generic Doctrine persister)
         return $this->fallbackPersister;
     }
 }

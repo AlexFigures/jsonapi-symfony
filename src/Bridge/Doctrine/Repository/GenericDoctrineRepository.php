@@ -9,6 +9,7 @@ use Doctrine\ORM\QueryBuilder;
 use JsonApi\Symfony\Contract\Data\ResourceRepository;
 use JsonApi\Symfony\Contract\Data\Slice;
 use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use JsonApi\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
 use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Query\Sorting;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
@@ -29,6 +30,7 @@ class GenericDoctrineRepository implements ResourceRepository
         private readonly EntityManagerInterface $em,
         private readonly ResourceRegistryInterface $registry,
         private readonly DoctrineFilterCompiler $filterCompiler,
+        private readonly SortHandlerRegistry $sortHandlers,
     ) {
     }
 
@@ -167,6 +169,15 @@ class GenericDoctrineRepository implements ResourceRepository
     {
         foreach ($sorting as $sort) {
             /** @var Sorting $sort */
+
+            // Check for custom sort handler first
+            $customHandler = $this->sortHandlers->findHandler($sort->field);
+            if ($customHandler !== null) {
+                $customHandler->handle($sort->field, $sort->desc, $qb);
+                continue;
+            }
+
+            // Default sorting behavior
             $direction = $sort->desc ? 'DESC' : 'ASC';
             $qb->addOrderBy('e.' . $sort->field, $direction);
         }

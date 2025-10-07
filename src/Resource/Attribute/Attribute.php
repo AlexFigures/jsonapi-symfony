@@ -12,16 +12,28 @@ use Attribute as PhpAttribute;
  * Attributes represent the resource's data fields and are exposed in the
  * "attributes" member of the JSON:API resource document.
  *
+ * Use #[SerializationGroups] to control read/write permissions:
+ * - 'read' - attribute is included in responses (GET, POST, PATCH)
+ * - 'write' - attribute can be modified in both create and update (POST, PATCH)
+ * - 'create' - attribute can only be set during creation (POST)
+ * - 'update' - attribute can only be modified during update (PATCH)
+ *
  * Example usage on property:
  * ```php
  * #[JsonApiResource(type: 'articles')]
  * final class Article
  * {
- *     #[Attribute(name: 'title', readable: true, writable: true)]
+ *     #[Attribute]
+ *     #[SerializationGroups(['read', 'write'])]
  *     public string $title;
  *
- *     #[Attribute(readable: true, writable: false)]
+ *     #[Attribute]
+ *     #[SerializationGroups(['read'])]
  *     public \DateTimeImmutable $createdAt;
+ *
+ *     #[Attribute]
+ *     #[SerializationGroups(['write'])]
+ *     public string $password;
  * }
  * ```
  *
@@ -46,13 +58,9 @@ final class Attribute
 {
     /**
      * @param string|null $name Attribute name in JSON:API document (defaults to property/method name)
-     * @param bool $readable Whether the attribute can be read (GET requests)
-     * @param bool $writable Whether the attribute can be written (POST/PATCH requests)
      */
     public function __construct(
         public readonly ?string $name = null,
-        public readonly bool $readable = true,
-        public readonly bool $writable = true,
     ) {
     }
 }

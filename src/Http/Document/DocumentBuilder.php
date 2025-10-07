@@ -199,7 +199,7 @@ final class DocumentBuilder
 
         /** @var AttributeMetadata $attribute */
         foreach ($metadata->attributes as $name => $attribute) {
-            if (!$attribute->readable) {
+            if (!$attribute->isReadable()) {
                 continue;
             }
 

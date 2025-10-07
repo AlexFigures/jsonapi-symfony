@@ -1,139 +1,139 @@
-# 🧪 Руководство по тестированию
+# 🧪 Testing Guide
 
-## Быстрый старт
+## Quick Start
 
 ```bash
-# 1. Установить зависимости
+# 1. Install dependencies
 composer install
 
-# 2. Запустить юнит и функциональные тесты (без БД)
+# 2. Run unit and functional tests (no DB required)
 make test
 
-# 3. Запустить интеграционные тесты с Docker
+# 3. Execute integration tests inside Docker
 make docker-test
 ```
 
-## Типы тестов
+## Test Types
 
-### 1. Юнит-тесты (Unit)
+### 1. Unit Tests
 
-Тесты отдельных классов и методов без внешних зависимостей.
+Verify individual classes and methods without external dependencies.
 
 ```bash
 make test-unit
 ```
 
-**Расположение:** `tests/Unit/`
+**Location:** `tests/Unit/`
 
-### 2. Функциональные тесты (Functional)
+### 2. Functional Tests
 
-Тесты с in-memory реализациями, без реальной БД.
+Use in-memory implementations without hitting a real database.
 
 ```bash
 make test-functional
 ```
 
-**Расположение:** `tests/Functional/`
+**Location:** `tests/Functional/`
 
-### 3. Интеграционные тесты (Integration)
+### 3. Integration Tests
 
-Тесты с реальными БД (PostgreSQL, MySQL, MariaDB, SQLite).
+Run against real databases (PostgreSQL, MySQL, MariaDB, SQLite).
 
 ```bash
-# С Docker (рекомендуется)
+# With Docker (recommended)
 make docker-test
 
-# Локально (требует установленных БД)
+# Locally (requires databases installed)
 make test-integration
 ```
 
-**Расположение:** `tests/Integration/`
+**Location:** `tests/Integration/`
 
-### 4. Тесты соответствия спецификации (Conformance)
+### 4. Conformance Tests
 
-Snapshot-тесты для проверки соответствия JSON:API спецификации.
+Snapshot suite that ensures compliance with the JSON:API specification.
 
 ```bash
 vendor/bin/phpunit --testsuite=Conformance
 ```
 
-**Расположение:** `tests/Conformance/`
+**Location:** `tests/Conformance/`
 
-## Docker-окружение
+## Docker Environment
 
-### Запуск
+### Start Up
 
 ```bash
-# Запустить все контейнеры
+# Start every container
 make docker-up
 
-# Проверить статус
+# Check status
 docker-compose -f docker-compose.test.yml ps
 
-# Посмотреть логи
+# Tail logs
 docker-compose -f docker-compose.test.yml logs -f
 ```
 
-### Доступные БД
+### Available Databases
 
-После `make docker-up` доступны:
+After `make docker-up` you have access to:
 
 - **PostgreSQL**: `localhost:5432`
 - **MySQL**: `localhost:3306`
 - **MariaDB**: `localhost:3307`
 
-### Запуск тестов в Docker
+### Running Tests Inside Docker
 
 ```bash
-# Все интеграционные тесты
+# Entire integration suite
 docker-compose -f docker-compose.test.yml exec php vendor/bin/phpunit --testsuite=Integration
 
-# Только PostgreSQL
+# PostgreSQL-only tests
 docker-compose -f docker-compose.test.yml exec php vendor/bin/phpunit tests/Integration/PostgreSQL/
 
-# Конкретный тест
+# Single test
 docker-compose -f docker-compose.test.yml exec php vendor/bin/phpunit tests/Integration/PostgreSQL/GenericRepositoryTest.php
 ```
 
-### Отладка в Docker
+### Debugging in Docker
 
 ```bash
-# Открыть shell в PHP-контейнере
+# Open a shell in the PHP container
 make docker-shell
 
-# Внутри контейнера:
+# Inside the container:
 php -v
 composer --version
 vendor/bin/phpunit --version
 
-# Подключиться к PostgreSQL
+# Connect to PostgreSQL
 docker-compose -f docker-compose.test.yml exec postgres psql -U jsonapi -d jsonapi_test
 ```
 
-### Остановка
+### Shutdown
 
 ```bash
-# Остановить и удалить контейнеры + volumes
+# Stop and remove containers plus volumes
 make docker-down
 
-# Только остановить (сохранить данные)
+# Stop only (keep data)
 docker-compose -f docker-compose.test.yml stop
 ```
 
-## Локальное тестирование (без Docker)
+## Local Testing (without Docker)
 
-### Требования
+### Requirements
 
 - PHP 8.2+
-- PostgreSQL 16+ (опционально)
-- MySQL 8.0+ (опционально)
-- MariaDB 11+ (опционально)
+- PostgreSQL 16+ (optional)
+- MySQL 8.0+ (optional)
+- MariaDB 11+ (optional)
 
-### Настройка
+### Setup
 
-1. Установить БД локально
-2. Создать базу данных `jsonapi_test`
-3. Настроить переменные окружения в `phpunit.xml.dist`
+1. Install the databases locally.
+2. Create a `jsonapi_test` database.
+3. Configure environment variables in `phpunit.xml.dist`.
 
 ```xml
 <php>
@@ -142,68 +142,68 @@ docker-compose -f docker-compose.test.yml stop
 </php>
 ```
 
-4. Запустить тесты:
+4. Run the tests:
 
 ```bash
 make test-integration
 ```
 
-## Проверка качества кода
+## Quality Checks
 
-### Все проверки
+### Full QA Suite
 
 ```bash
 make qa-full
 ```
 
-Включает:
-- PHPUnit (тесты)
-- PHPStan (статический анализ)
+Includes:
+- PHPUnit (tests)
+- PHPStan (static analysis)
 - Infection (mutation testing)
-- Deptrac (архитектурные правила)
-- BC Check (обратная совместимость)
+- Deptrac (architecture rules)
+- BC Check (backward compatibility)
 
-### Отдельные проверки
+### Individual Checks
 
 ```bash
-# Статический анализ
+# Static analysis
 make stan
 
 # Code style
 make cs-fix
 
-# Рефакторинг
+# Refactoring
 make rector
 
 # Mutation testing
 make mutation
 
-# Архитектурные правила
+# Architecture rules
 make deptrac
 
-# Обратная совместимость
+# Backward compatibility
 make bc-check
 ```
 
 ## Coverage
 
 ```bash
-# Генерация HTML-отчета
+# Generate HTML report
 XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html build/coverage
 
-# Открыть отчет
+# Open report
 open build/coverage/index.html
 ```
 
-## Отладка тестов
+## Test Debugging
 
-### Запуск одного теста
+### Run a Single Test
 
 ```bash
 vendor/bin/phpunit tests/Integration/PostgreSQL/GenericRepositoryTest.php::testFindCollectionReturnsAllArticles
 ```
 
-### Вывод отладочной информации
+### Print Debug Information
 
 ```php
 public function testSomething(): void
@@ -211,97 +211,96 @@ public function testSomething(): void
     dump($this->em->getConnection()->getDatabasePlatform()->getName());
     var_dump($article);
     
-    // Или используйте PHPUnit assertions
+    // Or use PHPUnit assertions
     self::assertSame('expected', 'actual');
 }
 ```
 
-### Остановка на первой ошибке
+### Stop on First Failure
 
 ```bash
 vendor/bin/phpunit --stop-on-failure
 ```
 
-### Фильтрация тестов
+### Filter Tests
 
 ```bash
-# По имени
+# By name
 vendor/bin/phpunit --filter testCreate
 
-# По группе
+# By group
 vendor/bin/phpunit --group integration
 ```
 
 ## CI/CD
 
-Тесты автоматически запускаются в GitHub Actions при каждом push и PR.
+GitHub Actions executes the test suite on every push and pull request.
 
-См. `.github/workflows/ci.yml`
+See `.github/workflows/ci.yml`.
 
 ## Troubleshooting
 
-### Проблема: "Connection refused" при запуске Docker-тестов
+### Issue: "Connection refused" when running Docker tests
 
-**Решение:**
+**Fix:**
 ```bash
-# Убедитесь, что контейнеры запущены
+# Ensure containers are running
 docker-compose -f docker-compose.test.yml ps
 
-# Проверьте логи
+# Inspect logs
 docker-compose -f docker-compose.test.yml logs postgres
 
-# Подождите, пока БД будут готовы
+# Wait until databases are ready
 make docker-up
 sleep 10
 ```
 
-### Проблема: "Table already exists"
+### Issue: "Table already exists"
 
-**Решение:**
+**Fix:**
 ```bash
-# Пересоздайте контейнеры
+# Recreate containers
 make docker-down
 make docker-up
 ```
 
-### Проблема: Тесты падают с ошибками памяти
+### Issue: Tests run out of memory
 
-**Решение:**
+**Fix:**
 ```bash
-# Увеличьте memory_limit
+# Increase memory_limit
 php -d memory_limit=512M vendor/bin/phpunit
 ```
 
-### Проблема: Медленные тесты
+### Issue: Tests are slow
 
-**Решение:**
+**Fix:**
 ```bash
-# Запускайте только нужные тесты
+# Run only the tests you need
 vendor/bin/phpunit --testsuite=Unit
 
-# Или используйте фильтры
+# Or apply filters
 vendor/bin/phpunit --filter Repository
 ```
 
-## Полезные команды
+## Useful Commands
 
 ```bash
-# Список всех тестов
+# List every test
 vendor/bin/phpunit --list-tests
 
-# Список test suites
+# List suites
 vendor/bin/phpunit --list-suites
 
-# Запуск с подробным выводом
+# Run with verbose output
 vendor/bin/phpunit --verbose
 
-# Запуск с отладочной информацией
+# Run with debug information
 vendor/bin/phpunit --debug
 ```
 
-## Дополнительная информация
+## Additional Resources
 
 - [PHPUnit Documentation](https://phpunit.de/)
 - [Doctrine ORM Testing](https://www.doctrine-project.org/projects/doctrine-orm/en/latest/reference/testing.html)
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-

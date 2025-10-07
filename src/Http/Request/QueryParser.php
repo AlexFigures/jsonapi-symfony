@@ -15,6 +15,7 @@ use JsonApi\Symfony\Query\Pagination;
 use JsonApi\Symfony\Query\Sorting;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use JsonApi\Symfony\Http\Request\FilteringWhitelist;
 use JsonApi\Symfony\Http\Safety\LimitsEnforcer;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -24,6 +25,7 @@ final class QueryParser
         private readonly ResourceRegistryInterface $registry,
         private readonly PaginationConfig $paginationConfig,
         private readonly SortingWhitelist $sortingWhitelist,
+        private readonly FilteringWhitelist $filteringWhitelist,
         private readonly ErrorMapper $errors,
         private readonly FilterParser $filterParser,
         private readonly ?LimitsEnforcer $limits = null,
@@ -38,7 +40,7 @@ final class QueryParser
         $criteria->fields = $this->parseFields($request);
         $criteria->include = $this->parseInclude($type, $request);
         $criteria->sort = $this->parseSort($type, $request);
-        $criteria->filter = $this->parseFilter($request);
+        $criteria->filter = $this->parseFilter($type, $request);
 
         $this->limits?->enforce($type, $criteria);
 
@@ -216,7 +218,7 @@ final class QueryParser
      *
      * @return \JsonApi\Symfony\Filter\Ast\Node|null
      */
-    private function parseFilter(Request $request): ?\JsonApi\Symfony\Filter\Ast\Node
+    private function parseFilter(string $type, Request $request): ?\JsonApi\Symfony\Filter\Ast\Node
     {
         /** @var array<string, mixed> $query */
         $query = $request->query->all();
@@ -236,7 +238,12 @@ final class QueryParser
         }
 
         try {
-            return $this->filterParser->parse($rawFilter);
+            $filterNode = $this->filterParser->parse($rawFilter);
+
+            // Validate against whitelist
+            $this->filteringWhitelist->validate($type, $filterNode);
+
+            return $filterNode;
         } catch (\InvalidArgumentException $e) {
             $this->throwBadRequest($this->errors->invalidParameter('filter', $e->getMessage()));
         }

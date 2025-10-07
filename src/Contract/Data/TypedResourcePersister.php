@@ -5,18 +5,17 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Contract\Data;
 
 /**
- * Интерфейс для Persister, который поддерживает конкретные типы ресурсов.
- * 
- * Используется в системе тегов для регистрации per-type персистеров.
+ * Persister interface that supports specific resource types.
+ *
+ * Used by the tagging system to register per-type persisters.
  */
 interface TypedResourcePersister extends ResourcePersister
 {
     /**
-     * Проверяет, поддерживает ли этот персистер указанный тип ресурса.
+     * Checks whether this persister supports the given resource type.
      *
-     * @param string $type JSON:API тип ресурса (например, 'articles', 'users')
-     * @return bool true, если персистер поддерживает этот тип
+     * @param string $type JSON:API resource type (for example 'articles', 'users')
+     * @return bool true when the persister supports the type
      */
     public function supports(string $type): bool;
 }
-

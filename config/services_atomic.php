@@ -26,9 +26,9 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 /**
- * Сервисы для Atomic Operations.
- * 
- * Загружаются только если atomic.enabled = true.
+ * Services for Atomic Operations.
+ *
+ * Loaded only if atomic.enabled = true.
  */
 return static function (ContainerConfigurator $configurator): void {
     $services = $configurator->services();

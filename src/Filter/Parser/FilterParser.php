@@ -143,6 +143,7 @@ final class FilterParser
             case 'like':
                 return [new Comparison($field, $operator, $this->normalizeValues($value))];
             case 'in':
+            case 'nin':
                 $values = $this->normalizeValues($value);
 
                 if ($values === []) {

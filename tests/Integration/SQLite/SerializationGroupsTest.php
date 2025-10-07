@@ -48,7 +48,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
                 'email' => 'john@example.com',
                 'password' => 'secret123',
                 'slug' => 'john-doe',
-                // Попытка установить read-only атрибуты
+                // Attempt to set read-only attributes
                 'createdAt' => new \DateTimeImmutable('2020-01-01'),
                 'updatedAt' => new \DateTimeImmutable('2020-01-01'),
             ],
@@ -56,14 +56,14 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
 
         $user = $this->persister->create('users', $changes);
 
-        // createdAt и updatedAt должны быть установлены автоматически, а не из запроса
+        // createdAt and updatedAt should be set automatically, not from request
         self::assertNotEquals('2020-01-01', $user->getCreatedAt()->format('Y-m-d'));
         self::assertNotEquals('2020-01-01', $user->getUpdatedAt()->format('Y-m-d'));
     }
 
     public function testUpdateIgnoresCreateOnlyAttributes(): void
     {
-        // Создаём пользователя
+        // Create user
         $user = new User();
         $user->setId('user-1');
         $user->setUsername('john_doe');
@@ -74,7 +74,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
         $this->em->flush();
         $this->em->clear();
 
-        // Попытка обновить create-only атрибут
+        // Attempt to update create-only attribute
         $changes = new ChangeSet(
             attributes: [
                 'username' => 'john_updated',
@@ -84,9 +84,9 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
 
         $updated = $this->persister->update('users', 'user-1', $changes);
 
-        // slug не должен измениться
+        // slug should not change
         self::assertSame('john-doe', $updated->getSlug());
-        // username должен измениться
+        // username should change
         self::assertSame('john_updated', $updated->getUsername());
     }
 }

@@ -72,7 +72,7 @@ final class JsonApiExtension extends Extension
             $loader = new PhpFileLoader($container, new FileLocator($configDirectory));
             $loader->load('services.php');
 
-            // Условная загрузка Atomic Operations
+            // Conditional loading of Atomic Operations
             if ($config['atomic']['enabled']) {
                 $loader->load('services_atomic.php');
             }

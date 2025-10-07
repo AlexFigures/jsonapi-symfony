@@ -7,12 +7,12 @@ namespace JsonApi\Symfony\Contract\Data;
 use JsonApi\Symfony\Http\Exception\NotImplementedException;
 
 /**
- * Null Object реализация RelationshipUpdater.
+ * Null Object implementation of RelationshipUpdater.
  *
- * Используется как дефолтная реализация, когда пользователь
- * не предоставил свою реализацию.
+ * Used as the default implementation when the user
+ * has not provided their own implementation.
  *
- * Выбрасывает NotImplementedException для всех методов.
+ * Throws NotImplementedException for all methods.
  */
 final class NullRelationshipUpdater implements RelationshipUpdater
 {

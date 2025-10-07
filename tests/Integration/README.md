@@ -1,96 +1,96 @@
-# Интеграционные тесты с Doctrine ORM
+# Integration Tests with Doctrine ORM
 
-Этот каталог содержит интеграционные тесты для Doctrine-реализаций JSON:API контрактов.
+This directory contains integration tests for Doctrine implementations of JSON:API contracts.
 
-## 🎯 Цель
+## 🎯 Purpose
 
-Тестирование генерик-классов для работы с Doctrine ORM:
-- `GenericDoctrineRepository` - универсальный репозиторий
-- `GenericDoctrinePersister` - универсальный персистер
-- `DoctrineTransactionManager` - менеджер транзакций
-- `GenericDoctrineRelationshipHandler` - обработчик связей (TODO)
+Testing generic classes for working with Doctrine ORM:
+- `GenericDoctrineRepository` - universal repository
+- `GenericDoctrinePersister` - universal persister
+- `DoctrineTransactionManager` - transaction manager
+- `GenericDoctrineRelationshipHandler` - relationship handler (TODO)
 
-## 🐳 Запуск тестов
+## 🐳 Running Tests
 
-### Вариант 1: С Docker (рекомендуется)
+### Option 1: With Docker (recommended)
 
 ```bash
-# Запустить все интеграционные тесты
+# Run all integration tests
 make docker-test
 
-# Или вручную:
-# 1. Запустить Docker-окружение
+# Or manually:
+# 1. Start Docker environment
 make docker-up
 
-# 2. Запустить тесты
+# 2. Run tests
 docker-compose -f docker-compose.test.yml exec php vendor/bin/phpunit --testsuite=Integration
 
-# 3. Остановить Docker-окружение
+# 3. Stop Docker environment
 make docker-down
 ```
 
-### Вариант 2: Локально (требует установленных БД)
+### Option 2: Locally (requires installed databases)
 
 ```bash
-# Установить PostgreSQL, MySQL, MariaDB локально
-# Настроить переменные окружения в phpunit.xml.dist
+# Install PostgreSQL, MySQL, MariaDB locally
+# Configure environment variables in phpunit.xml.dist
 
-# Запустить интеграционные тесты
+# Run integration tests
 make test-integration
 
-# Или для конкретной СУБД:
+# Or for specific DBMS:
 vendor/bin/phpunit tests/Integration/PostgreSQL/
 vendor/bin/phpunit tests/Integration/MySQL/
 vendor/bin/phpunit tests/Integration/MariaDB/
 ```
 
-## 📁 Структура
+## 📁 Structure
 
 ```
 tests/Integration/
-├── README.md                          # Этот файл
-├── docker/                            # Docker-конфигурация
-│   ├── Dockerfile                     # PHP с расширениями для БД
+├── README.md                          # This file
+├── docker/                            # Docker configuration
+│   ├── Dockerfile                     # PHP with database extensions
 │   └── postgres/
-│       └── init.sql                   # Инициализация PostgreSQL
+│       └── init.sql                   # PostgreSQL initialization
 ├── Fixtures/
-│   └── Entity/                        # Тестовые Doctrine-сущности
+│   └── Entity/                        # Test Doctrine entities
 │       ├── Article.php
 │       ├── Author.php
 │       └── Tag.php
-├── DoctrineIntegrationTestCase.php   # Базовый класс для тестов
-├── PostgreSQL/                        # Тесты для PostgreSQL
+├── DoctrineIntegrationTestCase.php   # Base class for tests
+├── PostgreSQL/                        # Tests for PostgreSQL
 │   ├── GenericRepositoryTest.php
 │   ├── GenericPersisterTest.php
 │   └── TransactionTest.php
-├── MySQL/                             # Тесты для MySQL (TODO)
-├── MariaDB/                           # Тесты для MariaDB (TODO)
-└── SQLite/                            # Тесты для SQLite (TODO)
+├── MySQL/                             # Tests for MySQL (TODO)
+├── MariaDB/                           # Tests for MariaDB (TODO)
+└── SQLite/                            # Tests for SQLite (TODO)
 ```
 
-## 🧪 Покрытие тестами
+## 🧪 Test Coverage
 
-### Текущее состояние
+### Current Status
 
 - ✅ GenericDoctrineRepository
-  - ✅ findCollection с пагинацией
-  - ✅ findCollection с сортировкой
+  - ✅ findCollection with pagination
+  - ✅ findCollection with sorting
   - ✅ findOne
   - ⏳ findRelated (TODO)
 
 - ✅ GenericDoctrinePersister
-  - ✅ create с client ID
-  - ✅ create с auto-generated ID
+  - ✅ create with client ID
+  - ✅ create with auto-generated ID
   - ✅ update
   - ✅ delete
   - ✅ timestamps (createdAt, updatedAt)
-  - ✅ конфликты ID
-  - ✅ обработка ошибок
+  - ✅ ID conflicts
+  - ✅ error handling
 
 - ✅ DoctrineTransactionManager
-  - ✅ commit при успехе
-  - ✅ rollback при исключении
-  - ✅ вложенные транзакции
+  - ✅ commit on success
+  - ✅ rollback on exception
+  - ✅ nested transactions
 
 - ⏳ GenericDoctrineRelationshipHandler (TODO)
   - ⏳ getToOneId
@@ -100,13 +100,13 @@ tests/Integration/
   - ⏳ addToMany
   - ⏳ removeFromToMany
 
-### Целевые метрики
+### Target Metrics
 
 - Line Coverage: ≥ 90%
 - Branch Coverage: ≥ 85%
 - Mutation Score: ≥ 70%
 
-## 🔧 Конфигурация БД
+## 🔧 Database Configuration
 
 ### PostgreSQL
 
@@ -144,9 +144,9 @@ Password: secret
 In-memory: sqlite:///:memory:
 ```
 
-## 📝 Написание новых тестов
+## 📝 Writing New Tests
 
-### Шаблон теста
+### Test Template
 
 ```php
 <?php
@@ -172,19 +172,19 @@ final class MyTest extends DoctrineIntegrationTestCase
 
     public function testSomething(): void
     {
-        // Заполняем БД тестовыми данными
+        // Populate database with test data
         $this->seedDatabase();
 
-        // Выполняем тест
+        // Execute test
         // ...
 
-        // Проверяем результат
+        // Verify result
         self::assertSame('expected', 'actual');
     }
 }
 ```
 
-### Доступные методы
+### Available Methods
 
 - `$this->em` - EntityManager
 - `$this->registry` - ResourceRegistry
@@ -192,23 +192,23 @@ final class MyTest extends DoctrineIntegrationTestCase
 - `$this->persister` - GenericDoctrinePersister
 - `$this->transactionManager` - DoctrineTransactionManager
 - `$this->accessor` - PropertyAccessor
-- `$this->seedDatabase()` - заполнить БД тестовыми данными
-- `$this->clearDatabase()` - очистить БД
+- `$this->seedDatabase()` - populate database with test data
+- `$this->clearDatabase()` - clear database
 
-## 🚀 Следующие шаги
+## 🚀 Next Steps
 
-1. ✅ Создать базовую инфраструктуру (Docker, базовые классы)
-2. ✅ Реализовать GenericDoctrineRepository
-3. ✅ Реализовать GenericDoctrinePersister
-4. ✅ Реализовать DoctrineTransactionManager
-5. ⏳ Реализовать GenericDoctrineRelationshipHandler
-6. ⏳ Портировать тесты на MySQL
-7. ⏳ Портировать тесты на MariaDB
-8. ⏳ Портировать тесты на SQLite
-9. ⏳ Добавить тесты для фильтрации
-10. ⏳ Добавить тесты для производительности
+1. ✅ Create basic infrastructure (Docker, base classes)
+2. ✅ Implement GenericDoctrineRepository
+3. ✅ Implement GenericDoctrinePersister
+4. ✅ Implement DoctrineTransactionManager
+5. ⏳ Implement GenericDoctrineRelationshipHandler
+6. ⏳ Port tests to MySQL
+7. ⏳ Port tests to MariaDB
+8. ⏳ Port tests to SQLite
+9. ⏳ Add filtering tests
+10. ⏳ Add performance tests
 
-## 📚 Дополнительная информация
+## 📚 Additional Information
 
 - [Doctrine ORM Documentation](https://www.doctrine-project.org/projects/orm.html)
 - [JSON:API Specification](https://jsonapi.org/)

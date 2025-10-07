@@ -7,12 +7,12 @@ namespace JsonApi\Symfony\Contract\Data;
 use JsonApi\Symfony\Http\Exception\NotImplementedException;
 
 /**
- * Null Object реализация ResourcePersister.
- * 
- * Используется как дефолтная реализация, когда пользователь
- * не предоставил свою реализацию.
- * 
- * Выбрасывает NotImplementedException для всех методов.
+ * Null Object implementation of ResourcePersister.
+ *
+ * Used as the default implementation when the user
+ * has not provided their own implementation.
+ *
+ * Throws NotImplementedException for all methods.
  */
 final class NullResourcePersister implements ResourcePersister
 {

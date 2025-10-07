@@ -12,6 +12,7 @@ use JsonApi\Symfony\Resource\Attribute\Attribute;
 use JsonApi\Symfony\Resource\Attribute\Id;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship;
+use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
 use JsonApi\Symfony\Resource\Attribute\SortableFields;
 
 #[ORM\Entity]
@@ -36,11 +37,13 @@ class Article
     private string $content;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    #[Attribute(writable: false)]
+    #[Attribute]
+    #[SerializationGroups(['read'])]
     private ?DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    #[Attribute(writable: false)]
+    #[Attribute]
+    #[SerializationGroups(['read'])]
     private ?DateTimeImmutable $updatedAt = null;
 
     #[ORM\ManyToOne(targetEntity: Author::class, inversedBy: 'articles')]

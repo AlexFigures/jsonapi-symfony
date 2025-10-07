@@ -8,12 +8,12 @@ use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Query\Pagination;
 
 /**
- * Null Object реализация RelationshipReader.
+ * Null Object implementation of RelationshipReader.
  *
- * Используется как дефолтная реализация, когда пользователь
- * не предоставил свою реализацию.
+ * Used as the default implementation when the user
+ * has not provided their own implementation.
  *
- * Возвращает пустые коллекции для всех методов.
+ * Returns empty collections for all methods.
  */
 final class NullRelationshipReader implements RelationshipReader
 {

@@ -11,7 +11,7 @@ vendor/autoload.php: composer.json $(COMPOSER_LOCK)
 
 install: vendor/autoload.php
 
-# Тесты без Docker (только Unit и Functional)
+# Tests without Docker (Unit and Functional only)
 test: vendor/autoload.php
 	vendor/bin/phpunit --testsuite=Unit,Functional
 
@@ -21,15 +21,15 @@ test-unit: vendor/autoload.php
 test-functional: vendor/autoload.php
 	vendor/bin/phpunit --testsuite=Functional
 
-# Интеграционные тесты (требуют Docker)
+# Integration tests (require Docker)
 test-integration: vendor/autoload.php
 	vendor/bin/phpunit --testsuite=Integration
 
-# Все тесты (включая интеграционные)
+# All tests (including integration)
 test-all: vendor/autoload.php
 	vendor/bin/phpunit
 
-# Docker команды
+# Docker commands
 docker-up:
 	docker-compose -f docker-compose.test.yml up -d
 	@echo "Waiting for databases to be ready..."

@@ -35,6 +35,9 @@ use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use JsonApi\Symfony\Http\Request\PaginationConfig;
 use JsonApi\Symfony\Http\Request\QueryParser;
 use JsonApi\Symfony\Http\Request\SortingWhitelist;
+use JsonApi\Symfony\Http\Request\FilteringWhitelist;
+use JsonApi\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use JsonApi\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
 use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
 use JsonApi\Symfony\Http\Relationship\LinkageBuilder;
 use JsonApi\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
@@ -64,6 +67,7 @@ use JsonApi\Symfony\Filter\Operator\EqualOperator;
 use JsonApi\Symfony\Filter\Operator\GreaterOrEqualOperator;
 use JsonApi\Symfony\Filter\Operator\GreaterThanOperator;
 use JsonApi\Symfony\Filter\Operator\InOperator;
+use JsonApi\Symfony\Filter\Operator\NotInOperator;
 use JsonApi\Symfony\Filter\Operator\IsNullOperator;
 use JsonApi\Symfony\Filter\Operator\LessOrEqualOperator;
 use JsonApi\Symfony\Filter\Operator\LessThanOperator;
@@ -267,6 +271,14 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
+    $services
+        ->set(FilteringWhitelist::class)
+        ->args([
+            service(ResourceRegistryInterface::class),
+            service(ErrorMapper::class),
+        ])
+    ;
+
     $services->set(FilterParser::class);
 
     $services
@@ -275,6 +287,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(PaginationConfig::class),
             service(SortingWhitelist::class),
+            service(FilteringWhitelist::class),
             service(ErrorMapper::class),
             service(FilterParser::class),
             service(LimitsEnforcer::class),
@@ -444,7 +457,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('controller.service_arguments')
     ;
 
-    // Автоматический загрузчик роутов
+    // Automatic route loader
     $services
         ->set(\JsonApi\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader::class)
         ->args([
@@ -455,8 +468,8 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('routing.loader')
     ;
 
-    // NullObject реализации для опциональных зависимостей
-    // Регистрируются с низким приоритетом, чтобы пользователь мог их переопределить
+    // NullObject implementations for optional dependencies
+    // Registered with low priority so users can override them
 
     $services
         ->set('jsonapi.null_existence_checker', \JsonApi\Symfony\Contract\Data\NullExistenceChecker::class)
@@ -515,6 +528,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services->set(GreaterOrEqualOperator::class)->tag('jsonapi.filter.operator');
     $services->set(LikeOperator::class)->tag('jsonapi.filter.operator');
     $services->set(InOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(NotInOperator::class)->tag('jsonapi.filter.operator');
     $services->set(IsNullOperator::class)->tag('jsonapi.filter.operator');
     $services->set(BetweenOperator::class)->tag('jsonapi.filter.operator');
 
@@ -526,23 +540,52 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
+    // Filter handler registry
+    $services
+        ->set(FilterHandlerRegistry::class)
+        ->args([
+            tagged_iterator('jsonapi.filter.handler'),
+        ])
+    ;
+
+    // Sort handler registry
+    $services
+        ->set(SortHandlerRegistry::class)
+        ->args([
+            tagged_iterator('jsonapi.sort.handler'),
+        ])
+    ;
+
     // Filter compiler
     $services
         ->set(DoctrineFilterCompiler::class)
         ->args([
             service(Registry::class),
+            service(FilterHandlerRegistry::class),
         ])
     ;
 
     // Doctrine Bridge Services
     // These are registered here so users don't have to manually configure them
     // They will be used when data_layer.provider is set to 'doctrine' (default)
+
+    // SerializerEntityInstantiator - uses the Symfony Serializer to instantiate entities
+    // Mirrors the approach used by API Platform
+    $services
+        ->set(\JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class)
+        ->args([
+            service('doctrine.orm.default_entity_manager'),
+            service(PropertyAccessorInterface::class),
+        ])
+    ;
+
     $services
         ->set(\JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
             service(ResourceRegistryInterface::class),
             service(DoctrineFilterCompiler::class),
+            service(SortHandlerRegistry::class),
         ])
     ;
 
@@ -554,6 +597,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(PropertyAccessorInterface::class),
             service('validator'),
             service(ConstraintViolationMapper::class),
+            service(\JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class),
         ])
     ;
 

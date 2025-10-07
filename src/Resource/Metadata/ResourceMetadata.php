@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Resource\Metadata;
 
+use JsonApi\Symfony\Resource\Attribute\FilterableFields;
+
 /**
  * @psalm-type AttributeMap = array<string, AttributeMetadata>
  * @psalm-type RelationshipMap = array<string, RelationshipMetadata>
@@ -26,6 +28,7 @@ final class ResourceMetadata
         public ?string $routePrefix = null,
         public ?string $description = null,
         public array $sortableFields = [],
+        public ?FilterableFields $filterableFields = null,
     ) {
     }
 }

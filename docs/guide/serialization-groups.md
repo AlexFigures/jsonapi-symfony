@@ -1,17 +1,21 @@
-# Группы сериализации
+# Serialization Groups
 
-Группы сериализации позволяют контролировать, когда атрибуты доступны для чтения и записи.
+Serialization groups control when attributes are readable and writable.
 
-## Доступные группы
+> **⚠️ Breaking Change:** Starting with version 1.0, the `readable` and `writable` options on `#[Attribute]` were removed.
+> You must use `#[SerializationGroups]` to manage attribute access.
+> See the [Migration Guide](migration-serialization-groups.md) for upgrade details.
 
-- **`read`** - атрибут включается в ответ (GET, POST, PATCH)
-- **`write`** - атрибут может быть изменён при создании и обновлении (POST, PATCH)
-- **`create`** - атрибут может быть установлен только при создании (POST)
-- **`update`** - атрибут может быть изменён только при обновлении (PATCH)
+## Available Groups
 
-## Примеры использования
+- **`read`** – attribute appears in responses (GET, POST, PATCH).
+- **`write`** – attribute can be supplied on create or update (POST, PATCH).
+- **`create`** – attribute is writable only during creation (POST).
+- **`update`** – attribute is writable only during updates (PATCH).
 
-### Обычный атрибут (чтение и запись)
+## Usage Examples
+
+### Standard attribute (read & write)
 
 ```php
 use JsonApi\Symfony\Resource\Attribute\Attribute;
@@ -22,12 +26,12 @@ use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
 private string $title;
 ```
 
-**Поведение:**
-- ✅ Возвращается в GET/POST/PATCH ответах
-- ✅ Может быть установлен при POST
-- ✅ Может быть изменён при PATCH
+**Behaviour:**
+- ✅ Included in GET/POST/PATCH responses.
+- ✅ Accepts values during POST.
+- ✅ Accepts values during PATCH.
 
-### Только для чтения (read-only)
+### Read-only attribute
 
 ```php
 #[Attribute]
@@ -35,14 +39,14 @@ private string $title;
 private \DateTimeImmutable $createdAt;
 ```
 
-**Поведение:**
-- ✅ Возвращается в GET/POST/PATCH ответах
-- ❌ Игнорируется при POST
-- ❌ Игнорируется при PATCH
+**Behaviour:**
+- ✅ Included in GET/POST/PATCH responses.
+- ❌ Ignored on POST.
+- ❌ Ignored on PATCH.
 
-**Использование:** timestamps, вычисляемые поля, автоматически генерируемые значения.
+**Typical use:** timestamps, computed fields, automatically generated values.
 
-### Только для записи (write-only)
+### Write-only attribute
 
 ```php
 #[Attribute]
@@ -50,14 +54,14 @@ private \DateTimeImmutable $createdAt;
 private string $password;
 ```
 
-**Поведение:**
-- ❌ НЕ возвращается в GET/POST/PATCH ответах
-- ✅ Может быть установлен при POST
-- ✅ Может быть изменён при PATCH
+**Behaviour:**
+- ❌ Not returned in GET/POST/PATCH responses.
+- ✅ Accepts values during POST.
+- ✅ Accepts values during PATCH.
 
-**Использование:** пароли, секретные ключи, конфиденциальные данные.
+**Typical use:** passwords, secrets, confidential data.
 
-### Только при создании (create-only)
+### Create-only attribute
 
 ```php
 #[Attribute]
@@ -65,14 +69,14 @@ private string $password;
 private string $slug;
 ```
 
-**Поведение:**
-- ✅ Возвращается в GET/POST/PATCH ответах
-- ✅ Может быть установлен при POST
-- ❌ Игнорируется при PATCH
+**Behaviour:**
+- ✅ Included in GET/POST/PATCH responses.
+- ✅ Accepts values during POST.
+- ❌ Ignored on PATCH.
 
-**Использование:** slug, уникальные идентификаторы, которые нельзя изменить после создания.
+**Typical use:** slugs or identifiers that must remain immutable.
 
-### Только при обновлении (update-only)
+### Update-only attribute
 
 ```php
 #[Attribute]
@@ -80,14 +84,14 @@ private string $slug;
 private string $role;
 ```
 
-**Поведение:**
-- ✅ Возвращается в GET/POST/PATCH ответах
-- ❌ Игнорируется при POST
-- ✅ Может быть изменён при PATCH
+**Behaviour:**
+- ✅ Included in GET/POST/PATCH responses.
+- ❌ Ignored on POST.
+- ✅ Accepts values during PATCH.
 
-**Использование:** поля, которые должны быть установлены администратором после создания.
+**Typical use:** fields that administrators adjust after creation.
 
-## Полный пример
+## Full Example
 
 ```php
 namespace App\Entity;
@@ -109,7 +113,7 @@ class User
     #[SerializationGroups(['read'])]
     private string $id;
 
-    // Обычный атрибут: чтение и запись
+    // Standard attribute: readable + writable
     #[ORM\Column]
     #[Attribute]
     #[SerializationGroups(['read', 'write'])]
@@ -120,19 +124,19 @@ class User
     #[SerializationGroups(['read', 'write'])]
     private string $email;
 
-    // Пароль: только запись, никогда не возвращается
+    // Password: write-only, never returned
     #[ORM\Column]
     #[Attribute]
     #[SerializationGroups(['write'])]
     private string $password;
 
-    // Slug: можно установить только при создании
+    // Slug: set during creation only
     #[ORM\Column(unique: true)]
     #[Attribute]
     #[SerializationGroups(['read', 'create'])]
     private string $slug;
 
-    // Timestamps: только чтение
+    // Timestamps: read-only
     #[ORM\Column(type: 'datetime_immutable')]
     #[Attribute]
     #[SerializationGroups(['read'])]
@@ -143,7 +147,7 @@ class User
     #[SerializationGroups(['read'])]
     private \DateTimeImmutable $updatedAt;
 
-    // Role: можно изменить только при обновлении
+    // Role: updatable only
     #[ORM\Column]
     #[Attribute]
     #[SerializationGroups(['read', 'update'])]
@@ -155,13 +159,13 @@ class User
         $this->updatedAt = new \DateTimeImmutable();
     }
 
-    // Геттеры и сеттеры...
+    // Getters and setters...
 }
 ```
 
-## Примеры запросов
+## Request Examples
 
-### Создание пользователя (POST)
+### Create a user (POST)
 
 ```bash
 POST /api/users
@@ -175,13 +179,13 @@ Content-Type: application/vnd.api+json
       "email": "john@example.com",
       "password": "secret123",
       "slug": "john-doe",
-      "role": "admin"  # ❌ Будет проигнорировано (update-only)
+      "role": "admin"  # ❌ Ignored (update-only)
     }
   }
 }
 ```
 
-**Ответ:**
+**Response:**
 
 ```json
 {
@@ -194,14 +198,14 @@ Content-Type: application/vnd.api+json
       "slug": "john-doe",
       "createdAt": "2024-01-15T10:30:00Z",
       "updatedAt": "2024-01-15T10:30:00Z",
-      "role": "user"  # Дефолтное значение
-      # ❌ password не возвращается (write-only)
+      "role": "user"  # Default value
+      # ❌ password is omitted (write-only)
     }
   }
 }
 ```
 
-### Обновление пользователя (PATCH)
+### Update a user (PATCH)
 
 ```bash
 PATCH /api/users/550e8400-e29b-41d4-a716-446655440000
@@ -214,14 +218,14 @@ Content-Type: application/vnd.api+json
     "attributes": {
       "username": "john_updated",
       "password": "newsecret456",
-      "slug": "new-slug",  # ❌ Будет проигнорировано (create-only)
-      "role": "admin"      # ✅ Будет применено (update-only)
+      "slug": "new-slug",  # ❌ Ignored (create-only)
+      "role": "admin"      # ✅ Applied (update-only)
     }
   }
 }
 ```
 
-**Ответ:**
+**Response:**
 
 ```json
 {
@@ -231,186 +235,88 @@ Content-Type: application/vnd.api+json
     "attributes": {
       "username": "john_updated",
       "email": "john@example.com",
-      "slug": "john-doe",  # Не изменился
+      "slug": "john-doe",  # Unchanged
       "createdAt": "2024-01-15T10:30:00Z",
       "updatedAt": "2024-01-15T10:35:00Z",
-      "role": "admin"  # Изменился
-      # ❌ password не возвращается (write-only)
+      "role": "admin"  # Updated value
+      # ❌ password is omitted (write-only)
     }
   }
 }
 ```
 
-## Комбинирование групп
+## Combining Groups
 
-Вы можете комбинировать группы для более сложных сценариев:
+You can mix groups to model complex workflows:
 
 ```php
-// Можно читать и писать при создании и обновлении
+// Readable and writable for create + update
 #[SerializationGroups(['read', 'write'])]
 private string $title;
 
-// Можно читать, писать только при создании
+// Readable, writable only on create
 #[SerializationGroups(['read', 'create'])]
 private string $slug;
 
-// Можно читать, писать только при обновлении
+// Readable, writable only on update
 #[SerializationGroups(['read', 'update'])]
 private string $status;
 
-// Только запись (создание и обновление)
+// Write-only across create and update
 #[SerializationGroups(['write'])]
 private string $password;
 
-// Только чтение
+// Read-only
 #[SerializationGroups(['read'])]
 private \DateTimeImmutable $createdAt;
 ```
 
-## Без групп сериализации
+## Without Serialization Groups
 
-Если вы не указываете `#[SerializationGroups]`, используются дефолтные значения из `#[Attribute]`:
+If you omit `#[SerializationGroups]`, the attribute defaults to both `read` and `write`:
 
 ```php
-// Эквивалентно #[SerializationGroups(['read', 'write'])]
 #[Attribute]
-private string $title;
+private string $title; // Equivalent to ['read', 'write']
+```
 
-// Только чтение
-#[Attribute(readable: true, writable: false)]
+Add groups explicitly whenever you need different behaviour:
+
+```php
+#[Attribute]
+#[SerializationGroups(['read'])]
 private \DateTimeImmutable $createdAt;
 
-// Только запись
-#[Attribute(readable: false, writable: true)]
+#[Attribute]
+#[SerializationGroups(['write'])]
 private string $password;
 ```
 
-**Рекомендация:** Используйте `#[SerializationGroups]` для более явного контроля и лучшей читаемости кода.
+## Symfony Serializer Integration
 
-## Интеграция с Symfony Serializer
+JSON:API serialization groups are **independent** from Symfony Serializer groups (`#[Groups]`).
 
-Группы сериализации JSON:API Bundle **не связаны** с группами Symfony Serializer (`#[Groups]`).
-
-Если вы используете Symfony Serializer для других целей, вы можете использовать оба атрибута одновременно:
+Use both attributes when you need to target Symfony's serializer and the JSON:API bundle at the same time:
 
 ```php
 use Symfony\Component\Serializer\Annotation\Groups;
 use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
 
 #[Attribute]
-#[SerializationGroups(['read', 'write'])]  // Для JSON:API
-#[Groups(['user:read', 'user:write'])]     // Для Symfony Serializer
+#[SerializationGroups(['read', 'write'])]  // JSON:API access control
+#[Groups(['user:read', 'user:write'])]     // Symfony Serializer profiles
 private string $username;
 ```
 
-## Валидация
+## Validation
 
-Группы сериализации работают **до** валидации. Если атрибут игнорируется из-за групп, он не будет валидироваться.
+Serialization groups run **before** validation. If an attribute is skipped because of its groups, validators will not execute.
 
 ```php
+use Symfony\Component\Validator\Constraints as Assert;
+
 #[Attribute]
-#[SerializationGroups(['read'])]  // Только чтение
-#[Assert\NotBlank]  // Валидация не сработает, т.к. атрибут не записывается
+#[SerializationGroups(['read'])]  // Read-only
+#[Assert\NotBlank]  // Validation is skipped because the attribute is never written
 private \DateTimeImmutable $createdAt;
 ```
-
-## Best Practices
-
-### 1. Всегда используйте `write-only` для паролей
-
-```php
-#[Attribute]
-#[SerializationGroups(['write'])]
-private string $password;
-```
-
-### 2. Используйте `read-only` для timestamps
-
-```php
-#[Attribute]
-#[SerializationGroups(['read'])]
-private \DateTimeImmutable $createdAt;
-
-#[Attribute]
-#[SerializationGroups(['read'])]
-private \DateTimeImmutable $updatedAt;
-```
-
-### 3. Используйте `create-only` для неизменяемых идентификаторов
-
-```php
-#[Attribute]
-#[SerializationGroups(['read', 'create'])]
-private string $slug;
-```
-
-### 4. Используйте `update-only` для административных полей
-
-```php
-#[Attribute]
-#[SerializationGroups(['read', 'update'])]
-private string $status;  // Только админ может изменить после создания
-```
-
-### 5. Явно указывайте группы для всех атрибутов
-
-Это делает код более понятным и предсказуемым:
-
-```php
-// ✅ Хорошо
-#[Attribute]
-#[SerializationGroups(['read', 'write'])]
-private string $title;
-
-// ❌ Плохо (неявное поведение)
-#[Attribute]
-private string $title;
-```
-
-## Troubleshooting
-
-### Атрибут не записывается
-
-Проверьте, что группа `write`, `create` или `update` указана:
-
-```php
-// ❌ Не будет записываться
-#[SerializationGroups(['read'])]
-
-// ✅ Будет записываться
-#[SerializationGroups(['read', 'write'])]
-```
-
-### Атрибут возвращается в ответе, хотя не должен
-
-Проверьте, что группа `read` НЕ указана:
-
-```php
-// ❌ Будет возвращаться
-#[SerializationGroups(['read', 'write'])]
-
-// ✅ Не будет возвращаться
-#[SerializationGroups(['write'])]
-```
-
-### Атрибут игнорируется при создании, но работает при обновлении
-
-Проверьте, что используется группа `write` или `create`, а не `update`:
-
-```php
-// ❌ Только при обновлении
-#[SerializationGroups(['read', 'update'])]
-
-// ✅ При создании и обновлении
-#[SerializationGroups(['read', 'write'])]
-
-// ✅ Только при создании
-#[SerializationGroups(['read', 'create'])]
-```
-
-## См. также
-
-- [Validation](validation.md)
-- [Doctrine Integration](doctrine-integration.md)
-- [Attributes](attributes.md)
-

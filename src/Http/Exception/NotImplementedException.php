@@ -7,9 +7,9 @@ namespace JsonApi\Symfony\Http\Exception;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
- * Исключение для функционала, который не реализован.
- * 
- * HTTP статус: 501 Not Implemented
+ * Exception for functionality that is not implemented.
+ *
+ * HTTP staтус: 501 Not Implemented
  */
 final class NotImplementedException extends HttpException
 {

@@ -11,8 +11,6 @@ final class AttributeMetadata
     public function __construct(
         public string $name,
         public ?string $propertyPath = null,
-        public bool $readable = true,
-        public bool $writable = true,
         /**
          * @var list<string>
          */
@@ -23,7 +21,9 @@ final class AttributeMetadata
     }
 
     /**
-     * Проверяет, доступен ли атрибут для чтения.
+     * Checks if the attribute is available for reading.
+     *
+     * By default (if SerializationGroups is not specified) the attribute is available for reading.
      */
     public function isReadable(): bool
     {
@@ -31,11 +31,14 @@ final class AttributeMetadata
             return $this->serializationGroups->canRead();
         }
 
-        return $this->readable;
+        // Default behavior: attribute is available for reading
+        return true;
     }
 
     /**
-     * Проверяет, доступен ли атрибут для записи.
+     * Checks if the attribute is available for writing.
+     *
+     * By default (if SerializationGroups is not specified) the attribute is available for writing.
      */
     public function isWritable(bool $isCreate = false): bool
     {
@@ -43,6 +46,7 @@ final class AttributeMetadata
             return $this->serializationGroups->canWrite($isCreate);
         }
 
-        return $this->writable;
+        // Default behavior: attribute is available for writing
+        return true;
     }
 }

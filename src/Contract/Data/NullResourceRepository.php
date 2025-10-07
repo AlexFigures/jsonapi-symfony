@@ -8,12 +8,12 @@ use JsonApi\Symfony\Http\Exception\NotImplementedException;
 use JsonApi\Symfony\Query\Criteria;
 
 /**
- * Null Object реализация ResourceRepository.
- * 
- * Используется как дефолтная реализация, когда пользователь
- * не предоставил свою реализацию.
- * 
- * Выбрасывает NotImplementedException для всех методов.
+ * Null Object implementation of ResourceRepository.
+ *
+ * Used as the default implementation when the user
+ * has not provided their own implementation.
+ *
+ * Throws NotImplementedException for all methods.
  */
 final class NullResourceRepository implements ResourceRepository
 {

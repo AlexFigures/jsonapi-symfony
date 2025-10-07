@@ -1,10 +1,10 @@
-# Автоматическая генерация роутов
+# Automatic Route Generation
 
-JSON:API Bundle автоматически генерирует стандартные CRUD роуты для всех зарегистрированных ресурсов.
+The JSON:API Bundle automatically produces CRUD routes for every registered resource.
 
-## Быстрый старт
+## Quick Start
 
-### 1. Создайте Entity с атрибутами
+### 1. Create an entity with attributes
 
 ```php
 // src/Entity/Article.php
@@ -36,11 +36,11 @@ class Article
     #[Relationship(targetType: 'tags', toMany: true)]
     private Collection $tags;
     
-    // Геттеры/сеттеры...
+    // Getters/setters...
 }
 ```
 
-### 2. Включите автоматическую генерацию роутов
+### 2. Enable automatic route generation
 
 ```yaml
 # config/routes.yaml
@@ -49,21 +49,21 @@ jsonapi_auto:
     type: jsonapi
 ```
 
-### 3. Готово!
+### 3. Done!
 
-Автоматически доступны следующие роуты:
+You immediately get the following routes:
 
-#### CRUD операции
+#### CRUD routes
 
 ```
-GET    /api/articles           - список статей
-POST   /api/articles           - создание статьи
-GET    /api/articles/{id}      - получение статьи
-PATCH  /api/articles/{id}      - обновление статьи
-DELETE /api/articles/{id}      - удаление статьи
+GET    /api/articles           - list articles
+POST   /api/articles           - create article
+GET    /api/articles/{id}      - fetch article
+PATCH  /api/articles/{id}      - update article
+DELETE /api/articles/{id}      - delete article
 ```
 
-#### Relationship операции
+#### Relationship routes
 
 ```
 # To-One relationship (author)
@@ -81,9 +81,9 @@ GET    /api/articles/{id}/author
 GET    /api/articles/{id}/tags
 ```
 
-## Конфигурация
+## Configuration
 
-### Изменение префикса роутов
+### Change the route prefix
 
 ```yaml
 # config/packages/jsonapi.yaml
@@ -91,11 +91,11 @@ jsonapi:
     route_prefix: /api/v1
 ```
 
-Теперь роуты будут доступны по адресу `/api/v1/articles`.
+Routes are now available under `/api/v1/articles`.
 
-### Отключение relationship роутов
+### Disable relationship routes
 
-Если вы не используете relationships, можно отключить генерацию этих роутов:
+If you do not use relationships, disable their generation:
 
 ```php
 // config/services.yaml
@@ -104,33 +104,33 @@ JsonApi\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader:
         $enableRelationshipRoutes: false
 ```
 
-## Именование роутов
+## Route Naming
 
-Автоматически сгенерированные роуты имеют следующие имена:
+Generated routes follow these naming conventions:
 
-### CRUD роуты
+### CRUD routes
 
-- `jsonapi.{type}.index` - список ресурсов
-- `jsonapi.{type}.create` - создание ресурса
-- `jsonapi.{type}.show` - получение ресурса
-- `jsonapi.{type}.update` - обновление ресурса
-- `jsonapi.{type}.delete` - удаление ресурса
+- `jsonapi.{type}.index` - list resources
+- `jsonapi.{type}.create` - create resource
+- `jsonapi.{type}.show` - fetch resource
+- `jsonapi.{type}.update` - update resource
+- `jsonapi.{type}.delete` - delete resource
 
-### Relationship роуты
+### Relationship routes
 
-- `jsonapi.{type}.relationships.{relationship}.show` - получение relationship
-- `jsonapi.{type}.relationships.{relationship}.update` - обновление relationship
-- `jsonapi.{type}.relationships.{relationship}.add` - добавление в to-many relationship
-- `jsonapi.{type}.relationships.{relationship}.remove` - удаление из to-many relationship
+- `jsonapi.{type}.relationships.{relationship}.show` - fetch relationship
+- `jsonapi.{type}.relationships.{relationship}.update` - update relationship
+- `jsonapi.{type}.relationships.{relationship}.add` - add to to-many relationship
+- `jsonapi.{type}.relationships.{relationship}.remove` - remove from to-many relationship
 
-### Related resource роуты
+### Related resource routes
 
-- `jsonapi.{type}.related.{relationship}` - получение связанных ресурсов
+- `jsonapi.{type}.related.{relationship}` - fetch related resources
 
-### Примеры
+### Examples
 
 ```php
-// Генерация URL в контроллере
+// Generate URLs in a controller
 $url = $this->generateUrl('jsonapi.articles.show', ['id' => '123']);
 // /api/articles/123
 
@@ -141,11 +141,11 @@ $url = $this->generateUrl('jsonapi.articles.related.tags', ['id' => '123']);
 // /api/articles/123/tags
 ```
 
-## Кастомизация роутов
+## Route Customisation
 
-### Добавление дополнительных роутов
+### Add extra routes
 
-Вы можете добавить дополнительные роуты вручную:
+You can always declare routes manually:
 
 ```yaml
 # config/routes.yaml
@@ -153,42 +153,42 @@ jsonapi_auto:
     resource: .
     type: jsonapi
 
-# Дополнительные кастомные роуты
+# Additional custom routes
 article_publish:
     path: /api/articles/{id}/publish
     controller: App\Controller\PublishArticleController
     methods: [POST]
 ```
 
-### Переопределение стандартных роутов
+### Override built-in routes
 
-Если вам нужно переопределить стандартный роут, создайте его **до** автоматической генерации:
+Define the custom route **before** the automatic block to override it:
 
 ```yaml
 # config/routes.yaml
 
-# Кастомный роут для создания статей
+# Custom route for creating articles
 article_create_custom:
     path: /api/articles
     controller: App\Controller\CustomCreateArticleController
     methods: [POST]
 
-# Автоматическая генерация (пропустит уже существующие роуты)
+# Automatic generation (skips already defined entries)
 jsonapi_auto:
     resource: .
     type: jsonapi
 ```
 
-**Важно:** Symfony использует первый подходящий роут, поэтому порядок имеет значение!
+**Important:** Symfony uses the first matching route, so order matters.
 
-### Отключение автоматической генерации для конкретного ресурса
+### Disable automatic routes for a specific resource
 
-Если вы хотите полностью контролировать роуты для конкретного ресурса, не используйте `#[JsonApiResource]` атрибут или создайте роуты вручную:
+If you prefer full manual control, skip the `#[JsonApiResource]` attribute or define routes by hand:
 
 ```yaml
 # config/routes.yaml
 
-# Ручные роуты для products
+# Manual routes for products
 product_index:
     path: /api/products
     controller: App\Controller\Product\IndexController
@@ -199,29 +199,29 @@ product_create:
     controller: App\Controller\Product\CreateController
     methods: [POST]
 
-# ... остальные роуты
+# ... remaining routes
 
-# Автоматическая генерация для всех остальных ресурсов
+# Automatic generation for every other resource
 jsonapi_auto:
     resource: .
     type: jsonapi
 ```
 
-## Требования к ID
+## ID Requirements
 
-По умолчанию, параметр `{id}` принимает любые значения (`.+` regex).
+By default the `{id}` placeholder accepts any value (`.+` regex).
 
-Это позволяет использовать:
+This allows:
 - UUID: `550e8400-e29b-41d4-a716-446655440000`
-- Числа: `123`
-- Строки: `my-article-slug`
+- Numbers: `123`
+- Strings: `my-article-slug`
 
-Если вам нужно ограничить формат ID, переопределите роут:
+Restrict the format by redefining the route:
 
 ```yaml
 # config/routes.yaml
 
-# Только UUID
+# UUID only
 article_show_uuid:
     path: /api/articles/{id}
     controller: JsonApi\Symfony\Http\Controller\ShowController
@@ -231,29 +231,29 @@ article_show_uuid:
         id: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
     methods: [GET]
 
-# Автоматическая генерация для остальных
+# Automatic generation for everything else
 jsonapi_auto:
     resource: .
     type: jsonapi
 ```
 
-## Отладка роутов
+## Route Debugging
 
-Посмотреть все сгенерированные роуты:
+List every generated route:
 
 ```bash
 php bin/console debug:router | grep jsonapi
 ```
 
-Посмотреть детали конкретного роута:
+Inspect a specific route:
 
 ```bash
 php bin/console debug:router jsonapi.articles.show
 ```
 
-## Примеры использования
+## Usage Examples
 
-### Минимальный setup
+### Minimal setup
 
 ```php
 // src/Entity/Product.php
@@ -289,55 +289,54 @@ JsonApi\Symfony\Contract\Data\ResourcePersister:
     alias: JsonApi\Symfony\Bridge\Doctrine\Persister\GenericDoctrinePersister
 ```
 
-**Готово!** Все CRUD операции работают:
+**Done!** All CRUD operations are live:
 
 ```bash
-# Список продуктов
+# List products
 curl http://localhost/api/products
 
-# Создание продукта
+# Create a product
 curl -X POST http://localhost/api/products \
   -H "Content-Type: application/vnd.api+json" \
   -d '{"data":{"type":"products","attributes":{"name":"Laptop"}}}'
 
-# Получение продукта
+# Fetch a product
 curl http://localhost/api/products/123
 
-# Обновление продукта
+# Update a product
 curl -X PATCH http://localhost/api/products/123 \
   -H "Content-Type: application/vnd.api+json" \
   -d '{"data":{"type":"products","id":"123","attributes":{"name":"Gaming Laptop"}}}'
 
-# Удаление продукта
+# Delete a product
 curl -X DELETE http://localhost/api/products/123
 ```
 
 ## Troubleshooting
 
-### Роуты не генерируются
+### Routes are missing
 
-1. Проверьте, что `#[JsonApiResource]` атрибут присутствует на Entity
-2. Проверьте, что Entity зарегистрирована в ResourceRegistry
-3. Проверьте, что `type: jsonapi` указан в routes.yaml
-4. Очистите кеш: `php bin/console cache:clear`
+1. Verify the `#[JsonApiResource]` attribute is present on the entity.
+2. Check that the entity is registered with the `ResourceRegistry`.
+3. Confirm `type: jsonapi` is configured in `routes.yaml`.
+4. Clear the cache: `php bin/console cache:clear`.
 
-### Конфликт роутов
+### Route conflicts
 
-Если вы видите ошибку "Route already exists", это значит, что роут с таким именем уже зарегистрирован.
+The error "Route already exists" means another route with the same name was registered.
 
-Решение:
-1. Переименуйте ваш кастомный роут
-2. Или измените порядок загрузки роутов в routes.yaml
+Fix it by:
+1. Renaming your custom route, or
+2. Reordering route definitions in `routes.yaml`.
 
 ### 404 Not Found
 
-1. Проверьте, что роут существует: `php bin/console debug:router`
-2. Проверьте, что контроллер зарегистрирован как сервис
-3. Проверьте, что ResourceRepository и ResourcePersister зарегистрированы
+1. Confirm the route exists: `php bin/console debug:router`.
+2. Ensure the controller is registered as a service.
+3. Make sure the `ResourceRepository` and `ResourcePersister` services are wired.
 
-## См. также
+## See Also
 
 - [Doctrine Integration](doctrine-integration.md)
 - [Validation](validation.md)
 - [Relationships](relationships.md)
-

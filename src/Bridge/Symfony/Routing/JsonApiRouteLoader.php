@@ -10,23 +10,23 @@ use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * Автоматический загрузчик роутов для JSON:API ресурсов.
- * 
- * Сканирует все зарегистрированные ресурсы и генерирует стандартные CRUD роуты:
- * - GET    /{prefix}/{type}           - список ресурсов
- * - POST   /{prefix}/{type}           - создание ресурса
- * - GET    /{prefix}/{type}/{id}      - получение ресурса
- * - PATCH  /{prefix}/{type}/{id}      - обновление ресурса
- * - DELETE /{prefix}/{type}/{id}      - удаление ресурса
- * 
- * Также генерирует роуты для relationships:
+ * Automatic route loader for JSON:API resources.
+ *
+ * Scans all registered resources and generates standard CRUD routes:
+ * - GET    /{prefix}/{type}           - resource collection
+ * - POST   /{prefix}/{type}           - resource creation
+ * - GET    /{prefix}/{type}/{id}      - resource retrieval
+ * - PATCH  /{prefix}/{type}/{id}      - resource update
+ * - DELETE /{prefix}/{type}/{id}      - resource deletion
+ *
+ * Also generates routes for relationships:
  * - GET    /{prefix}/{type}/{id}/relationships/{relationship}
  * - POST   /{prefix}/{type}/{id}/relationships/{relationship}
  * - PATCH  /{prefix}/{type}/{id}/relationships/{relationship}
  * - DELETE /{prefix}/{type}/{id}/relationships/{relationship}
- * 
- * Использование:
- * 
+ *
+ * Usage:
+ *
  * ```yaml
  * # config/routes.yaml
  * jsonapi_auto:

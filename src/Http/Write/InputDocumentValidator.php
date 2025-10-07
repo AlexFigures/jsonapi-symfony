@@ -111,7 +111,8 @@ final class InputDocumentValidator
 
             /** @var AttributeMetadata $attribute */
             $attribute = $metadata->attributes[$name];
-            if (!$attribute->writable) {
+            $isCreate = $method === 'POST';
+            if (!$attribute->isWritable($isCreate)) {
                 $attributeErrors[] = $this->errors->invalidPointer(sprintf('/data/attributes/%s', $name), sprintf('Attribute "%s" is read-only.', $name));
             }
         }

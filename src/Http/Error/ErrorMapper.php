@@ -122,6 +122,36 @@ final class ErrorMapper
         );
     }
 
+    public function filterFieldNotAllowed(string $type, string $field): ErrorObject
+    {
+        return $this->invalidParameter(
+            'filter',
+            sprintf('Filtering by "%s" is not allowed for resource type "%s".', $field, $type),
+            '400',
+            ErrorCodes::FILTER_FIELD_NOT_ALLOWED,
+        );
+    }
+
+    public function filterOperatorNotAllowed(string $type, string $field, string $operator): ErrorObject
+    {
+        return $this->invalidParameter(
+            'filter',
+            sprintf('Operator "%s" is not allowed for field "%s" on resource type "%s".', $operator, $field, $type),
+            '400',
+            ErrorCodes::FILTER_OPERATOR_NOT_ALLOWED,
+        );
+    }
+
+    public function filterNotAllowed(string $type, string $message): ErrorObject
+    {
+        return $this->invalidParameter(
+            'filter',
+            sprintf('Filtering is not allowed for resource type "%s": %s', $type, $message),
+            '400',
+            ErrorCodes::FILTER_NOT_ALLOWED,
+        );
+    }
+
     public function requestTooComplex(string $detail): ErrorObject
     {
         return $this->builder->create('400', ErrorCodes::REQUEST_COMPLEXITY_EXCEEDED, null, $detail);

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Resource\Registry;
 
 use JsonApi\Symfony\Resource\Attribute\Attribute as AttributeAttribute;
+use JsonApi\Symfony\Resource\Attribute\FilterableFields;
 use JsonApi\Symfony\Resource\Attribute\Id;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship as RelationshipAttribute;
@@ -148,6 +149,14 @@ final class ResourceRegistry implements ResourceRegistryInterface
             $sortableFields = $sortableFieldsAttr->fields;
         }
 
+        // Extract filterable fields from FilterableFields attribute
+        $filterableFields = null;
+        $filterableFieldsAttributes = $reflection->getAttributes(FilterableFields::class, ReflectionAttribute::IS_INSTANCEOF);
+        if ($filterableFieldsAttributes !== []) {
+            /** @var FilterableFields $filterableFieldsAttr */
+            $filterableFields = $filterableFieldsAttributes[0]->newInstance();
+        }
+
         return new ResourceMetadata(
             $resource->type,
             $class,
@@ -158,6 +167,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
             $resource->routePrefix,
             $resource->description,
             $sortableFields,
+            $filterableFields,
         );
     }
 
@@ -182,7 +192,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
 
             [$types, $nullable] = $this->guessAttributeTypes($member);
 
-            // Извлекаем SerializationGroups атрибут, если есть
+            // Extract SerializationGroups attribute if present
             $serializationGroups = null;
             $groupsAttributes = $member->getAttributes(\JsonApi\Symfony\Resource\Attribute\SerializationGroups::class);
             if (count($groupsAttributes) > 0) {
@@ -192,8 +202,6 @@ final class ResourceRegistry implements ResourceRegistryInterface
             $attributes[$name] = new AttributeMetadata(
                 $name,
                 $propertyPath,
-                $instance->readable,
-                $instance->writable,
                 $types,
                 $nullable,
                 $serializationGroups,

@@ -5,43 +5,43 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Resource\Attribute;
 
 /**
- * Атрибут для указания групп сериализации для атрибута ресурса.
- * 
- * Позволяет контролировать, когда атрибут доступен для чтения/записи:
- * - read: атрибут включается в ответ (GET, POST, PATCH)
- * - write: атрибут может быть изменён (POST, PATCH)
- * - create: атрибут может быть установлен только при создании (POST)
- * - update: атрибут может быть изменён только при обновлении (PATCH)
- * 
- * Примеры:
- * 
+ * Attribute for specifying serialization groups for a resource attribute.
+ *
+ * Allows controlling when an attribute is available for reading/writing:
+ * - read: attribute is included in response (GET, POST, PATCH)
+ * - write: attribute can be modified (POST, PATCH)
+ * - create: attribute can only be set during creation (POST)
+ * - update: attribute can only be modified during update (PATCH)
+ *
+ * Examples:
+ *
  * ```php
- * // Только для чтения (например, createdAt)
+ * // Read-only (e.g., createdAt)
  * #[Attribute]
  * #[SerializationGroups(['read'])]
  * private \DateTimeInterface $createdAt;
- * 
- * // Только для записи (например, password)
+ *
+ * // Write-only (e.g., password)
  * #[Attribute]
  * #[SerializationGroups(['write'])]
  * private string $password;
- * 
- * // Можно установить только при создании
+ *
+ * // Can only be set during creation
  * #[Attribute]
  * #[SerializationGroups(['read', 'create'])]
  * private string $slug;
- * 
- * // Обычный атрибут (чтение и запись)
+ *
+ * // Regular attribute (read and write)
  * #[Attribute]
  * #[SerializationGroups(['read', 'write'])]
  * private string $title;
  * ```
  */
-#[\Attribute(\Attribute::TARGET_PROPERTY)]
+#[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::TARGET_METHOD)]
 final readonly class SerializationGroups
 {
     /**
-     * @param array<string> $groups Группы сериализации
+     * @param array<string> $groups Serialization groups
      */
     public function __construct(
         public array $groups = [],
@@ -75,17 +75,17 @@ final readonly class SerializationGroups
 
     public function canWrite(bool $isCreate): bool
     {
-        // Если есть группа 'write', можно писать всегда
+        // If 'write' group exists, can always write
         if ($this->isWritable()) {
             return true;
         }
 
-        // Если создание и есть группа 'create'
+        // If creating and 'create' group exists
         if ($isCreate && $this->isCreatable()) {
             return true;
         }
 
-        // Если обновление и есть группа 'update'
+        // If updating and 'update' group exists
         if (!$isCreate && $this->isUpdatable()) {
             return true;
         }

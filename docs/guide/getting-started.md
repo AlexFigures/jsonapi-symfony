@@ -106,6 +106,7 @@ use JsonApi\Symfony\Resource\Attribute\Attribute;
 use JsonApi\Symfony\Resource\Attribute\Id;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship;
+use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
 
 #[JsonApiResource(type: 'articles')]
 class Article
@@ -115,9 +116,11 @@ class Article
     public string $id;
 
     #[Attribute]
+    #[SerializationGroups(['read', 'write'])]
     public string $title;
 
-    #[Attribute(writable: false)]
+    #[Attribute]
+    #[SerializationGroups(['read'])]
     public DateTimeImmutable $createdAt;
 
     #[Relationship(targetType: 'authors')]
@@ -345,16 +348,28 @@ public string $id;
 Mark properties as JSON:API attributes:
 
 ```php
-#[Attribute(
-    name: 'title',        // Optional: custom name
-    readable: true,       // Can be read via GET
-    writable: true        // Can be written via POST/PATCH
-)]
+use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
+
+#[Attribute(name: 'title')]  // Optional: custom name
+#[SerializationGroups(['read', 'write'])]  // Can be read and written
 public string $title;
 
-#[Attribute(writable: false)]  // Read-only
+#[Attribute]
+#[SerializationGroups(['read'])]  // Read-only
 public DateTimeImmutable $createdAt;
+
+#[Attribute]
+#[SerializationGroups(['write'])]  // Write-only (e.g., passwords)
+public string $password;
 ```
+
+**Available serialization groups:**
+- `read` - Attribute is included in responses (GET, POST, PATCH)
+- `write` - Attribute can be modified in both create and update (POST, PATCH)
+- `create` - Attribute can only be set during creation (POST)
+- `update` - Attribute can only be modified during update (PATCH)
+
+See [Serialization Groups Guide](serialization-groups.md) for more details.
 
 ### Relationships
 

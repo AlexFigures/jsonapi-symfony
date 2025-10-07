@@ -45,7 +45,7 @@ final class ConstraintViolationMapper
     }
 
     /**
-     * Преобразует violations в ValidationException.
+     * Converts violations to ValidationException.
      */
     public function mapToException(string $resourceType, ConstraintViolationListInterface $violations): ValidationException
     {

@@ -10,6 +10,7 @@ use JsonApi\Symfony\Filter\Ast\Comparison;
 use JsonApi\Symfony\Filter\Ast\Conjunction;
 use JsonApi\Symfony\Filter\Ast\Disjunction;
 use JsonApi\Symfony\Filter\Ast\Node;
+use JsonApi\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
 use JsonApi\Symfony\Filter\Operator\Registry;
 
 /**
@@ -19,6 +20,7 @@ final class DoctrineFilterCompiler
 {
     public function __construct(
         private readonly Registry $operators,
+        private readonly FilterHandlerRegistry $filterHandlers,
     ) {
     }
 
@@ -63,6 +65,15 @@ final class DoctrineFilterCompiler
 
     private function compileComparison(Comparison $node, string $rootAlias, AbstractPlatform $platform): \JsonApi\Symfony\Filter\Operator\DoctrineExpression
     {
+        // Check for custom filter handler first
+        $customHandler = $this->filterHandlers->findHandler($node->fieldPath, $node->operator);
+        if ($customHandler !== null) {
+            // For custom handlers, we need to create a temporary QueryBuilder to capture the modifications
+            // This is a simplified approach - in a real implementation, you might want to return
+            // a special expression type that can be applied later
+            throw new \LogicException('Custom filter handlers are not yet fully implemented in DoctrineFilterCompiler. Please use the repository-level integration instead.');
+        }
+
         $operator = $this->operators->get($node->operator);
 
         if ($operator === null) {

@@ -26,10 +26,12 @@ use Attribute;
  *     #[Attribute]
  *     public string $title;
  *
- *     #[Attribute(writable: false)]
+ *     #[Attribute]
+ *     #[SerializationGroups(['read'])]
  *     public \DateTimeImmutable $createdAt;
  *
- *     #[Attribute(writable: false)]
+ *     #[Attribute]
+ *     #[SerializationGroups(['read'])]
  *     public \DateTimeImmutable $updatedAt;
  *
  *     #[Attribute]

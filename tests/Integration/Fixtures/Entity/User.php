@@ -11,7 +11,7 @@ use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
 
 /**
- * Тестовая Entity для демонстрации групп сериализации.
+ * Test Entity for demonstrating serialization groups.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'users')]
@@ -36,31 +36,31 @@ class User
     #[SerializationGroups(['read', 'write'])]
     private string $email;
 
-    // Пароль: только для записи, никогда не возвращается в ответе
+    // Password: write-only, never returned in response
     #[ORM\Column(type: 'string', length: 255)]
     #[Attribute]
     #[SerializationGroups(['write'])]
     private string $password;
 
-    // Slug: можно установить только при создании, потом read-only
+    // Slug: can only be set during creation, then read-only
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     #[Attribute]
     #[SerializationGroups(['read', 'create'])]
     private string $slug;
 
-    // CreatedAt: только для чтения, устанавливается автоматически
+    // CreatedAt: read-only, set automatically
     #[ORM\Column(type: 'datetime_immutable')]
     #[Attribute]
     #[SerializationGroups(['read'])]
     private ?\DateTimeImmutable $createdAt = null;
 
-    // UpdatedAt: только для чтения, обновляется автоматически
+    // UpdatedAt: read-only, updated automatically
     #[ORM\Column(type: 'datetime_immutable')]
     #[Attribute]
     #[SerializationGroups(['read'])]
     private ?\DateTimeImmutable $updatedAt = null;
 
-    // Role: можно изменить только при обновлении (не при создании)
+    // Role: can only be changed during update (not during creation)
     #[ORM\Column(type: 'string', length: 50)]
     #[Attribute]
     #[SerializationGroups(['read', 'update'])]

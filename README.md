@@ -101,6 +101,8 @@ open http://localhost:8000/_jsonapi/docs
 - **[Configuration Reference](docs/guide/configuration.md)** - Complete configuration options
 - **[Doctrine Integration](docs/guide/integration-doctrine.md)** - Production-ready data layer
 - **[Examples & Recipes](docs/guide/examples.md)** - Real-world code examples
+- **[Serialization Groups](docs/guide/serialization-groups.md)** - Control read/write permissions
+- **[Migration Guide](docs/guide/migration-serialization-groups.md)** - 📢 Migrate from readable/writable to SerializationGroups
 
 ### For Advanced Users
 
@@ -256,7 +258,7 @@ jsonapi:
             enabled: false
 ```
 
-**📖 [Swagger UI Documentation →](docs/features/SWAGGER_UI.md)**
+**📖 [Swagger UI Documentation →](docs/features/swagger-ui.md)**
 
 ---
 

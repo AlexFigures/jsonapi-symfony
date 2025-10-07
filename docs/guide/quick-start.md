@@ -1,20 +1,20 @@
-# Быстрый старт
+# Quick Start
 
-Этот гайд покажет, как за 5 минут создать полноценный JSON:API с CRUD операциями, валидацией и relationships.
+This guide shows how to build a production-ready JSON:API in five minutes with CRUD operations, validation, and relationships.
 
-## Требования
+## Requirements
 
 - PHP 8.2+
 - Symfony 7.1+
 - Doctrine ORM 3.0+
 
-## Установка
+## Installation
 
 ```bash
 composer require jsonapi/symfony-jsonapi-bundle
 ```
 
-## Шаг 1: Создайте Entity
+## Step 1: Create an Entity
 
 ```php
 // src/Entity/Article.php
@@ -65,7 +65,7 @@ class Article
         $this->tags = new ArrayCollection();
     }
 
-    // Геттеры и сеттеры...
+    // Getters and setters...
     public function getId(): string
     {
         return $this->id;
@@ -131,12 +131,12 @@ class Article
 }
 ```
 
-## Шаг 2: Настройте сервисы
+## Step 2: Wire Services
 
 ```yaml
 # config/services.yaml
 services:
-    # Generic Doctrine реализации
+    # Generic Doctrine implementations
     JsonApi\Symfony\Contract\Data\ResourceRepository:
         alias: JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository
 
@@ -153,7 +153,7 @@ services:
         alias: JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager
 ```
 
-## Шаг 3: Включите автоматическую генерацию роутов
+## Step 3: Enable Automatic Route Generation
 
 ```yaml
 # config/routes.yaml
@@ -162,27 +162,27 @@ jsonapi_auto:
     type: jsonapi
 ```
 
-## Шаг 4: Настройте бандл (опционально)
+## Step 4: Configure the Bundle (optional)
 
 ```yaml
 # config/packages/jsonapi.yaml
 jsonapi:
     route_prefix: /api
     atomic:
-        enabled: false  # Отключаем Atomic Operations если не нужны
+        enabled: false  # Disable Atomic Operations if you don't need them
 ```
 
-## Готово! 🎉
+## You're Done! 🎉
 
-Теперь у вас есть полноценный JSON:API с:
+You now have a fully featured JSON:API with:
 
-### ✅ CRUD операциями
+### ✅ CRUD Operations
 
 ```bash
-# Список статей
+# List articles
 GET /api/articles
 
-# Создание статьи
+# Create an article
 POST /api/articles
 Content-Type: application/vnd.api+json
 
@@ -196,10 +196,10 @@ Content-Type: application/vnd.api+json
   }
 }
 
-# Получение статьи
+# Fetch an article
 GET /api/articles/{id}
 
-# Обновление статьи
+# Update an article
 PATCH /api/articles/{id}
 Content-Type: application/vnd.api+json
 
@@ -213,14 +213,14 @@ Content-Type: application/vnd.api+json
   }
 }
 
-# Удаление статьи
+# Delete an article
 DELETE /api/articles/{id}
 ```
 
-### ✅ Автоматической валидацией
+### ✅ Automatic Validation
 
 ```bash
-# Попытка создать статью с коротким заголовком
+# Attempt to create an article with a short title
 POST /api/articles
 Content-Type: application/vnd.api+json
 
@@ -228,7 +228,7 @@ Content-Type: application/vnd.api+json
   "data": {
     "type": "articles",
     "attributes": {
-      "title": "AB",  # Слишком короткий!
+      "title": "AB",  # Too short!
       "content": "Content"
     }
   }
@@ -253,10 +253,10 @@ Content-Type: application/vnd.api+json
 ### ✅ Relationships
 
 ```bash
-# Получение автора статьи
+# Fetch article author
 GET /api/articles/{id}/relationships/author
 
-# Установка автора
+# Set the author
 PATCH /api/articles/{id}/relationships/author
 Content-Type: application/vnd.api+json
 
@@ -267,7 +267,7 @@ Content-Type: application/vnd.api+json
   }
 }
 
-# Добавление тегов
+# Add tags
 POST /api/articles/{id}/relationships/tags
 Content-Type: application/vnd.api+json
 
@@ -278,7 +278,7 @@ Content-Type: application/vnd.api+json
   ]
 }
 
-# Удаление тега
+# Remove a tag
 DELETE /api/articles/{id}/relationships/tags
 Content-Type: application/vnd.api+json
 
@@ -288,24 +288,24 @@ Content-Type: application/vnd.api+json
   ]
 }
 
-# Получение связанных ресурсов
+# Retrieve related resources
 GET /api/articles/{id}/author
 GET /api/articles/{id}/tags
 ```
 
-### ✅ Пагинацией
+### ✅ Pagination
 
 ```bash
 GET /api/articles?page[number]=1&page[size]=10
 ```
 
-### ✅ Сортировкой
+### ✅ Sorting
 
 ```bash
 GET /api/articles?sort=-createdAt,title
 ```
 
-### ✅ Фильтрацией
+### ✅ Filtering
 
 ```bash
 GET /api/articles?filter[title]=Symfony
@@ -323,11 +323,11 @@ GET /api/articles?fields[articles]=title,content
 GET /api/articles?include=author,tags
 ```
 
-## Что дальше?
+## What's Next?
 
-### Кастомизация
+### Customisation
 
-Если вам нужна специфичная логика для конкретного ресурса, создайте свой Repository/Persister:
+If you need resource-specific behaviour, implement a dedicated repository or persister:
 
 ```php
 // src/JsonApi/Repository/ArticleRepository.php
@@ -346,11 +346,11 @@ final class ArticleRepository implements TypedResourceRepository
 
     public function findCollection(string $type, Criteria $criteria): Slice
     {
-        // Ваша специфичная логика
-        // Например, фильтрация по статусу, eager loading и т.д.
+        // Your custom logic
+        // e.g. filtering by status, eager loading, etc.
     }
 
-    // ... остальные методы
+    // ... remaining methods
 }
 ```
 
@@ -360,21 +360,21 @@ App\JsonApi\Repository\ArticleRepository:
     tags:
         - { name: 'jsonapi.repository', priority: 10 }
 
-# Generic repository для всех остальных типов
+# Generic repository for every other type
 JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository:
     tags:
         - { name: 'jsonapi.repository', priority: 0 }
 ```
 
-### Дополнительные возможности
+### Additional Capabilities
 
-- [Автоматическая генерация роутов](automatic-route-generation.md)
+- [Automatic route generation](automatic-route-generation.md)
 - [Doctrine Integration](doctrine-integration.md)
-- [Валидация](validation.md)
+- [Validation](validation.md)
 - [Relationships](relationships.md)
-- [Фильтрация](filtering.md)
-- [Пагинация](pagination.md)
-- [Сортировка](sorting.md)
+- [Filtering](filtering.md)
+- [Pagination](pagination.md)
+- [Sorting](sorting.md)
 - [Sparse Fieldsets](sparse-fieldsets.md)
 - [Include](include.md)
 - [Atomic Operations](atomic-operations.md)
@@ -383,38 +383,37 @@ JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository:
 
 ## Troubleshooting
 
-### Контейнер падает с ServiceNotFoundException
+### Container fails with ServiceNotFoundException
 
-Убедитесь, что вы зарегистрировали Generic Doctrine реализации в `config/services.yaml`.
+Make sure the Generic Doctrine implementations are registered in `config/services.yaml`.
 
-Если вы не используете Doctrine, бандл предоставляет NullObject реализации, которые работают "из коробки".
+If you are not using Doctrine, the bundle ships NullObject implementations that work out of the box.
 
-### Валидация не работает
+### Validation does not run
 
-Убедитесь, что вы используете `ValidatingDoctrinePersister` вместо `GenericDoctrinePersister`:
+Ensure you use `ValidatingDoctrinePersister` instead of `GenericDoctrinePersister`:
 
 ```yaml
 JsonApi\Symfony\Contract\Data\ResourcePersister:
     alias: JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
 ```
 
-### Роуты не генерируются
+### Routes are not generated
 
-1. Проверьте, что `type: jsonapi` указан в `config/routes.yaml`
-2. Очистите кеш: `php bin/console cache:clear`
-3. Проверьте роуты: `php bin/console debug:router | grep jsonapi`
+1. Confirm `type: jsonapi` is set in `config/routes.yaml`.
+2. Clear the cache: `php bin/console cache:clear`.
+3. Inspect routes: `php bin/console debug:router | grep jsonapi`.
 
-## Примеры
+## Examples
 
-Полные примеры приложений доступны в репозитории:
+Full application samples are available in the repository:
 
 - [Simple Blog](https://github.com/jsonapi/symfony-jsonapi-bundle/tree/main/examples/blog)
 - [E-commerce](https://github.com/jsonapi/symfony-jsonapi-bundle/tree/main/examples/ecommerce)
 - [Multi-tenant SaaS](https://github.com/jsonapi/symfony-jsonapi-bundle/tree/main/examples/saas)
 
-## Поддержка
+## Support
 
 - [GitHub Issues](https://github.com/jsonapi/symfony-jsonapi-bundle/issues)
 - [Discussions](https://github.com/jsonapi/symfony-jsonapi-bundle/discussions)
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/jsonapi+symfony)
-

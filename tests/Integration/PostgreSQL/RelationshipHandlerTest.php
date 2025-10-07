@@ -130,10 +130,10 @@ final class RelationshipHandlerTest extends DoctrineIntegrationTestCase
         $article = $this->em->find(Article::class, 'article-1');
         self::assertSame('author-1', $article->getAuthor()->getId());
 
-        // Меняем автора
+        // Change author
         $this->handler->replaceToOne($article, 'author', 'author-2');
 
-        // Проверяем
+        // Check
         $this->em->clear();
         $article = $this->em->find(Article::class, 'article-1');
         self::assertSame('author-2', $article->getAuthor()->getId());

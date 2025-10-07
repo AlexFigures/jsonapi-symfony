@@ -7,11 +7,11 @@ namespace JsonApi\Symfony\Http\Exception;
 use JsonApi\Symfony\Http\Error\ErrorObject;
 
 /**
- * Исключение для ошибок валидации.
- * 
- * HTTP статус: 422 Unprocessable Entity
- * 
- * Содержит массив JSON:API error objects с деталями валидации.
+ * Exception for validation errors.
+ *
+ * HTTP status: 422 Unprocessable Entity
+ *
+ * Contains an array of JSON:API error objects with validation details.
  */
 final class ValidationException extends JsonApiHttpException
 {

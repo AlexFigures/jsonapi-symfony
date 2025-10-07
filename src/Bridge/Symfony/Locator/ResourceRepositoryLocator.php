@@ -11,10 +11,10 @@ use JsonApi\Symfony\Contract\Data\TypedResourceRepository;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
 
 /**
- * Locator для поиска подходящего Repository по типу ресурса.
- * 
- * Собирает все зарегистрированные репозитории через tagged_iterator
- * и выбирает подходящий на основе метода supports().
+ * Locator for finding suitable Repository by resource type.
+ *
+ * Collects all registered repositories via tagged_iterator
+ * and selects the appropriate one based on the supports() method.
  */
 final class ResourceRepositoryLocator implements ResourceRepository
 {
@@ -50,7 +50,7 @@ final class ResourceRepositoryLocator implements ResourceRepository
             }
         }
 
-        // Используем fallback (может быть NullObject или generic Doctrine repository)
+        // Use fallback (can be NullObject or generic Doctrine repository)
         return $this->fallbackRepository;
     }
 }

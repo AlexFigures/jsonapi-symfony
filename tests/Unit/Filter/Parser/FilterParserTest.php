@@ -57,6 +57,18 @@ final class FilterParserTest extends TestCase
         self::assertSame(['sci-fi', 'classic'], $ast->values);
     }
 
+    public function testParsesNotInOperator(): void
+    {
+        $parser = new FilterParser();
+
+        $ast = $parser->parse(['status' => ['nin' => ['draft', 'archived']]]);
+
+        self::assertInstanceOf(Comparison::class, $ast);
+        self::assertSame('status', $ast->fieldPath);
+        self::assertSame('nin', $ast->operator);
+        self::assertSame(['draft', 'archived'], $ast->values);
+    }
+
     public function testParsesDisjunctionGroup(): void
     {
         $parser = new FilterParser();

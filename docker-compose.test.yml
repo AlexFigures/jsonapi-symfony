@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # PostgreSQL для интеграционных тестов
+  # PostgreSQL for integration tests
   postgres:
     image: postgres:16-alpine
     environment:
@@ -20,7 +20,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # MySQL для тестирования совместимости
+  # MySQL for compatibility testing
   mysql:
     image: mysql:8.0
     environment:
@@ -38,7 +38,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # MariaDB для тестирования совместимости
+  # MariaDB for compatibility testing
   mariadb:
     image: mariadb:11
     environment:
@@ -56,7 +56,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # PHP контейнер для запуска тестов
+  # PHP container for running tests
   php:
     build:
       context: .
@@ -65,7 +65,7 @@ services:
       - .:/app
       - composer_cache:/root/.composer
     working_dir: /app
-    command: tail -f /dev/null  # Держим контейнер запущенным
+    command: tail -f /dev/null  # Keep the container running
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,7 +82,7 @@ services:
       DATABASE_URL_MARIADB: "mysql://jsonapi:secret@mariadb:3306/jsonapi_test?serverVersion=mariadb-11.0.0"
       # SQLite
       DATABASE_URL_SQLITE: "sqlite:///:memory:"
-      # Тестовое окружение
+      # Test environment
       APP_ENV: test
       XDEBUG_MODE: coverage
 
@@ -91,4 +91,3 @@ volumes:
   mysql_data:
   mariadb_data:
   composer_cache:
-

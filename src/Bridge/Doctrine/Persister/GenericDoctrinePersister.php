@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Bridge\Doctrine\Persister;
 
 use Doctrine\ORM\EntityManagerInterface;
+use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
 use JsonApi\Symfony\Contract\Data\ChangeSet;
 use JsonApi\Symfony\Contract\Data\ResourcePersister;
 use JsonApi\Symfony\Http\Exception\ConflictException;
@@ -14,9 +15,12 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Универсальный Doctrine-персистер для JSON:API ресурсов.
+ * Generic Doctrine persister for JSON:API resources.
  *
- * Обрабатывает создание, обновление и удаление сущностей.
+ * Handles entity creation, updating, and deletion.
+ *
+ * Supports entities with constructors requiring parameters
+ * through SerializerEntityInstantiator (uses Symfony Serializer, like API Platform).
  */
 class GenericDoctrinePersister implements ResourcePersister
 {
@@ -24,6 +28,7 @@ class GenericDoctrinePersister implements ResourcePersister
         private readonly EntityManagerInterface $em,
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
+        private readonly SerializerEntityInstantiator $instantiator,
     ) {
     }
 
@@ -32,27 +37,40 @@ class GenericDoctrinePersister implements ResourcePersister
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->class;
 
-        // Проверка конфликта ID
+        // Check for ID conflict
         if ($clientId !== null && $this->em->find($entityClass, $clientId)) {
             throw new ConflictException(
                 sprintf('Resource "%s" with id "%s" already exists.', $type, $clientId)
             );
         }
 
-        // Создаем новую сущность через Doctrine ClassMetadata
-        $classMetadata = $this->em->getClassMetadata($entityClass);
-        $entity = $classMetadata->newInstance();
+        // Create new entity through SerializerEntityInstantiator
+        // It can call constructors with parameters and considers SerializationGroups
+        $result = $this->instantiator->instantiate($entityClass, $metadata, $changes, isCreate: true);
+        $entity = $result['entity'];
+        $remainingChanges = $result['remainingChanges'];
 
         $idPath = $metadata->idPropertyPath ?? 'id';
+        $classMetadata = $this->em->getClassMetadata($entityClass);
 
+        // Set ID if needed
         if ($clientId !== null) {
             $this->accessor->setValue($entity, $idPath, $clientId);
         } elseif ($classMetadata->isIdentifierNatural()) {
-            $this->accessor->setValue($entity, $idPath, Uuid::v4()->toRfc4122());
+            // Check if ID is already set (e.g., in constructor)
+            try {
+                $currentId = $this->accessor->getValue($entity, $idPath);
+                if ($currentId === null || $currentId === '') {
+                    $this->accessor->setValue($entity, $idPath, Uuid::v4()->toRfc4122());
+                }
+            } catch (\Throwable) {
+                // If unable to get ID, set a new one
+                $this->accessor->setValue($entity, $idPath, Uuid::v4()->toRfc4122());
+            }
         }
 
-        // Применяем атрибуты с учётом групп сериализации
-        $this->applyAttributes($entity, $metadata, $changes, true);
+        // Применяем оставшиеся атрибуты с учётом групп сериализации
+        $this->applyAttributes($entity, $metadata, $remainingChanges, true);
 
         $this->em->persist($entity);
         $this->em->flush();
