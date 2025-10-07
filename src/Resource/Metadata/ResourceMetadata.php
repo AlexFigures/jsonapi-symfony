@@ -14,6 +14,7 @@ final class ResourceMetadata
      * @param AttributeMap    $attributes
      * @param RelationshipMap $relationships
      * @param class-string    $class
+     * @param list<string>    $sortableFields
      */
     public function __construct(
         public string $type,
@@ -24,6 +25,7 @@ final class ResourceMetadata
         public ?string $idPropertyPath = null,
         public ?string $routePrefix = null,
         public ?string $description = null,
+        public array $sortableFields = [],
     ) {
     }
 }

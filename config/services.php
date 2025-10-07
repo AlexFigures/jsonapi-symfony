@@ -263,7 +263,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(SortingWhitelist::class)
         ->args([
-            '%jsonapi.sorting.whitelist%',
+            service(ResourceRegistryInterface::class),
         ])
     ;
 

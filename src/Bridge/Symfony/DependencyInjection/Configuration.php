@@ -93,16 +93,6 @@ final class Configuration implements ConfigurationInterface
 
         $pagination->end();
 
-        $sorting = $children->arrayNode('sorting')->addDefaultsIfNotSet();
-        $sortingChildren = $sorting->children();
-
-        $whitelist = $sortingChildren->arrayNode('whitelist')->useAttributeAsKey('type');
-        $whitelistPrototype = $whitelist->arrayPrototype();
-        $whitelistPrototype->scalarPrototype()->end();
-        $whitelistPrototype->end();
-        $whitelist->end();
-        $sorting->end();
-
         $write = $children->arrayNode('write')->addDefaultsIfNotSet();
         $writeChildren = $write->children();
 

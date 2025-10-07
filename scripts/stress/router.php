@@ -19,6 +19,7 @@ use JsonApi\Symfony\Atomic\Execution\OperationDispatcher;
 use JsonApi\Symfony\Atomic\Parser\AtomicRequestParser;
 use JsonApi\Symfony\Atomic\Validation\AtomicValidator;
 use JsonApi\Symfony\Bridge\Symfony\Controller\AtomicController;
+use JsonApi\Symfony\Filter\Parser\FilterParser;
 use JsonApi\Symfony\Http\Controller\CollectionController;
 use JsonApi\Symfony\Http\Controller\CreateResourceController;
 use JsonApi\Symfony\Http\Controller\DeleteResourceController;
@@ -64,16 +65,13 @@ $registry = new ResourceRegistry([
 ]);
 
 $pagination = new PaginationConfig(defaultSize: 25, maxSize: 100);
-$sorting = new SortingWhitelist([
-    'articles' => ['title', 'createdAt'],
-    'authors' => ['name'],
-    'tags' => ['name'],
-]);
+$sorting = new SortingWhitelist($registry);
 
 $errorBuilder = new ErrorBuilder(true);
 $errorMapper = new ErrorMapper($errorBuilder);
 
-$parser = new QueryParser($registry, $pagination, $sorting, $errorMapper);
+$filterParser = new FilterParser();
+$parser = new QueryParser($registry, $pagination, $sorting, $errorMapper, $filterParser);
 
 $routes = new RouteCollection();
 $routes->add('jsonapi.collection', new Route('/api/{type}'));

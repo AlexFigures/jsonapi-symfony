@@ -335,17 +335,14 @@ abstract class JsonApiTestCase extends TestCase
         ]);
 
         $pagination = new PaginationConfig(defaultSize: 25, maxSize: 100);
-        $sorting = new SortingWhitelist([
-            'articles' => ['title', 'createdAt'],
-            'authors' => ['name'],
-            'tags' => ['name'],
-        ]);
+        $sorting = new SortingWhitelist($registry);
 
         $errorBuilder = new ErrorBuilder(true);
         $errorMapper = new ErrorMapper($errorBuilder);
         $violationMapper = new ConstraintViolationMapper($registry, $errorMapper);
 
-        $parser = new QueryParser($registry, $pagination, $sorting, $errorMapper);
+        $filterParser = new \JsonApi\Symfony\Filter\Parser\FilterParser();
+        $parser = new QueryParser($registry, $pagination, $sorting, $errorMapper, $filterParser);
 
         $routes = new RouteCollection();
         $routes->add('jsonapi.collection', new Route('/api/{type}'));

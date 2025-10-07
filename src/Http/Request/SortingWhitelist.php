@@ -4,20 +4,30 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Request;
 
+use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+
 final class SortingWhitelist
 {
-    /**
-     * @param array<string, list<string>> $map
-     */
-    public function __construct(private array $map = [])
-    {
+    public function __construct(
+        private ResourceRegistryInterface $registry,
+    ) {
     }
 
     /**
+     * Returns the list of fields allowed for sorting for a given resource type.
+     *
+     * The sortable fields are defined using the #[SortableFields] attribute
+     * on the entity class.
+     *
      * @return list<string>
      */
     public function allowedFor(string $type): array
     {
-        return $this->map[$type] ?? [];
+        if (!$this->registry->hasType($type)) {
+            return [];
+        }
+
+        $metadata = $this->registry->getByType($type);
+        return $metadata->sortableFields;
     }
 }

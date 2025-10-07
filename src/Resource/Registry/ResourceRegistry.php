@@ -8,6 +8,7 @@ use JsonApi\Symfony\Resource\Attribute\Attribute as AttributeAttribute;
 use JsonApi\Symfony\Resource\Attribute\Id;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship as RelationshipAttribute;
+use JsonApi\Symfony\Resource\Attribute\SortableFields;
 use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
 use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
@@ -138,6 +139,15 @@ final class ResourceRegistry implements ResourceRegistryInterface
             $relationships = $this->extractRelationships($relationships, $method, $propertyPath);
         }
 
+        // Extract sortable fields from SortableFields attribute
+        $sortableFields = [];
+        $sortableFieldsAttributes = $reflection->getAttributes(SortableFields::class, ReflectionAttribute::IS_INSTANCEOF);
+        if ($sortableFieldsAttributes !== []) {
+            /** @var SortableFields $sortableFieldsAttr */
+            $sortableFieldsAttr = $sortableFieldsAttributes[0]->newInstance();
+            $sortableFields = $sortableFieldsAttr->fields;
+        }
+
         return new ResourceMetadata(
             $resource->type,
             $class,
@@ -147,6 +157,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
             $idPropertyPath,
             $resource->routePrefix,
             $resource->description,
+            $sortableFields,
         );
     }
 

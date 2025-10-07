@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Http\Exception;
 
 use JsonApi\Symfony\Http\Error\ErrorObject;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Исключение для ошибок валидации.
@@ -14,24 +13,14 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * 
  * Содержит массив JSON:API error objects с деталями валидации.
  */
-final class ValidationException extends HttpException
+final class ValidationException extends JsonApiHttpException
 {
     /**
      * @param array<ErrorObject> $errors
+     * @param array<string, string> $headers
      */
-    public function __construct(
-        private readonly array $errors,
-        string $message = 'Validation failed',
-    ) {
-        parent::__construct(422, $message);
-    }
-
-    /**
-     * @return array<ErrorObject>
-     */
-    public function getErrors(): array
+    public function __construct(array $errors, string $message = 'Validation failed', array $headers = [], ?\Throwable $previous = null)
     {
-        return $this->errors;
+        parent::__construct(422, $message, $headers, $errors, $previous);
     }
 }
-

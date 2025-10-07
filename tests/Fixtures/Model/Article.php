@@ -9,8 +9,10 @@ use JsonApi\Symfony\Resource\Attribute\Attribute;
 use JsonApi\Symfony\Resource\Attribute\Id;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship;
+use JsonApi\Symfony\Resource\Attribute\SortableFields;
 
 #[JsonApiResource(type: 'articles')]
+#[SortableFields(['title', 'createdAt'])]
 final class Article
 {
     /** @var list<Tag> */
