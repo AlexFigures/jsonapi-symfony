@@ -458,6 +458,14 @@ return static function (ContainerConfigurator $configurator): void {
     // Регистрируются с низким приоритетом, чтобы пользователь мог их переопределить
 
     $services
+        ->set('jsonapi.null_existence_checker', \JsonApi\Symfony\Contract\Data\NullExistenceChecker::class)
+    ;
+
+    $services
+        ->alias(ExistenceChecker::class, 'jsonapi.null_existence_checker')
+    ;
+
+    $services
         ->set('jsonapi.null_relationship_reader', \JsonApi\Symfony\Contract\Data\NullRelationshipReader::class)
     ;
 
