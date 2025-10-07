@@ -1,0 +1,66 @@
+# JSON:API Collection Endpoint
+jsonapi_collection:
+    path: /api/{type}
+    controller: JsonApi\Symfony\Http\Controller\CollectionController
+    methods: [GET, HEAD]
+
+# JSON:API Resource Endpoint
+jsonapi_resource:
+    path: /api/{type}/{id}
+    controller: JsonApi\Symfony\Http\Controller\ResourceController
+    methods: [GET, HEAD]
+    requirements:
+        id: '[^/]+'
+
+# JSON:API Create Resource
+jsonapi_create:
+    path: /api/{type}
+    controller: JsonApi\Symfony\Http\Controller\CreateResourceController
+    methods: [POST]
+
+# JSON:API Update Resource
+jsonapi_update:
+    path: /api/{type}/{id}
+    controller: JsonApi\Symfony\Http\Controller\UpdateResourceController
+    methods: [PATCH]
+    requirements:
+        id: '[^/]+'
+
+# JSON:API Delete Resource
+jsonapi_delete:
+    path: /api/{type}/{id}
+    controller: JsonApi\Symfony\Http\Controller\DeleteResourceController
+    methods: [DELETE]
+    requirements:
+        id: '[^/]+'
+
+# JSON:API Related Resources
+jsonapi_related:
+    path: /api/{type}/{id}/{relationship}
+    controller: JsonApi\Symfony\Http\Controller\RelatedController
+    methods: [GET, HEAD]
+    requirements:
+        id: '[^/]+'
+
+# JSON:API Relationships GET
+jsonapi_relationships_get:
+    path: /api/{type}/{id}/relationships/{relationship}
+    controller: JsonApi\Symfony\Http\Controller\RelationshipGetController
+    methods: [GET, HEAD]
+    requirements:
+        id: '[^/]+'
+
+# JSON:API Relationships Write
+jsonapi_relationships_write:
+    path: /api/{type}/{id}/relationships/{relationship}
+    controller: JsonApi\Symfony\Http\Controller\RelationshipWriteController
+    methods: [POST, PATCH, DELETE]
+    requirements:
+        id: '[^/]+'
+
+# JSON:API Atomic Operations
+jsonapi_atomic:
+    path: /api/operations
+    controller: JsonApi\Symfony\Bridge\Symfony\Controller\AtomicController
+    methods: [POST]
+

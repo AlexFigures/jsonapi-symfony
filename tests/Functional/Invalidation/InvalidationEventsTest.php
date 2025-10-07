@@ -31,10 +31,6 @@ final class InvalidationEventsTest extends JsonApiTestCase
 {
     public function testResourceCreateDispatchesEvent(): void
     {
-        // TODO: Implement event dispatching in CreateResourceController
-        // For now, mark as incomplete
-        self::markTestIncomplete('Event dispatching not yet implemented in CreateResourceController (GAP-011)');
-
         // Create a mock event dispatcher to capture dispatched events
         $dispatchedEvents = [];
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
@@ -47,25 +43,16 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Create controller with event dispatcher
         $controller = $this->createControllerWithEventDispatcher($eventDispatcher);
 
-        $request = Request::create('/api/articles', 'POST');
-        $request->headers->set('Content-Type', 'application/vnd.api+json');
-        $request->setMethod('POST');
-
-        $payload = [
+        $payload = json_encode([
             'data' => [
                 'type' => 'articles',
                 'attributes' => [
                     'title' => 'New Article',
                 ],
-                'relationships' => [
-                    'author' => [
-                        'data' => ['type' => 'authors', 'id' => '1'],
-                    ],
-                ],
             ],
-        ];
+        ], \JSON_THROW_ON_ERROR);
 
-        $request->initialize([], [], [], [], [], [], json_encode($payload, \JSON_THROW_ON_ERROR));
+        $request = Request::create('/api/articles', 'POST', server: ['CONTENT_TYPE' => 'application/vnd.api+json'], content: $payload);
 
         // Execute create
         $response = $controller($request, 'articles');
@@ -73,18 +60,14 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Verify response is successful
         self::assertSame(201, $response->getStatusCode());
 
-        // When implemented, verify event was dispatched
-        // self::assertCount(1, $dispatchedEvents);
-        // self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
-        // self::assertSame('articles', $dispatchedEvents[0]->type);
-        // self::assertSame('create', $dispatchedEvents[0]->operation);
+         self::assertCount(1, $dispatchedEvents);
+         self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
+         self::assertSame('articles', $dispatchedEvents[0]->type);
+         self::assertSame('create', $dispatchedEvents[0]->operation);
     }
 
     public function testResourceUpdateDispatchesEvent(): void
     {
-        // TODO: Implement event dispatching in UpdateResourceController
-        self::markTestIncomplete('Event dispatching not yet implemented in UpdateResourceController (GAP-011)');
-
         // Create a mock event dispatcher
         $dispatchedEvents = [];
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
@@ -97,11 +80,7 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Create controller with event dispatcher
         $controller = $this->createUpdateControllerWithEventDispatcher($eventDispatcher);
 
-        $request = Request::create('/api/articles/1', 'PATCH');
-        $request->headers->set('Content-Type', 'application/vnd.api+json');
-        $request->setMethod('PATCH');
-
-        $payload = [
+        $payload = json_encode([
             'data' => [
                 'type' => 'articles',
                 'id' => '1',
@@ -109,9 +88,9 @@ final class InvalidationEventsTest extends JsonApiTestCase
                     'title' => 'Updated Title',
                 ],
             ],
-        ];
+        ], \JSON_THROW_ON_ERROR);
 
-        $request->initialize([], [], [], [], [], [], json_encode($payload, \JSON_THROW_ON_ERROR));
+        $request = Request::create('/api/articles/1', 'PATCH', server: ['CONTENT_TYPE' => 'application/vnd.api+json'], content: $payload);
 
         // Execute update
         $response = $controller($request, 'articles', '1');
@@ -119,19 +98,15 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Verify response is successful
         self::assertSame(200, $response->getStatusCode());
 
-        // When implemented, verify event was dispatched
-        // self::assertCount(1, $dispatchedEvents);
-        // self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
-        // self::assertSame('articles', $dispatchedEvents[0]->type);
-        // self::assertSame('1', $dispatchedEvents[0]->id);
-        // self::assertSame('update', $dispatchedEvents[0]->operation);
+         self::assertCount(1, $dispatchedEvents);
+         self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
+         self::assertSame('articles', $dispatchedEvents[0]->type);
+         self::assertSame('1', $dispatchedEvents[0]->id);
+         self::assertSame('update', $dispatchedEvents[0]->operation);
     }
 
     public function testResourceDeleteDispatchesEvent(): void
     {
-        // TODO: Implement event dispatching in DeleteResourceController
-        self::markTestIncomplete('Event dispatching not yet implemented in DeleteResourceController (GAP-011)');
-
         // Create a mock event dispatcher
         $dispatchedEvents = [];
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
@@ -153,19 +128,15 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Verify response is successful
         self::assertSame(204, $response->getStatusCode());
 
-        // When implemented, verify event was dispatched
-        // self::assertCount(1, $dispatchedEvents);
-        // self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
-        // self::assertSame('articles', $dispatchedEvents[0]->type);
-        // self::assertSame('1', $dispatchedEvents[0]->id);
-        // self::assertSame('delete', $dispatchedEvents[0]->operation);
+         self::assertCount(1, $dispatchedEvents);
+         self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
+         self::assertSame('articles', $dispatchedEvents[0]->type);
+         self::assertSame('1', $dispatchedEvents[0]->id);
+         self::assertSame('delete', $dispatchedEvents[0]->operation);
     }
 
     public function testRelationshipUpdateDispatchesEvent(): void
     {
-        // TODO: Implement event dispatching in RelationshipWriteController
-        self::markTestIncomplete('Event dispatching not yet implemented in RelationshipWriteController (GAP-011)');
-
         // Create a mock event dispatcher
         $dispatchedEvents = [];
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
@@ -178,18 +149,18 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Create controller with event dispatcher
         $controller = $this->createRelationshipWriteControllerWithEventDispatcher($eventDispatcher);
 
-        $request = Request::create('/api/articles/1/relationships/tags', 'POST');
-        $request->headers->set('Content-Type', 'application/vnd.api+json');
-        $request->setMethod('POST');
-        $request->attributes->set('_route', 'jsonapi.relationship.write');
-
-        $payload = [
+        $payload = json_encode([
             'data' => [
                 ['type' => 'tags', 'id' => '1'],
             ],
-        ];
+        ], \JSON_THROW_ON_ERROR);
 
-        $request->initialize([], [], [], [], [], [], json_encode($payload, \JSON_THROW_ON_ERROR));
+        $request = Request::create(
+            '/api/articles/1/relationships/tags',
+            'POST',
+            server: ['CONTENT_TYPE' => 'application/vnd.api+json'],
+            content: $payload
+        );
 
         // Execute relationship update
         $response = $controller($request, 'articles', '1', 'tags');
@@ -197,62 +168,121 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Verify response is successful
         self::assertSame(200, $response->getStatusCode());
 
-        // When implemented, verify event was dispatched
-        // self::assertCount(1, $dispatchedEvents);
-        // self::assertInstanceOf(RelationshipChangedEvent::class, $dispatchedEvents[0]);
-        // self::assertSame('articles', $dispatchedEvents[0]->type);
-        // self::assertSame('1', $dispatchedEvents[0]->id);
-        // self::assertSame('tags', $dispatchedEvents[0]->relationship);
-        // self::assertSame('update', $dispatchedEvents[0]->operation);
+         self::assertCount(1, $dispatchedEvents);
+         self::assertInstanceOf(RelationshipChangedEvent::class, $dispatchedEvents[0]);
+         self::assertSame('articles', $dispatchedEvents[0]->type);
+         self::assertSame('1', $dispatchedEvents[0]->id);
+         self::assertSame('tags', $dispatchedEvents[0]->relationship);
+         self::assertSame('add', $dispatchedEvents[0]->operation); // POST = add operation
     }
 
     /**
      * Helper to create CreateResourceController with EventDispatcher.
-     *
-     * @param EventDispatcherInterface $eventDispatcher
-     * @phpstan-ignore-next-line
      */
     private function createControllerWithEventDispatcher(EventDispatcherInterface $eventDispatcher): CreateResourceController
     {
-        // For now, return the standard controller without event dispatcher
-        // When implementing, add EventDispatcher to constructor
-        return $this->createController();
+        $validator = new \JsonApi\Symfony\Http\Write\InputDocumentValidator(
+            $this->registry(),
+            $this->writeConfig(),
+            $this->errorMapper()
+        );
+
+        return new CreateResourceController(
+            $this->registry(),
+            $validator,
+            $this->changeSetFactory(),
+            $this->persister(),
+            $this->transactionManager(),
+            $this->documentBuilder(),
+            $this->linkGenerator(),
+            $this->writeConfig(),
+            $this->errorMapper(),
+            $this->violationMapper(),
+            $eventDispatcher
+        );
     }
 
     /**
      * Helper to create UpdateResourceController with EventDispatcher.
-     *
-     * @param EventDispatcherInterface $eventDispatcher
-     * @phpstan-ignore-next-line
      */
     private function createUpdateControllerWithEventDispatcher(EventDispatcherInterface $eventDispatcher): UpdateResourceController
     {
-        // For now, return the standard controller without event dispatcher
-        return $this->updateController();
+        $validator = new \JsonApi\Symfony\Http\Write\InputDocumentValidator(
+            $this->registry(),
+            $this->writeConfig(),
+            $this->errorMapper()
+        );
+
+        return new UpdateResourceController(
+            $this->registry(),
+            $validator,
+            $this->changeSetFactory(),
+            $this->persister(),
+            $this->transactionManager(),
+            $this->documentBuilder(),
+            $this->errorMapper(),
+            $this->violationMapper(),
+            $eventDispatcher
+        );
     }
 
     /**
      * Helper to create DeleteResourceController with EventDispatcher.
-     *
-     * @param EventDispatcherInterface $eventDispatcher
-     * @phpstan-ignore-next-line
      */
     private function createDeleteControllerWithEventDispatcher(EventDispatcherInterface $eventDispatcher): DeleteResourceController
     {
-        // For now, return the standard controller without event dispatcher
-        return $this->deleteController();
+        return new DeleteResourceController(
+            $this->registry(),
+            $this->persister(),
+            $this->transactionManager(),
+            $eventDispatcher
+        );
     }
 
     /**
      * Helper to create RelationshipWriteController with EventDispatcher.
-     *
-     * @param EventDispatcherInterface $eventDispatcher
-     * @phpstan-ignore-next-line
      */
     private function createRelationshipWriteControllerWithEventDispatcher(EventDispatcherInterface $eventDispatcher): RelationshipWriteController
     {
-        // For now, return the standard controller without event dispatcher
-        return $this->relationshipWriteController();
+        // Initialize dependencies
+        $this->registry();
+
+        $relationshipValidator = new \JsonApi\Symfony\Http\Write\RelationshipDocumentValidator(
+            $this->registry(),
+            new \JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker($this->repository()),
+            $this->errorMapper()
+        );
+
+        $relationshipUpdater = new \JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater(
+            $this->registry(),
+            $this->repository()
+        );
+
+        $relationshipReader = new \JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader(
+            $this->registry(),
+            $this->repository(),
+            $this->propertyAccessor()
+        );
+
+        $pagination = new \JsonApi\Symfony\Http\Request\PaginationConfig(defaultSize: 25, maxSize: 100);
+
+        $linkageBuilder = new \JsonApi\Symfony\Http\Relationship\LinkageBuilder(
+            $this->registry(),
+            $relationshipReader,
+            $pagination
+        );
+
+        $relationshipResponseConfig = new \JsonApi\Symfony\Http\Relationship\WriteRelationshipsResponseConfig('linkage');
+
+        return new RelationshipWriteController(
+            $relationshipValidator,
+            $relationshipUpdater,
+            $linkageBuilder,
+            $relationshipResponseConfig,
+            $this->errorMapper(),
+            $this->transactionManager(),
+            $eventDispatcher
+        );
     }
 }
 

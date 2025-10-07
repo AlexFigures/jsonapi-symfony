@@ -318,6 +318,14 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
+        ->set(\JsonApi\Symfony\Http\Controller\SwaggerUiController::class)
+        ->args([
+            '%jsonapi.docs.ui%',
+        ])
+        ->tag('controller.service_arguments')
+    ;
+
+    $services
         ->set(LinkageBuilder::class)
         ->args([
             service(ResourceRegistryInterface::class),

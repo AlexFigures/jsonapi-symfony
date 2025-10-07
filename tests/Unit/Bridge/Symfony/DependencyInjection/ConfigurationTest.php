@@ -62,6 +62,12 @@ final class ConfigurationTest extends TestCase
                         'include_profiles' => true,
                     ],
                 ],
+                'ui' => [
+                    'enabled' => true,
+                    'route' => '/_jsonapi/docs',
+                    'spec_url' => '/_jsonapi/openapi.json',
+                    'theme' => 'swagger',
+                ],
             ],
             $config['docs']
         );

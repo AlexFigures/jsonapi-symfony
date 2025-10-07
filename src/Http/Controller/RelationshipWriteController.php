@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Http\Controller;
 
 use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
+use JsonApi\Symfony\Contract\Tx\TransactionManager;
+use JsonApi\Symfony\Events\RelationshipChangedEvent;
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
@@ -16,6 +18,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use RuntimeException;
 
 #[Route(path: '/api/{type}/{id}/relationships/{rel}', methods: ['PATCH', 'POST', 'DELETE'], name: 'jsonapi.relationship.write')]
@@ -27,6 +30,8 @@ final class RelationshipWriteController
         private readonly LinkageBuilder $linkage,
         private readonly WriteRelationshipsResponseConfig $responseConfig,
         private readonly ErrorMapper $errors,
+        private readonly TransactionManager $transaction,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -38,21 +43,36 @@ final class RelationshipWriteController
         $kind = $validated['kind'];
         $data = $validated['data'];
 
-        if ($request->isMethod('PATCH')) {
-            if ($kind === 'to-one') {
-                /** @var array{type: string, id: string}|null $data */
-                $this->updater->replaceToOne($type, $id, $rel, $this->linkage->toIdentifierOrNull($data));
+        // Execute relationship update within a transaction
+        $this->transaction->transactional(function () use ($request, $kind, $data, $type, $id, $rel): void {
+            if ($request->isMethod('PATCH')) {
+                if ($kind === 'to-one') {
+                    /** @var array{type: string, id: string}|null $data */
+                    $this->updater->replaceToOne($type, $id, $rel, $this->linkage->toIdentifierOrNull($data));
+                } else {
+                    /** @var list<array{type: string, id: string}> $data */
+                    $this->updater->replaceToMany($type, $id, $rel, $this->linkage->toIdentifiers($data));
+                }
+            } elseif ($request->isMethod('POST')) {
+                /** @var list<array{type: string, id: string}> $data */
+                $this->updater->addToMany($type, $id, $rel, $this->linkage->toIdentifiers($data));
             } else {
                 /** @var list<array{type: string, id: string}> $data */
-                $this->updater->replaceToMany($type, $id, $rel, $this->linkage->toIdentifiers($data));
+                $this->updater->removeFromToMany($type, $id, $rel, $this->linkage->toIdentifiers($data));
             }
-        } elseif ($request->isMethod('POST')) {
-            /** @var list<array{type: string, id: string}> $data */
-            $this->updater->addToMany($type, $id, $rel, $this->linkage->toIdentifiers($data));
-        } else {
-            /** @var list<array{type: string, id: string}> $data */
-            $this->updater->removeFromToMany($type, $id, $rel, $this->linkage->toIdentifiers($data));
-        }
+        });
+
+        // Dispatch event after successful transaction
+        $operation = match (true) {
+            $request->isMethod('PATCH') => 'replace',
+            $request->isMethod('POST') => 'add',
+            $request->isMethod('DELETE') => 'remove',
+            default => throw new RuntimeException('Unsupported HTTP method'),
+        };
+
+        $this->eventDispatcher->dispatch(
+            new RelationshipChangedEvent($type, $id, $rel, $operation)
+        );
 
         if ($this->responseConfig->mode === '204') {
             return new Response(null, Response::HTTP_NO_CONTENT, ['Content-Type' => MediaType::JSON_API]);

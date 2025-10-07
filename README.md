@@ -54,6 +54,19 @@ jsonapi:
         client_generated_ids:
             articles: false
             authors: true
+    docs:
+        generator:
+            openapi:
+                enabled: true
+                title: 'My API'
+                version: '1.0.0'
+                servers:
+                    - 'https://api.example.com'
+        ui:
+            enabled: true
+            route: '/_jsonapi/docs'
+            spec_url: '/_jsonapi/openapi.json'
+            theme: 'swagger'  # or 'redoc'
 ```
 
 Declare your first resource:
@@ -107,6 +120,75 @@ Input documents are validated strictly:
 * Client-generated IDs are controlled per type through `write.client_generated_ids`. When disabled the bundle throws `403 Forbidden`; when enabled conflicts surface as `409 Conflict`.
 
 An in-memory `ResourcePersister` backs the functional test suite, using UUIDv4 server-generated identifiers when the client does not supply an ID.
+
+## Public API & Backward Compatibility
+
+JsonApiBundle follows [Semantic Versioning](https://semver.org/). The public API consists of:
+
+- **Contract Interfaces** (`src/Contract/`) - Stable, BC guaranteed
+- **Resource Attributes** (`src/Resource/Attribute/`) - Stable, BC guaranteed
+- **Configuration Schema** - Stable, BC guaranteed
+
+See [Public API Reference](docs/api/public-api.md) for complete documentation.
+
+### Backward Compatibility Policy
+
+- **MAJOR** versions may contain breaking changes
+- **MINOR** versions add new features in a backward compatible manner
+- **PATCH** versions contain bug fixes only
+
+See [BC Policy](docs/api/bc-policy.md) for detailed information.
+
+### Upgrading
+
+When upgrading between versions, consult the [Upgrade Guide](docs/api/upgrade-guide.md) for migration instructions.
+
+**Pre-1.0 Notice**: Versions 0.x may introduce breaking changes in MINOR versions. Pin to exact MINOR version in `composer.json`:
+
+```json
+{
+    "require": {
+        "jsonapi/symfony-jsonapi-bundle": "~0.1.0"
+    }
+}
+```
+
+---
+
+## API Documentation
+
+The bundle provides automatic OpenAPI 3.1 documentation generation and interactive UI:
+
+### OpenAPI Specification
+Access the machine-readable OpenAPI spec at:
+```
+GET /_jsonapi/openapi.json
+```
+
+### Interactive Documentation UI
+Access the interactive Swagger UI or Redoc at:
+```
+GET /_jsonapi/docs
+```
+
+**Features**:
+- 🎨 **Two themes**: Swagger UI (default) or Redoc
+- 🔍 **Try it out**: Test API endpoints directly from the browser
+- 📖 **Auto-generated**: Reflects all registered resources and their attributes/relationships
+- 🔒 **Configurable**: Enable/disable per environment
+
+**Configuration**:
+```yaml
+jsonapi:
+    docs:
+        ui:
+            enabled: true              # Enable/disable UI
+            route: '/_jsonapi/docs'    # UI route
+            spec_url: '/_jsonapi/openapi.json'  # OpenAPI spec URL
+            theme: 'swagger'           # 'swagger' or 'redoc'
+```
+
+**Production tip**: Disable in production by setting `enabled: false` in `config/packages/prod/jsonapi.yaml`.
 
 Example response:
 

@@ -7,25 +7,74 @@
 1. **Обнаружение утечек памяти** — проверка что память не растёт монотонно при длительной работе
 2. **Проверка стабильности** — отсутствие падений при большом количестве запросов
 3. **Профилирование производительности** — выявление узких мест
+4. **Реальные HTTP-запросы** — тестирование полного цикла request-response через контроллеры
+
+## Архитектура
+
+### Компоненты
+
+1. **Stress Test Application** (`scripts/stress/app/`)
+   - Минимальное Symfony приложение с JsonApiBundle
+   - In-memory репозиторий с большим датасетом (1000 Articles, 100 Authors, 500 Tags)
+   - Все JSON:API endpoints (collection, resource, relationships, atomic)
+
+2. **HTTP Client** (`scripts/stress/http-client.php`)
+   - Простой cURL-based HTTP клиент
+   - Поддержка GET, POST, PATCH, DELETE
+   - Автоматическая обработка JSON:API Content-Type
+
+3. **Stress Test Runners**
+   - `run.php` — оригинальный симуляционный тест (deprecated)
+   - `run-http.php` — HTTP-based стресс-тест (рекомендуется)
+   - `memory-stress.php` — расширенное профилирование памяти с HTTP
+
+4. **Server** (`scripts/stress/server.php`)
+   - Запуск PHP built-in server для stress test app
 
 ## Использование
 
-### Базовый запуск
+### Быстрый старт
 
 ```bash
-# Все тесты
-make stress
+# Терминал 1: Запустить сервер
+php scripts/stress/server.php
 
-# Только тесты памяти
-make stress-mem
-
-# Только тесты производительности
-make stress-perf
+# Терминал 2: Запустить стресс-тесты
+php scripts/stress/run-http.php --profile=all
 ```
 
-### Прямой запуск скрипта
+### HTTP-Based Stress Tests (Рекомендуется)
 
 ```bash
+# 1. Запустить сервер (в отдельном терминале)
+php scripts/stress/server.php [port]
+
+# 2. Запустить стресс-тесты
+php scripts/stress/run-http.php --profile=mem
+php scripts/stress/run-http.php --profile=perf
+php scripts/stress/run-http.php --profile=all
+
+# С кастомным URL сервера
+php scripts/stress/run-http.php --server=http://localhost:9000
+```
+
+### Memory Profiling
+
+```bash
+# 1. Запустить сервер
+php scripts/stress/server.php
+
+# 2. Запустить memory stress test
+php scripts/stress/memory-stress.php --profile=standard
+php scripts/stress/memory-stress.php --profile=quick      # Для CI
+php scripts/stress/memory-stress.php --profile=extended   # Глубокий анализ
+php scripts/stress/memory-stress.php --iterations=5000    # Кастомное количество
+```
+
+### Legacy Simulation Tests (Deprecated)
+
+```bash
+# Старые симуляционные тесты (не используют реальные HTTP-запросы)
 php scripts/stress/run.php --profile=mem
 php scripts/stress/run.php --profile=perf
 php scripts/stress/run.php --profile=all
@@ -33,35 +82,66 @@ php scripts/stress/run.php --profile=all
 
 ## Тестовые сценарии
 
-### 1. Collection GET with include/fields (1000 итераций)
+### HTTP-Based Tests (run-http.php, memory-stress.php)
+
+#### 1. Collection GET with include/fields (1000 итераций)
+**Endpoint**: `GET /api/articles?include=author,tags&fields[articles]=title`
+
 Проверяет:
 - Отсутствие утечек при построении документов с `include`
 - Корректную работу sparse fieldsets
 - Стабильность DocumentBuilder
+- Реальные HTTP response times
+- Полный цикл request-response
 
-### 2. Related/Relationships to-many (500 итераций)
+#### 2. Resource GET (500 итераций)
+**Endpoint**: `GET /api/articles/{id}?include=author,tags`
+
 Проверяет:
-- Обработку to-many relationships
+- Получение отдельных ресурсов
+- Include relationships
+- HTTP caching headers
+- Response time для single resource
+
+#### 3. Related Resources (300 итераций)
+**Endpoint**: `GET /api/articles/{id}/tags`
+
+Проверяет:
+- Related resources endpoint
+- To-many relationships
 - Отсутствие N+1 запросов
 - Корректную работу LinkageBuilder
 
-### 3. Atomic operations with lid (200 итераций)
+#### 4. Relationships (200 итераций)
+**Endpoint**: `GET /api/articles/{id}/relationships/author`
+
+Проверяет:
+- Relationships endpoint
+- Resource linkage
+- To-one и to-many relationships
+
+#### 5. Atomic Operations (100 итераций)
+**Endpoint**: `POST /api/operations`
+
 Проверяет:
 - Транзакционность
 - Разрешение Local IDs
 - Отсутствие утечек в LidRegistry
+- Atomic operations extension
 
-### 4. PATCH/DELETE with If-Match (300 итераций)
+#### 6. Write Operations (200 итераций)
+**Endpoints**: `PATCH /api/articles/{id}`, `DELETE /api/articles/{id}`
+
 Проверяет:
-- Preconditions (412/428)
+- PATCH/DELETE операции
+- Preconditions (If-Match)
 - ETag генерацию и валидацию
 - Стабильность при конкурентных обновлениях
 
-### 5. Filters with large IN/OR (100 итераций)
-Проверяет:
-- Обработку сложных фильтров
-- Лимиты complexity budget
-- Отсутствие SQL injection
+### Legacy Simulation Tests (run.php)
+
+Старые тесты используют симуляцию Request объектов без реальных HTTP-запросов.
+**Не рекомендуется** для обнаружения реальных проблем производительности.
 
 ## Метрики
 
@@ -87,7 +167,9 @@ php scripts/stress/run.php --profile=all
 
 ## Отчёты
 
-Результаты сохраняются в `build/stress-report.json`:
+### HTTP-Based Tests
+
+Результаты сохраняются в `build/stress-report-http.json`:
 
 ```json
 {
@@ -97,14 +179,20 @@ php scripts/stress/run.php --profile=all
       "iteration": 1,
       "memory_usage": 12345678,
       "memory_peak": 12345678,
+      "http_time": 0.0234,
       "time": 1234567890.123
     }
   ],
   "memory_start": 10000000,
   "memory_peak": 15000000,
-  "time_start": 1234567890.0
+  "time_start": 1234567890.0,
+  "http_errors": 0
 }
 ```
+
+### Legacy Tests
+
+Результаты сохраняются в `build/stress-report.json` (старый формат без http_time)
 
 ## Интеграция с CI
 
@@ -161,11 +249,28 @@ $config = [
 ];
 ```
 
+## Dataset
+
+Stress test application использует расширенный InMemoryRepository с большим датасетом:
+
+- **1000 Articles** — с разными авторами и тегами
+- **100 Authors** — распределены по статьям
+- **500 Tags** — каждая статья имеет 2-5 тегов
+
+Это позволяет тестировать:
+- Pagination с большими коллекциями
+- Include с множественными relationships
+- N+1 query detection
+- Memory usage при больших response documents
+
 ## Дальнейшие улучшения
 
-- [ ] Интеграция с реальными контроллерами (сейчас только симуляция)
-- [ ] Добавить профилирование SQL запросов
+- [x] Интеграция с реальными контроллерами через HTTP
+- [x] Большой датасет для реалистичного тестирования
+- [ ] Добавить профилирование SQL запросов (для Doctrine adapter)
 - [ ] Визуализация графиков памяти
 - [ ] Автоматическое сравнение с baseline
 - [ ] Интеграция с php-meminfo для анализа графа удержания
+- [ ] Docker-based stress test environment
+- [ ] Continuous benchmarking в CI
 

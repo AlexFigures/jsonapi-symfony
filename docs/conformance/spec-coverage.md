@@ -76,7 +76,7 @@ This document maps JSON:API 1.1 specification requirements (MUST/SHOULD) to test
 | **5.1** `fields[TYPE]` limits returned attributes | MUST | ✅ OK | `FieldsTest::testSparseFieldsetOnResource` | Projection applied |
 | **5.2** `fields` applies to primary data and `included` | MUST | ✅ OK | `SparseFieldsetsTest::testFieldsApplyToIncluded` (GAP-007) | Both covered |
 | **5.3** `type` and `id` always present regardless of `fields` | MUST | ✅ OK | `DocumentBuilder::buildResourceObject` | Never filtered |
-| **5.4** Invalid field names → 400 | SHOULD | ⚠️ PARTIAL | `QueryParamErrorsTest` | Basic validation, needs comprehensive test |
+| **5.4** Invalid field names → 400 | SHOULD | ✅ OK | `InvalidFieldNamesTest` (GAP-016) | Comprehensive validation: reserved names, special chars, malformed syntax |
 | **5.5** Projection optimization (DB-level) | SHOULD | ✅ OK | `FieldsProjector` | DQL SELECT optimization |
 
 ---
@@ -321,25 +321,36 @@ This document maps JSON:API 1.1 specification requirements (MUST/SHOULD) to test
 - **Priority**: Low (MAY requirement)
 - **Recommendation**: Add support if use case arises
 
-### GAP-016: Invalid Field Names Validation (Comprehensive)
+### ~~GAP-016: Invalid Field Names Validation (Comprehensive)~~ ✅ RESOLVED
 - **Spec**: Section 5.4 (SHOULD)
-- **Status**: Partial coverage
-- **Priority**: Medium
-- **Recommendation**: Add comprehensive test for all edge cases
+- **Status**: ✅ Fully covered
+- **Test**: `InvalidFieldNamesTest` (14 test cases)
+- **Coverage**: Reserved names, special characters, whitespace, malformed syntax, SQL injection attempts, path traversal
+- **Resolved**: 2025-10-06
 
 ---
 
 ## Next Steps
 
 1. ✅ **Spec coverage matrix complete** - This document
-2. 🔄 **Test gap analysis** - See `gaps.md`
-3. 🔄 **Memory & performance audit** - See `../reliability/memory-perf-report.md`
-4. 🔄 **Architecture review** - See `../architecture/review.md`
-5. 🔄 **Security checklist** - See `../security/checklist.md`
+2. ✅ **JSON:API Status Compliance Audit** - See `jsonapi-status-compliance-audit.md`
+3. ✅ **Test gap analysis** - See `gaps.md`
+4. 🔄 **Memory & performance audit** - See `../reliability/memory-perf-report.md`
+5. 🔄 **Architecture review** - See `../architecture/review.md`
+6. 🔄 **Security checklist** - See `../security/checklist.md`
 
 ---
 
-**Last Updated**: 2025-10-06  
-**Reviewer**: Codex QA Agent  
+## Related Documentation
+
+- **[JSON:API Status Compliance Audit](jsonapi-status-compliance-audit.md)** - Comprehensive audit of HTTP status codes and error handling
+- **[Status Compliance Test Matrix](status-compliance-test-matrix.md)** - Detailed test matrix for all status code scenarios
+- **[Status Compliance Failures](status-compliance-failures.json)** - Machine-readable report of deferred requirements
+- **[Test Gap Analysis](gaps.md)** - Analysis of missing test coverage
+
+---
+
+**Last Updated**: 2025-10-07
+**Reviewer**: Codex QA Agent
 **Status**: ✅ Complete
 

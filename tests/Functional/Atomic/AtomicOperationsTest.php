@@ -250,4 +250,105 @@ final class AtomicOperationsTest extends JsonApiTestCase
             self::assertSame('Author ' . ($i + 1), $result['data']['attributes']['name']);
         }
     }
+
+    public function testAddOperationWithHrefUsesDataTypeWhenRefIsNull(): void
+    {
+        $controller = $this->atomicController();
+
+        // When using href, ref is null, so the null-safe operator is tested
+        $payload = [
+            'atomic:operations' => [
+                [
+                    'op' => 'add',
+                    'href' => '/api/authors',
+                    'data' => [
+                        'type' => 'authors',
+                        'attributes' => [
+                            'name' => 'Author Via Href',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $request = Request::create('/api/operations', 'POST', server: [
+            'CONTENT_TYPE' => MediaType::JSON_API_ATOMIC,
+            'HTTP_ACCEPT' => MediaType::JSON_API_ATOMIC,
+        ], content: json_encode($payload, \JSON_THROW_ON_ERROR));
+
+        $response = $controller($request);
+
+        self::assertSame(200, $response->getStatusCode());
+        $decoded = json_decode((string) $response->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        if (!is_array($decoded)) {
+            self::fail('Response payload must decode to an array.');
+        }
+        /** @var array<string, mixed> $decoded */
+        self::assertArrayHasKey('atomic:results', $decoded);
+        $results = $decoded['atomic:results'];
+        if (!is_array($results) || !array_is_list($results)) {
+            self::fail('Atomic results must be represented as a list.');
+        }
+        /** @var list<array<string, mixed>> $results */
+        self::assertCount(1, $results);
+        $firstResult = $results[0];
+        self::assertArrayHasKey('data', $firstResult);
+        $data = $firstResult['data'];
+        if (!is_array($data)) {
+            self::fail('Atomic result data must be an object.');
+        }
+        self::assertSame('authors', $data['type']);
+        self::assertSame('Author Via Href', $data['attributes']['name']);
+    }
+
+    public function testAddOperationWithRefButNoTypeInRefUsesDataType(): void
+    {
+        $controller = $this->atomicController();
+
+        // Test when ref.type is null but data.type is provided
+        // This tests the fallback logic: $type = $operation->ref?->type; if ($type === null && ...)
+        $payload = [
+            'atomic:operations' => [
+                [
+                    'op' => 'add',
+                    'ref' => ['type' => 'authors'], // ref with type
+                    'data' => [
+                        'type' => 'authors',
+                        'attributes' => [
+                            'name' => 'Author With Ref Type',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $request = Request::create('/api/operations', 'POST', server: [
+            'CONTENT_TYPE' => MediaType::JSON_API_ATOMIC,
+            'HTTP_ACCEPT' => MediaType::JSON_API_ATOMIC,
+        ], content: json_encode($payload, \JSON_THROW_ON_ERROR));
+
+        $response = $controller($request);
+
+        self::assertSame(200, $response->getStatusCode());
+        $decoded = json_decode((string) $response->getContent(), true, flags: \JSON_THROW_ON_ERROR);
+        if (!is_array($decoded)) {
+            self::fail('Response payload must decode to an array.');
+        }
+        /** @var array<string, mixed> $decoded */
+        self::assertArrayHasKey('atomic:results', $decoded);
+        $results = $decoded['atomic:results'];
+        if (!is_array($results) || !array_is_list($results)) {
+            self::fail('Atomic results must be represented as a list.');
+        }
+        /** @var list<array<string, mixed>> $results */
+        self::assertCount(1, $results);
+        $firstResult = $results[0];
+        self::assertArrayHasKey('data', $firstResult);
+        $data = $firstResult['data'];
+        if (!is_array($data)) {
+            self::fail('Atomic result data must be an object.');
+        }
+        self::assertSame('authors', $data['type']);
+        self::assertSame('Author With Ref Type', $data['attributes']['name']);
+    }
 }

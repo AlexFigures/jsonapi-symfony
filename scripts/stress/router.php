@@ -1,0 +1,242 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Router script for PHP built-in server
+ * 
+ * This file is used by the PHP built-in server to route requests.
+ * It bootstraps the JSON:API services and handles requests.
+ */
+
+use JsonApi\Symfony\Atomic\AtomicConfig;
+use JsonApi\Symfony\Atomic\Execution\AtomicTransaction;
+use JsonApi\Symfony\Atomic\Execution\Handlers\AddHandler;
+use JsonApi\Symfony\Atomic\Execution\Handlers\RelationshipOps;
+use JsonApi\Symfony\Atomic\Execution\Handlers\RemoveHandler;
+use JsonApi\Symfony\Atomic\Execution\Handlers\UpdateHandler;
+use JsonApi\Symfony\Atomic\Execution\OperationDispatcher;
+use JsonApi\Symfony\Atomic\Parser\AtomicRequestParser;
+use JsonApi\Symfony\Atomic\Validation\AtomicValidator;
+use JsonApi\Symfony\Bridge\Symfony\Controller\AtomicController;
+use JsonApi\Symfony\Http\Controller\CollectionController;
+use JsonApi\Symfony\Http\Controller\CreateResourceController;
+use JsonApi\Symfony\Http\Controller\DeleteResourceController;
+use JsonApi\Symfony\Http\Controller\RelatedController;
+use JsonApi\Symfony\Http\Controller\ResourceController;
+use JsonApi\Symfony\Http\Controller\UpdateResourceController;
+use JsonApi\Symfony\Http\Document\DocumentBuilder;
+use JsonApi\Symfony\Http\Error\ErrorBuilder;
+use JsonApi\Symfony\Http\Error\ErrorMapper;
+use JsonApi\Symfony\Http\Link\LinkGenerator;
+use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
+use JsonApi\Symfony\Http\Request\PaginationConfig;
+use JsonApi\Symfony\Http\Request\QueryParser;
+use JsonApi\Symfony\Http\Request\SortingWhitelist;
+use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
+use JsonApi\Symfony\Http\Write\ChangeSetFactory;
+use JsonApi\Symfony\Http\Write\InputDocumentValidator;
+use JsonApi\Symfony\Http\Write\WriteConfig;
+use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
+use JsonApi\Symfony\StressApp\StressRepositoryFactory;
+use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker;
+use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister;
+use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader;
+use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager;
+use JsonApi\Symfony\Tests\Fixtures\Model\Article;
+use JsonApi\Symfony\Tests\Fixtures\Model\Author;
+use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\Routing\Generator\UrlGenerator;
+use Symfony\Component\Routing\RequestContext;
+use Symfony\Component\Routing\Route;
+use Symfony\Component\Routing\RouteCollection;
+
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+// Boot services (based on JsonApiTestCase::boot())
+$registry = new ResourceRegistry([
+    Article::class,
+    Author::class,
+    Tag::class,
+]);
+
+$pagination = new PaginationConfig(defaultSize: 25, maxSize: 100);
+$sorting = new SortingWhitelist([
+    'articles' => ['title', 'createdAt'],
+    'authors' => ['name'],
+    'tags' => ['name'],
+]);
+
+$errorBuilder = new ErrorBuilder(true);
+$errorMapper = new ErrorMapper($errorBuilder);
+
+$parser = new QueryParser($registry, $pagination, $sorting, $errorMapper);
+
+$routes = new RouteCollection();
+$routes->add('jsonapi.collection', new Route('/api/{type}'));
+$routes->add('jsonapi.resource', new Route('/api/{type}/{id}'));
+$routes->add('jsonapi.related', new Route('/api/{type}/{id}/{rel}'));
+$routes->add('jsonapi.relationship.get', new Route('/api/{type}/{id}/relationships/{rel}'));
+$routes->add('jsonapi.relationship.write', new Route('/api/{type}/{id}/relationships/{rel}'));
+
+$context = new RequestContext();
+$context->setScheme('http');
+$context->setHost('localhost');
+
+$urlGenerator = new UrlGenerator($routes, $context);
+$linkGenerator = new LinkGenerator($urlGenerator);
+$accessor = PropertyAccess::createPropertyAccessor();
+$document = new DocumentBuilder($registry, $accessor, $linkGenerator, 'when_included');
+
+// Use StressRepositoryFactory to create InMemoryRepository with large dataset
+$repository = StressRepositoryFactory::create($registry, $accessor);
+
+// Create additional services
+$transactionManager = new InMemoryTransactionManager();
+$persister = new InMemoryPersister($repository, $registry, $transactionManager, $accessor);
+$relationshipReader = new InMemoryRelationshipReader($registry, $repository, $accessor);
+$existenceChecker = new InMemoryExistenceChecker($repository);
+$violationMapper = new ConstraintViolationMapper($registry, $errorMapper);
+
+// Write configuration
+$writeConfig = new WriteConfig(false, ['authors' => true]);
+$validator = new InputDocumentValidator($registry, $writeConfig, $errorMapper);
+$changeSetFactory = new ChangeSetFactory($registry);
+
+// Atomic operations configuration
+$atomicConfig = new AtomicConfig(true, '/api/operations', false, 100, 'auto', true, true, '/api');
+$mediaNegotiator = new MediaTypeNegotiator($atomicConfig);
+$atomicParser = new AtomicRequestParser($atomicConfig, $errorMapper);
+$atomicValidator = new AtomicValidator($atomicConfig, $registry, $errorMapper);
+$atomicTransaction = new AtomicTransaction($transactionManager);
+$addHandler = new AddHandler($persister, $changeSetFactory, $registry, $accessor);
+$updateHandler = new UpdateHandler($persister, $changeSetFactory, $registry, $accessor, $errorMapper);
+$removeHandler = new RemoveHandler($persister, $errorMapper);
+$relationshipOps = new RelationshipOps(
+    new \JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater($registry, $repository),
+    $registry,
+    $errorMapper
+);
+$resultBuilder = new \JsonApi\Symfony\Atomic\Result\ResultBuilder($atomicConfig, $document);
+$dispatcher = new OperationDispatcher(
+    $atomicTransaction,
+    $addHandler,
+    $updateHandler,
+    $removeHandler,
+    $relationshipOps,
+    $resultBuilder
+);
+
+// Create controllers
+$collectionController = new CollectionController($registry, $repository, $parser, $document);
+$resourceController = new ResourceController($registry, $repository, $parser, $document);
+$relatedController = new RelatedController($registry, $relationshipReader, $parser, $document);
+$createController = new CreateResourceController(
+    $registry,
+    $validator,
+    $changeSetFactory,
+    $persister,
+    $transactionManager,
+    $document,
+    $linkGenerator,
+    $writeConfig,
+    $errorMapper,
+    $violationMapper
+);
+$updateController = new UpdateResourceController(
+    $registry,
+    $validator,
+    $changeSetFactory,
+    $persister,
+    $transactionManager,
+    $document,
+    $errorMapper,
+    $violationMapper
+);
+$deleteController = new DeleteResourceController($registry, $persister, $transactionManager);
+$atomicController = new AtomicController($atomicParser, $atomicValidator, $dispatcher, $mediaNegotiator);
+
+// Handle request
+$request = Request::createFromGlobals();
+$path = $request->getPathInfo();
+$method = $request->getMethod();
+
+try {
+    // Parse route
+    if ($path === '/api/operations') {
+        // Atomic operations endpoint
+        if ($method === 'POST') {
+            $response = $atomicController($request);
+            $response->send();
+            return;
+        }
+    } elseif (preg_match('#^/api/([a-z]+)$#', $path, $matches)) {
+        // Collection endpoint
+        $type = $matches[1];
+
+        if ($method === 'GET') {
+            $response = $collectionController($request, $type);
+            $response->send();
+            return;
+        } elseif ($method === 'POST') {
+            $response = $createController($request, $type);
+            $response->send();
+            return;
+        }
+    } elseif (preg_match('#^/api/([a-z]+)/([0-9]+)/([a-z]+)$#', $path, $matches)) {
+        // Related resources endpoint
+        $type = $matches[1];
+        $id = $matches[2];
+        $rel = $matches[3];
+
+        if ($method === 'GET') {
+            $response = $relatedController($request, $type, $id, $rel);
+            $response->send();
+            return;
+        }
+    } elseif (preg_match('#^/api/([a-z]+)/([0-9]+)$#', $path, $matches)) {
+        // Resource endpoint
+        $type = $matches[1];
+        $id = $matches[2];
+
+        if ($method === 'GET') {
+            $response = $resourceController($request, $type, $id);
+            $response->send();
+            return;
+        } elseif ($method === 'PATCH') {
+            $response = $updateController($request, $type, $id);
+            $response->send();
+            return;
+        } elseif ($method === 'DELETE') {
+            $response = $deleteController($request, $type, $id);
+            $response->send();
+            return;
+        }
+    }
+
+    // Not found
+    $response = new Response(
+        json_encode(['errors' => [['status' => '404', 'title' => 'Not Found']]], JSON_THROW_ON_ERROR),
+        404,
+        ['Content-Type' => 'application/vnd.api+json']
+    );
+    $response->send();
+} catch (\Throwable $e) {
+    $response = new Response(
+        json_encode([
+            'errors' => [[
+                'status' => '500',
+                'title' => 'Internal Server Error',
+                'detail' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]],
+        ], JSON_THROW_ON_ERROR),
+        500,
+        ['Content-Type' => 'application/vnd.api+json']
+    );
+    $response->send();
+}
+

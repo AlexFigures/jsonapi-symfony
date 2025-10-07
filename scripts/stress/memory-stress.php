@@ -5,17 +5,22 @@ declare(strict_types=1);
 
 /**
  * Memory Stress Test для JsonApiBundle
- * 
+ *
  * Проверяет отсутствие утечек памяти при длительной работе без перезапуска PHP.
- * 
+ * Использует реальные HTTP-запросы к контроллерам.
+ *
  * Использование:
- *   php scripts/stress/memory-stress.php [--profile=PROFILE] [--iterations=N]
- * 
+ *   # Start server in one terminal:
+ *   php scripts/stress/server.php
+ *
+ *   # Run stress tests in another terminal:
+ *   php scripts/stress/memory-stress.php [--profile=PROFILE] [--iterations=N] [--server=URL]
+ *
  * Профили:
  *   - quick: 100 итераций (для CI)
  *   - standard: 1000 итераций (по умолчанию)
  *   - extended: 5000 итераций (для глубокого анализа)
- * 
+ *
  * Выход:
  *   - 0: тест пройден (нет утечек)
  *   - 1: обнаружены утечки памяти
@@ -23,12 +28,14 @@ declare(strict_types=1);
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__ . '/http-client.php';
 
-use Symfony\Component\HttpFoundation\Request;
+use JsonApi\Symfony\StressTest\HttpClient;
 
 // Парсинг аргументов
 $profile = 'standard';
 $iterations = null;
+$serverUrl = 'http://127.0.0.1:8765';
 
 foreach ($argv as $arg) {
     if (str_starts_with($arg, '--profile=')) {
@@ -36,6 +43,9 @@ foreach ($argv as $arg) {
     }
     if (str_starts_with($arg, '--iterations=')) {
         $iterations = (int) substr($arg, strlen('--iterations='));
+    }
+    if (str_starts_with($arg, '--server=')) {
+        $serverUrl = substr($arg, strlen('--server='));
     }
 }
 
@@ -81,13 +91,26 @@ if ($iterations !== null) {
     }
 }
 
-echo "=== JsonApiBundle Memory Stress Test ===\n";
+echo "=== JsonApiBundle Memory Stress Test (HTTP) ===\n";
 echo "Profile: $profile\n";
+echo "Server: $serverUrl\n";
 echo "Configuration:\n";
 foreach ($config as $key => $value) {
     echo "  - $key: $value iterations\n";
 }
 echo "\n";
+
+// Initialize HTTP client
+$client = new HttpClient($serverUrl);
+
+// Check if server is running
+echo "Checking server availability...\n";
+if (!$client->isServerRunning()) {
+    fwrite(STDERR, "❌ ERROR: Server is not running at $serverUrl\n");
+    fwrite(STDERR, "Start the server with: php scripts/stress/server.php\n");
+    exit(2);
+}
+echo "✅ Server is running\n\n";
 
 // Инициализация метрик
 $metrics = [
@@ -177,19 +200,22 @@ for ($i = 0; $i < $config['collections']; $i++) {
         'page' => ['number' => ($i % 10) + 1, 'size' => 25],
         'sort' => $i % 2 === 0 ? 'title' : '-createdAt',
     ];
-    
+
     if ($i % 3 === 0) {
         $params['include'] = 'author';
     }
     if ($i % 5 === 0) {
         $params['fields'] = ['articles' => 'title,body'];
     }
-    
-    // Здесь должен быть реальный вызов контроллера
-    // Для примера просто создаём Request
-    $request = Request::create('/api/articles', 'GET', $params);
-    unset($request); // Освобождаем
-    
+
+    // Real HTTP request
+    try {
+        $response = $client->get('/api/articles', $params);
+        unset($response);
+    } catch (\Throwable $e) {
+        // Ignore errors for stress testing
+    }
+
     if ($i % 100 === 0) {
         recordMetrics('collections', $i, $metrics);
         echo "  Progress: $i / {$config['collections']}\r";
@@ -200,16 +226,20 @@ echo "  Completed: {$config['collections']} iterations\n";
 // Тест 2: GET отдельных ресурсов
 echo "[2/6] Testing resource GET requests...\n";
 for ($i = 0; $i < $config['resources']; $i++) {
-    $id = ($i % 100) + 1;
+    $id = ($i % 1000) + 1;
     $params = [];
-    
+
     if ($i % 2 === 0) {
         $params['include'] = 'author,tags';
     }
-    
-    $request = Request::create("/api/articles/$id", 'GET', $params);
-    unset($request);
-    
+
+    try {
+        $response = $client->get("/api/articles/$id", $params);
+        unset($response);
+    } catch (\Throwable $e) {
+        // Ignore errors
+    }
+
     if ($i % 100 === 0) {
         recordMetrics('resources', $i, $metrics);
         echo "  Progress: $i / {$config['resources']}\r";
@@ -220,17 +250,21 @@ echo "  Completed: {$config['resources']} iterations\n";
 // Тест 3: Relationships endpoints
 echo "[3/6] Testing relationship endpoints...\n";
 for ($i = 0; $i < $config['relationships']; $i++) {
-    $id = ($i % 100) + 1;
+    $id = ($i % 1000) + 1;
     $rel = $i % 2 === 0 ? 'author' : 'tags';
-    
+
     // Чередуем /relationships и /related
-    $path = $i % 2 === 0 
+    $path = $i % 2 === 0
         ? "/api/articles/$id/relationships/$rel"
         : "/api/articles/$id/$rel";
-    
-    $request = Request::create($path, 'GET');
-    unset($request);
-    
+
+    try {
+        $response = $client->get($path);
+        unset($response);
+    } catch (\Throwable $e) {
+        // Ignore errors
+    }
+
     if ($i % 100 === 0) {
         recordMetrics('relationships', $i, $metrics);
         echo "  Progress: $i / {$config['relationships']}\r";
@@ -253,13 +287,17 @@ for ($i = 0; $i < $config['atomic']; $i++) {
             ],
         ],
     ];
-    
-    $request = Request::create('/api/operations', 'POST', 
-        server: ['CONTENT_TYPE' => 'application/vnd.api+json; ext="https://jsonapi.org/ext/atomic"'],
-        content: json_encode($payload)
-    );
-    unset($request, $payload);
-    
+
+    try {
+        $response = $client->post('/api/operations', $payload, [
+            'Content-Type' => 'application/vnd.api+json; ext="https://jsonapi.org/ext/atomic"'
+        ]);
+        unset($response);
+    } catch (\Throwable $e) {
+        // Ignore errors
+    }
+    unset($payload);
+
     if ($i % 50 === 0) {
         recordMetrics('atomic', $i, $metrics);
         echo "  Progress: $i / {$config['atomic']}\r";
@@ -270,28 +308,28 @@ echo "  Completed: {$config['atomic']} iterations\n";
 // Тест 5: PATCH/DELETE операции
 echo "[5/6] Testing write operations...\n";
 for ($i = 0; $i < $config['writes']; $i++) {
-    $id = ($i % 100) + 1;
+    $id = ($i % 1000) + 1;
     $method = $i % 3 === 0 ? 'DELETE' : 'PATCH';
-    
-    if ($method === 'PATCH') {
-        $payload = [
-            'data' => [
-                'type' => 'articles',
-                'id' => (string) $id,
-                'attributes' => ['title' => "Updated $i"],
-            ],
-        ];
-        $request = Request::create("/api/articles/$id", 'PATCH',
-            server: ['CONTENT_TYPE' => 'application/vnd.api+json'],
-            content: json_encode($payload)
-        );
-        unset($payload);
-    } else {
-        $request = Request::create("/api/articles/$id", 'DELETE');
+
+    try {
+        if ($method === 'PATCH') {
+            $payload = [
+                'data' => [
+                    'type' => 'articles',
+                    'id' => (string) $id,
+                    'attributes' => ['title' => "Updated $i"],
+                ],
+            ];
+            $response = $client->patch("/api/articles/$id", $payload);
+            unset($payload, $response);
+        } else {
+            $response = $client->delete("/api/articles/$id");
+            unset($response);
+        }
+    } catch (\Throwable $e) {
+        // Ignore errors
     }
-    
-    unset($request);
-    
+
     if ($i % 100 === 0) {
         recordMetrics('writes', $i, $metrics);
         echo "  Progress: $i / {$config['writes']}\r";
@@ -308,10 +346,15 @@ for ($i = 0; $i < $config['filters']; $i++) {
         ],
         'page' => ['size' => 10],
     ];
-    
-    $request = Request::create('/api/articles', 'GET', $params);
-    unset($request, $params);
-    
+
+    try {
+        $response = $client->get('/api/articles', $params);
+        unset($response);
+    } catch (\Throwable $e) {
+        // Ignore errors
+    }
+    unset($params);
+
     if ($i % 50 === 0) {
         recordMetrics('filters', $i, $metrics);
         echo "  Progress: $i / {$config['filters']}\r";

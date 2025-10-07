@@ -1,0 +1,92 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    # Register resource models as tagged services (without autowiring)
+    JsonApi\Symfony\Tests\Fixtures\Model\Article:
+        autowire: false
+        tags:
+            - { name: 'jsonapi.resource', type: 'articles' }
+
+    JsonApi\Symfony\Tests\Fixtures\Model\Author:
+        autowire: false
+        tags:
+            - { name: 'jsonapi.resource', type: 'authors' }
+
+    JsonApi\Symfony\Tests\Fixtures\Model\Tag:
+        autowire: false
+        tags:
+            - { name: 'jsonapi.resource', type: 'tags' }
+
+    # Repository with large dataset
+    JsonApi\Symfony\StressApp\StressInMemoryRepository:
+        arguments:
+            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
+        public: true
+
+    # Alias for ResourceRepository contract
+    JsonApi\Symfony\Contract\Data\ResourceRepository:
+        alias: JsonApi\Symfony\StressApp\StressInMemoryRepository
+        public: true
+
+    # Persister
+    JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister:
+        arguments:
+            $repository: '@JsonApi\Symfony\StressApp\StressInMemoryRepository'
+            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
+            $transactionManager: '@JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager'
+        public: true
+
+    JsonApi\Symfony\Contract\Data\ResourcePersister:
+        alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister
+        public: true
+
+    # Transaction Manager
+    JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager:
+        public: true
+
+    JsonApi\Symfony\Contract\Tx\TransactionManager:
+        alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager
+        public: true
+
+    # Relationship services
+    JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader:
+        arguments:
+            $repository: '@JsonApi\Symfony\StressApp\StressInMemoryRepository'
+            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
+        public: true
+
+    JsonApi\Symfony\Contract\Data\RelationshipReader:
+        alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader
+        public: true
+
+    JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater:
+        arguments:
+            $repository: '@JsonApi\Symfony\StressApp\StressInMemoryRepository'
+            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
+        public: true
+
+    JsonApi\Symfony\Contract\Data\RelationshipUpdater:
+        alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater
+        public: true
+
+    # Existence Checker
+    JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker:
+        arguments:
+            $repository: '@JsonApi\Symfony\StressApp\StressInMemoryRepository'
+        public: true
+
+    JsonApi\Symfony\Contract\Data\ExistenceChecker:
+        alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker
+        public: true
+
+parameters:
+    jsonapi.strict_content_negotiation: false
+    jsonapi.media_type: 'application/vnd.api+json'
+    jsonapi.limits:
+        max_include_depth: 3
+        max_page_size: 100
+        complexity_budget: 1000
+

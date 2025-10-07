@@ -305,6 +305,7 @@ final class ErrorSourcePointersTest extends JsonApiTestCase
             $writeConfig,
             $this->errorMapper(),
             $this->violationMapper(),
+            $this->eventDispatcher(),
         );
     }
 }

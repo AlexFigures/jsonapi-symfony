@@ -56,6 +56,8 @@ use JsonApi\Symfony\Tests\Fixtures\Model\Author;
 use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
 use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -92,6 +94,7 @@ abstract class JsonApiTestCase extends TestCase
     private ?LinkGenerator $linkGenerator = null;
     private ?WriteConfig $writeConfig = null;
     private ?ChangeSetFactory $changeSetFactory = null;
+    private ?EventDispatcherInterface $eventDispatcher = null;
 
     protected function collectionController(): CollectionController
     {
@@ -310,6 +313,15 @@ abstract class JsonApiTestCase extends TestCase
         return $this->transactionManager;
     }
 
+    protected function eventDispatcher(): EventDispatcherInterface
+    {
+        $this->boot();
+
+        \assert($this->eventDispatcher instanceof EventDispatcherInterface);
+
+        return $this->eventDispatcher;
+    }
+
     private function boot(): void
     {
         if ($this->collectionController !== null) {
@@ -381,21 +393,25 @@ abstract class JsonApiTestCase extends TestCase
         $dispatcher = new OperationDispatcher($atomicTransaction, $addHandler, $updateHandler, $removeHandler, $relationshipOps, $resultBuilder);
         $atomicController = new AtomicController($atomicParser, $atomicValidator, $dispatcher, $mediaNegotiator);
 
+        // Create event dispatcher for testing
+        $eventDispatcher = new EventDispatcher();
+
         $this->registry = $registry;
         $this->repository = $repository;
         $this->parser = $parser;
         $this->document = $document;
         $this->collectionController = new CollectionController($registry, $repository, $parser, $document);
         $this->resourceController = new ResourceController($registry, $repository, $parser, $document);
-        $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $errorMapper, $violationMapper);
-        $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $errorMapper, $violationMapper);
-        $this->deleteController = new DeleteResourceController($registry, $persister, $transactionManager);
+        $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $errorMapper, $violationMapper, $eventDispatcher);
+        $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $errorMapper, $violationMapper, $eventDispatcher);
+        $this->deleteController = new DeleteResourceController($registry, $persister, $transactionManager, $eventDispatcher);
         $this->accessor = $accessor;
         $this->persister = $persister;
         $this->transactionManager = $transactionManager;
+        $this->eventDispatcher = $eventDispatcher;
         $this->relatedController = new RelatedController($registry, $relationshipReader, $parser, $document);
         $this->relationshipGetController = new RelationshipGetController($linkageBuilder);
-        $this->relationshipWriteController = new RelationshipWriteController($relationshipValidator, $relationshipUpdater, $linkageBuilder, $relationshipResponseConfig, $errorMapper);
+        $this->relationshipWriteController = new RelationshipWriteController($relationshipValidator, $relationshipUpdater, $linkageBuilder, $relationshipResponseConfig, $errorMapper, $transactionManager, $eventDispatcher);
         $this->atomicController = $atomicController;
 
         $this->errorMapper = $errorMapper;

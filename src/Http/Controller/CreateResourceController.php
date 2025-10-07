@@ -6,6 +6,7 @@ namespace JsonApi\Symfony\Http\Controller;
 
 use JsonApi\Symfony\Contract\Data\ResourcePersister;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
+use JsonApi\Symfony\Events\ResourceChangedEvent;
 use JsonApi\Symfony\Http\Document\DocumentBuilder;
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
@@ -26,6 +27,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use RuntimeException;
 
 #[Route(path: '/api/{type}', methods: ['POST'], name: 'jsonapi.create')]
@@ -42,6 +44,7 @@ final class CreateResourceController
         private readonly WriteConfig $writeConfig,
         private readonly ErrorMapper $errors,
         private readonly ConstraintViolationMapper $violationMapper,
+        private readonly EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -81,7 +84,14 @@ final class CreateResourceController
          * } $document
          */
         $document = $this->document->buildResource($type, $model, new Criteria(), $request);
-        $self = $document['data']['links']['self'] ?? $this->links->resourceSelf($type, $document['data']['id']);
+        $resourceId = $document['data']['id'];
+
+        // Dispatch event after successful creation
+        $this->eventDispatcher->dispatch(
+            new ResourceChangedEvent($type, $resourceId, 'create')
+        );
+
+        $self = $document['data']['links']['self'] ?? $this->links->resourceSelf($type, $resourceId);
 
         return new JsonResponse(
             $document,

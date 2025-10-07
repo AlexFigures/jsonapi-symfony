@@ -310,6 +310,14 @@ final class Configuration implements ConfigurationInterface
         $servers->end();
         $openApi->end();
 
+        $ui = $docsChildren->arrayNode('ui')->addDefaultsIfNotSet();
+        $uiChildren = $ui->children();
+        $uiChildren->booleanNode('enabled')->defaultTrue()->end();
+        $uiChildren->scalarNode('route')->defaultValue('/_jsonapi/docs')->end();
+        $uiChildren->scalarNode('spec_url')->defaultValue('/_jsonapi/openapi.json')->end();
+        $uiChildren->enumNode('theme')->values(['swagger', 'redoc'])->defaultValue('swagger')->end();
+        $ui->end();
+
         $jsonSchema = $generatorChildren->arrayNode('json_schema')->addDefaultsIfNotSet();
         $jsonSchemaChildren = $jsonSchema->children();
         $jsonSchemaChildren->booleanNode('enabled')->defaultTrue()->end();

@@ -315,6 +315,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             $writeConfig,
             $this->errorMapper(),
             $this->violationMapper(),
+            $this->eventDispatcher(),
         );
     }
 }
