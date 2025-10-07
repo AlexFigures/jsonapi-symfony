@@ -10,23 +10,17 @@
 [![Symfony Version](https://img.shields.io/badge/symfony-%5E7.1-blue.svg)](https://symfony.com/)
 
 
-## Installation
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
 composer require jsonapi/symfony-jsonapi-bundle
 ```
 
-For local development against this repository:
+### Basic Setup
 
-```bash
-git clone https://github.com/your-org/jsonapi-symfony.git
-cd jsonapi-symfony
-composer install
-```
-
-## Usage
-
-Register the bundle in your Symfony application's `config/bundles.php`:
+1. **Register the bundle** in `config/bundles.php`:
 
 ```php
 return [
@@ -34,42 +28,17 @@ return [
 ];
 ```
 
-Configure the bundle (defaults shown):
+2. **Create configuration** in `config/packages/jsonapi.yaml`:
 
 ```yaml
-# config/packages/jsonapi.yaml
 jsonapi:
-    strict_content_negotiation: true
-    media_type: 'application/vnd.api+json'
     route_prefix: '/api'
     pagination:
         default_size: 25
         max_size: 100
-    sorting:
-        whitelist:
-            articles: ['title', 'createdAt']
-            authors: ['name']
-    write:
-        allow_relationship_writes: false
-        client_generated_ids:
-            articles: false
-            authors: true
-    docs:
-        generator:
-            openapi:
-                enabled: true
-                title: 'My API'
-                version: '1.0.0'
-                servers:
-                    - 'https://api.example.com'
-        ui:
-            enabled: true
-            route: '/_jsonapi/docs'
-            spec_url: '/_jsonapi/openapi.json'
-            theme: 'swagger'  # or 'redoc'
 ```
 
-Declare your first resource:
+3. **Define your first resource**:
 
 ```php
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
@@ -81,69 +50,134 @@ use JsonApi\Symfony\Resource\Attribute\Relationship;
 final class Article
 {
     #[Id]
+    #[Attribute]
     public string $id;
 
     #[Attribute]
     public string $title;
 
-    #[Relationship(toMany: true)]
+    #[Relationship(toMany: true, targetType: 'comments')]
     public array $comments = [];
 }
 ```
 
-Stage 2 ships fully functional read endpoints and foundational writes:
+4. **Implement data layer** (see [Doctrine Integration Guide](docs/guide/integration-doctrine.md))
 
-* Attribute-driven metadata registry with automatic discovery of attributes and relationships.
-* `GET /api/{type}` and `GET /api/{type}/{id}` controllers with JSON:API 1.1 compliant documents.
-* Relationship endpoints for `GET /api/{type}/{id}/relationships/{relationship}` and
-  `GET /api/{type}/{id}/{relationship}` with linkage validation, configurable responses, and
-  metadata support.
-* Query parsing for `include`, `fields[TYPE]`, `sort`, `page[number]`, and `page[size]` with robust validation.
-* Pagination helpers generating `self`, `first`, `prev`, `next`, and `last` links that retain other query parameters.
-* Document builder producing `data`, `included`, `links`, `meta`, and `jsonapi.version` for any combination of sparse fieldsets and includes.
-* In-memory repository and sample fixtures (Article, Author, Tag) for functional testing.
-* `POST /api/{type}`, `PATCH /api/{type}/{id}`, and `DELETE /api/{type}/{id}` controllers with ChangeSet-based write ports, transactional execution, and client-generated ID support.
+5. **Start using your API**:
 
-## Writes
+```bash
+# Get all articles
+curl http://localhost:8000/api/articles
 
-Stage 2 adds denormalisation of JSON:API resource documents into a `ChangeSet` consumed by the `ResourcePersister` port. Controllers wrap each write in a `TransactionManager::transactional()` call to guarantee atomicity and return the appropriate JSON:API responses:
+# Get single article with relationships
+curl "http://localhost:8000/api/articles/1?include=author,tags"
 
-* `POST /api/{type}` ⇒ `201 Created` with the newly created resource document and a `Location` header pointing at its `self` link.
-* `PATCH /api/{type}/{id}` ⇒ `200 OK` with the updated resource document.
-* `DELETE /api/{type}/{id}` ⇒ `204 No Content`.
+# Create new article
+curl -X POST \
+     -H "Content-Type: application/vnd.api+json" \
+     -d '{"data": {"type": "articles", "attributes": {"title": "Hello"}}}' \
+     http://localhost:8000/api/articles
+```
 
-Input documents are validated strictly:
+**📖 [Complete Getting Started Guide →](docs/guide/getting-started.md)**
 
-* `data.type` and `data.id` must match the endpoint.
-* Only attributes declared with `#[Attribute(writable: true)]` are accepted; attempts to write read-only or unknown attributes result in `400 Bad Request`.
-* Relationship writes are rejected by default (`allow_relationship_writes: false`).
-* Client-generated IDs are controlled per type through `write.client_generated_ids`. When disabled the bundle throws `403 Forbidden`; when enabled conflicts surface as `409 Conflict`.
+---
 
-An in-memory `ResourcePersister` backs the functional test suite, using UUIDv4 server-generated identifiers when the client does not supply an ID.
+## 📚 Documentation
 
-## Public API & Backward Compatibility
+### For New Users
 
-JsonApiBundle follows [Semantic Versioning](https://semver.org/). The public API consists of:
+- **[Getting Started Guide](docs/guide/getting-started.md)** - Build your first API in 5 minutes
+- **[Configuration Reference](docs/guide/configuration.md)** - Complete configuration options
+- **[Doctrine Integration](docs/guide/integration-doctrine.md)** - Production-ready data layer
+- **[Examples & Recipes](docs/guide/examples.md)** - Real-world code examples
 
-- **Contract Interfaces** (`src/Contract/`) - Stable, BC guaranteed
-- **Resource Attributes** (`src/Resource/Attribute/`) - Stable, BC guaranteed
-- **Configuration Schema** - Stable, BC guaranteed
+### For Advanced Users
 
-See [Public API Reference](docs/api/public-api.md) for complete documentation.
+- **[Advanced Features](docs/guide/advanced-features.md)** - Profiles, hooks, events, caching
+- **[Public API Reference](docs/api/public-api.md)** - Stable API documentation
+- **[Troubleshooting Guide](docs/guide/troubleshooting.md)** - Common issues and solutions
 
-### Backward Compatibility Policy
+### For Contributors
+
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
+- **[Architecture Review](docs/architecture/review.md)** - Design and extensibility
+- **[BC Policy](docs/api/bc-policy.md)** - Backward compatibility guarantees
+
+**📖 [Complete Documentation Index →](docs/guide/README.md)**
+
+---
+
+## ✨ Features
+
+### Core Features
+
+✅ **JSON:API 1.1 Compliance** - Full specification support
+✅ **Attribute-Driven** - No XML/YAML configuration needed
+✅ **Auto-Generated Endpoints** - No controller boilerplate
+✅ **Query Parameters** - `include`, `fields`, `sort`, `page`
+✅ **Relationships** - To-one and to-many with full CRUD
+✅ **Write Operations** - POST, PATCH, DELETE with validation
+✅ **Atomic Operations** - Batch operations in single transaction
+✅ **Interactive Docs** - Swagger UI / Redoc integration
+
+### Read Operations
+
+* `GET /api/{type}` - Collection with pagination, sorting, filtering
+* `GET /api/{type}/{id}` - Single resource with sparse fieldsets
+* `GET /api/{type}/{id}/relationships/{rel}` - Relationship linkage
+* `GET /api/{type}/{id}/{rel}` - Related resources
+* Query parsing: `include`, `fields[TYPE]`, `sort`, `page[number]`, `page[size]`
+* Pagination with `self`, `first`, `prev`, `next`, `last` links
+* Compound documents with `included` array
+* Sparse fieldsets for performance optimization
+
+### Write Operations
+
+* `POST /api/{type}` → `201 Created` with Location header
+* `PATCH /api/{type}/{id}` → `200 OK` with updated resource
+* `DELETE /api/{type}/{id}` → `204 No Content`
+* Transactional execution via `TransactionManager`
+* Client-generated ID support (configurable per type)
+* Strict input validation with detailed error responses
+* Relationship modification endpoints (optional)
+
+### Advanced Features
+
+* **Profiles (RFC 6906)** - Extend JSON:API with custom semantics
+* **Hooks System** - Intercept and modify request processing
+* **Event System** - React to resource changes
+* **HTTP Caching** - ETag, Last-Modified, surrogate keys
+* **Custom Operators** - Extend filtering capabilities
+* **Cache Invalidation** - CDN/reverse proxy support
+
+**📖 [See all features →](docs/guide/advanced-features.md)**
+
+---
+
+## 🔒 Backward Compatibility
+
+JsonApiBundle follows [Semantic Versioning](https://semver.org/):
 
 - **MAJOR** versions may contain breaking changes
-- **MINOR** versions add new features in a backward compatible manner
+- **MINOR** versions add features in a backward-compatible manner
 - **PATCH** versions contain bug fixes only
 
-See [BC Policy](docs/api/bc-policy.md) for detailed information.
+### Public API (Stable)
 
-### Upgrading
+The following are guaranteed to maintain backward compatibility:
 
-When upgrading between versions, consult the [Upgrade Guide](docs/api/upgrade-guide.md) for migration instructions.
+- ✅ **Contract Interfaces** (`src/Contract/`) - Data layer contracts
+- ✅ **Resource Attributes** (`src/Resource/Attribute/`) - `#[JsonApiResource]`, `#[Attribute]`, etc.
+- ✅ **Configuration Schema** - All `jsonapi:` configuration options
 
-**Pre-1.0 Notice**: Versions 0.x may introduce breaking changes in MINOR versions. Pin to exact MINOR version in `composer.json`:
+**📖 [Public API Reference →](docs/api/public-api.md)**
+**📖 [BC Policy →](docs/api/bc-policy.md)**
+**📖 [Upgrade Guide →](docs/api/upgrade-guide.md)**
+
+### Pre-1.0 Notice
+
+⚠️ Versions 0.x may introduce breaking changes in MINOR versions. Pin to exact MINOR version:
 
 ```json
 {
@@ -155,80 +189,104 @@ When upgrading between versions, consult the [Upgrade Guide](docs/api/upgrade-gu
 
 ---
 
-## API Documentation
+## 📖 Interactive API Documentation
 
-The bundle provides automatic OpenAPI 3.1 documentation generation and interactive UI:
+The bundle provides automatic OpenAPI 3.1 documentation with interactive UI:
 
-### OpenAPI Specification
-Access the machine-readable OpenAPI spec at:
-```
-GET /_jsonapi/openapi.json
-```
+### Access Documentation
 
-### Interactive Documentation UI
-Access the interactive Swagger UI or Redoc at:
+**Swagger UI (Interactive):**
 ```
-GET /_jsonapi/docs
+http://localhost:8000/_jsonapi/docs
 ```
 
-**Features**:
+**OpenAPI Specification (JSON):**
+```
+http://localhost:8000/_jsonapi/openapi.json
+```
+
+### Features
+
 - 🎨 **Two themes**: Swagger UI (default) or Redoc
-- 🔍 **Try it out**: Test API endpoints directly from the browser
-- 📖 **Auto-generated**: Reflects all registered resources and their attributes/relationships
-- 🔒 **Configurable**: Enable/disable per environment
+- 🔍 **Try it out**: Test endpoints directly from browser
+- 📖 **Auto-generated**: Reflects all resources and relationships
+- 🔒 **Environment-aware**: Disable in production
 
-**Configuration**:
+### Configuration
+
+```yaml
+# config/packages/jsonapi.yaml
+jsonapi:
+    docs:
+        generator:
+            openapi:
+                enabled: true
+                title: 'My API'
+                version: '1.0.0'
+        ui:
+            enabled: true
+            route: '/_jsonapi/docs'
+            theme: 'swagger'  # or 'redoc'
+```
+
+**Production:** Disable in `config/packages/prod/jsonapi.yaml`:
+
 ```yaml
 jsonapi:
     docs:
         ui:
-            enabled: true              # Enable/disable UI
-            route: '/_jsonapi/docs'    # UI route
-            spec_url: '/_jsonapi/openapi.json'  # OpenAPI spec URL
-            theme: 'swagger'           # 'swagger' or 'redoc'
+            enabled: false
 ```
 
-**Production tip**: Disable in production by setting `enabled: false` in `config/packages/prod/jsonapi.yaml`.
+**📖 [Swagger UI Documentation →](docs/features/SWAGGER_UI.md)**
 
-Example response:
+---
+
+## 📊 Example Response
 
 ```json
 {
   "jsonapi": { "version": "1.1" },
   "links": {
-    "self": "https://api.example.test/api/articles?page[number]=2&page[size]=5",
-    "first": "https://api.example.test/api/articles?page[number]=1&page[size]=5",
-    "prev": "https://api.example.test/api/articles?page[number]=1&page[size]=5",
-    "next": "https://api.example.test/api/articles?page[number]=3&page[size]=5",
-    "last": "https://api.example.test/api/articles?page[number]=3&page[size]=5"
+    "self": "http://localhost/api/articles?page[number]=1&page[size]=10",
+    "first": "http://localhost/api/articles?page[number]=1&page[size]=10",
+    "last": "http://localhost/api/articles?page[number]=3&page[size]=10",
+    "next": "http://localhost/api/articles?page[number]=2&page[size]=10"
   },
   "data": [
     {
       "type": "articles",
-      "id": "42",
+      "id": "1",
       "attributes": {
-        "title": "Hello JSON:API",
-        "createdAt": "2024-06-01T12:00:00+00:00"
+        "title": "Getting Started with JSON:API",
+        "createdAt": "2025-10-07T10:00:00+00:00"
+      },
+      "relationships": {
+        "author": {
+          "links": {
+            "self": "http://localhost/api/articles/1/relationships/author",
+            "related": "http://localhost/api/articles/1/author"
+          },
+          "data": { "type": "authors", "id": "1" }
+        }
       },
       "links": {
-        "self": "https://api.example.test/api/articles/42"
+        "self": "http://localhost/api/articles/1"
       }
     }
   ],
   "included": [
     {
       "type": "authors",
-      "id": "7",
+      "id": "1",
       "attributes": { "name": "Alice" },
-      "links": {
-        "self": "https://api.example.test/api/authors/7"
-      }
+      "links": { "self": "http://localhost/api/authors/1" }
     }
   ],
   "meta": {
-    "total": 123,
-    "page": 2,
-    "size": 5
+    "total": 25,
+    "page": 1,
+    "size": 10
   }
 }
 ```
