@@ -15,14 +15,14 @@ use JsonApi\Symfony\Query\Sorting;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 /**
- * Универсальный Doctrine-репозиторий для JSON:API ресурсов.
+ * Generic Doctrine repository for JSON:API resources.
  *
- * Автоматически обрабатывает:
- * - Фильтрацию (полная поддержка всех операторов)
- * - Сортировку
- * - Пагинацию
- * - Sparse fieldsets (частичная гидратация)
- * - Eager loading для includes (предотвращение N+1 запросов)
+ * Automatically handles:
+ * - Filtering (full support for every operator)
+ * - Sorting
+ * - Pagination
+ * - Sparse fieldsets (partial hydration)
+ * - Eager loading for includes (prevents N+1 queries)
  */
 class GenericDoctrineRepository implements ResourceRepository
 {
@@ -43,19 +43,19 @@ class GenericDoctrineRepository implements ResourceRepository
             ->select('e')
             ->from($entityClass, 'e');
 
-        // Применяем фильтрацию
+        // Apply filters
         if ($criteria->filter !== null) {
             $platform = $this->em->getConnection()->getDatabasePlatform();
             $this->filterCompiler->apply($qb, $criteria->filter, $platform);
         }
 
-        // Применяем eager loading для includes (предотвращение N+1)
+        // Apply eager loading for includes (prevent N+1 queries)
         $this->applyEagerLoading($qb, $metadata, $criteria->include);
 
-        // Применяем сортировку
+        // Apply sorting
         $this->applySorting($qb, $criteria->sort);
 
-        // Применяем пагинацию
+        // Apply pagination
         $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
         $qb->setFirstResult($offset)
            ->setMaxResults($criteria->pagination->size);
@@ -267,4 +267,3 @@ class GenericDoctrineRepository implements ResourceRepository
         }
     }
 }
-

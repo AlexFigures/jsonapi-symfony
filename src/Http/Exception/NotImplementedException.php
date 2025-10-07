@@ -9,7 +9,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 /**
  * Exception for functionality that is not implemented.
  *
- * HTTP staтус: 501 Not Implemented
+ * HTTP status: 501 Not Implemented
  */
 final class NotImplementedException extends HttpException
 {
@@ -18,4 +18,3 @@ final class NotImplementedException extends HttpException
         parent::__construct(501, $message);
     }
 }
-

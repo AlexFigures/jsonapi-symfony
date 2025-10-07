@@ -8,9 +8,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
 
 /**
- * Doctrine-реализация менеджера транзакций.
+ * Doctrine-backed transaction manager implementation.
  *
- * Использует встроенный механизм транзакций Doctrine ORM.
+ * Leverages Doctrine ORM's native transaction facilities.
  */
 class DoctrineTransactionManager implements TransactionManager
 {
@@ -24,4 +24,3 @@ class DoctrineTransactionManager implements TransactionManager
         return $this->em->wrapInTransaction($callback);
     }
 }
-

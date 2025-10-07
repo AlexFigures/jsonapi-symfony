@@ -4,27 +4,27 @@
 declare(strict_types=1);
 
 /**
- * Memory Stress Test для JsonApiBundle
+ * Memory Stress Test for JsonApiBundle
  *
- * Проверяет отсутствие утечек памяти при длительной работе без перезапуска PHP.
- * Использует реальные HTTP-запросы к контроллерам.
+ * Checks for memory leaks during long-running execution without restarting PHP.
+ * Uses real HTTP requests against controllers.
  *
- * Использование:
+ * Usage:
  *   # Start server in one terminal:
  *   php scripts/stress/server.php
  *
  *   # Run stress tests in another terminal:
  *   php scripts/stress/memory-stress.php [--profile=PROFILE] [--iterations=N] [--server=URL]
  *
- * Профили:
- *   - quick: 100 итераций (для CI)
- *   - standard: 1000 итераций (по умолчанию)
- *   - extended: 5000 итераций (для глубокого анализа)
+ * Profiles:
+ *   - quick: 100 iterations (CI-friendly)
+ *   - standard: 1000 iterations (default)
+ *   - extended: 5000 iterations (deep analysis)
  *
- * Выход:
- *   - 0: тест пройден (нет утечек)
- *   - 1: обнаружены утечки памяти
- *   - 2: ошибка выполнения
+ * Exit codes:
+ *   - 0: pass (no leaks)
+ *   - 1: memory leaks detected
+ *   - 2: execution error
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
@@ -32,7 +32,7 @@ require __DIR__ . '/http-client.php';
 
 use JsonApi\Symfony\StressTest\HttpClient;
 
-// Парсинг аргументов
+// Parse CLI arguments
 $profile = 'standard';
 $iterations = null;
 $serverUrl = 'http://127.0.0.1:8765';
@@ -49,7 +49,7 @@ foreach ($argv as $arg) {
     }
 }
 
-// Профили
+// Profiles
 $profiles = [
     'quick' => [
         'collections' => 100,
@@ -85,7 +85,7 @@ if (!isset($profiles[$profile])) {
 
 $config = $profiles[$profile];
 if ($iterations !== null) {
-    // Переопределить все счётчики
+    // Override all counters
     foreach ($config as $key => $value) {
         $config[$key] = $iterations;
     }
@@ -112,14 +112,14 @@ if (!$client->isServerRunning()) {
 }
 echo "✅ Server is running\n\n";
 
-// Инициализация метрик
+// Initialise metrics
 $metrics = [
     'start_memory' => memory_get_usage(true),
     'peak_memory' => 0,
     'samples' => [],
 ];
 
-// Функция для записи метрик
+// Record metrics
 function recordMetrics(string $phase, int $iteration, array &$metrics): void
 {
     $current = memory_get_usage(true);
@@ -138,7 +138,7 @@ function recordMetrics(string $phase, int $iteration, array &$metrics): void
     }
 }
 
-// Функция для анализа тренда
+// Analyse trend
 function analyzeTrend(array $samples, string $phase): array
 {
     $phaseSamples = array_filter($samples, fn($s) => $s['phase'] === $phase);
@@ -146,7 +146,7 @@ function analyzeTrend(array $samples, string $phase): array
         return ['trend' => 'insufficient_data', 'slope' => 0];
     }
     
-    // Линейная регрессия для определения тренда
+    // Use linear regression to determine the trend
     $n = count($phaseSamples);
     $sumX = 0;
     $sumY = 0;
@@ -165,8 +165,8 @@ function analyzeTrend(array $samples, string $phase): array
     
     $slope = ($n * $sumXY - $sumX * $sumY) / ($n * $sumX2 - $sumX * $sumX);
     
-    // Определяем тренд
-    $threshold = 1024; // 1KB на итерацию считается утечкой
+    // Determine the trend
+    $threshold = 1024; // Treat >1KB per iteration as a leak
     if ($slope > $threshold) {
         $trend = 'leak';
     } elseif ($slope < -$threshold) {
@@ -178,7 +178,7 @@ function analyzeTrend(array $samples, string $phase): array
     return ['trend' => $trend, 'slope' => $slope];
 }
 
-// Функция для форматирования байтов
+// Format bytes
 function formatBytes(int $bytes): string
 {
     $units = ['B', 'KB', 'MB', 'GB'];
@@ -192,10 +192,10 @@ function formatBytes(int $bytes): string
 
 echo "Starting stress tests...\n\n";
 
-// Тест 1: GET коллекций с разными параметрами
+// Test 1: GET collections with varied parameters
 echo "[1/6] Testing collection GET requests...\n";
 for ($i = 0; $i < $config['collections']; $i++) {
-    // Варьируем параметры для разнообразия
+    // Vary parameters for diversity
     $params = [
         'page' => ['number' => ($i % 10) + 1, 'size' => 25],
         'sort' => $i % 2 === 0 ? 'title' : '-createdAt',
@@ -223,7 +223,7 @@ for ($i = 0; $i < $config['collections']; $i++) {
 }
 echo "  Completed: {$config['collections']} iterations\n";
 
-// Тест 2: GET отдельных ресурсов
+// Test 2: GET individual resources
 echo "[2/6] Testing resource GET requests...\n";
 for ($i = 0; $i < $config['resources']; $i++) {
     $id = ($i % 1000) + 1;
@@ -247,13 +247,13 @@ for ($i = 0; $i < $config['resources']; $i++) {
 }
 echo "  Completed: {$config['resources']} iterations\n";
 
-// Тест 3: Relationships endpoints
+// Test 3: Relationship endpoints
 echo "[3/6] Testing relationship endpoints...\n";
 for ($i = 0; $i < $config['relationships']; $i++) {
     $id = ($i % 1000) + 1;
     $rel = $i % 2 === 0 ? 'author' : 'tags';
 
-    // Чередуем /relationships и /related
+    // Alternate between /relationships and /related
     $path = $i % 2 === 0
         ? "/api/articles/$id/relationships/$rel"
         : "/api/articles/$id/$rel";
@@ -272,7 +272,7 @@ for ($i = 0; $i < $config['relationships']; $i++) {
 }
 echo "  Completed: {$config['relationships']} iterations\n";
 
-// Тест 4: Atomic operations
+// Test 4: Atomic operations
 echo "[4/6] Testing atomic operations...\n";
 for ($i = 0; $i < $config['atomic']; $i++) {
     $payload = [
@@ -305,7 +305,7 @@ for ($i = 0; $i < $config['atomic']; $i++) {
 }
 echo "  Completed: {$config['atomic']} iterations\n";
 
-// Тест 5: PATCH/DELETE операции
+// Test 5: PATCH/DELETE operations
 echo "[5/6] Testing write operations...\n";
 for ($i = 0; $i < $config['writes']; $i++) {
     $id = ($i % 1000) + 1;
@@ -337,7 +337,7 @@ for ($i = 0; $i < $config['writes']; $i++) {
 }
 echo "  Completed: {$config['writes']} iterations\n";
 
-// Тест 6: Фильтры (если реализованы)
+// Test 6: Filters (if implemented)
 echo "[6/6] Testing filter operations...\n";
 for ($i = 0; $i < $config['filters']; $i++) {
     $params = [
@@ -362,7 +362,7 @@ for ($i = 0; $i < $config['filters']; $i++) {
 }
 echo "  Completed: {$config['filters']} iterations\n\n";
 
-// Анализ результатов
+// Analyse results
 echo "=== Analysis ===\n\n";
 
 $phases = ['collections', 'resources', 'relationships', 'atomic', 'writes', 'filters'];
@@ -386,13 +386,13 @@ echo "Peak memory:   " . formatBytes($metrics['peak_memory']) . "\n";
 echo "Final memory:  " . formatBytes(memory_get_usage(true)) . "\n";
 echo "Memory delta:  " . formatBytes(memory_get_usage(true) - $metrics['start_memory']) . "\n";
 
-// Сохранение детального отчёта
+// Persist detailed report
 $reportPath = __DIR__ . '/../../build/stress-report.json';
 @mkdir(dirname($reportPath), 0755, true);
 file_put_contents($reportPath, json_encode($metrics, JSON_PRETTY_PRINT));
 echo "\nDetailed report saved to: $reportPath\n";
 
-// Выход
+// Exit
 if ($hasLeaks) {
     echo "\n❌ FAIL: Memory leaks detected!\n";
     exit(1);
@@ -400,4 +400,3 @@ if ($hasLeaks) {
     echo "\n✅ PASS: No memory leaks detected.\n";
     exit(0);
 }
-

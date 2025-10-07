@@ -1,6 +1,5 @@
--- Создание расширений для PostgreSQL
+-- Create PostgreSQL extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Создание тестовых таблиц будет выполняться через Doctrine
--- в самих тестах с помощью SchemaTool
-
+-- Test tables are created via Doctrine
+-- inside the tests using SchemaTool

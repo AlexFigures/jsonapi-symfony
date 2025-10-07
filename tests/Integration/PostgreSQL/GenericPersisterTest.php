@@ -36,7 +36,7 @@ final class GenericPersisterTest extends DoctrineIntegrationTestCase
         self::assertSame('New Article', $article->getTitle());
         self::assertSame('Article content', $article->getContent());
 
-        // Проверяем, что статья сохранена в БД
+        // Verify that article is saved in DB
         $this->em->clear();
         $found = $this->em->find(Article::class, 'article-new');
         self::assertNotNull($found);
@@ -81,7 +81,7 @@ final class GenericPersisterTest extends DoctrineIntegrationTestCase
 
         self::assertSame('article-1', $article->getId());
         self::assertSame('Updated Title', $article->getTitle());
-        self::assertSame('Content of first article', $article->getContent()); // Не изменилось
+        self::assertSame('Content of first article', $article->getContent()); // Unchanged
 
         // Проверяем в БД
         $this->em->clear();
@@ -103,7 +103,7 @@ final class GenericPersisterTest extends DoctrineIntegrationTestCase
 
         $this->persister->delete('articles', 'article-1');
 
-        // Проверяем, что статья удалена
+        // Verify that article is deleted
         $this->em->clear();
         $found = $this->em->find(Article::class, 'article-1');
         self::assertNull($found);
@@ -127,8 +127,8 @@ final class GenericPersisterTest extends DoctrineIntegrationTestCase
         self::assertNotNull($article->getCreatedAt());
         self::assertNull($article->getUpdatedAt());
 
-        // Обновляем
-        sleep(1); // Чтобы updatedAt отличался
+        // Update
+        sleep(1); // So updatedAt differs
         $updateChanges = new ChangeSet(['title' => 'Updated']);
         $updated = $this->persister->update('articles', $article->getId(), $updateChanges);
 

@@ -41,13 +41,13 @@ abstract class DoctrineIntegrationTestCase extends TestCase
     protected ConstraintViolationMapper $violationMapper;
 
     /**
-     * Возвращает DSN для подключения к БД.
-     * Переопределяется в конкретных тестах для разных СУБД.
+     * Returns the DSN used to connect to the database.
+     * Each concrete test overrides this for its specific driver.
      */
     abstract protected function getDatabaseUrl(): string;
 
     /**
-     * Возвращает платформу БД для Doctrine.
+     * Returns the Doctrine database platform name.
      */
     abstract protected function getPlatform(): string;
 
@@ -55,13 +55,13 @@ abstract class DoctrineIntegrationTestCase extends TestCase
     {
         parent::setUp();
 
-        // Создаем EntityManager
+        // Create the EntityManager
         $this->em = $this->createEntityManager();
 
-        // Создаем схему БД
+        // Create the database schema
         $this->createSchema();
 
-        // Инициализируем сервисы
+        // Initialise services
         $this->registry = new ResourceRegistry([
             Article::class,
             Author::class,
@@ -83,13 +83,13 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $this->accessor,
         );
 
-        // Validator для ValidatingDoctrinePersister
+        // Validator for ValidatingDoctrinePersister
         $this->validator = Validation::createValidatorBuilder()
             ->enableAttributeMapping()
             ->getValidator();
 
-        // Нужен ErrorMapper для ConstraintViolationMapper
-        // Для тестов создаём упрощённую версию
+        // ConstraintViolationMapper needs an ErrorMapper
+        // Provide a simplified version for tests
         $this->violationMapper = new ConstraintViolationMapper(
             $this->registry,
             new \JsonApi\Symfony\Http\Error\ErrorMapper(
@@ -110,7 +110,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
 
     protected function tearDown(): void
     {
-        // Очищаем БД после каждого теста
+        // Clean up the database after each test
         if (isset($this->em) && $this->em->isOpen()) {
             $this->dropSchema();
             $this->em->close();
@@ -121,7 +121,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
 
     private function createEntityManager(): EntityManagerInterface
     {
-        // Используем ArrayAdapter для кеша в тестах
+        // Use ArrayAdapter as cache in tests
         $cache = new ArrayAdapter();
 
         $config = ORMSetup::createAttributeMetadataConfiguration(
@@ -129,7 +129,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             isDevMode: true,
         );
 
-        // Устанавливаем кеш для метаданных и запросов
+        // Configure caches for metadata and queries
         $config->setMetadataCache($cache);
         $config->setQueryCache($cache);
         $config->setResultCache($cache);
@@ -146,10 +146,10 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $schemaTool = new SchemaTool($this->em);
         $metadata = $this->em->getMetadataFactory()->getAllMetadata();
 
-        // Сначала удаляем схему, если она существует
+        // Drop the schema first if it already exists
         $schemaTool->dropSchema($metadata);
 
-        // Затем создаем новую схему
+        // Then create a fresh schema
         $schemaTool->createSchema($metadata);
     }
 
@@ -161,11 +161,11 @@ abstract class DoctrineIntegrationTestCase extends TestCase
     }
 
     /**
-     * Создает тестовые данные в БД.
+     * Seeds test data into the database.
      */
     protected function seedDatabase(): void
     {
-        // Создаем авторов
+        // Create authors
         $author1 = new Author();
         $author1->setId('author-1');
         $author1->setName('John Doe');
@@ -176,7 +176,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $author2->setName('Jane Smith');
         $author2->setEmail('jane@example.com');
 
-        // Создаем теги
+        // Create tags
         $tag1 = new Tag();
         $tag1->setId('tag-1');
         $tag1->setName('PHP');
@@ -185,7 +185,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $tag2->setId('tag-2');
         $tag2->setName('Symfony');
 
-        // Создаем статьи
+        // Create articles
         $article1 = new Article();
         $article1->setId('article-1');
         $article1->setTitle('First Article');
@@ -201,7 +201,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $article2->setAuthor($author2);
         $article2->addTag($tag1);
 
-        // Сохраняем в БД
+        // Persist to the database
         $this->em->persist($author1);
         $this->em->persist($author2);
         $this->em->persist($tag1);
@@ -213,13 +213,13 @@ abstract class DoctrineIntegrationTestCase extends TestCase
     }
 
     /**
-     * Очищает все данные из БД.
+     * Clears all data from the database.
      */
     protected function clearDatabase(): void
     {
         $connection = $this->em->getConnection();
 
-        // Отключаем проверку внешних ключей
+        // Disable foreign key checks
         $platform = $connection->getDatabasePlatform()->getName();
 
         if ($platform === 'postgresql') {
@@ -241,4 +241,3 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $this->em->clear();
     }
 }
-

@@ -15,26 +15,26 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
 /**
- * Инстанциатор сущностей, использующий Symfony Serializer.
- * 
- * Это правильный подход, используемый в API Platform:
- * - Использует ObjectNormalizer из Symfony Serializer
- * - Автоматически обрабатывает конструкторы с параметрами
- * - Поддерживает все возможности Symfony Serializer
- * - Не требует написания собственной логики рефлексии
- * 
- * Преимущества:
- * - Меньше кода
- * - Лучшая поддержка типов
- * - Автоматическая обработка конструкторов
- * - Совместимость с API Platform
- * - Поддержка кастомных денормализаторов
- * 
- * Как это работает:
- * 1. Преобразует ChangeSet в массив данных
- * 2. Использует Serializer::denormalize() для создания объекта
- * 3. Serializer автоматически вызывает конструктор с параметрами
- * 4. Оставшиеся свойства устанавливаются через сеттеры/свойства
+ * Entity instantiator that relies on the Symfony Serializer.
+ *
+ * Mirrors the strategy used in API Platform:
+ * - Uses the ObjectNormalizer from the Symfony Serializer
+ * - Automatically handles constructors with parameters
+ * - Supports every capability provided by the Symfony Serializer
+ * - Avoids bespoke reflection logic
+ *
+ * Benefits:
+ * - Less code
+ * - Better type inference
+ * - Automatic constructor handling
+ * - Full compatibility with API Platform
+ * - Supports custom denormalizers
+ *
+ * How it works:
+ * 1. Converts the ChangeSet into an array of data
+ * 2. Calls Serializer::denormalize() to create the object
+ * 3. Lets the serializer invoke the constructor with arguments
+ * 4. Applies remaining properties through setters/property access
  */
 final class SerializerEntityInstantiator
 {
@@ -44,36 +44,36 @@ final class SerializerEntityInstantiator
         private readonly EntityManagerInterface $em,
         private readonly PropertyAccessorInterface $accessor,
     ) {
-        // Создаем PropertyInfoExtractor для определения типов
-        // Используем только ReflectionExtractor (не требует phpdocumentor/reflection-docblock)
+        // Create a PropertyInfoExtractor to resolve types
+        // Rely only on ReflectionExtractor (no phpdocumentor/reflection-docblock required)
         $reflectionExtractor = new ReflectionExtractor();
 
         $propertyInfo = new PropertyInfoExtractor(
             [$reflectionExtractor],  // listExtractors
             [$reflectionExtractor],  // typeExtractors
-            [],                      // descriptionExtractors (не нужны)
+            [],                      // descriptionExtractors (not needed)
             [$reflectionExtractor],  // accessExtractors
             [$reflectionExtractor]   // initializableExtractors
         );
 
-        // Создаем ObjectNormalizer с поддержкой конструкторов
+        // Build an ObjectNormalizer with constructor support
         $normalizer = new ObjectNormalizer(
-            null, // ClassMetadataFactory (не нужен для базового использования)
-            null, // NameConverter (не нужен)
-            $this->accessor, // PropertyAccessor для установки свойств
-            $propertyInfo, // PropertyInfo для определения типов
-            null, // ClassDiscriminator (не нужен)
-            null, // ObjectClassResolver (не нужен)
+            null, // ClassMetadataFactory (not required for basic usage)
+            null, // NameConverter (not required)
+            $this->accessor, // PropertyAccessor for setting properties
+            $propertyInfo, // PropertyInfo for determining types
+            null, // ClassDiscriminator (not required)
+            null, // ObjectClassResolver (not required)
         );
 
-        // Создаем Serializer с ObjectNormalizer
+        // Create the Serializer with the ObjectNormalizer
         $this->serializer = new Serializer([$normalizer]);
     }
 
     /**
-     * Создает экземпляр сущности, используя Symfony Serializer.
+     * Creates an entity instance via the Symfony Serializer.
      *
-     * @param bool $isCreate true для POST (create), false для PATCH (update)
+     * @param bool $isCreate true for POST (create), false for PATCH (update)
      * @return array{entity: object, remainingChanges: ChangeSet}
      */
     public function instantiate(
@@ -85,7 +85,7 @@ final class SerializerEntityInstantiator
         $reflection = new \ReflectionClass($entityClass);
         $constructor = $reflection->getConstructor();
 
-        // Если конструктора нет или он без параметров, используем стандартный способ
+        // Fallback: instantiate without the serializer when there is no constructor or it has no parameters
         if ($constructor === null || $constructor->getNumberOfParameters() === 0) {
             $classMetadata = $this->em->getClassMetadata($entityClass);
             $entity = $classMetadata->newInstance();
@@ -96,30 +96,30 @@ final class SerializerEntityInstantiator
             ];
         }
 
-        // Фильтруем атрибуты по SerializationGroups
+        // Filter attributes by serialization groups
         $filteredChanges = $this->filterBySerializationGroups($changes, $metadata, $isCreate);
 
-        // Подготавливаем данные для денормализации
+        // Prepare data for denormalisation
         $data = $this->prepareDataForDenormalization($filteredChanges, $metadata);
 
-        // Используем Symfony Serializer для создания объекта
-        // Он автоматически вызовет конструктор с правильными параметрами!
+        // Use the Symfony Serializer to build the object
+        // It automatically calls the constructor with the correct arguments
         $entity = $this->serializer->denormalize(
             $data,
             $entityClass,
             null,
             [
-                // Разрешаем частичную денормализацию (не все свойства обязательны)
+                // Allow partial denormalisation (not every property is required)
                 AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => true,
-                // Игнорируем свойства, которые нельзя установить
+                // Ignore properties that cannot be set
                 AbstractNormalizer::IGNORED_ATTRIBUTES => [],
             ]
         );
 
-        // Определяем, какие атрибуты были использованы конструктором
+        // Determine which attributes were consumed by the constructor
         $usedAttributes = $this->getConstructorParameters($constructor, $filteredChanges, $metadata);
 
-        // Создаем новый ChangeSet без использованных атрибутов
+        // Build a new ChangeSet without constructor-consumed attributes
         $remainingAttributes = [];
         foreach ($filteredChanges->attributes as $path => $value) {
             if (!in_array($path, $usedAttributes, true)) {
@@ -134,8 +134,8 @@ final class SerializerEntityInstantiator
     }
 
     /**
-     * Подготавливает данные из ChangeSet для Symfony Serializer.
-     * 
+     * Prepares data from the ChangeSet for the Symfony Serializer.
+     *
      * @return array<string, mixed>
      */
     private function prepareDataForDenormalization(
@@ -145,7 +145,7 @@ final class SerializerEntityInstantiator
         $data = [];
 
         foreach ($changes->attributes as $path => $value) {
-            // Ищем метаданные атрибута по property path (аналогично filterBySerializationGroups)
+            // Look up attribute metadata by property path (same logic as filterBySerializationGroups)
             $attributeMetadata = $this->findAttributeMetadata($metadata, $path);
             $propertyPath = $attributeMetadata?->propertyPath ?? $path;
 
@@ -156,12 +156,12 @@ final class SerializerEntityInstantiator
     }
 
     /**
-     * Фильтрует атрибуты по SerializationGroups.
+     * Filters attributes according to SerializationGroups.
      *
-     * Учитывает группы 'write', 'create', 'update':
-     * - 'write': можно записывать всегда (POST и PATCH)
-     * - 'create': можно записывать только при создании (POST)
-     * - 'update': можно записывать только при обновлении (PATCH)
+     * Considers the 'write', 'create', and 'update' groups:
+     * - 'write': always writable (POST and PATCH)
+     * - 'create': writable during creation only (POST)
+     * - 'update': writable during updates only (PATCH)
      */
     private function filterBySerializationGroups(
         ChangeSet $changes,
@@ -171,31 +171,31 @@ final class SerializerEntityInstantiator
         $filteredAttributes = [];
 
         foreach ($changes->attributes as $path => $value) {
-            // Ищем метаданные атрибута по property path (аналогично GenericDoctrinePersister)
+            // Look up attribute metadata by property path (same as GenericDoctrinePersister)
             $attributeMetadata = $this->findAttributeMetadata($metadata, $path);
 
-            // Если метаданных нет, пропускаем атрибут (по умолчанию разрешаем)
+            // If metadata is missing, keep the attribute (permissive by default)
             if ($attributeMetadata === null) {
                 $filteredAttributes[$path] = $value;
                 continue;
             }
 
-            // Проверяем, можно ли записывать этот атрибут
+            // Check whether the attribute is writable
             if ($attributeMetadata->isWritable($isCreate)) {
                 $filteredAttributes[$path] = $value;
             }
-            // Если атрибут не доступен для записи, он будет проигнорирован
+            // Non-writable attributes are ignored
         }
 
         return new ChangeSet($filteredAttributes);
     }
 
     /**
-     * Находит метаданные атрибута по property path или имени.
+     * Finds attribute metadata by property path or name.
      *
-     * Это критично для безопасности: когда атрибут переименован через #[Attribute(name: 'new-name')],
-     * метаданные индексируются по новому имени, но ChangeSet содержит property path.
-     * Без правильного поиска атрибуты с SerializationGroups могут быть неправильно обработаны.
+     * Security-sensitive: when an attribute is renamed with #[Attribute(name: 'new-name')],
+     * metadata is indexed by the new name while the ChangeSet keeps the property path.
+     * Without this lookup, attributes with SerializationGroups could be mishandled.
      */
     private function findAttributeMetadata(
         ResourceMetadata $metadata,
@@ -211,7 +211,7 @@ final class SerializerEntityInstantiator
     }
 
     /**
-     * Получает список параметров конструктора, которые были использованы.
+     * Returns the constructor parameters that were consumed.
      *
      * @return list<string>
      */
@@ -225,13 +225,13 @@ final class SerializerEntityInstantiator
         foreach ($constructor->getParameters() as $parameter) {
             $paramName = $parameter->getName();
 
-            // Проверяем, есть ли этот параметр в ChangeSet
+            // Direct match: constructor parameter is present in the ChangeSet
             if (isset($changes->attributes[$paramName])) {
                 $usedAttributes[] = $paramName;
                 continue;
             }
 
-            // Проверяем через propertyPath в метаданных
+            // Fallback: check via propertyPath in metadata
             foreach ($metadata->attributes as $attributeName => $attributeMetadata) {
                 $propertyPath = $attributeMetadata->propertyPath ?? $attributeName;
 
@@ -245,4 +245,3 @@ final class SerializerEntityInstantiator
         return $usedAttributes;
     }
 }
-

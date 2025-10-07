@@ -5,18 +5,17 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Contract\Data;
 
 /**
- * Интерфейс для Repository, который поддерживает конкретные типы ресурсов.
- * 
- * Используется в системе тегов для регистрации per-type репозиториев.
+ * Repository interface that supports specific resource types.
+ *
+ * Used by the tagging system to register per-type repositories.
  */
 interface TypedResourceRepository extends ResourceRepository
 {
     /**
-     * Проверяет, поддерживает ли этот репозиторий указанный тип ресурса.
+     * Checks whether this repository supports the given resource type.
      *
-     * @param string $type JSON:API тип ресурса (например, 'articles', 'users')
-     * @return bool true, если репозиторий поддерживает этот тип
+     * @param string $type JSON:API resource type (for example 'articles', 'users')
+     * @return bool true when the repository supports the type
      */
     public function supports(string $type): bool;
 }
-

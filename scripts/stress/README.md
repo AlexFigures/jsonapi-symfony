@@ -1,175 +1,175 @@
 # Stress Testing & Memory Profiling
 
-Этот каталог содержит скрипты для стресс-тестирования и профилирования памяти JSON:API Bundle.
+This directory provides scripts for stress testing and memory profiling the JSON:API Bundle.
 
-## Цели
+## Goals
 
-1. **Обнаружение утечек памяти** — проверка что память не растёт монотонно при длительной работе
-2. **Проверка стабильности** — отсутствие падений при большом количестве запросов
-3. **Профилирование производительности** — выявление узких мест
-4. **Реальные HTTP-запросы** — тестирование полного цикла request-response через контроллеры
+1. **Detect memory leaks** — confirm that memory usage does not grow monotonically during long runs.
+2. **Validate stability** — ensure large volumes of requests complete without crashes.
+3. **Profile performance** — surface bottlenecks and slow endpoints.
+4. **Exercise real HTTP requests** — cover the full request/response lifecycle through controllers.
 
-## Архитектура
+## Architecture
 
-### Компоненты
+### Components
 
 1. **Stress Test Application** (`scripts/stress/app/`)
-   - Минимальное Symfony приложение с JsonApiBundle
-   - In-memory репозиторий с большим датасетом (1000 Articles, 100 Authors, 500 Tags)
-   - Все JSON:API endpoints (collection, resource, relationships, atomic)
+   - Minimal Symfony application using the JsonApiBundle.
+   - In-memory repository seeded with 1000 Articles, 100 Authors, and 500 Tags.
+   - Provides every JSON:API endpoint (collection, resource, relationships, atomic).
 
 2. **HTTP Client** (`scripts/stress/http-client.php`)
-   - Простой cURL-based HTTP клиент
-   - Поддержка GET, POST, PATCH, DELETE
-   - Автоматическая обработка JSON:API Content-Type
+   - Lightweight cURL-based HTTP client.
+  - Supports GET, POST, PATCH, DELETE.
+   - Automatically negotiates the JSON:API media type.
 
 3. **Stress Test Runners**
-   - `run.php` — оригинальный симуляционный тест (deprecated)
-   - `run-http.php` — HTTP-based стресс-тест (рекомендуется)
-   - `memory-stress.php` — расширенное профилирование памяти с HTTP
+   - `run.php` — legacy simulation test (deprecated).
+   - `run-http.php` — HTTP-based stress test (recommended).
+   - `memory-stress.php` — extended memory profiling via HTTP.
 
 4. **Server** (`scripts/stress/server.php`)
-   - Запуск PHP built-in server для stress test app
+   - Spins up the PHP built-in server for the stress test application.
 
-## Использование
+## Usage
 
-### Быстрый старт
+### Quick Start
 
 ```bash
-# Терминал 1: Запустить сервер
+# Terminal 1: start the server
 php scripts/stress/server.php
 
-# Терминал 2: Запустить стресс-тесты
+# Terminal 2: run the stress suite
 php scripts/stress/run-http.php --profile=all
 ```
 
-### HTTP-Based Stress Tests (Рекомендуется)
+### HTTP-Based Stress Tests (Recommended)
 
 ```bash
-# 1. Запустить сервер (в отдельном терминале)
+# 1. Start the server (in a separate terminal)
 php scripts/stress/server.php [port]
 
-# 2. Запустить стресс-тесты
+# 2. Run the stress tests
 php scripts/stress/run-http.php --profile=mem
 php scripts/stress/run-http.php --profile=perf
 php scripts/stress/run-http.php --profile=all
 
-# С кастомным URL сервера
+# Use a custom server URL
 php scripts/stress/run-http.php --server=http://localhost:9000
 ```
 
 ### Memory Profiling
 
 ```bash
-# 1. Запустить сервер
+# 1. Start the server
 php scripts/stress/server.php
 
-# 2. Запустить memory stress test
+# 2. Launch the memory stress test
 php scripts/stress/memory-stress.php --profile=standard
-php scripts/stress/memory-stress.php --profile=quick      # Для CI
-php scripts/stress/memory-stress.php --profile=extended   # Глубокий анализ
-php scripts/stress/memory-stress.php --iterations=5000    # Кастомное количество
+php scripts/stress/memory-stress.php --profile=quick      # For CI
+php scripts/stress/memory-stress.php --profile=extended   # Deep analysis
+php scripts/stress/memory-stress.php --iterations=5000    # Custom run length
 ```
 
 ### Legacy Simulation Tests (Deprecated)
 
 ```bash
-# Старые симуляционные тесты (не используют реальные HTTP-запросы)
+# Simulation tests without real HTTP requests
 php scripts/stress/run.php --profile=mem
 php scripts/stress/run.php --profile=perf
 php scripts/stress/run.php --profile=all
 ```
 
-## Тестовые сценарии
+## Test Scenarios
 
-### HTTP-Based Tests (run-http.php, memory-stress.php)
+### HTTP-Based Tests (`run-http.php`, `memory-stress.php`)
 
-#### 1. Collection GET with include/fields (1000 итераций)
+#### 1. Collection GET with include/fields (1000 iterations)
 **Endpoint**: `GET /api/articles?include=author,tags&fields[articles]=title`
 
-Проверяет:
-- Отсутствие утечек при построении документов с `include`
-- Корректную работу sparse fieldsets
-- Стабильность DocumentBuilder
-- Реальные HTTP response times
-- Полный цикл request-response
+Validates:
+- No leaks when building documents with `include`.
+- Correct sparse fieldset handling.
+- Stability of the `DocumentBuilder`.
+- Real HTTP response times.
+- End-to-end request/response behaviour.
 
-#### 2. Resource GET (500 итераций)
+#### 2. Resource GET (500 iterations)
 **Endpoint**: `GET /api/articles/{id}?include=author,tags`
 
-Проверяет:
-- Получение отдельных ресурсов
-- Include relationships
-- HTTP caching headers
-- Response time для single resource
+Validates:
+- Fetching individual resources.
+- Relationship includes.
+- HTTP caching headers.
+- Response latency for single resources.
 
-#### 3. Related Resources (300 итераций)
+#### 3. Related Resources (300 iterations)
 **Endpoint**: `GET /api/articles/{id}/tags`
 
-Проверяет:
-- Related resources endpoint
-- To-many relationships
-- Отсутствие N+1 запросов
-- Корректную работу LinkageBuilder
+Validates:
+- Related resources endpoints.
+- To-many relationship loading.
+- Absence of N+1 queries.
+- Correct behaviour of the `LinkageBuilder`.
 
-#### 4. Relationships (200 итераций)
+#### 4. Relationships (200 iterations)
 **Endpoint**: `GET /api/articles/{id}/relationships/author`
 
-Проверяет:
-- Relationships endpoint
-- Resource linkage
-- To-one и to-many relationships
+Validates:
+- Relationship endpoints.
+- Resource linkage documents.
+- Both to-one and to-many relationships.
 
-#### 5. Atomic Operations (100 итераций)
+#### 5. Atomic Operations (100 iterations)
 **Endpoint**: `POST /api/operations`
 
-Проверяет:
-- Транзакционность
-- Разрешение Local IDs
-- Отсутствие утечек в LidRegistry
-- Atomic operations extension
+Validates:
+- Transaction handling.
+- Local ID resolution.
+- Leak-free `LidRegistry`.
+- JSON:API atomic operations extension.
 
-#### 6. Write Operations (200 итераций)
+#### 6. Write Operations (200 iterations)
 **Endpoints**: `PATCH /api/articles/{id}`, `DELETE /api/articles/{id}`
 
-Проверяет:
-- PATCH/DELETE операции
-- Preconditions (If-Match)
-- ETag генерацию и валидацию
-- Стабильность при конкурентных обновлениях
+Validates:
+- PATCH/DELETE execution paths.
+- Preconditions (`If-Match`).
+- ETag generation and validation.
+- Stability under concurrent updates.
 
-### Legacy Simulation Tests (run.php)
+### Legacy Simulation Tests (`run.php`)
 
-Старые тесты используют симуляцию Request объектов без реальных HTTP-запросов.
-**Не рекомендуется** для обнаружения реальных проблем производительности.
+Legacy tests simulate `Request` objects without performing real HTTP calls.
+**Not recommended** for uncovering production performance issues.
 
-## Метрики
+## Metrics
 
-Скрипт собирает следующие метрики:
+Each script collects:
 
-- **memory_usage** — текущее использование памяти (в байтах)
-- **memory_peak** — пиковое использование памяти
-- **time** — время выполнения батча
-- **growth** — рост памяти между первыми 10% и последними 10% батчей
+- **memory_usage** — current memory usage (bytes).
+- **memory_peak** — peak memory usage.
+- **time** — batch execution time.
+- **growth** — difference in memory between the first and last 10% of batches.
 
-## Критерии успеха
+## Success Criteria
 
-✅ **Нет утечек памяти:**
-- Рост памяти между первыми и последними 10% батчей < 50 MB
+✅ **No memory leaks:**
+- Memory growth between the first and last 10% of batches remains below 50 MB.
 
-✅ **Стабильность:**
-- Все батчи выполняются без исключений
-- Нет монотонного роста памяти
+✅ **Stability:**
+- Every batch runs without exceptions.
+- No monotonic memory growth.
 
-✅ **Производительность:**
-- Среднее время на батч < 100ms (для простых операций)
-- Пиковая память < 256 MB
+✅ **Performance:**
+- Average time per batch < 100 ms (for simple operations).
+- Peak memory < 256 MB.
 
-## Отчёты
+## Reports
 
 ### HTTP-Based Tests
 
-Результаты сохраняются в `build/stress-report-http.json`:
+Results are persisted to `build/stress-report-http.json`:
 
 ```json
 {
@@ -192,27 +192,27 @@ php scripts/stress/run.php --profile=all
 
 ### Legacy Tests
 
-Результаты сохраняются в `build/stress-report.json` (старый формат без http_time)
+Stored in `build/stress-report.json` (legacy format without `http_time`).
 
-## Интеграция с CI
+## CI Integration
 
-Добавьте в `.github/workflows/qa.yml`:
+Add to `.github/workflows/qa.yml`:
 
 ```yaml
 - name: Stress Tests
   run: make stress
-  continue-on-error: true  # Не блокировать CI при обнаружении утечек
+  continue-on-error: true  # Do not block CI when leaks are detected
 ```
 
-## Профилирование с Blackfire
+## Profiling with Blackfire
 
-Для детального профилирования используйте Blackfire:
+Use Blackfire for detailed profiling:
 
 ```bash
 blackfire run php scripts/stress/run.php --profile=mem
 ```
 
-Или XDebug:
+Or Xdebug:
 
 ```bash
 php -d xdebug.mode=profile scripts/stress/run.php --profile=perf
@@ -220,30 +220,30 @@ php -d xdebug.mode=profile scripts/stress/run.php --profile=perf
 
 ## Troubleshooting
 
-### Ошибка "Memory limit exceeded"
+### Error: "Memory limit exceeded"
 
-Увеличьте лимит памяти:
+Increase the memory limit:
 
 ```bash
 php -d memory_limit=512M scripts/stress/run.php
 ```
 
-### Ложные срабатывания утечек
+### False positives for leaks
 
-Проверьте:
-1. Достаточно ли итераций (минимум 100)
-2. Не включён ли XDebug (отключите для точных измерений)
-3. Запускается ли GC регулярно (см. `gc_interval` в конфиге)
+Verify that:
+1. The iteration count is sufficient (at least 100).
+2. Xdebug is disabled (it skews measurements).
+3. GC runs regularly (`gc_interval` in the configuration).
 
-### Медленное выполнение
+### Slow execution
 
-Уменьшите количество батчей в `run.php`:
+Reduce the number of batches in `run.php`:
 
 ```php
 $config = [
     'batches' => [
-        'collections' => 100,  // вместо 1000
-        'related' => 50,       // вместо 500
+        'collections' => 100,  // instead of 1000
+        'related' => 50,       // instead of 500
         // ...
     ],
 ];
@@ -251,26 +251,25 @@ $config = [
 
 ## Dataset
 
-Stress test application использует расширенный InMemoryRepository с большим датасетом:
+The stress test application relies on an extended `InMemoryRepository` with a dense dataset:
 
-- **1000 Articles** — с разными авторами и тегами
-- **100 Authors** — распределены по статьям
-- **500 Tags** — каждая статья имеет 2-5 тегов
+- **1000 Articles** — varied authors and tags.
+- **100 Authors** — distributed across articles.
+- **500 Tags** — each article carries 2–5 tags.
 
-Это позволяет тестировать:
-- Pagination с большими коллекциями
-- Include с множественными relationships
-- N+1 query detection
-- Memory usage при больших response documents
+This setup enables testing of:
+- Pagination with large collections.
+- Includes with multiple relationships.
+- N+1 query detection.
+- Memory usage for sizeable response documents.
 
-## Дальнейшие улучшения
+## Future Improvements
 
-- [x] Интеграция с реальными контроллерами через HTTP
-- [x] Большой датасет для реалистичного тестирования
-- [ ] Добавить профилирование SQL запросов (для Doctrine adapter)
-- [ ] Визуализация графиков памяти
-- [ ] Автоматическое сравнение с baseline
-- [ ] Интеграция с php-meminfo для анализа графа удержания
-- [ ] Docker-based stress test environment
-- [ ] Continuous benchmarking в CI
-
+- [x] Integrate with real controllers over HTTP.
+- [x] Provide a large dataset for realistic workloads.
+- [ ] Add SQL query profiling (Doctrine adapter).
+- [ ] Visualise memory graphs.
+- [ ] Automate comparisons against a baseline.
+- [ ] Integrate with php-meminfo for retention graph analysis.
+- [ ] Docker-based stress test environment.
+- [ ] Continuous benchmarking in CI.

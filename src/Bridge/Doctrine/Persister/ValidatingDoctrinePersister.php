@@ -17,18 +17,18 @@ use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * Doctrine Persister с автоматической валидацией через Symfony Validator.
+ * Doctrine Persister with automatic validation through Symfony Validator.
  *
- * Расширяет GenericDoctrinePersister, добавляя валидацию перед persist().
+ * Extends GenericDoctrinePersister by adding validation before persist().
  *
- * Использует Symfony Validator constraints на Entity:
+ * Uses Symfony Validator constraints on Entity:
  * - #[Assert\NotBlank]
  * - #[Assert\Length]
  * - #[Assert\Email]
- * - и т.д.
+ * - etc.
  *
- * Поддерживает сущности с конструкторами, требующими параметры,
- * через SerializerEntityInstantiator (использует Symfony Serializer, как API Platform).
+ * Supports entities with constructors requiring parameters
+ * through SerializerEntityInstantiator (uses Symfony Serializer, like API Platform).
  */
 final class ValidatingDoctrinePersister implements ResourcePersister
 {
@@ -47,15 +47,15 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->class;
 
-        // Проверка конфликта ID
+        // Check for ID conflict
         if ($clientId !== null && $this->em->find($entityClass, $clientId)) {
             throw new ConflictException(
                 sprintf('Resource "%s" with id "%s" already exists.', $type, $clientId)
             );
         }
 
-        // Создаем новую сущность через SerializerEntityInstantiator
-        // Он умеет вызывать конструкторы с параметрами и учитывает SerializationGroups
+        // Create new entity through SerializerEntityInstantiator
+        // It can call constructors with parameters and considers SerializationGroups
         $result = $this->instantiator->instantiate($entityClass, $metadata, $changes, isCreate: true);
         $entity = $result['entity'];
         $remainingChanges = $result['remainingChanges'];
@@ -63,26 +63,26 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         $idPath = $metadata->idPropertyPath ?? 'id';
         $classMetadata = $this->em->getClassMetadata($entityClass);
 
-        // Устанавливаем ID если нужно
+        // Set ID if needed
         if ($clientId !== null) {
             $this->accessor->setValue($entity, $idPath, $clientId);
         } elseif ($classMetadata->isIdentifierNatural()) {
-            // Проверяем, не установлен ли ID уже (например, в конструкторе)
+            // Check if ID is already set (e.g., in constructor)
             try {
                 $currentId = $this->accessor->getValue($entity, $idPath);
                 if ($currentId === null || $currentId === '') {
                     $this->accessor->setValue($entity, $idPath, Uuid::v4()->toRfc4122());
                 }
             } catch (\Throwable) {
-                // Если не удалось получить ID, устанавливаем новый
+                // If unable to get ID, set a new one
                 $this->accessor->setValue($entity, $idPath, Uuid::v4()->toRfc4122());
             }
         }
 
-        // Применяем оставшиеся атрибуты с учётом групп сериализации
+        // Apply remaining attributes considering serialization groups
         $this->applyAttributes($entity, $metadata, $remainingChanges, true);
 
-        // Валидация перед persist
+        // Validate before persist
         $this->validate($entity, $type);
 
         $this->em->persist($entity);
@@ -102,10 +102,10 @@ final class ValidatingDoctrinePersister implements ResourcePersister
             );
         }
 
-        // Применяем атрибуты с учётом групп сериализации
+        // Apply attributes considering serialization groups
         $this->applyAttributes($entity, $metadata, $changes, false);
 
-        // Валидация перед flush
+        // Validate before flush
         $this->validate($entity, $type);
 
         $this->em->flush();
@@ -135,11 +135,11 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         bool $isCreate
     ): void {
         foreach ($changes->attributes as $path => $value) {
-            // Проверяем, можно ли записать этот атрибут
+            // Check if this attribute can be written
             $attributeMetadata = $this->findAttributeMetadata($metadata, $path);
 
             if ($attributeMetadata !== null && !$attributeMetadata->isWritable($isCreate)) {
-                // Пропускаем атрибуты, которые нельзя записать
+                // Skip attributes that cannot be written
                 continue;
             }
 
@@ -161,7 +161,7 @@ final class ValidatingDoctrinePersister implements ResourcePersister
     }
 
     /**
-     * Валидирует сущность и выбрасывает исключение при ошибках.
+     * Validates entity and throws exception on errors.
      *
      * @throws \JsonApi\Symfony\Http\Exception\ValidationException
      */
@@ -170,7 +170,7 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         $violations = $this->validator->validate($entity);
 
         if (count($violations) > 0) {
-            // ConstraintViolationMapper преобразует violations в JSON:API errors
+            // ConstraintViolationMapper converts violations to JSON:API errors
             throw $this->violationMapper->mapToException($type, $violations);
         }
     }

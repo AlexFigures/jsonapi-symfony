@@ -464,6 +464,8 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistry::class),
             '%jsonapi.route_prefix%',
             true, // enableRelationshipRoutes
+            '%jsonapi.docs.generator.openapi%',
+            '%jsonapi.docs.ui%',
         ])
         ->tag('routing.loader')
     ;

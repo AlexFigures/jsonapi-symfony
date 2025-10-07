@@ -22,7 +22,7 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
         return 'postgresql';
     }
 
-    // ==================== Успешная валидация ====================
+    // ==================== Successful validation ====================
 
     public function testCreateWithValidDataSucceeds(): void
     {
@@ -44,7 +44,7 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
 
     public function testUpdateWithValidDataSucceeds(): void
     {
-        // Создаём продукт
+        // Create product
         $product = new Product();
         $product->setId('product-1');
         $product->setName('Laptop');
@@ -54,7 +54,7 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
         $this->em->flush();
         $this->em->clear();
 
-        // Обновляем
+        // Update
         $changes = new ChangeSet(
             attributes: [
                 'name' => 'Gaming Laptop',
@@ -66,7 +66,7 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
 
         self::assertSame('Gaming Laptop', $updated->getName());
         self::assertSame('1499.99', $updated->getPrice());
-        self::assertSame(10, $updated->getStock()); // Не изменилось
+        self::assertSame(10, $updated->getStock()); // Unchanged
     }
 
     // ==================== Валидация NotBlank ====================

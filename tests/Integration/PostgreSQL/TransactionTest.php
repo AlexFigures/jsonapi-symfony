@@ -34,7 +34,7 @@ final class TransactionTest extends DoctrineIntegrationTestCase
 
         self::assertSame('tx-article', $result->getId());
 
-        // Проверяем, что данные сохранены
+        // Verify that the data was saved
         $this->em->clear();
         $found = $this->em->find(Article::class, 'tx-article');
         self::assertNotNull($found);
@@ -51,7 +51,7 @@ final class TransactionTest extends DoctrineIntegrationTestCase
 
                 $this->persister->create('articles', $changes, 'rollback-article');
 
-                // Бросаем исключение
+                // Throw an exception
                 throw new \RuntimeException('Rollback test');
             });
 
@@ -60,7 +60,7 @@ final class TransactionTest extends DoctrineIntegrationTestCase
             self::assertSame('Rollback test', $e->getMessage());
         }
 
-        // Проверяем, что данные НЕ сохранены
+        // Verify that the data was NOT saved
         $this->em->clear();
         $found = $this->em->find(Article::class, 'rollback-article');
         self::assertNull($found);
@@ -72,7 +72,7 @@ final class TransactionTest extends DoctrineIntegrationTestCase
             $changes1 = new ChangeSet(['title' => 'Article 1', 'content' => 'Content 1']);
             $article1 = $this->persister->create('articles', $changes1, 'nested-1');
 
-            // Вложенная транзакция
+            // Nested transaction
             $this->transactionManager->transactional(function () {
                 $changes2 = new ChangeSet(['title' => 'Article 2', 'content' => 'Content 2']);
                 $this->persister->create('articles', $changes2, 'nested-2');
@@ -81,10 +81,9 @@ final class TransactionTest extends DoctrineIntegrationTestCase
             return $article1;
         });
 
-        // Проверяем, что обе статьи сохранены
+        // Verify that both articles were saved
         $this->em->clear();
         self::assertNotNull($this->em->find(Article::class, 'nested-1'));
         self::assertNotNull($this->em->find(Article::class, 'nested-2'));
     }
 }
-

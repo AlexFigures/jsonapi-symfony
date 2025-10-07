@@ -1,6 +1,6 @@
 FROM php:8.4-cli-alpine
 
-# Установка системных зависимостей
+# Install system dependencies
 RUN apk add --no-cache \
     postgresql-dev \
     mysql-dev \
@@ -12,23 +12,22 @@ RUN apk add --no-cache \
     unzip \
     linux-headers
 
-# Установка PHP расширений
+# Install PHP extensions
 RUN docker-php-ext-install \
     pdo \
     pdo_pgsql \
     pdo_mysql
 
-# Установка Xdebug для coverage
+# Install Xdebug for coverage
 RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
 
-# Установка Composer
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Настройка Xdebug
+# Configure Xdebug
 RUN echo "xdebug.mode=coverage" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
 WORKDIR /app
 
 CMD ["php", "-v"]
-

@@ -146,10 +146,10 @@ final class RelationshipHandlerTest extends DoctrineIntegrationTestCase
         $article = $this->em->find(Article::class, 'article-1');
         self::assertNotNull($article->getAuthor());
 
-        // Удаляем автора
+        // Remove author
         $this->handler->replaceToOne($article, 'author', null);
 
-        // Проверяем
+        // Verify
         $this->em->clear();
         $article = $this->em->find(Article::class, 'article-1');
         self::assertNull($article->getAuthor());
@@ -172,10 +172,10 @@ final class RelationshipHandlerTest extends DoctrineIntegrationTestCase
         $article = $this->em->find(Article::class, 'article-1');
         self::assertCount(2, $article->getTags());
 
-        // Заменяем на один тег
+        // Replace with one tag
         $this->handler->replaceToMany($article, 'tags', ['tag-1']);
 
-        // Проверяем
+        // Verify
         $this->em->clear();
         $article = $this->em->find(Article::class, 'article-1');
         self::assertCount(1, $article->getTags());
@@ -189,10 +189,10 @@ final class RelationshipHandlerTest extends DoctrineIntegrationTestCase
         $article = $this->em->find(Article::class, 'article-1');
         self::assertCount(2, $article->getTags());
 
-        // Очищаем все теги
+        // Clear all tags
         $this->handler->replaceToMany($article, 'tags', []);
 
-        // Проверяем
+        // Verify
         $this->em->clear();
         $article = $this->em->find(Article::class, 'article-1');
         self::assertCount(0, $article->getTags());
@@ -202,7 +202,7 @@ final class RelationshipHandlerTest extends DoctrineIntegrationTestCase
     {
         $this->seedDatabase();
 
-        // Создаём новый тег
+        // Create new tag
         $tag3 = new Tag();
         $tag3->setId('tag-3');
         $tag3->setName('Doctrine');
@@ -211,12 +211,12 @@ final class RelationshipHandlerTest extends DoctrineIntegrationTestCase
         $this->em->clear();
 
         $article = $this->em->find(Article::class, 'article-2');
-        self::assertCount(1, $article->getTags()); // Только tag-1
+        self::assertCount(1, $article->getTags()); // Only tag-1
 
-        // Добавляем tag-2 и tag-3
+        // Add tag-2 and tag-3
         $this->handler->addToMany($article, 'tags', ['tag-2', 'tag-3']);
 
-        // Проверяем
+        // Verify
         $this->em->clear();
         $article = $this->em->find(Article::class, 'article-2');
         self::assertCount(3, $article->getTags());
@@ -229,10 +229,10 @@ final class RelationshipHandlerTest extends DoctrineIntegrationTestCase
         $article = $this->em->find(Article::class, 'article-1');
         self::assertCount(2, $article->getTags());
 
-        // Пытаемся добавить уже существующий тег
+        // Try to add already existing tag
         $this->handler->addToMany($article, 'tags', ['tag-1']);
 
-        // Проверяем - количество не изменилось
+        // Verify - count unchanged
         $this->em->clear();
         $article = $this->em->find(Article::class, 'article-1');
         self::assertCount(2, $article->getTags());
@@ -245,10 +245,10 @@ final class RelationshipHandlerTest extends DoctrineIntegrationTestCase
         $article = $this->em->find(Article::class, 'article-1');
         self::assertCount(2, $article->getTags());
 
-        // Удаляем один тег
+        // Remove one tag
         $this->handler->removeFromToMany($article, 'tags', ['tag-1']);
 
-        // Проверяем
+        // Verify
         $this->em->clear();
         $article = $this->em->find(Article::class, 'article-1');
         self::assertCount(1, $article->getTags());
@@ -262,7 +262,7 @@ final class RelationshipHandlerTest extends DoctrineIntegrationTestCase
         $article = $this->em->find(Article::class, 'article-1');
         self::assertCount(2, $article->getTags());
 
-        // Создаём новый тег, но НЕ добавляем его к статье
+        // Create new tag, but do NOT add it to article
         $tag3 = new Tag();
         $tag3->setId('tag-3');
         $tag3->setName('Doctrine');
@@ -272,10 +272,10 @@ final class RelationshipHandlerTest extends DoctrineIntegrationTestCase
 
         $article = $this->em->find(Article::class, 'article-1');
 
-        // Пытаемся удалить тег, которого нет в коллекции
+        // Try to remove tag that is not in collection
         $this->handler->removeFromToMany($article, 'tags', ['tag-3']);
 
-        // Проверяем - количество не изменилось
+        // Verify - count unchanged
         $this->em->clear();
         $article = $this->em->find(Article::class, 'article-1');
         self::assertCount(2, $article->getTags());

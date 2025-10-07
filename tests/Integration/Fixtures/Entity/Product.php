@@ -11,7 +11,7 @@ use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Тестовая Entity с валидацией для демонстрации ValidatingDoctrinePersister.
+ * Sample entity with validation used to demonstrate the ValidatingDoctrinePersister.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'products')]
@@ -111,4 +111,3 @@ class Product
         return $this;
     }
 }
-

@@ -39,7 +39,7 @@ final class GenericRepositoryTest extends DoctrineIntegrationTestCase
     {
         $this->seedDatabase();
 
-        // Первая страница
+        // First page
         $criteria = new Criteria(new Pagination(1, 1));
         $slice = $this->repository->findCollection('articles', $criteria);
 
@@ -47,7 +47,7 @@ final class GenericRepositoryTest extends DoctrineIntegrationTestCase
         self::assertSame(2, $slice->totalItems);
         self::assertSame('article-1', $slice->items[0]->getId());
 
-        // Вторая страница
+        // Second page
         $criteria = new Criteria(new Pagination(2, 1));
         $slice = $this->repository->findCollection('articles', $criteria);
 
@@ -60,7 +60,7 @@ final class GenericRepositoryTest extends DoctrineIntegrationTestCase
     {
         $this->seedDatabase();
 
-        // Сортировка по title DESC
+        // Sort by title DESC
         $criteria = new Criteria(new Pagination(1, 10));
         $criteria->sort = [new Sorting('title', true)]; // true = DESC
 
@@ -435,4 +435,3 @@ final class GenericRepositoryTest extends DoctrineIntegrationTestCase
         self::assertCount(2, $article->getTags());
     }
 }
-

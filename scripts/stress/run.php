@@ -6,25 +6,25 @@ declare(strict_types=1);
 /**
  * Memory & Performance Stress Test Script
  *
- * Проверяет отсутствие утечек памяти и стабильность при длительной работе.
+ * Ensures there are no memory leaks and that long-running execution remains stable.
  *
- * Использование:
+ * Usage:
  *   php scripts/stress/run.php --profile=mem
  *   php scripts/stress/run.php --profile=perf
  *   php scripts/stress/run.php --profile=all
  *
- * Метрики:
- *   - memory_get_usage(true) — реальное использование памяти
- *   - memory_get_peak_usage(true) — пиковое использование
- *   - Время выполнения батчей
- *   - Отсутствие монотонного роста памяти
+ * Metrics:
+ *   - memory_get_usage(true) — actual memory usage
+ *   - memory_get_peak_usage(true) — peak memory usage
+ *   - Batch execution time
+ *   - Absence of monotonic memory growth
  */
 
 require __DIR__ . '/../../vendor/autoload.php';
 
 use Symfony\Component\HttpFoundation\Request;
 
-// Конфигурация
+// Configuration
 $config = [
     'batches' => [
         'collections' => 1000,
@@ -33,11 +33,11 @@ $config = [
         'preconditions' => 300,
         'filters' => 100,
     ],
-    'memory_threshold_mb' => 50, // Максимальный рост памяти между батчами
-    'gc_interval' => 100, // Интервал принудительной сборки мусора
+    'memory_threshold_mb' => 50, // Maximum memory growth between batches
+    'gc_interval' => 100, // Interval for forced garbage collection
 ];
 
-// Парсинг аргументов
+// Parse CLI arguments
 $profile = 'all';
 foreach ($argv as $arg) {
     if (str_starts_with($arg, '--profile=')) {
@@ -50,7 +50,7 @@ echo "Profile: {$profile}\n";
 echo "PHP Version: " . PHP_VERSION . "\n";
 echo "Memory Limit: " . ini_get('memory_limit') . "\n\n";
 
-// Инициализация метрик
+// Initialise metrics
 $metrics = [
     'batches' => [],
     'memory_start' => memory_get_usage(true),
@@ -59,7 +59,7 @@ $metrics = [
 ];
 
 /**
- * Запись метрик батча
+ * Record batch metrics
  */
 function recordBatch(string $name, int $iteration, array &$metrics): void
 {
@@ -78,7 +78,7 @@ function recordBatch(string $name, int $iteration, array &$metrics): void
         $metrics['memory_peak'] = $memoryPeak;
     }
 
-    // Вывод прогресса каждые 100 итераций
+    // Print progress every 100 iterations
     if ($iteration % 100 === 0) {
         $memoryMb = round($memoryUsage / 1024 / 1024, 2);
         $peakMb = round($memoryPeak / 1024 / 1024, 2);
@@ -93,16 +93,16 @@ function recordBatch(string $name, int $iteration, array &$metrics): void
 }
 
 /**
- * Проверка на утечки памяти
+ * Memory leak check
  */
 function checkMemoryLeaks(array $metrics, array $config): bool
 {
     $batches = $metrics['batches'];
     if (count($batches) < 10) {
-        return true; // Недостаточно данных
+        return true; // Not enough data
     }
 
-    // Сравниваем первые 10% и последние 10% батчей
+    // Compare the first 10% and last 10% of batches
     $sampleSize = (int) (count($batches) * 0.1);
     $firstBatches = array_slice($batches, 0, $sampleSize);
     $lastBatches = array_slice($batches, -$sampleSize);
@@ -127,7 +127,7 @@ function checkMemoryLeaks(array $metrics, array $config): bool
 }
 
 /**
- * Генерация отчёта
+ * Generate report
  */
 function generateReport(array $metrics): void
 {
@@ -142,17 +142,17 @@ function generateReport(array $metrics): void
     echo sprintf("Memory growth: %.2f MB\n", (memory_get_usage(true) - $metrics['memory_start']) / 1024 / 1024);
 }
 
-// Стресс-тесты
+// Stress tests
 try {
-    // Тест 1: GET коллекций с разными include/fields
+    // Test 1: GET collections with different include/fields combinations
     if ($profile === 'all' || $profile === 'mem') {
         echo "\n--- Test 1: Collection GET with include/fields ---\n";
         for ($i = 1; $i <= $config['batches']['collections']; $i++) {
-            // Симуляция запроса (в реальности нужно использовать контроллеры)
+            // Simulate a request (replace with real controllers in production)
             $includes = ['author', 'tags', 'comments'];
             $fields = ['title', 'body', 'createdAt'];
 
-            // Здесь должен быть реальный вызов контроллера
+            // Replace with an actual controller call
             // $request = Request::create('/api/articles?include=' . implode(',', $includes));
             // $response = $controller($request, 'articles');
 
@@ -164,11 +164,11 @@ try {
         }
     }
 
-    // Тест 2: Related/Relationships to-many
+    // Test 2: Related/Relationships to-many
     if ($profile === 'all' || $profile === 'mem') {
         echo "\n--- Test 2: Related/Relationships to-many ---\n";
         for ($i = 1; $i <= $config['batches']['related']; $i++) {
-            // Симуляция запроса related
+            // Simulate a related request
             // $request = Request::create('/api/articles/1/tags');
             // $response = $relatedController($request, 'articles', '1', 'tags');
 
@@ -180,11 +180,11 @@ try {
         }
     }
 
-    // Тест 3: Atomic операции с lid
+    // Test 3: Atomic operations with lid
     if ($profile === 'all' || $profile === 'mem') {
         echo "\n--- Test 3: Atomic operations with lid ---\n";
         for ($i = 1; $i <= $config['batches']['atomic']; $i++) {
-            // Симуляция atomic операций
+            // Simulate atomic operations
             // $payload = ['atomic:operations' => [...]];
             // $request = Request::create('/api/operations', 'POST', ...);
             // $response = $atomicController($request);
@@ -197,11 +197,11 @@ try {
         }
     }
 
-    // Тест 4: PATCH/DELETE с If-Match
+    // Test 4: PATCH/DELETE with If-Match
     if ($profile === 'all' || $profile === 'perf') {
         echo "\n--- Test 4: PATCH/DELETE with If-Match ---\n";
         for ($i = 1; $i <= $config['batches']['preconditions']; $i++) {
-            // Симуляция PATCH с If-Match
+            // Simulate PATCH with If-Match
             // $request = Request::create('/api/articles/1', 'PATCH', server: ['HTTP_IF_MATCH' => '"etag"']);
             // $response = $updateController($request, 'articles', '1');
 
@@ -213,11 +213,11 @@ try {
         }
     }
 
-    // Тест 5: Фильтры с большими IN/OR
+    // Test 5: Filters with large IN/OR predicates
     if ($profile === 'all' || $profile === 'perf') {
         echo "\n--- Test 5: Filters with large IN/OR ---\n";
         for ($i = 1; $i <= $config['batches']['filters']; $i++) {
-            // Симуляция фильтров
+            // Simulate filters
             // $request = Request::create('/api/articles?filter[id][in]=1,2,3,...,100');
             // $response = $collectionController($request, 'articles');
 
@@ -229,11 +229,11 @@ try {
         }
     }
 
-    // Финальная проверка
+    // Final check
     $noLeaks = checkMemoryLeaks($metrics, $config);
     generateReport($metrics);
 
-    // Сохранение метрик в файл
+    // Save metrics to disk
     $reportPath = __DIR__ . '/../../build/stress-report.json';
     @mkdir(dirname($reportPath), 0755, true);
     file_put_contents($reportPath, json_encode($metrics, JSON_PRETTY_PRINT));
@@ -245,4 +245,3 @@ try {
     echo $e->getTraceAsString() . "\n";
     exit(1);
 }
-

@@ -196,6 +196,86 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->assertNotNull($routes->get('jsonapi.articles.show'));
     }
 
+    public function testAddsDocumentationRoutesWhenEnabled(): void
+    {
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('all')->willReturn([]);
+
+        $openApiConfig = [
+            'enabled' => true,
+            'route' => '/_jsonapi/openapi.json',
+        ];
+
+        $uiConfig = [
+            'enabled' => true,
+            'route' => '/_jsonapi/docs',
+        ];
+
+        $loader = new JsonApiRouteLoader($registry, '/api', true, $openApiConfig, $uiConfig);
+        $routes = $loader->load('.', 'jsonapi');
+
+        $openApiRoute = $routes->get('jsonapi.docs.openapi');
+        self::assertNotNull($openApiRoute);
+        self::assertSame('/_jsonapi/openapi.json', $openApiRoute->getPath());
+        self::assertSame('JsonApi\Symfony\Http\Controller\OpenApiController', $openApiRoute->getDefault('_controller'));
+        self::assertSame(['GET'], $openApiRoute->getMethods());
+
+        $uiRoute = $routes->get('jsonapi.docs.ui');
+        self::assertNotNull($uiRoute);
+        self::assertSame('/_jsonapi/docs', $uiRoute->getPath());
+        self::assertSame('JsonApi\Symfony\Http\Controller\SwaggerUiController', $uiRoute->getDefault('_controller'));
+        self::assertSame(['GET'], $uiRoute->getMethods());
+    }
+
+    public function testDocumentationRoutesRespectCustomPaths(): void
+    {
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('all')->willReturn([]);
+
+        $openApiConfig = [
+            'enabled' => true,
+            'route' => '/doc/openapi.json',
+        ];
+
+        $uiConfig = [
+            'enabled' => true,
+            'route' => '/doc/browser',
+        ];
+
+        $loader = new JsonApiRouteLoader($registry, '/api', true, $openApiConfig, $uiConfig);
+        $routes = $loader->load('.', 'jsonapi');
+
+        $openApiRoute = $routes->get('jsonapi.docs.openapi');
+        self::assertNotNull($openApiRoute);
+        self::assertSame('/doc/openapi.json', $openApiRoute->getPath());
+
+        $uiRoute = $routes->get('jsonapi.docs.ui');
+        self::assertNotNull($uiRoute);
+        self::assertSame('/doc/browser', $uiRoute->getPath());
+    }
+
+    public function testDocumentationRoutesCanBeDisabled(): void
+    {
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('all')->willReturn([]);
+
+        $openApiConfig = [
+            'enabled' => false,
+            'route' => '/_jsonapi/openapi.json',
+        ];
+
+        $uiConfig = [
+            'enabled' => false,
+            'route' => '/_jsonapi/docs',
+        ];
+
+        $loader = new JsonApiRouteLoader($registry, '/api', true, $openApiConfig, $uiConfig);
+        $routes = $loader->load('.', 'jsonapi');
+
+        self::assertNull($routes->get('jsonapi.docs.openapi'));
+        self::assertNull($routes->get('jsonapi.docs.ui'));
+    }
+
     public function testSupportsJsonApiType(): void
     {
         $registry = $this->createMock(ResourceRegistryInterface::class);
@@ -219,4 +299,3 @@ final class JsonApiRouteLoaderTest extends TestCase
         $loader->load('.', 'jsonapi');
     }
 }
-

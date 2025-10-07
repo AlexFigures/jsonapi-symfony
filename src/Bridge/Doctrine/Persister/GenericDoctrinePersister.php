@@ -69,7 +69,7 @@ class GenericDoctrinePersister implements ResourcePersister
             }
         }
 
-        // Применяем оставшиеся атрибуты с учётом групп сериализации
+        // Apply remaining attributes considering serialization groups
         $this->applyAttributes($entity, $metadata, $remainingChanges, true);
 
         $this->em->persist($entity);
@@ -89,7 +89,7 @@ class GenericDoctrinePersister implements ResourcePersister
             );
         }
 
-        // Применяем атрибуты с учётом групп сериализации
+        // Apply attributes considering serialization groups
         $this->applyAttributes($entity, $metadata, $changes, false);
         $this->em->flush();
 
@@ -118,11 +118,11 @@ class GenericDoctrinePersister implements ResourcePersister
         bool $isCreate
     ): void {
         foreach ($changes->attributes as $path => $value) {
-            // Проверяем, можно ли записать этот атрибут
+            // Check if this attribute can be written
             $attributeMetadata = $this->findAttributeMetadata($metadata, $path);
 
             if ($attributeMetadata !== null && !$attributeMetadata->isWritable($isCreate)) {
-                // Пропускаем атрибуты, которые нельзя записать
+                // Skip attributes that cannot be written
                 continue;
             }
 

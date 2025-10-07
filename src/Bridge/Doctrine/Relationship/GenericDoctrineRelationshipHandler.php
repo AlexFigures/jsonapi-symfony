@@ -22,12 +22,12 @@ use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 /**
- * Generic Doctrine реализация для чтения и обновления связей.
+ * Generic Doctrine implementation for reading and updating relationships.
  *
- * Автоматически определяет тип связи через Doctrine metadata
- * и выполняет соответствующие операции.
+ * Automatically determines relationship type through Doctrine metadata
+ * and performs corresponding operations.
  *
- * Поддерживает:
+ * Supports:
  * - OneToOne
  * - ManyToOne
  * - OneToMany

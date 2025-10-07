@@ -21,7 +21,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
         return 'postgresql';
     }
 
-    // ==================== Create (группа 'create') ====================
+    // ==================== Create (group 'create') ====================
 
     public function testCreateAllowsWritableAttributes(): void
     {
@@ -51,7 +51,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
                 'email' => 'john@example.com',
                 'password' => 'secret123',
                 'slug' => 'john-doe',
-                // Попытка установить read-only атрибуты
+                // Attempt to set read-only attributes
                 'createdAt' => new \DateTimeImmutable('2020-01-01'),
                 'updatedAt' => new \DateTimeImmutable('2020-01-01'),
             ],
@@ -59,7 +59,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
 
         $user = $this->persister->create('users', $changes);
 
-        // createdAt и updatedAt должны быть установлены автоматически, а не из запроса
+        // createdAt and updatedAt should be set automatically, not from request
         self::assertNotEquals('2020-01-01', $user->getCreatedAt()->format('Y-m-d'));
         self::assertNotEquals('2020-01-01', $user->getUpdatedAt()->format('Y-m-d'));
     }
@@ -72,22 +72,22 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
                 'email' => 'john@example.com',
                 'password' => 'secret123',
                 'slug' => 'john-doe',
-                // Попытка установить update-only атрибут
+                // Attempt to set update-only attribute
                 'role' => 'admin',
             ],
         );
 
         $user = $this->persister->create('users', $changes);
 
-        // role не должна быть установлена при создании
-        self::assertSame('user', $user->getRole()); // Дефолтное значение
+        // role should not be set during creation
+        self::assertSame('user', $user->getRole()); // Default value
     }
 
-    // ==================== Update (группа 'update') ====================
+    // ==================== Update group ('update') ====================
 
     public function testUpdateAllowsWritableAttributes(): void
     {
-        // Создаём пользователя
+        // Create a user
         $user = new User();
         $user->setId('user-1');
         $user->setUsername('john_doe');
@@ -98,7 +98,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
         $this->em->flush();
         $this->em->clear();
 
-        // Обновляем
+        // Update the entity
         $changes = new ChangeSet(
             attributes: [
                 'username' => 'john_updated',
@@ -116,7 +116,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
 
     public function testUpdateIgnoresReadOnlyAttributes(): void
     {
-        // Создаём пользователя
+        // Create a user
         $user = new User();
         $user->setId('user-1');
         $user->setUsername('john_doe');
@@ -126,11 +126,11 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
         $this->em->persist($user);
         $this->em->flush();
 
-        // Получаем createdAt после persist
+        // Capture createdAt after persisting
         $originalCreatedAt = $user->getCreatedAt();
         $this->em->clear();
 
-        // Попытка обновить read-only атрибуты
+        // Attempt to update read-only attributes
         $changes = new ChangeSet(
             attributes: [
                 'username' => 'john_updated',
@@ -141,7 +141,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
 
         $updated = $this->persister->update('users', 'user-1', $changes);
 
-        // createdAt не должен измениться
+        // createdAt must remain unchanged
         self::assertEquals(
             $originalCreatedAt->format('Y-m-d H:i:s'),
             $updated->getCreatedAt()->format('Y-m-d H:i:s')
@@ -150,7 +150,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
 
     public function testUpdateIgnoresCreateOnlyAttributes(): void
     {
-        // Создаём пользователя
+        // Create a user
         $user = new User();
         $user->setId('user-1');
         $user->setUsername('john_doe');
@@ -161,7 +161,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
         $this->em->flush();
         $this->em->clear();
 
-        // Попытка обновить create-only атрибут
+        // Attempt to update a create-only attribute
         $changes = new ChangeSet(
             attributes: [
                 'username' => 'john_updated',
@@ -171,15 +171,15 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
 
         $updated = $this->persister->update('users', 'user-1', $changes);
 
-        // slug не должен измениться
+        // slug must remain unchanged
         self::assertSame('john-doe', $updated->getSlug());
-        // username должен измениться
+        // username should change
         self::assertSame('john_updated', $updated->getUsername());
     }
 
     public function testUpdateAllowsUpdateOnlyAttributes(): void
     {
-        // Создаём пользователя
+        // Create a user
         $user = new User();
         $user->setId('user-1');
         $user->setUsername('john_doe');
@@ -190,7 +190,7 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
         $this->em->flush();
         $this->em->clear();
 
-        // Обновляем update-only атрибут
+        // Update an update-only attribute
         $changes = new ChangeSet(
             attributes: [
                 'role' => 'admin',
@@ -199,22 +199,22 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
 
         $updated = $this->persister->update('users', 'user-1', $changes);
 
-        // role должна измениться при обновлении
+        // role should change during update
         self::assertSame('admin', $updated->getRole());
     }
 
-    // ==================== Комбинированные тесты ====================
+    // ==================== Combined tests ====================
 
     public function testCreateAndUpdateRespectDifferentGroups(): void
     {
-        // Создание: slug можно установить, role нельзя
+        // Creation: slug is allowed, role is not
         $createChanges = new ChangeSet(
             attributes: [
                 'username' => 'john_doe',
                 'email' => 'john@example.com',
                 'password' => 'secret123',
                 'slug' => 'john-doe',
-                'role' => 'admin', // Будет проигнорировано
+                'role' => 'admin', // Will be ignored
             ],
         );
 
@@ -222,27 +222,27 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
         $userId = $user->getId();
 
         self::assertSame('john-doe', $user->getSlug());
-        self::assertSame('user', $user->getRole()); // Дефолтное значение
+        self::assertSame('user', $user->getRole()); // Default value
 
         $this->em->clear();
 
-        // Обновление: slug нельзя изменить, role можно
+        // Update: slug cannot change, role can
         $updateChanges = new ChangeSet(
             attributes: [
-                'slug' => 'new-slug', // Будет проигнорировано
-                'role' => 'admin', // Будет применено
+                'slug' => 'new-slug', // Will be ignored
+                'role' => 'admin', // Will be applied
             ],
         );
 
         $updated = $this->persister->update('users', $userId, $updateChanges);
 
-        self::assertSame('john-doe', $updated->getSlug()); // Не изменился
-        self::assertSame('admin', $updated->getRole()); // Изменился
+        self::assertSame('john-doe', $updated->getSlug()); // Unchanged
+        self::assertSame('admin', $updated->getRole()); // Updated
     }
 
     public function testPasswordIsWriteOnlyNeverReturned(): void
     {
-        // Создаём пользователя
+        // Create a user
         $changes = new ChangeSet(
             attributes: [
                 'username' => 'john_doe',
@@ -254,11 +254,11 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
 
         $user = $this->persister->create('users', $changes);
 
-        // Пароль записан в БД
+        // Password persisted in the database
         self::assertSame('secret123', $user->getPassword());
 
-        // Но в реальном API он не должен возвращаться в JSON
-        // (это проверяется в DocumentBuilder, который использует isReadable())
+        // It must not be returned in JSON responses
+        // (enforced by DocumentBuilder via isReadable())
         $metadata = $this->registry->getByType('users');
         $passwordAttribute = null;
         foreach ($metadata->attributes as $attr) {
@@ -269,7 +269,6 @@ final class SerializationGroupsTest extends DoctrineIntegrationTestCase
         }
 
         self::assertNotNull($passwordAttribute);
-        self::assertFalse($passwordAttribute->isReadable()); // Не читается!
+        self::assertFalse($passwordAttribute->isReadable()); // Not readable!
     }
 }
-

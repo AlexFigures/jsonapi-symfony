@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Bridge\Symfony\Routing;
 
+use JsonApi\Symfony\Http\Controller\OpenApiController;
+use JsonApi\Symfony\Http\Controller\SwaggerUiController;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\Config\Loader\Loader;
 use Symfony\Component\Routing\Route;
@@ -38,10 +40,16 @@ final class JsonApiRouteLoader extends Loader
 {
     private bool $loaded = false;
 
+    /**
+     * @param array{enabled?: bool, route?: string} $openApiConfig
+     * @param array{enabled?: bool, route?: string} $docsUiConfig
+     */
     public function __construct(
         private readonly ResourceRegistryInterface $registry,
         private readonly string $routePrefix = '/api',
         private readonly bool $enableRelationshipRoutes = true,
+        private readonly array $openApiConfig = [],
+        private readonly array $docsUiConfig = [],
     ) {
         parent::__construct();
     }
@@ -209,6 +217,8 @@ final class JsonApiRouteLoader extends Loader
             }
         }
 
+        $this->addDocumentationRoutes($routes);
+
         return $routes;
     }
 
@@ -216,5 +226,37 @@ final class JsonApiRouteLoader extends Loader
     {
         return $type === 'jsonapi';
     }
-}
 
+    private function addDocumentationRoutes(RouteCollection $routes): void
+    {
+        if (($this->openApiConfig['enabled'] ?? false) === true) {
+            $path = $this->openApiConfig['route'] ?? '/_jsonapi/openapi.json';
+
+            $routes->add(
+                'jsonapi.docs.openapi',
+                new Route(
+                    path: $path,
+                    defaults: [
+                        '_controller' => OpenApiController::class,
+                    ],
+                    methods: ['GET'],
+                )
+            );
+        }
+
+        if (($this->docsUiConfig['enabled'] ?? false) === true) {
+            $path = $this->docsUiConfig['route'] ?? '/_jsonapi/docs';
+
+            $routes->add(
+                'jsonapi.docs.ui',
+                new Route(
+                    path: $path,
+                    defaults: [
+                        '_controller' => SwaggerUiController::class,
+                    ],
+                    methods: ['GET'],
+                )
+            );
+        }
+    }
+}
