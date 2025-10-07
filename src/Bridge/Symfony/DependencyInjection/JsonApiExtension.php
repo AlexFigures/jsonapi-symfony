@@ -60,6 +60,9 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.docs.ui', $config['docs']['ui']);
         $container->setParameter('jsonapi.release', $config['release']);
 
+        // Store resource paths for ResourceDiscoveryPass
+        $container->setParameter('jsonapi.resource_paths', $config['resource_paths']);
+
         $this->registerAutoconfiguration($container);
 
         $configDirectory = __DIR__ . '/../../../../config';

@@ -34,6 +34,15 @@ final class Configuration implements ConfigurationInterface
         $routePrefix = $children->scalarNode('route_prefix');
         $routePrefix->defaultValue('/api')->end();
 
+        // Resource discovery paths
+        /** @var ArrayNodeDefinition $resourcePaths */
+        $resourcePaths = $children->arrayNode('resource_paths');
+        $resourcePaths
+            ->info('Directories to scan for JSON:API resources with #[JsonApiResource] attribute')
+            ->defaultValue(['%kernel.project_dir%/src/Entity'])
+            ->scalarPrototype()->end();
+        $resourcePaths->end();
+
         $pagination = $children->arrayNode('pagination')->addDefaultsIfNotSet();
         $paginationChildren = $pagination->children();
 

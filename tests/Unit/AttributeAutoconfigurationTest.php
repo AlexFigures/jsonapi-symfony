@@ -18,6 +18,9 @@ final class AttributeAutoconfigurationTest extends TestCase
         $container = new ContainerBuilder();
         $extension = new JsonApiExtension();
 
+        // Set required parameters for ResourceDiscoveryPass
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+
         $extension->load([], $container);
 
         $container->register(ResourceFixture::class)

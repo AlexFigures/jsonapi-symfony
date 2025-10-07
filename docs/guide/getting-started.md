@@ -164,23 +164,22 @@ class Author
 }
 ```
 
-### Step 2: Register Resources
+### Step 2: Configure Resource Discovery (Optional)
 
-Register your resources in the service container:
+By default, the bundle automatically discovers resources in `src/Entity` directory. If your entities are in a different location, configure the paths:
 
 ```yaml
-# config/services.yaml
-services:
-    # ... existing services
-
-    App\Entity\Article:
-        tags:
-            - { name: 'jsonapi.resource', type: 'articles' }
-
-    App\Entity\Author:
-        tags:
-            - { name: 'jsonapi.resource', type: 'authors' }
+# config/packages/jsonapi.yaml
+jsonapi:
+    route_prefix: '/api'
+    resource_paths:
+        - '%kernel.project_dir%/src/Entity'
+        - '%kernel.project_dir%/src/Domain/Model'  # Additional paths if needed
 ```
+
+The bundle will automatically scan these directories for classes with the `#[JsonApiResource]` attribute.
+
+> **Note**: Resources are discovered automatically at container compile time. You don't need to manually register them as services unless you want to override the default behavior.
 
 ### Step 3: Implement Data Layer
 
