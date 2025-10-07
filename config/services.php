@@ -56,6 +56,7 @@ use JsonApi\Symfony\Contract\Data\ExistenceChecker;
 use JsonApi\Symfony\Contract\Data\RelationshipReader;
 use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
 use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceRepository;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
 use JsonApi\Symfony\Filter\Operator\BetweenOperator;
@@ -487,6 +488,14 @@ return static function (ContainerConfigurator $configurator): void {
 
     $services
         ->alias(ResourcePersister::class, 'jsonapi.null_resource_persister')
+    ;
+
+    $services
+        ->set('jsonapi.null_resource_repository', \JsonApi\Symfony\Contract\Data\NullResourceRepository::class)
+    ;
+
+    $services
+        ->alias(ResourceRepository::class, 'jsonapi.null_resource_repository')
     ;
 
     $services
