@@ -553,6 +553,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
             service('validator'),
+            service(ConstraintViolationMapper::class),
         ])
     ;
 
