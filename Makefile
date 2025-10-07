@@ -1,4 +1,6 @@
-.PHONY: test stan cs-fix rector install mutation deptrac bc-check stress-mem stress-perf qa-full
+.PHONY: test test-unit test-functional test-integration test-all
+.PHONY: docker-up docker-down docker-test docker-shell
+.PHONY: stan cs-fix rector install mutation deptrac bc-check stress-mem stress-perf qa-full
 
 COMPOSER ?= composer
 COMPOSER_LOCK := $(wildcard composer.lock)
@@ -9,8 +11,39 @@ vendor/autoload.php: composer.json $(COMPOSER_LOCK)
 
 install: vendor/autoload.php
 
+# Тесты без Docker (только Unit и Functional)
 test: vendor/autoload.php
+	vendor/bin/phpunit --testsuite=Unit,Functional
+
+test-unit: vendor/autoload.php
+	vendor/bin/phpunit --testsuite=Unit
+
+test-functional: vendor/autoload.php
+	vendor/bin/phpunit --testsuite=Functional
+
+# Интеграционные тесты (требуют Docker)
+test-integration: vendor/autoload.php
+	vendor/bin/phpunit --testsuite=Integration
+
+# Все тесты (включая интеграционные)
+test-all: vendor/autoload.php
 	vendor/bin/phpunit
+
+# Docker команды
+docker-up:
+	docker-compose -f docker-compose.test.yml up -d
+	@echo "Waiting for databases to be ready..."
+	@sleep 10
+
+docker-down:
+	docker-compose -f docker-compose.test.yml down -v
+
+docker-test: docker-up
+	docker-compose -f docker-compose.test.yml exec php vendor/bin/phpunit --testsuite=Integration
+	$(MAKE) docker-down
+
+docker-shell:
+	docker-compose -f docker-compose.test.yml exec php sh
 
 stan: vendor/autoload.php
 	php -d memory_limit=$(PHPSTAN_MEMORY_LIMIT) vendor/bin/phpstan analyse --memory-limit=$(PHPSTAN_MEMORY_LIMIT)

@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # PostgreSQL для интеграционных тестов
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: jsonapi_test
+      POSTGRES_USER: jsonapi
+      POSTGRES_PASSWORD: secret
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./tests/Integration/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jsonapi"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # MySQL для тестирования совместимости
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: jsonapi_test
+      MYSQL_USER: jsonapi
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # MariaDB для тестирования совместимости
+  mariadb:
+    image: mariadb:11
+    environment:
+      MARIADB_DATABASE: jsonapi_test
+      MARIADB_USER: jsonapi
+      MARIADB_PASSWORD: secret
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # PHP контейнер для запуска тестов
+  php:
+    build:
+      context: .
+      dockerfile: tests/Integration/docker/Dockerfile
+    volumes:
+      - .:/app
+      - composer_cache:/root/.composer
+    working_dir: /app
+    command: tail -f /dev/null  # Держим контейнер запущенным
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+    environment:
+      # PostgreSQL
+      DATABASE_URL_POSTGRES: "postgresql://jsonapi:secret@postgres:5432/jsonapi_test?serverVersion=16&charset=utf8"
+      # MySQL
+      DATABASE_URL_MYSQL: "mysql://jsonapi:secret@mysql:3306/jsonapi_test?serverVersion=8.0"
+      # MariaDB
+      DATABASE_URL_MARIADB: "mysql://jsonapi:secret@mariadb:3306/jsonapi_test?serverVersion=mariadb-11.0.0"
+      # SQLite
+      DATABASE_URL_SQLITE: "sqlite:///:memory:"
+      # Тестовое окружение
+      APP_ENV: test
+      XDEBUG_MODE: coverage
+
+volumes:
+  postgres_data:
+  mysql_data:
+  mariadb_data:
+  composer_cache:
+

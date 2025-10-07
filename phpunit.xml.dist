@@ -12,5 +12,25 @@
         <testsuite name="Functional">
             <directory>tests/Functional</directory>
         </testsuite>
+        <testsuite name="Integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Conformance">
+            <directory>tests/Conformance</directory>
+        </testsuite>
     </testsuites>
+
+    <php>
+        <!-- PostgreSQL -->
+        <env name="DATABASE_URL_POSTGRES" value="postgresql://jsonapi:secret@localhost:5432/jsonapi_test?serverVersion=16&amp;charset=utf8"/>
+
+        <!-- MySQL -->
+        <env name="DATABASE_URL_MYSQL" value="mysql://jsonapi:secret@localhost:3306/jsonapi_test?serverVersion=8.0"/>
+
+        <!-- MariaDB -->
+        <env name="DATABASE_URL_MARIADB" value="mysql://jsonapi:secret@localhost:3307/jsonapi_test?serverVersion=mariadb-11.0.0"/>
+
+        <!-- SQLite -->
+        <env name="DATABASE_URL_SQLITE" value="sqlite:///:memory:"/>
+    </php>
 </phpunit>

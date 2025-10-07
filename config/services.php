@@ -3,17 +3,6 @@
 declare(strict_types=1);
 
 use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
-use JsonApi\Symfony\Atomic\AtomicConfig;
-use JsonApi\Symfony\Atomic\Execution\AtomicTransaction;
-use JsonApi\Symfony\Atomic\Execution\Handlers\AddHandler;
-use JsonApi\Symfony\Atomic\Execution\Handlers\RelationshipOps;
-use JsonApi\Symfony\Atomic\Execution\Handlers\RemoveHandler;
-use JsonApi\Symfony\Atomic\Execution\Handlers\UpdateHandler;
-use JsonApi\Symfony\Atomic\Execution\OperationDispatcher;
-use JsonApi\Symfony\Atomic\Parser\AtomicRequestParser;
-use JsonApi\Symfony\Atomic\Result\ResultBuilder;
-use JsonApi\Symfony\Atomic\Validation\AtomicValidator;
-use JsonApi\Symfony\Bridge\Symfony\Controller\AtomicController;
 use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
 use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
 use JsonApi\Symfony\Http\Controller\CollectionController;
@@ -383,109 +372,6 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set(AtomicConfig::class)
-        ->args([
-            '%jsonapi.atomic.enabled%',
-            '%jsonapi.atomic.endpoint%',
-            '%jsonapi.atomic.require_ext_header%',
-            '%jsonapi.atomic.max_operations%',
-            '%jsonapi.atomic.return_policy%',
-            '%jsonapi.atomic.allow_href%',
-            '%jsonapi.atomic.lid.accept_in_resource_and_identifier%',
-            '%jsonapi.route_prefix%',
-        ])
-    ;
-
-    $services
-        ->set(MediaTypeNegotiator::class)
-        ->args([
-            service(AtomicConfig::class),
-        ])
-    ;
-
-    $services
-        ->set(AtomicRequestParser::class)
-        ->args([
-            service(AtomicConfig::class),
-            service(ErrorMapper::class),
-        ])
-    ;
-
-    $services
-        ->set(AtomicValidator::class)
-        ->args([
-            service(AtomicConfig::class),
-            service(ResourceRegistryInterface::class),
-            service(ErrorMapper::class),
-        ])
-    ;
-
-    $services
-        ->set(AtomicTransaction::class)
-        ->args([
-            service(TransactionManager::class),
-        ])
-    ;
-
-    $services
-        ->set(AddHandler::class)
-        ->args([
-            service(ResourcePersister::class),
-            service(ChangeSetFactory::class),
-            service(ResourceRegistryInterface::class),
-            service(PropertyAccessorInterface::class),
-        ])
-    ;
-
-    $services
-        ->set(UpdateHandler::class)
-        ->args([
-            service(ResourcePersister::class),
-            service(ChangeSetFactory::class),
-            service(ResourceRegistryInterface::class),
-            service(PropertyAccessorInterface::class),
-            service(ErrorMapper::class),
-        ])
-    ;
-
-    $services
-        ->set(RemoveHandler::class)
-        ->args([
-            service(ResourcePersister::class),
-            service(ErrorMapper::class),
-        ])
-    ;
-
-    $services
-        ->set(RelationshipOps::class)
-        ->args([
-            service(RelationshipUpdater::class),
-            service(ResourceRegistryInterface::class),
-            service(ErrorMapper::class),
-        ])
-    ;
-
-    $services
-        ->set(ResultBuilder::class)
-        ->args([
-            service(AtomicConfig::class),
-            service(DocumentBuilder::class),
-        ])
-    ;
-
-    $services
-        ->set(OperationDispatcher::class)
-        ->args([
-            service(AtomicTransaction::class),
-            service(AddHandler::class),
-            service(UpdateHandler::class),
-            service(RemoveHandler::class),
-            service(RelationshipOps::class),
-            service(ResultBuilder::class),
-        ])
-    ;
-
-    $services
         ->set(CollectionController::class)
         ->autowire()
         ->autoconfigure()
@@ -541,10 +427,36 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('controller.service_arguments')
     ;
 
+    // Автоматический загрузчик роутов
     $services
-        ->set(AtomicController::class)
-        ->autowire()
-        ->autoconfigure()
-        ->tag('controller.service_arguments')
+        ->set(\JsonApi\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader::class)
+        ->args([
+            service(ResourceRegistry::class),
+            '%jsonapi.route_prefix%',
+            true, // enableRelationshipRoutes
+        ])
+        ->tag('routing.loader')
     ;
+
+    // NullObject реализации для опциональных зависимостей
+    // Регистрируются с низким приоритетом, чтобы пользователь мог их переопределить
+
+    $services
+        ->set('jsonapi.null_relationship_reader', \JsonApi\Symfony\Contract\Data\NullRelationshipReader::class)
+    ;
+
+    $services
+        ->set('jsonapi.null_relationship_updater', \JsonApi\Symfony\Contract\Data\NullRelationshipUpdater::class)
+    ;
+
+    $services
+        ->set('jsonapi.null_resource_persister', \JsonApi\Symfony\Contract\Data\NullResourcePersister::class)
+    ;
+
+    $services
+        ->set('jsonapi.null_transaction_manager', \JsonApi\Symfony\Contract\Tx\NullTransactionManager::class)
+    ;
+
+    // Алиасы с низким приоритетом - будут использоваться только если пользователь не предоставил свои реализации
+    // Используем Locator pattern, поэтому алиасы не нужны
 };

@@ -6,6 +6,7 @@ namespace JsonApi\Symfony\Http\Validation;
 
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Error\ErrorObject;
+use JsonApi\Symfony\Http\Exception\ValidationException;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\Validator\ConstraintViolationInterface;
@@ -26,14 +27,30 @@ final class ConstraintViolationMapper
     {
         $metadata = $this->registry->getByType($resourceType);
         $errors = [];
+        $seenPointers = [];
 
         foreach ($violations as $violation) {
             /** @var ConstraintViolationInterface $violation */
             [$pointer, $meta] = $this->pointerFor($metadata, (string) $violation->getPropertyPath());
+
+            if (isset($seenPointers[$pointer])) {
+                continue;
+            }
+
+            $seenPointers[$pointer] = true;
             $errors[] = $this->errors->validationError($pointer, (string) $violation->getMessage(), $meta);
         }
 
         return $errors;
+    }
+
+    /**
+     * Преобразует violations в ValidationException.
+     */
+    public function mapToException(string $resourceType, ConstraintViolationListInterface $violations): ValidationException
+    {
+        $errors = $this->map($resourceType, $violations);
+        return new ValidationException($errors);
     }
 
     /**

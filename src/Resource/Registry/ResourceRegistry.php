@@ -171,6 +171,13 @@ final class ResourceRegistry implements ResourceRegistryInterface
 
             [$types, $nullable] = $this->guessAttributeTypes($member);
 
+            // Извлекаем SerializationGroups атрибут, если есть
+            $serializationGroups = null;
+            $groupsAttributes = $member->getAttributes(\JsonApi\Symfony\Resource\Attribute\SerializationGroups::class);
+            if (count($groupsAttributes) > 0) {
+                $serializationGroups = $groupsAttributes[0]->newInstance();
+            }
+
             $attributes[$name] = new AttributeMetadata(
                 $name,
                 $propertyPath,
@@ -178,6 +185,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
                 $instance->writable,
                 $types,
                 $nullable,
+                $serializationGroups,
             );
         }
 

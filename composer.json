@@ -16,6 +16,8 @@
     "symfony/validator": "^7.1"
   },
   "require-dev": {
+    "doctrine/dbal": "^3.8",
+    "doctrine/orm": "^3.0",
     "friendsofphp/php-cs-fixer": "^3.64",
     "infection/infection": "^0.29",
     "phpstan/phpstan": "^1.11",
@@ -23,8 +25,9 @@
     "qossmic/deptrac-shim": "^1.0",
     "rector/rector": "^1.0",
     "roave/backward-compatibility-check": "^8.14",
-    "symfony/phpunit-bridge": "^7.1",
-    "spatie/phpunit-snapshot-assertions": "^5.2"
+    "spatie/phpunit-snapshot-assertions": "^5.2",
+    "symfony/cache": "^7.3",
+    "symfony/phpunit-bridge": "^7.1"
   },
   "autoload": {
     "psr-4": {

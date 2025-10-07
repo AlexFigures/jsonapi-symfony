@@ -4,3 +4,10 @@
 /.infection/
 infection.log
 /.phpunit.result.cache
+
+# Docker volumes
+/var/
+
+# IDE
+/.idea/
+/.vscode/

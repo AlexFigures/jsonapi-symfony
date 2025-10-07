@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Contract\Data;
 
+use ArrayIterator;
+use Countable;
+use IteratorAggregate;
+use Traversable;
+
 /**
  * Represents a paginated collection of resources.
  *
@@ -26,7 +31,7 @@ namespace JsonApi\Symfony\Contract\Data;
  * @api This class is part of the public API and follows semantic versioning.
  * @since 0.1.0
  */
-final class Slice
+final class Slice implements Countable, IteratorAggregate
 {
     /**
      * @param list<object> $items Resource objects for the current page
@@ -40,5 +45,18 @@ final class Slice
         public int $pageSize,
         public int $totalItems,
     ) {
+    }
+
+    public function count(): int
+    {
+        return count($this->items);
+    }
+
+    /**
+     * @return Traversable<object>
+     */
+    public function getIterator(): Traversable
+    {
+        return new ArrayIterator($this->items);
     }
 }
