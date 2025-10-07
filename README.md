@@ -80,10 +80,14 @@ curl -X POST \
      -H "Content-Type: application/vnd.api+json" \
      -d '{"data": {"type": "articles", "attributes": {"title": "Hello"}}}' \
      http://localhost:8000/api/articles
+
+# Interactive API documentation
+open http://localhost:8000/_jsonapi/docs
 ```
 
 **📖 [Complete Getting Started Guide →](docs/guide/getting-started.md)**
 **🚀 [Production-Ready Features →](docs/PRODUCTION_READY.md)**
+**📊 [Interactive API Docs →](docs/guide/swagger-ui.md)**
 
 ---
 
@@ -93,6 +97,7 @@ curl -X POST \
 
 - **[Production-Ready Features](docs/PRODUCTION_READY.md)** - ⭐ Complete guide to production features
 - **[Getting Started Guide](docs/guide/getting-started.md)** - Build your first API in 5 minutes
+- **[Swagger UI & OpenAPI](docs/guide/swagger-ui.md)** - Interactive API documentation
 - **[Configuration Reference](docs/guide/configuration.md)** - Complete configuration options
 - **[Doctrine Integration](docs/guide/integration-doctrine.md)** - Production-ready data layer
 - **[Examples & Recipes](docs/guide/examples.md)** - Real-world code examples

@@ -4,27 +4,23 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Tests\Integration;
 
-use JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
 use JsonApi\Symfony\Filter\Ast\Comparison;
 use JsonApi\Symfony\Filter\Ast\Conjunction;
 use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Query\Pagination;
 use JsonApi\Symfony\Query\Sorting;
-use JsonApi\Symfony\Tests\Fixtures\Model\Article;
-use JsonApi\Symfony\Tests\Fixtures\Model\Author;
+use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
 
 /**
  * Integration test for GenericDoctrineRepository with filtering and eager loading.
  */
 final class GenericDoctrineRepositoryTest extends DoctrineIntegrationTestCase
 {
-    private GenericDoctrineRepository $repository;
-
     protected function setUp(): void
     {
         parent::setUp();
-        
-        $this->repository = $this->getContainer()->get(GenericDoctrineRepository::class);
+
         $this->loadFixtures();
     }
 
@@ -134,21 +130,21 @@ final class GenericDoctrineRepositoryTest extends DoctrineIntegrationTestCase
     {
         $criteria = new Criteria(new Pagination(1, 5));
         $criteria->include = ['author'];
-        
+
         // Clear entity manager to ensure fresh load
-        $this->getEntityManager()->clear();
-        
+        $this->em->clear();
+
         $slice = $this->repository->findCollection('articles', $criteria);
-        
+
         // Access author without triggering lazy loading
         foreach ($slice->items as $article) {
             $this->assertInstanceOf(Article::class, $article);
             $author = $article->getAuthor();
-            
+
             if ($author !== null) {
                 $this->assertInstanceOf(Author::class, $author);
                 // Author should be loaded (not a proxy or already initialized)
-                $this->assertTrue($this->getEntityManager()->getUnitOfWork()->isInIdentityMap($author));
+                $this->assertTrue($this->em->getUnitOfWork()->isInIdentityMap($author));
             }
         }
     }
@@ -157,9 +153,9 @@ final class GenericDoctrineRepositoryTest extends DoctrineIntegrationTestCase
     {
         $criteria = new Criteria(new Pagination(1, 5));
         $criteria->include = ['author', 'tags'];
-        
+
         // Clear entity manager to ensure fresh load
-        $this->getEntityManager()->clear();
+        $this->em->clear();
         
         $slice = $this->repository->findCollection('articles', $criteria);
         
@@ -242,7 +238,7 @@ final class GenericDoctrineRepositoryTest extends DoctrineIntegrationTestCase
 
     private function loadFixtures(): void
     {
-        $em = $this->getEntityManager();
+        $em = $this->em;
 
         // Create authors
         $authors = [];

@@ -44,6 +44,11 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
 
         $request = $event->getRequest();
 
+        // Skip content negotiation for documentation routes
+        if ($this->isDocumentationRoute($request)) {
+            return;
+        }
+
         $this->assertContentType($request);
         $this->assertAcceptHeader($request);
     }
@@ -109,6 +114,23 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         }
     }
 
+    /**
+     * Check if the request is for documentation routes that should not be subject to JSON:API content negotiation.
+     */
+    private function isDocumentationRoute(Request $request): bool
+    {
+        $route = $request->attributes->get('_route');
+
+        // Check by route name
+        if ($route !== null && str_starts_with((string) $route, 'jsonapi.docs.')) {
+            return true;
+        }
+
+        // Fallback: check by path pattern
+        $path = $request->getPathInfo();
+        return str_starts_with($path, '/_jsonapi/docs') || str_starts_with($path, '/_jsonapi/openapi');
+    }
+
     private function normalizeMediaType(string $value): string
     {
         $normalized = trim(strtolower($value));
@@ -164,7 +186,7 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
 
     private static function addVaryAccept(Response $response): void
     {
-        $response->headers->set('Vary', self::mergeVaryHeader($response, 'Accept'), false);
+        $response->headers->set('Vary', self::mergeVaryHeader($response, 'Accept'));
     }
 
     private static function mergeVaryHeader(Response $response, string $value): string
