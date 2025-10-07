@@ -14,6 +14,11 @@ use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
 final class JsonApiExtension extends Extension
 {
+    public function getAlias(): string
+    {
+        return 'jsonapi';
+    }
+
     public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();
