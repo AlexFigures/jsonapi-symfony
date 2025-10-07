@@ -534,6 +534,40 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
-    // Алиасы с низким приоритетом - будут использоваться только если пользователь не предоставил свои реализации
-    // Используем Locator pattern, поэтому алиасы не нужны
+    // Doctrine Bridge Services
+    // These are registered here so users don't have to manually configure them
+    // They will be used when data_layer.provider is set to 'doctrine' (default)
+    $services
+        ->set(\JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository::class)
+        ->args([
+            service('doctrine.orm.default_entity_manager'),
+            service(ResourceRegistryInterface::class),
+            service(DoctrineFilterCompiler::class),
+        ])
+    ;
+
+    $services
+        ->set(\JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister::class)
+        ->args([
+            service('doctrine.orm.default_entity_manager'),
+            service(ResourceRegistryInterface::class),
+            service(PropertyAccessorInterface::class),
+            service('validator'),
+        ])
+    ;
+
+    $services
+        ->set(\JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler::class)
+        ->args([
+            service('doctrine.orm.default_entity_manager'),
+            service(ResourceRegistryInterface::class),
+        ])
+    ;
+
+    $services
+        ->set(\JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager::class)
+        ->args([
+            service('doctrine.orm.default_entity_manager'),
+        ])
+    ;
 };
