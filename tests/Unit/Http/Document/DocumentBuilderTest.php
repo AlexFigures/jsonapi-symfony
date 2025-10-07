@@ -152,15 +152,15 @@ final class DocumentBuilderTest extends TestCase
         self::assertSame(['https://profiles.test/a'], $collectionDocument['links']['profiles']);
         self::assertSame(['https://profiles.test/a'], $collectionDocument['meta']['profiles']);
         self::assertSame(['https://profiles.test/a'], $collectionDocument['data'][0]['relationships']['comments']['meta']['profiles']);
-        self::assertSame('jsonapi.related:id=1&rel=comments&type=articles', $collectionDocument['data'][0]['relationships']['comments']['links']['related']);
-        self::assertSame('jsonapi.resource:id=10&type=comments', $collectionDocument['included'][0]['links']['self']);
+        self::assertSame('jsonapi.articles.related.comments:id=1', $collectionDocument['data'][0]['relationships']['comments']['links']['related']);
+        self::assertSame('jsonapi.comments.show:id=10', $collectionDocument['included'][0]['links']['self']);
 
         $resourceRequest = Request::create('https://api.test/articles/1');
         ProfileContext::store($resourceRequest, $context);
 
         $resourceDocument = $builder->buildResource('articles', $article, $criteria, $resourceRequest);
 
-        self::assertSame('jsonapi.resource:id=1&type=articles', $resourceDocument['data']['links']['self']);
+        self::assertSame('jsonapi.articles.show:id=1', $resourceDocument['data']['links']['self']);
         self::assertSame(['https://profiles.test/a'], $resourceDocument['links']['profiles']);
         self::assertSame(['https://profiles.test/a'], $resourceDocument['meta']['profiles']);
         self::assertSame(['https://profiles.test/a'], $resourceDocument['data']['relationships']['comments']['meta']['profiles']);

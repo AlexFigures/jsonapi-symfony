@@ -22,8 +22,8 @@ final class LinkGenerator
     public function resourceSelf(string $type, string $id): string
     {
         return $this->urls->generate(
-            'jsonapi.resource',
-            ['type' => $type, 'id' => $id],
+            "jsonapi.{$type}.show",
+            ['id' => $id],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
     }
@@ -31,8 +31,8 @@ final class LinkGenerator
     public function relationshipSelf(string $type, string $id, string $relationship): string
     {
         return $this->urls->generate(
-            'jsonapi.relationship.get',
-            ['type' => $type, 'id' => $id, 'rel' => $relationship],
+            "jsonapi.{$type}.relationships.{$relationship}.show",
+            ['id' => $id],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
     }
@@ -40,8 +40,8 @@ final class LinkGenerator
     public function relationshipRelated(string $type, string $id, string $relationship): string
     {
         return $this->urls->generate(
-            'jsonapi.related',
-            ['type' => $type, 'id' => $id, 'rel' => $relationship],
+            "jsonapi.{$type}.related.{$relationship}",
+            ['id' => $id],
             UrlGeneratorInterface::ABSOLUTE_URL
         );
     }
@@ -83,10 +83,9 @@ final class LinkGenerator
 
         $query['page']['number'] = $number;
         $query['page']['size'] = $size;
-        $query['type'] = $type;
 
         return $this->urls->generate(
-            'jsonapi.collection',
+            "jsonapi.{$type}.index",
             $query,
             UrlGeneratorInterface::ABSOLUTE_URL
         );
