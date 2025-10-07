@@ -65,7 +65,7 @@ final class JsonApiRouteLoader extends Loader
                 new Route(
                     path: "{$prefix}/{$resourceType}",
                     defaults: [
-                        '_controller' => 'JsonApi\Symfony\Http\Controller\IndexController',
+                        '_controller' => 'JsonApi\Symfony\Http\Controller\CollectionController',
                         'type' => $resourceType,
                     ],
                     methods: ['GET'],
@@ -77,7 +77,7 @@ final class JsonApiRouteLoader extends Loader
                 new Route(
                     path: "{$prefix}/{$resourceType}",
                     defaults: [
-                        '_controller' => 'JsonApi\Symfony\Http\Controller\CreateController',
+                        '_controller' => 'JsonApi\Symfony\Http\Controller\CreateResourceController',
                         'type' => $resourceType,
                     ],
                     methods: ['POST'],
@@ -90,7 +90,7 @@ final class JsonApiRouteLoader extends Loader
                 new Route(
                     path: "{$prefix}/{$resourceType}/{id}",
                     defaults: [
-                        '_controller' => 'JsonApi\Symfony\Http\Controller\ShowController',
+                        '_controller' => 'JsonApi\Symfony\Http\Controller\ResourceController',
                         'type' => $resourceType,
                     ],
                     requirements: ['id' => '.+'],
@@ -103,7 +103,7 @@ final class JsonApiRouteLoader extends Loader
                 new Route(
                     path: "{$prefix}/{$resourceType}/{id}",
                     defaults: [
-                        '_controller' => 'JsonApi\Symfony\Http\Controller\UpdateController',
+                        '_controller' => 'JsonApi\Symfony\Http\Controller\UpdateResourceController',
                         'type' => $resourceType,
                     ],
                     requirements: ['id' => '.+'],
@@ -116,7 +116,7 @@ final class JsonApiRouteLoader extends Loader
                 new Route(
                     path: "{$prefix}/{$resourceType}/{id}",
                     defaults: [
-                        '_controller' => 'JsonApi\Symfony\Http\Controller\DeleteController',
+                        '_controller' => 'JsonApi\Symfony\Http\Controller\DeleteResourceController',
                         'type' => $resourceType,
                     ],
                     requirements: ['id' => '.+'],
@@ -135,7 +135,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'JsonApi\Symfony\Http\Controller\Relationship\ShowRelationshipController',
+                                '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipGetController',
                                 'type' => $resourceType,
                                 'relationship' => $relationshipName,
                             ],
@@ -150,7 +150,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'JsonApi\Symfony\Http\Controller\Relationship\UpdateRelationshipController',
+                                '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipWriteController',
                                 'type' => $resourceType,
                                 'relationship' => $relationshipName,
                             ],
@@ -166,7 +166,7 @@ final class JsonApiRouteLoader extends Loader
                             new Route(
                                 path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                                 defaults: [
-                                    '_controller' => 'JsonApi\Symfony\Http\Controller\Relationship\AddToRelationshipController',
+                                    '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipWriteController',
                                     'type' => $resourceType,
                                     'relationship' => $relationshipName,
                                 ],
@@ -181,7 +181,7 @@ final class JsonApiRouteLoader extends Loader
                             new Route(
                                 path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                                 defaults: [
-                                    '_controller' => 'JsonApi\Symfony\Http\Controller\Relationship\RemoveFromRelationshipController',
+                                    '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipWriteController',
                                     'type' => $resourceType,
                                     'relationship' => $relationshipName,
                                 ],
@@ -197,7 +197,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'JsonApi\Symfony\Http\Controller\Relationship\ShowRelatedController',
+                                '_controller' => 'JsonApi\Symfony\Http\Controller\RelatedController',
                                 'type' => $resourceType,
                                 'relationship' => $relationshipName,
                             ],

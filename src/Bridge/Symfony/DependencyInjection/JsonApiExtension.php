@@ -63,6 +63,9 @@ final class JsonApiExtension extends Extension
         // Store resource paths for ResourceDiscoveryPass
         $container->setParameter('jsonapi.resource_paths', $config['resource_paths']);
 
+        // Store data layer configuration
+        $container->setParameter('jsonapi.data_layer', $config['data_layer']);
+
         $this->registerAutoconfiguration($container);
 
         $configDirectory = __DIR__ . '/../../../../config';
@@ -75,6 +78,10 @@ final class JsonApiExtension extends Extension
                 $loader->load('services_atomic.php');
             }
         }
+
+        // Configure data layer aliases AFTER loading services.php
+        // This will override the default Null implementations
+        $this->configureDataLayer($container, $config['data_layer']);
     }
 
     private function registerAutoconfiguration(ContainerBuilder $container): void
@@ -88,5 +95,65 @@ final class JsonApiExtension extends Extension
 
         $container->registerForAutoconfiguration(ProfileInterface::class)
             ->addTag('jsonapi.profile');
+    }
+
+    /**
+     * Configure data layer service aliases based on configuration.
+     *
+     * @param array{provider: string, repository: string|null, persister: string|null, relationship_reader: string|null, transaction_manager: string|null} $config
+     */
+    private function configureDataLayer(ContainerBuilder $container, array $config): void
+    {
+        if ($config['provider'] === 'doctrine') {
+            // Use Doctrine implementations
+            $container->setAlias(
+                'JsonApi\Symfony\Contract\Data\ResourceRepository',
+                'JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository'
+            )->setPublic(false);
+
+            $container->setAlias(
+                'JsonApi\Symfony\Contract\Data\ResourcePersister',
+                'JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister'
+            )->setPublic(false);
+
+            $container->setAlias(
+                'JsonApi\Symfony\Contract\Data\RelationshipReader',
+                'JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler'
+            )->setPublic(false);
+
+            $container->setAlias(
+                'JsonApi\Symfony\Contract\Tx\TransactionManager',
+                'JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager'
+            )->setPublic(false);
+        } elseif ($config['provider'] === 'custom') {
+            // Use custom implementations
+            if ($config['repository'] !== null) {
+                $container->setAlias(
+                    'JsonApi\Symfony\Contract\Data\ResourceRepository',
+                    $config['repository']
+                )->setPublic(false);
+            }
+
+            if ($config['persister'] !== null) {
+                $container->setAlias(
+                    'JsonApi\Symfony\Contract\Data\ResourcePersister',
+                    $config['persister']
+                )->setPublic(false);
+            }
+
+            if ($config['relationship_reader'] !== null) {
+                $container->setAlias(
+                    'JsonApi\Symfony\Contract\Data\RelationshipReader',
+                    $config['relationship_reader']
+                )->setPublic(false);
+            }
+
+            if ($config['transaction_manager'] !== null) {
+                $container->setAlias(
+                    'JsonApi\Symfony\Contract\Tx\TransactionManager',
+                    $config['transaction_manager']
+                )->setPublic(false);
+            }
+        }
     }
 }

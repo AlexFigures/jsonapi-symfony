@@ -43,6 +43,43 @@ final class Configuration implements ConfigurationInterface
             ->scalarPrototype()->end();
         $resourcePaths->end();
 
+        // Data layer configuration
+        $dataLayer = $children->arrayNode('data_layer')->addDefaultsIfNotSet();
+        $dataLayerChildren = $dataLayer->children();
+
+        $dataLayerChildren
+            ->enumNode('provider')
+            ->info('Data layer implementation to use')
+            ->values(['doctrine', 'custom'])
+            ->defaultValue('doctrine')
+            ->end();
+
+        $dataLayerChildren
+            ->scalarNode('repository')
+            ->info('Custom ResourceRepository service ID (only when provider=custom)')
+            ->defaultNull()
+            ->end();
+
+        $dataLayerChildren
+            ->scalarNode('persister')
+            ->info('Custom ResourcePersister service ID (only when provider=custom)')
+            ->defaultNull()
+            ->end();
+
+        $dataLayerChildren
+            ->scalarNode('relationship_reader')
+            ->info('Custom RelationshipReader service ID (only when provider=custom)')
+            ->defaultNull()
+            ->end();
+
+        $dataLayerChildren
+            ->scalarNode('transaction_manager')
+            ->info('Custom TransactionManager service ID (only when provider=custom)')
+            ->defaultNull()
+            ->end();
+
+        $dataLayer->end();
+
         $pagination = $children->arrayNode('pagination')->addDefaultsIfNotSet();
         $paginationChildren = $pagination->children();
 

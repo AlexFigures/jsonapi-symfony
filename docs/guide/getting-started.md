@@ -181,9 +181,31 @@ The bundle will automatically scan these directories for classes with the `#[Jso
 
 > **Note**: Resources are discovered automatically at container compile time. You don't need to manually register them as services unless you want to override the default behavior.
 
-### Step 3: Implement Data Layer
+### Step 3: Configure Data Layer (Optional)
 
-The bundle requires you to implement data layer contracts. For this tutorial, we'll use a simple in-memory repository:
+By default, the bundle uses Doctrine ORM for data persistence. If you're using Doctrine, no additional configuration is needed:
+
+```yaml
+# config/packages/jsonapi.yaml
+jsonapi:
+    route_prefix: '/api'
+    data_layer:
+        provider: doctrine  # This is the default, can be omitted
+```
+
+The bundle automatically configures:
+- `ResourceRepository` → `GenericDoctrineRepository`
+- `ResourcePersister` → `ValidatingDoctrinePersister`
+- `RelationshipReader` → `GenericDoctrineRelationshipHandler`
+- `TransactionManager` → `DoctrineTransactionManager`
+
+**No manual service configuration needed!**
+
+> **Note**: If you're not using Doctrine or want custom implementations, see the [Data Layer Configuration](data-layer-configuration.md) guide.
+
+### Step 4: (Optional) Custom Data Layer
+
+If you want to use a custom data layer instead of Doctrine, you can implement the contracts. For this tutorial, we'll show a simple in-memory repository:
 
 ```php
 // src/Repository/ArticleRepository.php
@@ -239,15 +261,18 @@ class ArticleRepository implements ResourceRepository
 }
 ```
 
-Register the repository:
+Configure the bundle to use your custom repository:
 
 ```yaml
-# config/services.yaml
-services:
-    App\Repository\ArticleRepository:
-        tags:
-            - { name: 'jsonapi.repository', type: 'articles' }
+# config/packages/jsonapi.yaml
+jsonapi:
+    data_layer:
+        provider: custom
+        repository: App\Repository\ArticleRepository
+        # You'll also need to implement persister, relationship_reader, and transaction_manager
 ```
+
+> **Tip**: For most projects, using the default Doctrine implementation is recommended. Custom implementations are only needed for special cases like non-relational databases or custom storage backends.
 
 ### Step 4: Test Your API
 
