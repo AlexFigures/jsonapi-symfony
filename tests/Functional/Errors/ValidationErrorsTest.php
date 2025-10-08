@@ -97,6 +97,7 @@ final class ValidationErrorsTest extends JsonApiTestCase
             $this->errorMapper(),
             $this->violationMapper(),
             $this->eventDispatcher(),
+            $this->relationshipResolver(),
         );
     }
 }

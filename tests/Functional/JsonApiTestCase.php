@@ -45,6 +45,7 @@ use JsonApi\Symfony\Http\Write\RelationshipDocumentValidator;
 use JsonApi\Symfony\Http\Write\WriteConfig;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker;
 use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister;
 use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader;
@@ -95,6 +96,7 @@ abstract class JsonApiTestCase extends TestCase
     private ?WriteConfig $writeConfig = null;
     private ?ChangeSetFactory $changeSetFactory = null;
     private ?EventDispatcherInterface $eventDispatcher = null;
+    private ?RelationshipResolver $relationshipResolver = null;
 
     protected function collectionController(): CollectionController
     {
@@ -322,6 +324,15 @@ abstract class JsonApiTestCase extends TestCase
         return $this->eventDispatcher;
     }
 
+    protected function relationshipResolver(): RelationshipResolver
+    {
+        $this->boot();
+
+        \assert($this->relationshipResolver instanceof RelationshipResolver);
+
+        return $this->relationshipResolver;
+    }
+
     private function boot(): void
     {
         if ($this->collectionController !== null) {
@@ -394,16 +405,21 @@ abstract class JsonApiTestCase extends TestCase
         // Create event dispatcher for testing
         $eventDispatcher = new EventDispatcher();
 
+        // Create RelationshipResolver (in-memory version doesn't need EntityManager)
+        // For functional tests, we use a mock that does nothing
+        $relationshipResolver = $this->createMock(RelationshipResolver::class);
+
         $this->registry = $registry;
         $this->repository = $repository;
         $this->parser = $parser;
         $this->document = $document;
         $this->collectionController = new CollectionController($registry, $repository, $parser, $document);
         $this->resourceController = new ResourceController($registry, $repository, $parser, $document);
-        $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $errorMapper, $violationMapper, $eventDispatcher);
-        $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $errorMapper, $violationMapper, $eventDispatcher);
+        $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $errorMapper, $violationMapper, $eventDispatcher, $relationshipResolver);
+        $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $errorMapper, $violationMapper, $eventDispatcher, $relationshipResolver);
         $this->deleteController = new DeleteResourceController($registry, $persister, $transactionManager, $eventDispatcher);
         $this->accessor = $accessor;
+        $this->relationshipResolver = $relationshipResolver;
         $this->persister = $persister;
         $this->transactionManager = $transactionManager;
         $this->eventDispatcher = $eventDispatcher;

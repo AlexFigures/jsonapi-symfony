@@ -22,6 +22,7 @@ use JsonApi\Symfony\Http\Write\InputDocumentValidator;
 use JsonApi\Symfony\Http\Write\WriteConfig;
 use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -45,6 +46,7 @@ final class CreateResourceController
         private readonly ErrorMapper $errors,
         private readonly ConstraintViolationMapper $violationMapper,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly RelationshipResolver $relationshipResolver,
     ) {
     }
 
@@ -66,7 +68,20 @@ final class CreateResourceController
             $model = $this->transaction->transactional(function () use ($type, $input) {
                 $changes = $this->changes->fromAttributes($type, $input['attributes']);
 
-                return $this->persister->create($type, $changes, $input['id']);
+                $entity = $this->persister->create($type, $changes, $input['id']);
+
+                // Apply relationships if present
+                if (!empty($input['relationships'])) {
+                    $metadata = $this->registry->getByType($type);
+                    $this->relationshipResolver->applyRelationships(
+                        $entity,
+                        $input['relationships'],
+                        $metadata,
+                        isCreate: true
+                    );
+                }
+
+                return $entity;
             });
         } catch (ValidationFailedException $exception) {
             $errors = $this->violationMapper->map($type, $exception->getViolations());

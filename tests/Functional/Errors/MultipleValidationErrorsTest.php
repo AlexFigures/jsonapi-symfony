@@ -316,6 +316,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             $this->errorMapper(),
             $this->violationMapper(),
             $this->eventDispatcher(),
+            $this->relationshipResolver(),
         );
     }
 }

@@ -119,7 +119,7 @@ final class Configuration implements ConfigurationInterface
         $relationshipsChildren = $relationships->children();
 
         $relationshipsChildren->enumNode('write_response')->values(['linkage', '204'])->defaultValue('linkage')->end();
-        $relationshipsChildren->enumNode('linkage_in_resource')->values(['never', 'when_included', 'always'])->defaultValue('when_included')->end();
+        $relationshipsChildren->enumNode('linkage_in_resource')->values(['never', 'when_included', 'always'])->defaultValue('always')->end();
         $relationships->end();
 
         $errors = $children->arrayNode('errors')->addDefaultsIfNotSet();
