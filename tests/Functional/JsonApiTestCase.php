@@ -340,9 +340,10 @@ abstract class JsonApiTestCase extends TestCase
         $errorBuilder = new ErrorBuilder(true);
         $errorMapper = new ErrorMapper($errorBuilder);
         $violationMapper = new ConstraintViolationMapper($registry, $errorMapper);
+        $filtering = new \JsonApi\Symfony\Http\Request\FilteringWhitelist($registry, $errorMapper);
 
         $filterParser = new \JsonApi\Symfony\Filter\Parser\FilterParser();
-        $parser = new QueryParser($registry, $pagination, $sorting, $errorMapper, $filterParser);
+        $parser = new QueryParser($registry, $pagination, $sorting, $filtering, $errorMapper, $filterParser);
 
         $routes = new RouteCollection();
         $routes->add('jsonapi.collection', new Route('/api/{type}'));

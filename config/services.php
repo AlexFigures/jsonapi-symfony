@@ -627,7 +627,7 @@ return static function (ContainerConfigurator $configurator): void {
             service('doctrine.orm.default_entity_manager'),
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
-            service('logger')->nullOnInvalid(),
+            service(ErrorMapper::class),
         ])
     ;
 
