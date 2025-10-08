@@ -10,9 +10,13 @@ use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Entity instantiator that relies on the Symfony Serializer.
@@ -56,9 +60,12 @@ final class SerializerEntityInstantiator
             [$reflectionExtractor]   // initializableExtractors
         );
 
+        // Create ClassMetadataFactory for strict attribute validation
+        $classMetadataFactory = new ClassMetadataFactory(new AttributeLoader());
+
         // Build an ObjectNormalizer with constructor support
         $normalizer = new ObjectNormalizer(
-            null, // ClassMetadataFactory (not required for basic usage)
+            $classMetadataFactory, // ClassMetadataFactory (required for ALLOW_EXTRA_ATTRIBUTES = false)
             null, // NameConverter (not required)
             $this->accessor, // PropertyAccessor for setting properties
             $propertyInfo, // PropertyInfo for determining types
@@ -109,8 +116,10 @@ final class SerializerEntityInstantiator
             $entityClass,
             null,
             [
-                // Allow partial denormalisation (not every property is required)
-                AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => true,
+                // Strict mode: reject unknown attributes
+                AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
+                // Collect all denormalization errors for better error reporting
+                AbstractNormalizer::COLLECT_DENORMALIZATION_ERRORS => true,
                 // Ignore properties that cannot be set
                 AbstractNormalizer::IGNORED_ATTRIBUTES => [],
             ]
@@ -129,7 +138,10 @@ final class SerializerEntityInstantiator
 
         return [
             'entity' => $entity,
-            'remainingChanges' => new ChangeSet($remainingAttributes),
+            'remainingChanges' => new ChangeSet(
+                attributes: $remainingAttributes,
+                relationships: $filteredChanges->relationships
+            ),
         ];
     }
 
@@ -138,7 +150,7 @@ final class SerializerEntityInstantiator
      *
      * @return array<string, mixed>
      */
-    private function prepareDataForDenormalization(
+    public function prepareDataForDenormalization(
         ChangeSet $changes,
         ResourceMetadata $metadata
     ): array {
@@ -153,6 +165,22 @@ final class SerializerEntityInstantiator
         }
 
         return $data;
+    }
+
+    /**
+     * Returns the Symfony Serializer instance.
+     */
+    public function serializer(): SerializerInterface
+    {
+        return $this->serializer;
+    }
+
+    /**
+     * Returns the Symfony Denormalizer instance.
+     */
+    public function denormalizer(): DenormalizerInterface
+    {
+        return $this->serializer;
     }
 
     /**
@@ -187,7 +215,11 @@ final class SerializerEntityInstantiator
             // Non-writable attributes are ignored
         }
 
-        return new ChangeSet($filteredAttributes);
+        // Preserve relationships from original ChangeSet
+        return new ChangeSet(
+            attributes: $filteredAttributes,
+            relationships: $changes->relationships
+        );
     }
 
     /**

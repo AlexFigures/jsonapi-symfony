@@ -234,7 +234,7 @@ Content-Type: application/vnd.api+json
   }
 }
 
-# Ответ: 422 Unprocessable Entity
+# Response: 422 Unprocessable Entity
 {
   "errors": [
     {

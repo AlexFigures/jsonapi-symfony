@@ -29,6 +29,20 @@ This is the complete developer guide for JsonApiBundle, a JSON:API 1.1 compliant
   - Advanced configuration
   - Service registration
 
+### Routing
+
+- **[Route Naming Conventions](routing-naming-conventions.md)** - Configure route naming patterns
+  - Snake case vs kebab case naming
+  - Configuration options
+  - Migration guide
+  - Best practices
+
+- **[Custom Routes](custom-routes.md)** - Define custom endpoints with attributes
+  - Custom route attributes
+  - Entity and controller usage
+  - Route parameters and options
+  - Practical examples
+
 ### Integration Guides
 
 - **[Doctrine ORM Integration](integration-doctrine.md)** - Use with Doctrine ORM

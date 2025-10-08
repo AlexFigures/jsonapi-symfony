@@ -69,7 +69,7 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
         self::assertSame(10, $updated->getStock()); // Unchanged
     }
 
-    // ==================== Валидация NotBlank ====================
+    // ==================== NotBlank validation ====================
 
     public function testCreateWithBlankNameFails(): void
     {
@@ -117,13 +117,13 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
         }
     }
 
-    // ==================== Валидация Length ====================
+    // ==================== Length validation ====================
 
     public function testCreateWithTooShortNameFails(): void
     {
         $changes = new ChangeSet(
             attributes: [
-                'name' => 'AB', // Минимум 3 символа
+                'name' => 'AB', // Minimum 3 characters
                 'price' => '999.99',
                 'stock' => 10,
             ],
@@ -146,7 +146,7 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
     {
         $changes = new ChangeSet(
             attributes: [
-                'name' => str_repeat('A', 256), // Максимум 255 символов
+                'name' => str_repeat('A', 256), // Maximum 255 characters
                 'price' => '999.99',
                 'stock' => 10,
             ],
@@ -165,7 +165,7 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
         }
     }
 
-    // ==================== Валидация Positive ====================
+    // ==================== Positive validation ====================
 
     public function testCreateWithNegativePriceFails(): void
     {
@@ -212,14 +212,14 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
         }
     }
 
-    // ==================== Валидация LessThan ====================
+    // ==================== LessThan validation ====================
 
     public function testCreateWithTooHighPriceFails(): void
     {
         $changes = new ChangeSet(
             attributes: [
                 'name' => 'Laptop',
-                'price' => '1000000.00', // Максимум 999999.99
+                'price' => '1000000.00', // Maximum 999999.99
                 'stock' => 10,
             ],
         );
@@ -237,7 +237,7 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
         }
     }
 
-    // ==================== Валидация Email ====================
+    // ==================== Email validation ====================
 
     public function testCreateWithInvalidEmailFails(): void
     {
@@ -279,7 +279,7 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
         self::assertSame('support@example.com', $product->getContactEmail());
     }
 
-    // ==================== Валидация PositiveOrZero ====================
+    // ==================== PositiveOrZero validation ====================
 
     public function testCreateWithNegativeStockFails(): void
     {
@@ -319,16 +319,16 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
         self::assertSame(0, $product->getStock());
     }
 
-    // ==================== Множественные ошибки ====================
+    // ==================== Multiple errors ====================
 
     public function testCreateWithMultipleErrorsReturnsAllErrors(): void
     {
         $changes = new ChangeSet(
             attributes: [
-                'name' => 'AB', // Слишком короткое
-                'price' => '-100.00', // Отрицательное
-                'stock' => -5, // Отрицательное
-                'contactEmail' => 'not-an-email', // Невалидный email
+                'name' => 'AB', // Too short
+                'price' => '-100.00', // Negative value
+                'stock' => -5, // Negative value
+                'contactEmail' => 'not-an-email', // Invalid email
             ],
         );
 
@@ -338,7 +338,7 @@ final class ValidatingPersisterTest extends DoctrineIntegrationTestCase
             $this->validatingPersister->create('products', $changes);
         } catch (ValidationException $e) {
             $errors = $e->getErrors();
-            self::assertGreaterThanOrEqual(4, count($errors)); // Минимум 4 ошибки
+            self::assertGreaterThanOrEqual(4, count($errors)); // At least 4 errors
             throw $e;
         }
     }

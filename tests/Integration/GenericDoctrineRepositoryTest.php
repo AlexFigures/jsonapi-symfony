@@ -17,6 +17,17 @@ use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
  */
 final class GenericDoctrineRepositoryTest extends DoctrineIntegrationTestCase
 {
+    protected function getDatabaseUrl(): string
+    {
+        return $_ENV['DATABASE_URL_POSTGRES']
+            ?? 'postgresql://jsonapi:secret@localhost:5432/jsonapi_test?serverVersion=16&charset=utf8';
+    }
+
+    protected function getPlatform(): string
+    {
+        return 'postgresql';
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

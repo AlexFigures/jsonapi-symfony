@@ -31,10 +31,12 @@ final class RenamedAttributeSecurityTest extends TestCase
         $metadata = $this->createArticleMetadataWithRenamedReadOnlyPublishedAt();
         
         // Simulate a client trying to modify the read-only field
-        $maliciousChanges = new ChangeSet([
-            'publishedAt' => '2024-01-01T00:00:00Z', // Client tries to set published date
-            'title' => 'Legitimate Title Change'      // This should be allowed
-        ]);
+        $maliciousChanges = new ChangeSet(
+            attributes: [
+                'publishedAt' => '2024-01-01T00:00:00Z', // Client tries to set published date
+                'title' => 'Legitimate Title Change'      // This should be allowed
+            ]
+        );
 
         // Create instantiator (this would normally be injected)
         $instantiator = $this->createSerializerEntityInstantiator();
@@ -63,9 +65,11 @@ final class RenamedAttributeSecurityTest extends TestCase
         // Simulate an entity with renamed writable attribute
         $metadata = $this->createArticleMetadataWithRenamedWritableSlug();
         
-        $changes = new ChangeSet([
-            'slug' => 'new-article-slug' // This should be allowed
-        ]);
+        $changes = new ChangeSet(
+            attributes: [
+                'slug' => 'new-article-slug' // This should be allowed
+            ]
+        );
 
         $instantiator = $this->createSerializerEntityInstantiator();
         

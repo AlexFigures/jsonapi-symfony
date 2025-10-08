@@ -6,6 +6,7 @@ namespace JsonApi\Symfony\Bridge\Symfony\Routing;
 
 use JsonApi\Symfony\Http\Controller\OpenApiController;
 use JsonApi\Symfony\Http\Controller\SwaggerUiController;
+use JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\Config\Loader\Loader;
 use Symfony\Component\Routing\Route;
@@ -50,6 +51,8 @@ final class JsonApiRouteLoader extends Loader
         private readonly bool $enableRelationshipRoutes = true,
         private readonly array $openApiConfig = [],
         private readonly array $docsUiConfig = [],
+        private readonly ?RouteNameGenerator $routeNameGenerator = null,
+        private readonly ?CustomRouteRegistryInterface $customRouteRegistry = null,
     ) {
         parent::__construct();
     }
@@ -63,13 +66,16 @@ final class JsonApiRouteLoader extends Loader
         $this->loaded = true;
         $routes = new RouteCollection();
 
+        // Add high-priority custom routes first (priority > 0)
+        $this->addCustomRoutes($routes, true);
+
         foreach ($this->registry->all() as $metadata) {
             $resourceType = $metadata->type;
             $prefix = rtrim($this->routePrefix, '/');
 
             // Collection routes
             $routes->add(
-                "jsonapi.{$resourceType}.index",
+                $this->generateRouteName($resourceType, 'index'),
                 new Route(
                     path: "{$prefix}/{$resourceType}",
                     defaults: [
@@ -81,7 +87,7 @@ final class JsonApiRouteLoader extends Loader
             );
 
             $routes->add(
-                "jsonapi.{$resourceType}.create",
+                $this->generateRouteName($resourceType, 'create'),
                 new Route(
                     path: "{$prefix}/{$resourceType}",
                     defaults: [
@@ -94,7 +100,7 @@ final class JsonApiRouteLoader extends Loader
 
             // Resource routes
             $routes->add(
-                "jsonapi.{$resourceType}.show",
+                $this->generateRouteName($resourceType, 'show'),
                 new Route(
                     path: "{$prefix}/{$resourceType}/{id}",
                     defaults: [
@@ -107,7 +113,7 @@ final class JsonApiRouteLoader extends Loader
             );
 
             $routes->add(
-                "jsonapi.{$resourceType}.update",
+                $this->generateRouteName($resourceType, 'update'),
                 new Route(
                     path: "{$prefix}/{$resourceType}/{id}",
                     defaults: [
@@ -120,7 +126,7 @@ final class JsonApiRouteLoader extends Loader
             );
 
             $routes->add(
-                "jsonapi.{$resourceType}.delete",
+                $this->generateRouteName($resourceType, 'delete'),
                 new Route(
                     path: "{$prefix}/{$resourceType}/{id}",
                     defaults: [
@@ -139,7 +145,7 @@ final class JsonApiRouteLoader extends Loader
 
                     // GET relationship
                     $routes->add(
-                        "jsonapi.{$resourceType}.relationships.{$relationshipName}.show",
+                        $this->generateRouteName($resourceType, null, $relationshipName, 'show'),
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                             defaults: [
@@ -154,7 +160,7 @@ final class JsonApiRouteLoader extends Loader
 
                     // PATCH relationship (replace)
                     $routes->add(
-                        "jsonapi.{$resourceType}.relationships.{$relationshipName}.update",
+                        $this->generateRouteName($resourceType, null, $relationshipName, 'update'),
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                             defaults: [
@@ -170,7 +176,7 @@ final class JsonApiRouteLoader extends Loader
                     // POST relationship (add to-many)
                     if ($relationship->toMany) {
                         $routes->add(
-                            "jsonapi.{$resourceType}.relationships.{$relationshipName}.add",
+                            $this->generateRouteName($resourceType, null, $relationshipName, 'add'),
                             new Route(
                                 path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                                 defaults: [
@@ -185,7 +191,7 @@ final class JsonApiRouteLoader extends Loader
 
                         // DELETE relationship (remove from to-many)
                         $routes->add(
-                            "jsonapi.{$resourceType}.relationships.{$relationshipName}.remove",
+                            $this->generateRouteName($resourceType, null, $relationshipName, 'remove'),
                             new Route(
                                 path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                                 defaults: [
@@ -201,7 +207,7 @@ final class JsonApiRouteLoader extends Loader
 
                     // Related resource routes
                     $routes->add(
-                        "jsonapi.{$resourceType}.related.{$relationshipName}",
+                        $this->generateRouteName($resourceType, null, $relationshipName),
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/{$relationshipName}",
                             defaults: [
@@ -217,6 +223,8 @@ final class JsonApiRouteLoader extends Loader
             }
         }
 
+        // Add low-priority custom routes after auto-generated routes (priority <= 0)
+        $this->addCustomRoutes($routes, false);
         $this->addDocumentationRoutes($routes);
 
         return $routes;
@@ -225,6 +233,56 @@ final class JsonApiRouteLoader extends Loader
     public function supports(mixed $resource, ?string $type = null): bool
     {
         return $type === 'jsonapi';
+    }
+
+    private function addCustomRoutes(RouteCollection $routes, bool $highPriority = false): void
+    {
+        if ($this->customRouteRegistry === null) {
+            return;
+        }
+
+        foreach ($this->customRouteRegistry->all() as $customRoute) {
+            // Filter routes by priority
+            if ($highPriority && $customRoute->priority <= 0) {
+                continue; // Skip low-priority routes when adding high-priority ones
+            }
+            if (!$highPriority && $customRoute->priority > 0) {
+                continue; // Skip high-priority routes when adding low-priority ones
+            }
+            $routeName = $customRoute->name;
+
+            // Apply route name transformation if configured
+            // Only transform names that match the exact canonical pattern: jsonapi.{type}.{action}
+            // Leave custom names like 'jsonapi.products.actions.publish' untouched
+            if ($this->routeNameGenerator !== null && str_starts_with($routeName, 'jsonapi.')) {
+                $parts = explode('.', $routeName);
+                if (count($parts) === 3 && $parts[0] === 'jsonapi') {
+                    // Only transform if it's exactly the canonical 3-part pattern
+                    $resourceType = $parts[1];
+                    $action = $parts[2];
+                    $routeName = $this->generateRouteName($resourceType, $action);
+                }
+                // For any other pattern (e.g., 'jsonapi.products.actions.publish'), leave the name unchanged
+            }
+
+            $defaults = array_merge($customRoute->defaults, [
+                '_controller' => $customRoute->controller,
+            ]);
+
+            if ($customRoute->resourceType !== null) {
+                $defaults['type'] = $customRoute->resourceType;
+            }
+
+            $routes->add(
+                $routeName,
+                new Route(
+                    path: $customRoute->path,
+                    defaults: $defaults,
+                    requirements: $customRoute->requirements,
+                    methods: $customRoute->methods,
+                )
+            );
+        }
     }
 
     private function addDocumentationRoutes(RouteCollection $routes): void
@@ -258,5 +316,33 @@ final class JsonApiRouteLoader extends Loader
                 )
             );
         }
+    }
+
+    /**
+     * Generate a route name using the configured naming convention.
+     */
+    private function generateRouteName(
+        string $resourceType,
+        ?string $action,
+        ?string $relationship = null,
+        ?string $relationshipAction = null
+    ): string {
+        if ($this->routeNameGenerator !== null) {
+            return $this->routeNameGenerator->generateRouteName($resourceType, $action, $relationship, $relationshipAction);
+        }
+
+        // Fallback to legacy naming for backward compatibility
+        if ($relationship !== null) {
+            if ($relationshipAction !== null) {
+                return "jsonapi.{$resourceType}.relationships.{$relationship}.{$relationshipAction}";
+            }
+            return "jsonapi.{$resourceType}.related.{$relationship}";
+        }
+
+        if ($action === null) {
+            throw new \InvalidArgumentException('Action cannot be null for non-relationship routes');
+        }
+
+        return "jsonapi.{$resourceType}.{$action}";
     }
 }

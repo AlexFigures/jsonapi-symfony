@@ -337,6 +337,8 @@ Fix it by:
 
 ## See Also
 
+- [Route Naming Conventions](routing-naming-conventions.md) - Configure snake_case vs kebab-case route names
+- [Custom Routes](custom-routes.md) - Define custom endpoints beyond standard CRUD
 - [Doctrine Integration](doctrine-integration.md)
 - [Validation](validation.md)
 - [Relationships](relationships.md)

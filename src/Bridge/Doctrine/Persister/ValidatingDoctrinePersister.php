@@ -11,9 +11,18 @@ use JsonApi\Symfony\Contract\Data\ResourcePersister;
 use JsonApi\Symfony\Http\Exception\ConflictException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
+use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+use Symfony\Component\Serializer\Exception\ExtraAttributesException;
+use Symfony\Component\Serializer\Exception\MissingConstructorArgumentsException;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
+use Symfony\Component\Serializer\Exception\PartialDenormalizationException;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
@@ -39,6 +48,8 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         private readonly ValidatorInterface $validator,
         private readonly ConstraintViolationMapper $violationMapper,
         private readonly SerializerEntityInstantiator $instantiator,
+        private readonly DatabaseErrorMapper $databaseErrorMapper,
+        private readonly RelationshipResolver $relationshipResolver,
     ) {
     }
 
@@ -56,7 +67,30 @@ final class ValidatingDoctrinePersister implements ResourcePersister
 
         // Create new entity through SerializerEntityInstantiator
         // It can call constructors with parameters and considers SerializationGroups
-        $result = $this->instantiator->instantiate($entityClass, $metadata, $changes, isCreate: true);
+        try {
+            $result = $this->instantiator->instantiate($entityClass, $metadata, $changes, isCreate: true);
+        } catch (MissingConstructorArgumentsException $exception) {
+            $violations = new ConstraintViolationList();
+
+            foreach ($exception->getMissingConstructorArguments() as $argument) {
+                $attributeMetadata = $this->findAttributeMetadata($metadata, $argument);
+                $propertyPath = $attributeMetadata?->propertyPath ?? $argument;
+
+                $violations->add(new ConstraintViolation(
+                    'This field is required.',
+                    'This field is required.',
+                    [],
+                    null,
+                    $propertyPath,
+                    null
+                ));
+            }
+
+            throw $this->violationMapper->mapToException($type, $violations);
+        } catch (PartialDenormalizationException|NotNormalizableValueException|ExtraAttributesException $e) {
+            // Handle denormalization errors from strict mode
+            throw $this->violationMapper->mapDenormErrors($type, $e);
+        }
         $entity = $result['entity'];
         $remainingChanges = $result['remainingChanges'];
 
@@ -79,16 +113,22 @@ final class ValidatingDoctrinePersister implements ResourcePersister
             }
         }
 
-        // Apply remaining attributes considering serialization groups
-        $this->applyAttributes($entity, $metadata, $remainingChanges, true);
+        // Apply remaining attributes through strict Serializer denormalization
+        $this->denormalizeInto($entity, $remainingChanges, $metadata, true);
 
-        // Validate before persist
-        $this->validate($entity, $type);
+        // Validate before persist with create groups
+        $this->validateWithGroups($entity, $type, $metadata, true);
 
-        $this->em->persist($entity);
-        $this->em->flush();
-
-        return $entity;
+        // Persist entity in transaction with database error handling
+        try {
+            return $this->em->wrapInTransaction(function () use ($entity) {
+                $this->em->persist($entity);
+                $this->em->flush();
+                return $entity;
+            });
+        } catch (\Throwable $e) {
+            throw $this->databaseErrorMapper->mapDatabaseError($type, $e);
+        }
     }
 
     public function update(string $type, string $id, ChangeSet $changes): object
@@ -102,15 +142,21 @@ final class ValidatingDoctrinePersister implements ResourcePersister
             );
         }
 
-        // Apply attributes considering serialization groups
-        $this->applyAttributes($entity, $metadata, $changes, false);
+        // Apply attributes through strict Serializer denormalization
+        $this->denormalizeInto($entity, $changes, $metadata, false);
 
-        // Validate before flush
-        $this->validate($entity, $type);
+        // Validate before flush with update groups
+        $this->validateWithGroups($entity, $type, $metadata, false);
 
-        $this->em->flush();
-
-        return $entity;
+        // Update entity in transaction with database error handling
+        try {
+            return $this->em->wrapInTransaction(function () use ($entity) {
+                $this->em->flush();
+                return $entity;
+            });
+        } catch (\Throwable $e) {
+            throw $this->databaseErrorMapper->mapDatabaseError($type, $e);
+        }
     }
 
     public function delete(string $type, string $id): void
@@ -124,28 +170,76 @@ final class ValidatingDoctrinePersister implements ResourcePersister
             );
         }
 
-        $this->em->remove($entity);
-        $this->em->flush();
-    }
-
-    private function applyAttributes(
-        object $entity,
-        \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
-        ChangeSet $changes,
-        bool $isCreate
-    ): void {
-        foreach ($changes->attributes as $path => $value) {
-            // Check if this attribute can be written
-            $attributeMetadata = $this->findAttributeMetadata($metadata, $path);
-
-            if ($attributeMetadata !== null && !$attributeMetadata->isWritable($isCreate)) {
-                // Skip attributes that cannot be written
-                continue;
-            }
-
-            $this->accessor->setValue($entity, $path, $value);
+        // Delete entity in transaction with database error handling
+        try {
+            $this->em->wrapInTransaction(function () use ($entity) {
+                $this->em->remove($entity);
+                $this->em->flush();
+            });
+        } catch (\Throwable $e) {
+            throw $this->databaseErrorMapper->mapDatabaseError($type, $e);
         }
     }
+
+    /**
+     * Applies changes to entity through strict Serializer denormalization.
+     *
+     * Uses strict mode with error collection to catch all denormalization issues.
+     */
+    private function denormalizeInto(
+        object $entity,
+        ChangeSet $changes,
+        \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        bool $isCreate
+    ): void {
+
+        // Denormalize attributes if present
+        if (!empty($changes->attributes)) {
+            $this->denormalizeAttributes($entity, $changes, $metadata, $isCreate);
+        }
+
+        // Apply relationships if present
+        if (!empty($changes->relationships)) {
+            $this->relationshipResolver->applyRelationships($entity, $changes->relationships, $metadata, $isCreate);
+        }
+    }
+
+    private function denormalizeAttributes(
+        object $entity,
+        ChangeSet $changes,
+        \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        bool $isCreate
+    ): void {
+        // Create ChangeSet with only attributes for denormalization
+        $attributesOnlyChanges = new ChangeSet(attributes: $changes->attributes);
+        $data = $this->instantiator->prepareDataForDenormalization($attributesOnlyChanges, $metadata);
+
+        // Use serialization groups from metadata or defaults
+        $operationGroups = $metadata->getOperationGroups();
+        $serializationGroups = $operationGroups->getSerializationGroups($isCreate);
+
+        $context = [
+            AbstractNormalizer::OBJECT_TO_POPULATE => $entity,
+            AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false, // Strict mode: reject unknown attributes
+            AbstractNormalizer::COLLECT_DENORMALIZATION_ERRORS => true,
+            'deep_object_to_populate' => true, // Enable deep updates for embeddables and nested objects
+            AbstractNormalizer::GROUPS => $serializationGroups,
+            'is_create' => $isCreate, // Pass operation type for relationship resolver
+        ];
+
+        try {
+            $this->instantiator->denormalizer()->denormalize(
+                $data,
+                $metadata->class,
+                null,
+                $context
+            );
+        } catch (PartialDenormalizationException|NotNormalizableValueException|ExtraAttributesException $e) {
+            throw $this->violationMapper->mapDenormErrors($metadata->type, $e);
+        }
+    }
+
+
 
     private function findAttributeMetadata(
         \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
@@ -161,13 +255,21 @@ final class ValidatingDoctrinePersister implements ResourcePersister
     }
 
     /**
-     * Validates entity and throws exception on errors.
+     * Validates entity with operation-specific groups and throws exception on errors.
      *
      * @throws \JsonApi\Symfony\Http\Exception\ValidationException
      */
-    private function validate(object $entity, string $type): void
-    {
-        $violations = $this->validator->validate($entity);
+    private function validateWithGroups(
+        object $entity,
+        string $type,
+        \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        bool $isCreate
+    ): void {
+        // Use validation groups from metadata or defaults
+        $operationGroups = $metadata->getOperationGroups();
+        $groups = $operationGroups->getValidationGroups($isCreate);
+
+        $violations = $this->validator->validate($entity, null, $groups);
 
         if (count($violations) > 0) {
             // ConstraintViolationMapper converts violations to JSON:API errors

@@ -29,6 +29,15 @@ final class ResourceMetadata
         public ?string $description = null,
         public array $sortableFields = [],
         public ?FilterableFields $filterableFields = null,
+        public ?OperationGroups $operationGroups = null,
     ) {
+    }
+
+    /**
+     * Returns operation groups for this resource.
+     */
+    public function getOperationGroups(): OperationGroups
+    {
+        return $this->operationGroups ?? OperationGroups::default();
     }
 }

@@ -137,6 +137,24 @@ When 1.0.0 is released, this section will contain:
 
 ---
 
+### New Routing Features (0.1.x)
+
+**Status:** Available now
+
+**New Features:**
+- Configurable route naming conventions (snake_case vs kebab-case)
+- Custom route attributes for defining custom endpoints
+
+**Migration Guide:**
+- [Routing Features Upgrade Guide](../migration/routing-features-upgrade.md)
+
+**Backward Compatibility:**
+- ✅ Fully backward compatible
+- ✅ No breaking changes
+- ✅ Optional features
+
+---
+
 ### Upgrading from 0.1.x to 0.2.x (Future)
 
 **Status:** Not yet released

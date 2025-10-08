@@ -256,6 +256,18 @@ return static function (ContainerConfigurator $configurator): void {
 
     $services->alias(ResourceRegistryInterface::class, ResourceRegistry::class);
 
+    // Custom route registry
+    $services
+        ->set(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistry::class)
+        ->args([
+            [], // Will be replaced by ResourceDiscoveryPass
+        ])
+    ;
+
+    $services
+        ->alias(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface::class, \JsonApi\Symfony\Resource\Registry\CustomRouteRegistry::class)
+    ;
+
     $services
         ->set(PaginationConfig::class)
         ->args([
@@ -457,6 +469,14 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('controller.service_arguments')
     ;
 
+    // Route name generator
+    $services
+        ->set(\JsonApi\Symfony\Bridge\Symfony\Routing\RouteNameGenerator::class)
+        ->args([
+            '%jsonapi.routing.naming_convention%',
+        ])
+    ;
+
     // Automatic route loader
     $services
         ->set(\JsonApi\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader::class)
@@ -466,6 +486,8 @@ return static function (ContainerConfigurator $configurator): void {
             true, // enableRelationshipRoutes
             '%jsonapi.docs.generator.openapi%',
             '%jsonapi.docs.ui%',
+            service(\JsonApi\Symfony\Bridge\Symfony\Routing\RouteNameGenerator::class),
+            service(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistry::class),
         ])
         ->tag('routing.loader')
     ;
@@ -592,6 +614,24 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
+        ->set(\JsonApi\Symfony\Http\Validation\DatabaseErrorMapper::class)
+        ->args([
+            service(ResourceRegistryInterface::class),
+            service(\JsonApi\Symfony\Http\Error\ErrorMapper::class),
+        ])
+    ;
+
+    $services
+        ->set(\JsonApi\Symfony\Resource\Relationship\RelationshipResolver::class)
+        ->args([
+            service('doctrine.orm.default_entity_manager'),
+            service(ResourceRegistryInterface::class),
+            service(PropertyAccessorInterface::class),
+            service('logger')->nullOnInvalid(),
+        ])
+    ;
+
+    $services
         ->set(\JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
@@ -600,7 +640,18 @@ return static function (ContainerConfigurator $configurator): void {
             service('validator'),
             service(ConstraintViolationMapper::class),
             service(\JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class),
+            service(\JsonApi\Symfony\Http\Validation\DatabaseErrorMapper::class),
+            service(\JsonApi\Symfony\Resource\Relationship\RelationshipResolver::class),
         ])
+    ;
+
+    $services
+        ->set(\JsonApi\Symfony\Bridge\Serializer\Normalizer\JsonApiRelationshipDenormalizer::class)
+        ->args([
+            service(\JsonApi\Symfony\Resource\Relationship\RelationshipResolver::class),
+            service(ResourceRegistryInterface::class),
+        ])
+        ->tag('serializer.normalizer', ['priority' => 100]) // High priority to handle relationships first
     ;
 
     $services

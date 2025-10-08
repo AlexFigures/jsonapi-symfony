@@ -135,6 +135,8 @@ open http://localhost:8000/_jsonapi/docs
 ✅ **JSON:API 1.1 Compliance** - 97.8% specification coverage (132/135 requirements)
 ✅ **Attribute-Driven** - No XML/YAML configuration needed
 ✅ **Auto-Generated Endpoints** - No controller boilerplate
+✅ **Configurable Route Naming** - Choose between snake_case and kebab-case
+✅ **Custom Route Attributes** - Define custom endpoints with PHP attributes
 ✅ **Query Parameters** - `include`, `fields`, `sort`, `page`, `filter`
 ✅ **Relationships** - To-one and to-many with full CRUD
 ✅ **Write Operations** - POST, PATCH, DELETE with validation

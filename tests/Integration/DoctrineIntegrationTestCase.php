@@ -10,15 +10,25 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
 use JsonApi\Symfony\Bridge\Doctrine\Persister\GenericDoctrinePersister;
 use JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister;
 use JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use JsonApi\Symfony\Http\Error\ErrorBuilder;
+use JsonApi\Symfony\Http\Error\ErrorMapper;
+use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
 use JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
+use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use JsonApi\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use JsonApi\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
+use JsonApi\Symfony\Filter\Operator\Registry;
 use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\EntityWithConstructor;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Product;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\User;
@@ -65,6 +75,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $this->registry = new ResourceRegistry([
             Article::class,
             Author::class,
+            EntityWithConstructor::class,
             Tag::class,
             Product::class,
             User::class,
@@ -72,15 +83,30 @@ abstract class DoctrineIntegrationTestCase extends TestCase
 
         $this->accessor = PropertyAccess::createPropertyAccessor();
 
+        // Create minimal dependencies for repository
+        $operatorRegistry = new Registry([]);
+        $filterHandlerRegistry = new FilterHandlerRegistry([]);
+        $filterCompiler = new DoctrineFilterCompiler($operatorRegistry, $filterHandlerRegistry);
+        $sortHandlerRegistry = new SortHandlerRegistry();
+
         $this->repository = new GenericDoctrineRepository(
             $this->em,
             $this->registry,
+            $filterCompiler,
+            $sortHandlerRegistry,
+        );
+
+        // Create SerializerEntityInstantiator
+        $instantiator = new SerializerEntityInstantiator(
+            $this->em,
+            $this->accessor,
         );
 
         $this->persister = new GenericDoctrinePersister(
             $this->em,
             $this->registry,
             $this->accessor,
+            $instantiator,
         );
 
         // Validator for ValidatingDoctrinePersister
@@ -97,12 +123,30 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             ),
         );
 
+        // Create ErrorMapper and DatabaseErrorMapper
+        $errorBuilder = new ErrorBuilder(true);
+        $errorMapper = new ErrorMapper($errorBuilder);
+        $databaseErrorMapper = new DatabaseErrorMapper(
+            $this->registry,
+            $errorMapper,
+        );
+
+        // Create RelationshipResolver
+        $relationshipResolver = new RelationshipResolver(
+            $this->em,
+            $this->registry,
+            $this->accessor,
+        );
+
         $this->validatingPersister = new ValidatingDoctrinePersister(
             $this->em,
             $this->registry,
             $this->accessor,
             $this->validator,
             $this->violationMapper,
+            $instantiator,
+            $databaseErrorMapper,
+            $relationshipResolver,
         );
 
         $this->transactionManager = new DoctrineTransactionManager($this->em);

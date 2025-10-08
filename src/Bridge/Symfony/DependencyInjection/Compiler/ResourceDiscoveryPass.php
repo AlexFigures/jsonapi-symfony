@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
 
+use JsonApi\Symfony\Resource\Attribute\JsonApiCustomRoute;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata;
 use LogicException;
 use ReflectionClass;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
@@ -34,9 +36,11 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
         $resourcePaths = $container->getParameter('jsonapi.resource_paths');
 
         $discoveredResources = $this->discoverResources($resourcePaths, $container);
+        $discoveredCustomRoutes = $this->discoverCustomRoutes($resourcePaths, $container);
 
         // Store discovered resources as a parameter
         $container->setParameter('jsonapi.discovered_resources', $discoveredResources);
+        $container->setParameter('jsonapi.discovered_custom_routes', $discoveredCustomRoutes);
 
         // Update ResourceRegistry definition to use discovered resources
         if ($container->hasDefinition('JsonApi\Symfony\Resource\Registry\ResourceRegistry')) {
@@ -46,6 +50,12 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
             // The ResourceRegistry constructor accepts iterable<object|string>
             // We pass an array of class names (strings)
             $registryDefinition->setArgument(0, $discoveredResources);
+        }
+
+        // Update CustomRouteRegistry definition to use discovered custom routes
+        if ($container->hasDefinition('JsonApi\Symfony\Resource\Registry\CustomRouteRegistry')) {
+            $registryDefinition = $container->getDefinition('JsonApi\Symfony\Resource\Registry\CustomRouteRegistry');
+            $registryDefinition->setArgument(0, $discoveredCustomRoutes);
         }
     }
 
@@ -132,6 +142,137 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
         $className = $classMatches[1];
 
         return $namespace . '\\' . $className;
+    }
+
+    /**
+     * @param list<string> $paths
+     * @return array<CustomRouteMetadata>
+     */
+    private function discoverCustomRoutes(array $paths, ContainerBuilder $container): array
+    {
+        $customRoutes = [];
+
+        foreach ($paths as $path) {
+            $resolvedPath = $this->resolvePath($path, $container);
+
+            if (!is_dir($resolvedPath)) {
+                continue;
+            }
+
+            $finder = new Finder();
+            $finder->files()->name('*.php')->in($resolvedPath);
+
+            foreach ($finder as $file) {
+                $className = $this->extractClassName($file->getPathname());
+                if ($className === null || !class_exists($className)) {
+                    continue;
+                }
+
+                try {
+                    $reflection = new ReflectionClass($className);
+                    $customRouteAttributes = $reflection->getAttributes(JsonApiCustomRoute::class);
+
+                    foreach ($customRouteAttributes as $attribute) {
+                        /** @var JsonApiCustomRoute $customRoute */
+                        $customRoute = $attribute->newInstance();
+
+                        // Determine controller and resource type
+                        $controller = $customRoute->controller;
+                        $resourceType = $customRoute->resourceType;
+
+                        // If controller is not explicitly provided, we need to determine it
+                        if ($controller === null) {
+                            // Check if this is a controller class (has methods that could be actions)
+                            $isControllerClass = $this->isControllerClass($reflection);
+
+                            if ($isControllerClass) {
+                                // For controller classes, check if it's invokable
+                                if ($reflection->hasMethod('__invoke')) {
+                                    $controller = $className; // Invokable controller
+                                } else {
+                                    throw new \InvalidArgumentException(sprintf(
+                                        'Custom route "%s" on controller class "%s" must specify a controller parameter ' .
+                                        'because the class is not invokable. Use controller: "%s::methodName" or make the class invokable by adding an __invoke method.',
+                                        $customRoute->name,
+                                        $className,
+                                        $className
+                                    ));
+                                }
+                            } else {
+                                // For entity classes, controller must be explicitly provided
+                                throw new \InvalidArgumentException(sprintf(
+                                    'Custom route "%s" on entity class "%s" must specify a controller parameter.',
+                                    $customRoute->name,
+                                    $className
+                                ));
+                            }
+                        }
+
+                        // If used on an entity class, try to get resource type from JsonApiResource attribute
+                        if ($resourceType === null) {
+                            $resourceAttributes = $reflection->getAttributes(JsonApiResource::class);
+                            if (count($resourceAttributes) > 0) {
+                                /** @var JsonApiResource $resource */
+                                $resource = $resourceAttributes[0]->newInstance();
+                                $resourceType = $resource->type;
+                            }
+                        }
+
+                        $customRoutes[] = new CustomRouteMetadata(
+                            name: $customRoute->name,
+                            path: $customRoute->path,
+                            methods: $customRoute->methods,
+                            controller: $controller,
+                            resourceType: $resourceType,
+                            defaults: $customRoute->defaults,
+                            requirements: $customRoute->requirements,
+                            description: $customRoute->description,
+                            priority: $customRoute->priority,
+                        );
+                    }
+                } catch (\ReflectionException) {
+                    // Skip classes that can't be reflected
+                    continue;
+                }
+            }
+        }
+
+        return $customRoutes;
+    }
+
+    /**
+     * Determines if a class is likely a controller class based on its characteristics.
+     */
+    private function isControllerClass(\ReflectionClass $reflection): bool
+    {
+        $className = $reflection->getName();
+
+        // Check if class name contains "Controller"
+        if (str_contains($className, 'Controller')) {
+            return true;
+        }
+
+        // Check if class has JsonApiResource attribute (likely an entity)
+        if (count($reflection->getAttributes(JsonApiResource::class)) > 0) {
+            return false;
+        }
+
+        // Check if class has public methods that could be controller actions
+        $publicMethods = $reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
+        foreach ($publicMethods as $method) {
+            // Skip magic methods and inherited methods
+            if ($method->isStatic() ||
+                $method->isAbstract() ||
+                str_starts_with($method->getName(), '__') ||
+                $method->getDeclaringClass()->getName() !== $className) {
+                continue;
+            }
+
+            // If it has public instance methods, it's likely a controller
+            return true;
+        }
+
+        return false;
     }
 
     /**

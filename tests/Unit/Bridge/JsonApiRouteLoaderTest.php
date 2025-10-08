@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Tests\Unit\Bridge;
 
 use JsonApi\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader;
+use JsonApi\Symfony\Bridge\Symfony\Routing\RouteNameGenerator;
 use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
@@ -297,5 +298,230 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Do not add the "jsonapi" loader twice');
         $loader->load('.', 'jsonapi');
+    }
+
+    public function testKebabCaseNamingConvention(): void
+    {
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('all')->willReturn([
+            new ResourceMetadata(
+                type: 'blog_posts',
+                class: 'App\Entity\BlogPost',
+                attributes: [],
+                relationships: [
+                    new RelationshipMetadata(
+                        name: 'author',
+                        toMany: false,
+                        targetType: 'authors',
+                        propertyPath: 'author',
+                    ),
+                ],
+            ),
+        ]);
+
+        $routeNameGenerator = new RouteNameGenerator(RouteNameGenerator::KEBAB_CASE);
+        $loader = new JsonApiRouteLoader($registry, '/api', true, [], [], $routeNameGenerator);
+        $routes = $loader->load('.', 'jsonapi');
+
+        // Check that route names use kebab-case
+        $this->assertNotNull($routes->get('jsonapi.blog-posts.index'));
+        $this->assertNotNull($routes->get('jsonapi.blog-posts.create'));
+        $this->assertNotNull($routes->get('jsonapi.blog-posts.show'));
+        $this->assertNotNull($routes->get('jsonapi.blog-posts.update'));
+        $this->assertNotNull($routes->get('jsonapi.blog-posts.delete'));
+
+        // Check relationship routes
+        $this->assertNotNull($routes->get('jsonapi.blog-posts.relationships.author.show'));
+        $this->assertNotNull($routes->get('jsonapi.blog-posts.relationships.author.update'));
+        $this->assertNotNull($routes->get('jsonapi.blog-posts.related.author'));
+
+        // Verify old snake_case routes don't exist
+        $this->assertNull($routes->get('jsonapi.blog_posts.index'));
+        $this->assertNull($routes->get('jsonapi.blog_posts.relationships.author.show'));
+    }
+
+    public function testCustomRoutes(): void
+    {
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('all')->willReturn([]);
+
+        $customRouteRegistry = $this->createMock(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface::class);
+        $customRouteRegistry->method('all')->willReturn([
+            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+                name: 'articles.publish',
+                path: '/api/articles/{id}/publish',
+                methods: ['POST'],
+                controller: 'App\Controller\PublishController',
+                resourceType: 'articles',
+                defaults: ['_format' => 'json'],
+                requirements: ['id' => '\d+'],
+                description: 'Publish an article',
+                priority: 0,
+            ),
+            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+                name: 'articles.search',
+                path: '/api/articles/search',
+                methods: ['GET'],
+                controller: 'App\Controller\SearchController',
+                resourceType: 'articles',
+                defaults: [],
+                requirements: [],
+                description: 'Search articles',
+                priority: 10,
+            ),
+        ]);
+
+        $loader = new JsonApiRouteLoader($registry, '/api', true, [], [], null, $customRouteRegistry);
+        $routes = $loader->load('.', 'jsonapi');
+
+        // Check custom routes are added
+        $publishRoute = $routes->get('articles.publish');
+        $this->assertNotNull($publishRoute);
+        $this->assertSame('/api/articles/{id}/publish', $publishRoute->getPath());
+        $this->assertSame(['POST'], $publishRoute->getMethods());
+        $this->assertSame('App\Controller\PublishController', $publishRoute->getDefault('_controller'));
+        $this->assertSame('articles', $publishRoute->getDefault('type'));
+        $this->assertSame('json', $publishRoute->getDefault('_format'));
+        $this->assertSame('\d+', $publishRoute->getRequirement('id'));
+
+        $searchRoute = $routes->get('articles.search');
+        $this->assertNotNull($searchRoute);
+        $this->assertSame('/api/articles/search', $searchRoute->getPath());
+        $this->assertSame(['GET'], $searchRoute->getMethods());
+        $this->assertSame('App\Controller\SearchController', $searchRoute->getDefault('_controller'));
+        $this->assertSame('articles', $searchRoute->getDefault('type'));
+    }
+
+    public function testCustomRoutesPreserveComplexNames(): void
+    {
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('all')->willReturn([]);
+
+        $routeNameGenerator = new \JsonApi\Symfony\Bridge\Symfony\Routing\RouteNameGenerator('kebab-case');
+
+        $customRouteRegistry = $this->createMock(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface::class);
+        $customRouteRegistry->method('all')->willReturn([
+            // This should be transformed (canonical 3-part pattern)
+            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+                name: 'jsonapi.products.publish',
+                path: '/api/products/{id}/publish',
+                methods: ['POST'],
+                controller: 'App\Controller\PublishController',
+                resourceType: 'products',
+                defaults: [],
+                requirements: [],
+                description: null,
+                priority: 0,
+            ),
+            // This should NOT be transformed (4-part pattern)
+            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+                name: 'jsonapi.products.actions.archive',
+                path: '/api/products/{id}/archive',
+                methods: ['POST'],
+                controller: 'App\Controller\ArchiveController',
+                resourceType: 'products',
+                defaults: [],
+                requirements: [],
+                description: null,
+                priority: 0,
+            ),
+            // This should NOT be transformed (doesn't start with jsonapi.)
+            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+                name: 'custom.products.special',
+                path: '/api/products/special',
+                methods: ['GET'],
+                controller: 'App\Controller\SpecialController',
+                resourceType: 'products',
+                defaults: [],
+                requirements: [],
+                description: null,
+                priority: 0,
+            ),
+        ]);
+
+        $loader = new JsonApiRouteLoader($registry, '/api', true, [], [], $routeNameGenerator, $customRouteRegistry);
+        $routes = $loader->load('.', 'jsonapi');
+
+        // Check that canonical 3-part name was transformed (kebab-case)
+        $publishRoute = $routes->get('jsonapi.products.publish');
+        $this->assertNotNull($publishRoute);
+
+        // Check that 4-part name was preserved exactly
+        $archiveRoute = $routes->get('jsonapi.products.actions.archive');
+        $this->assertNotNull($archiveRoute);
+        $this->assertSame('/api/products/{id}/archive', $archiveRoute->getPath());
+
+        // Check that non-jsonapi name was preserved exactly
+        $specialRoute = $routes->get('custom.products.special');
+        $this->assertNotNull($specialRoute);
+        $this->assertSame('/api/products/special', $specialRoute->getPath());
+    }
+
+    public function testCustomRoutesPriorityOrdering(): void
+    {
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('all')->willReturn([
+            new \JsonApi\Symfony\Resource\Metadata\ResourceMetadata(
+                type: 'articles',
+                class: 'App\Entity\Article',
+                attributes: [],
+                relationships: [],
+            ),
+        ]);
+
+        $customRouteRegistry = $this->createMock(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface::class);
+        $customRouteRegistry->method('all')->willReturn([
+            // High priority route - should be added BEFORE auto-generated routes
+            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+                name: 'articles.search',
+                path: '/api/articles/search',
+                methods: ['GET'],
+                controller: 'App\Controller\SearchController',
+                resourceType: 'articles',
+                defaults: [],
+                requirements: [],
+                description: null,
+                priority: 10, // High priority
+            ),
+            // Low priority route - should be added AFTER auto-generated routes
+            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+                name: 'articles.archive',
+                path: '/api/articles/archive',
+                methods: ['POST'],
+                controller: 'App\Controller\ArchiveController',
+                resourceType: 'articles',
+                defaults: [],
+                requirements: [],
+                description: null,
+                priority: -5, // Low priority
+            ),
+        ]);
+
+        $loader = new JsonApiRouteLoader($registry, '/api', true, [], [], null, $customRouteRegistry);
+        $routes = $loader->load('.', 'jsonapi');
+
+        // Get all route names in order
+        $routeNames = array_keys($routes->all());
+
+        // High priority custom route should come before auto-generated routes
+        $searchIndex = array_search('articles.search', $routeNames);
+        $showIndex = array_search('jsonapi.articles.show', $routeNames);
+        $this->assertNotFalse($searchIndex, 'Search route should exist');
+        $this->assertNotFalse($showIndex, 'Show route should exist');
+        $this->assertLessThan($showIndex, $searchIndex, 'High priority custom route should come before auto-generated routes');
+
+        // Low priority custom route should come after auto-generated routes
+        $archiveIndex = array_search('articles.archive', $routeNames);
+        $this->assertNotFalse($archiveIndex, 'Archive route should exist');
+        $this->assertGreaterThan($showIndex, $archiveIndex, 'Low priority custom route should come after auto-generated routes');
+
+        // Verify the routes exist and have correct paths
+        $searchRoute = $routes->get('articles.search');
+        $this->assertNotNull($searchRoute);
+        $this->assertSame('/api/articles/search', $searchRoute->getPath());
+
+        $archiveRoute = $routes->get('articles.archive');
+        $this->assertNotNull($archiveRoute);
+        $this->assertSame('/api/articles/archive', $archiveRoute->getPath());
     }
 }

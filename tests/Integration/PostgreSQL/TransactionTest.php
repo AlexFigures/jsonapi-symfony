@@ -24,10 +24,12 @@ final class TransactionTest extends DoctrineIntegrationTestCase
     public function testTransactionCommitsOnSuccess(): void
     {
         $result = $this->transactionManager->transactional(function () {
-            $changes = new ChangeSet([
-                'title' => 'Transactional Article',
-                'content' => 'Content',
-            ]);
+            $changes = new ChangeSet(
+                attributes: [
+                    'title' => 'Transactional Article',
+                    'content' => 'Content',
+                ]
+            );
 
             return $this->persister->create('articles', $changes, 'tx-article');
         });
@@ -44,10 +46,12 @@ final class TransactionTest extends DoctrineIntegrationTestCase
     {
         try {
             $this->transactionManager->transactional(function () {
-                $changes = new ChangeSet([
-                    'title' => 'Will be rolled back',
-                    'content' => 'Content',
-                ]);
+                $changes = new ChangeSet(
+                    attributes: [
+                        'title' => 'Will be rolled back',
+                        'content' => 'Content',
+                    ]
+                );
 
                 $this->persister->create('articles', $changes, 'rollback-article');
 
@@ -69,12 +73,12 @@ final class TransactionTest extends DoctrineIntegrationTestCase
     public function testNestedTransactions(): void
     {
         $result = $this->transactionManager->transactional(function () {
-            $changes1 = new ChangeSet(['title' => 'Article 1', 'content' => 'Content 1']);
+            $changes1 = new ChangeSet(attributes: ['title' => 'Article 1', 'content' => 'Content 1']);
             $article1 = $this->persister->create('articles', $changes1, 'nested-1');
 
             // Nested transaction
             $this->transactionManager->transactional(function () {
-                $changes2 = new ChangeSet(['title' => 'Article 2', 'content' => 'Content 2']);
+                $changes2 = new ChangeSet(attributes: ['title' => 'Article 2', 'content' => 'Content 2']);
                 $this->persister->create('articles', $changes2, 'nested-2');
             });
 

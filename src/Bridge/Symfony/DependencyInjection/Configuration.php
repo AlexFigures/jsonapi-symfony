@@ -34,6 +34,17 @@ final class Configuration implements ConfigurationInterface
         $routePrefix = $children->scalarNode('route_prefix');
         $routePrefix->defaultValue('/api')->end();
 
+        // Routing configuration
+        $routing = $children->arrayNode('routing')->addDefaultsIfNotSet();
+        $routingChildren = $routing->children();
+        $routingChildren
+            ->enumNode('naming_convention')
+            ->info('Route naming convention for auto-generated routes')
+            ->values(['snake_case', 'kebab-case'])
+            ->defaultValue('snake_case')
+            ->end();
+        $routing->end();
+
         // Resource discovery paths
         /** @var ArrayNodeDefinition $resourcePaths */
         $resourcePaths = $children->arrayNode('resource_paths');

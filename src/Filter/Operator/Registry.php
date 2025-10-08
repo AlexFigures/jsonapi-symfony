@@ -12,6 +12,16 @@ final class Registry
     /** @var array<string, Operator> */
     private array $operators = [];
 
+    /**
+     * @param iterable<Operator> $operators
+     */
+    public function __construct(iterable $operators = [])
+    {
+        foreach ($operators as $operator) {
+            $this->register($operator);
+        }
+    }
+
     public function register(Operator $operator): void
     {
         $this->operators[$operator->name()] = $operator;
