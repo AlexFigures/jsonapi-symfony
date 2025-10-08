@@ -27,7 +27,7 @@ final class CustomRouteHandlerPass implements CompilerPassInterface
         // Find all services implementing CustomRouteHandlerInterface
         foreach ($container->getDefinitions() as $definition) {
             $class = $definition->getClass();
-            
+
             // Skip if class is not set or is abstract
             if ($class === null || $definition->isAbstract()) {
                 continue;
@@ -36,13 +36,31 @@ final class CustomRouteHandlerPass implements CompilerPassInterface
             // Resolve parameter placeholders in class name
             $class = $container->getParameterBag()->resolveValue($class);
 
-            // Skip if class doesn't exist
-            if (!class_exists($class)) {
+            // Skip if class is not a string (can be an expression)
+            if (!is_string($class)) {
+                continue;
+            }
+
+            // Skip if class doesn't exist or can't be loaded
+            // Wrap in try-catch to handle classes with missing dependencies
+            try {
+                if (!class_exists($class)) {
+                    continue;
+                }
+            } catch (\Throwable) {
+                // Class exists but can't be loaded (missing dependencies, syntax errors, etc.)
+                // This is fine - just skip it
                 continue;
             }
 
             // Check if class implements CustomRouteHandlerInterface
-            if (!is_subclass_of($class, CustomRouteHandlerInterface::class)) {
+            // Also wrap this in try-catch in case reflection fails
+            try {
+                if (!is_subclass_of($class, CustomRouteHandlerInterface::class)) {
+                    continue;
+                }
+            } catch (\Throwable) {
+                // Reflection failed - skip this class
                 continue;
             }
 
