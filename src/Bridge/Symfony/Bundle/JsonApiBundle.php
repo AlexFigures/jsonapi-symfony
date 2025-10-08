@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Bridge\Symfony\Bundle;
 
+use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\Compiler\CustomRouteHandlerPass;
 use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
 use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -21,6 +22,9 @@ final class JsonApiBundle extends Bundle
 
         // Register compiler pass for automatic resource discovery
         $container->addCompilerPass(new ResourceDiscoveryPass());
+
+        // Register compiler pass for automatic handler registration (new in 0.3.0)
+        $container->addCompilerPass(new CustomRouteHandlerPass());
     }
 
     public function getContainerExtension(): ?ExtensionInterface

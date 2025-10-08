@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Bridge\Symfony\Routing;
 
+use JsonApi\Symfony\CustomRoute\Controller\CustomRouteController;
 use JsonApi\Symfony\Http\Controller\OpenApiController;
 use JsonApi\Symfony\Http\Controller\SwaggerUiController;
 use JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface;
@@ -265,9 +266,17 @@ final class JsonApiRouteLoader extends Loader
                 // For any other pattern (e.g., 'jsonapi.products.actions.publish'), leave the name unchanged
             }
 
+            // Determine controller based on whether this is a handler-based or controller-based route
+            $controller = $this->resolveController($customRoute);
+
             $defaults = array_merge($customRoute->defaults, [
-                '_controller' => $customRoute->controller,
+                '_controller' => $controller,
             ]);
+
+            // For handler-based routes, pass the route name as a parameter
+            if ($customRoute->isHandlerBased()) {
+                $defaults['routeName'] = $customRoute->name;
+            }
 
             if ($customRoute->resourceType !== null) {
                 $defaults['type'] = $customRoute->resourceType;
@@ -344,5 +353,24 @@ final class JsonApiRouteLoader extends Loader
         }
 
         return "jsonapi.{$resourceType}.{$action}";
+    }
+
+    /**
+     * Resolve the controller for a custom route.
+     *
+     * For handler-based routes (new in 0.3.0), routes to CustomRouteController.
+     * For controller-based routes (legacy), uses the specified controller.
+     */
+    private function resolveController($customRoute): string
+    {
+        if ($customRoute->isHandlerBased()) {
+            // Handler-based routes go through CustomRouteController
+            return CustomRouteController::class;
+        }
+
+        // Controller-based routes use the specified controller
+        return $customRoute->controller ?? throw new \RuntimeException(
+            sprintf('Custom route "%s" has no controller or handler configured.', $customRoute->name)
+        );
     }
 }

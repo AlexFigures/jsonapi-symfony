@@ -74,6 +74,9 @@ final class JsonApiExtension extends Extension
             $loader = new PhpFileLoader($container, new FileLocator($configDirectory));
             $loader->load('services.php');
 
+            // Load Custom Route Handler services (new in 0.3.0)
+            $loader->load('services_custom_routes.php');
+
             // Conditional loading of Atomic Operations
             if ($config['atomic']['enabled']) {
                 $loader->load('services_atomic.php');

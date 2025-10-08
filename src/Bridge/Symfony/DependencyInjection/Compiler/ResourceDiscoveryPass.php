@@ -175,32 +175,34 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
                         /** @var JsonApiCustomRoute $customRoute */
                         $customRoute = $attribute->newInstance();
 
-                        // Determine controller and resource type
+                        // Determine handler, controller, and resource type
+                        $handler = $customRoute->handler;
                         $controller = $customRoute->controller;
                         $resourceType = $customRoute->resourceType;
 
-                        // If controller is not explicitly provided, we need to determine it
-                        if ($controller === null) {
-                            // Check if this is a controller class (has methods that could be actions)
+                        // If neither handler nor controller is provided, we need to determine it
+                        if ($handler === null && $controller === null) {
+                            // Check if this is a controller/handler class
                             $isControllerClass = $this->isControllerClass($reflection);
 
                             if ($isControllerClass) {
-                                // For controller classes, check if it's invokable
+                                // For controller/handler classes, check if it's invokable
                                 if ($reflection->hasMethod('__invoke')) {
                                     $controller = $className; // Invokable controller
                                 } else {
                                     throw new \InvalidArgumentException(sprintf(
-                                        'Custom route "%s" on controller class "%s" must specify a controller parameter ' .
-                                        'because the class is not invokable. Use controller: "%s::methodName" or make the class invokable by adding an __invoke method.',
+                                        'Custom route "%s" on controller class "%s" must specify a handler or controller parameter ' .
+                                        'because the class is not invokable. Use handler: HandlerClass::class or controller: "%s::methodName" ' .
+                                        'or make the class invokable by adding an __invoke method.',
                                         $customRoute->name,
                                         $className,
                                         $className
                                     ));
                                 }
                             } else {
-                                // For entity classes, controller must be explicitly provided
+                                // For entity classes, handler or controller must be explicitly provided
                                 throw new \InvalidArgumentException(sprintf(
-                                    'Custom route "%s" on entity class "%s" must specify a controller parameter.',
+                                    'Custom route "%s" on entity class "%s" must specify a handler or controller parameter.',
                                     $customRoute->name,
                                     $className
                                 ));
@@ -223,6 +225,7 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
                             'name' => $customRoute->name,
                             'path' => $customRoute->path,
                             'methods' => $customRoute->methods,
+                            'handler' => $handler,
                             'controller' => $controller,
                             'resourceType' => $resourceType,
                             'defaults' => $customRoute->defaults,

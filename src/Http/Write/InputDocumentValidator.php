@@ -9,7 +9,6 @@ use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Exception\ConflictException;
 use JsonApi\Symfony\Http\Exception\MultiErrorException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 final class InputDocumentValidator
@@ -109,12 +108,6 @@ final class InputDocumentValidator
                 continue;
             }
 
-            /** @var AttributeMetadata $attribute */
-            $attribute = $metadata->attributes[$name];
-            $isCreate = $method === 'POST';
-            if (!$attribute->isWritable($isCreate)) {
-                $attributeErrors[] = $this->errors->invalidPointer(sprintf('/data/attributes/%s', $name), sprintf('Attribute "%s" is read-only.', $name));
-            }
         }
 
         if ($attributeErrors !== []) {
