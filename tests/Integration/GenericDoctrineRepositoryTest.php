@@ -255,6 +255,7 @@ final class GenericDoctrineRepositoryTest extends DoctrineIntegrationTestCase
         $authors = [];
         for ($i = 1; $i <= 3; $i++) {
             $author = new Author();
+            $author->setId(\Symfony\Component\Uid\Uuid::v4()->toString());
             $author->setName('Author ' . $i);
             $author->setEmail('author' . $i . '@example.com');
             $em->persist($author);
@@ -264,10 +265,9 @@ final class GenericDoctrineRepositoryTest extends DoctrineIntegrationTestCase
         // Create articles
         for ($i = 1; $i <= 20; $i++) {
             $article = new Article();
+            $article->setId(\Symfony\Component\Uid\Uuid::v4()->toString());
             $article->setTitle('Test Article ' . $i);
             $article->setContent('Content for article ' . $i);
-            $article->setStatus($i % 2 === 0 ? 'published' : 'draft');
-            $article->setViewCount($i * 10);
             $article->setAuthor($authors[$i % count($authors)]);
             $em->persist($article);
         }

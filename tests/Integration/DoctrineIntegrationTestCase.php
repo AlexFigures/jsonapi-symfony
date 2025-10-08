@@ -84,7 +84,19 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $this->accessor = PropertyAccess::createPropertyAccessor();
 
         // Create minimal dependencies for repository
-        $operatorRegistry = new Registry([]);
+        $operatorRegistry = new Registry([
+            new \JsonApi\Symfony\Filter\Operator\EqualOperator(),
+            new \JsonApi\Symfony\Filter\Operator\NotEqualOperator(),
+            new \JsonApi\Symfony\Filter\Operator\LikeOperator(),
+            new \JsonApi\Symfony\Filter\Operator\InOperator(),
+            new \JsonApi\Symfony\Filter\Operator\NotInOperator(),
+            new \JsonApi\Symfony\Filter\Operator\GreaterThanOperator(),
+            new \JsonApi\Symfony\Filter\Operator\GreaterOrEqualOperator(),
+            new \JsonApi\Symfony\Filter\Operator\LessThanOperator(),
+            new \JsonApi\Symfony\Filter\Operator\LessOrEqualOperator(),
+            new \JsonApi\Symfony\Filter\Operator\BetweenOperator(),
+            new \JsonApi\Symfony\Filter\Operator\IsNullOperator(),
+        ]);
         $filterHandlerRegistry = new FilterHandlerRegistry([]);
         $filterCompiler = new DoctrineFilterCompiler($operatorRegistry, $filterHandlerRegistry);
         $sortHandlerRegistry = new SortHandlerRegistry();

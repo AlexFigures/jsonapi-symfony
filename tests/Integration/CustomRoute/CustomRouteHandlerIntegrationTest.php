@@ -263,7 +263,8 @@ final class CustomRouteHandlerIntegrationTest extends TestCase
         $queryParser = $this->createMockQueryParser();
 
         // Create error mapper
-        $errorMapper = new ErrorMapper();
+        $errorBuilder = new ErrorBuilder(useDefaultTitleMap: true);
+        $errorMapper = new ErrorMapper($errorBuilder);
 
         // Create context factory
         $contextFactory = new CustomRouteContextFactory(
@@ -290,7 +291,7 @@ final class CustomRouteHandlerIntegrationTest extends TestCase
         $eventDispatcher = new EventDispatcher();
 
         // Create error builder
-        $errorBuilder = new ErrorBuilder();
+        $errorBuilder = new ErrorBuilder(useDefaultTitleMap: true);
 
         return new CustomRouteController(
             $handlerRegistry,
@@ -323,7 +324,7 @@ final class CustomRouteHandlerIntegrationTest extends TestCase
     private function createMockRepository(): ResourceRepository
     {
         $articles = &$this->articles;
-        
+
         return new class($articles) implements ResourceRepository {
             public function __construct(private array &$articles) {}
 
@@ -346,6 +347,12 @@ final class CustomRouteHandlerIntegrationTest extends TestCase
                     totalItems: count($this->articles)
                 );
             }
+
+            public function findRelated(string $type, string $relationship, array $identifiers): iterable
+            {
+                // Simple implementation for testing - just return empty array
+                return [];
+            }
         };
     }
 
@@ -358,7 +365,7 @@ final class CustomRouteHandlerIntegrationTest extends TestCase
     {
         $documentBuilder = $this->createStub(DocumentBuilder::class);
         $linkGenerator = $this->createStub(LinkGenerator::class);
-        $errorBuilder = new ErrorBuilder();
+        $errorBuilder = new ErrorBuilder(useDefaultTitleMap: true);
 
         return new CustomRouteResponseBuilder(
             $documentBuilder,

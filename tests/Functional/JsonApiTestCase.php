@@ -43,12 +43,14 @@ use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Http\Write\InputDocumentValidator;
 use JsonApi\Symfony\Http\Write\RelationshipDocumentValidator;
 use JsonApi\Symfony\Http\Write\WriteConfig;
+use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker;
 use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister;
 use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader;
+use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipResolver;
 use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater;
 use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRepository;
 use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager;
@@ -363,6 +365,16 @@ abstract class JsonApiTestCase extends TestCase
         $routes->add('jsonapi.relationship.get', new Route('/api/{type}/{id}/relationships/{rel}'));
         $routes->add('jsonapi.relationship.write', new Route('/api/{type}/{id}/relationships/{rel}'));
 
+        // Add type-specific routes for LinkGenerator
+        foreach (['articles', 'authors', 'tags'] as $type) {
+            $routes->add("jsonapi.{$type}.index", new Route("/api/{$type}"));
+            $routes->add("jsonapi.{$type}.show", new Route("/api/{$type}/{id}"));
+            $routes->add("jsonapi.{$type}.related.author", new Route("/api/{$type}/{id}/author"));
+            $routes->add("jsonapi.{$type}.related.tags", new Route("/api/{$type}/{id}/tags"));
+            $routes->add("jsonapi.{$type}.relationships.author.show", new Route("/api/{$type}/{id}/relationships/author"));
+            $routes->add("jsonapi.{$type}.relationships.tags.show", new Route("/api/{$type}/{id}/relationships/tags"));
+        }
+
         $context = new RequestContext();
         $context->setScheme('http');
         $context->setHost('localhost');
@@ -371,9 +383,9 @@ abstract class JsonApiTestCase extends TestCase
         $linkGenerator = new LinkGenerator($urlGenerator);
         $this->linkGenerator = $linkGenerator;
         $accessor = PropertyAccess::createPropertyAccessor();
-        $document = new DocumentBuilder($registry, $accessor, $linkGenerator, 'when_included');
+        $document = new DocumentBuilder($registry, $accessor, $linkGenerator, 'always');
         $repository = new InMemoryRepository($registry, $accessor);
-        $writeConfig = new WriteConfig(false, [
+        $writeConfig = new WriteConfig(true, [
             'authors' => true,
         ]);
         $this->writeConfig = $writeConfig;
@@ -405,9 +417,13 @@ abstract class JsonApiTestCase extends TestCase
         // Create event dispatcher for testing
         $eventDispatcher = new EventDispatcher();
 
-        // Create RelationshipResolver (in-memory version doesn't need EntityManager)
-        // For functional tests, we use a mock that does nothing
+        // Create RelationshipResolver (in-memory version wrapped in mock)
+        $inMemoryResolver = new InMemoryRelationshipResolver($repository, $registry, $accessor);
         $relationshipResolver = $this->createMock(RelationshipResolver::class);
+        $relationshipResolver->method('applyRelationships')
+            ->willReturnCallback(function (object $entity, array $relationshipsPayload, ResourceMetadata $resourceMetadata, bool $isCreate) use ($inMemoryResolver) {
+                $inMemoryResolver->applyRelationships($entity, $relationshipsPayload, $resourceMetadata, $isCreate);
+            });
 
         $this->registry = $registry;
         $this->repository = $repository;

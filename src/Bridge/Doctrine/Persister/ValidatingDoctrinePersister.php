@@ -113,7 +113,7 @@ final class ValidatingDoctrinePersister implements ResourcePersister
             }
         }
 
-        // Apply remaining attributes through strict Serializer denormalization
+        // Apply remaining attributes and relationships through strict Serializer denormalization
         $this->denormalizeInto($entity, $remainingChanges, $metadata, true);
 
         // Validate before persist with create groups
@@ -142,7 +142,7 @@ final class ValidatingDoctrinePersister implements ResourcePersister
             );
         }
 
-        // Apply attributes through strict Serializer denormalization
+        // Apply attributes and relationships through strict Serializer denormalization
         $this->denormalizeInto($entity, $changes, $metadata, false);
 
         // Validate before flush with update groups

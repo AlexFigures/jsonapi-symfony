@@ -195,7 +195,8 @@ class RelationshipResolver
         }
 
         // Validate class compatibility if targetClass provided
-        if ($meta->targetClass !== null) {
+        // Skip this validation for to-many relationships where targetClass is Collection
+        if ($meta->targetClass !== null && !is_a($meta->targetClass, \Doctrine\Common\Collections\Collection::class, true)) {
             $reg = $this->registry->getByType($type);
             if (!\is_a($reg->class, $meta->targetClass, true)) {
                 throw new ValidationException([
@@ -464,8 +465,21 @@ class RelationshipResolver
 
     private function setInverseSide(object $target, string $inverseField, object $owner, int $assocType): void
     {
+        // Determine inverse side type
+        // ManyToOne → OneToMany (inverse)
+        // OneToMany → ManyToOne (inverse)
+        // ManyToMany → ManyToMany (inverse)
+        // OneToOne → OneToOne (inverse)
+        $inverseIsToMany = match ($assocType) {
+            ORMClassMetadata::MANY_TO_ONE => true,  // Inverse of ManyToOne is OneToMany
+            ORMClassMetadata::ONE_TO_MANY => false, // Inverse of OneToMany is ManyToOne
+            ORMClassMetadata::MANY_TO_MANY => true, // Inverse of ManyToMany is ManyToMany
+            ORMClassMetadata::ONE_TO_ONE => false,  // Inverse of OneToOne is OneToOne
+            default => false,
+        };
+
         // For *ToOne inverse side, prefer setter; for *ToMany inverse side, prefer adder
-        if ($this->isToMany($assocType)) {
+        if ($inverseIsToMany) {
             $adder = $this->guessAdderName($inverseField);
             if (method_exists($target, $adder)) { $target->{$adder}($owner); return; }
             $col = $this->getOrInitCollection($target, $inverseField);

@@ -14,7 +14,7 @@ final class RelationshipMetadata
         public ?string $targetClass = null,
         public bool $nullable = true,
         public RelationshipLinkingPolicy $linkingPolicy = RelationshipLinkingPolicy::REFERENCE,
-        public RelationshipSemantics $semantics = RelationshipSemantics::MERGE,
+        public RelationshipSemantics $semantics = RelationshipSemantics::REPLACE,
         public ?int $minItems = null, // For to-many relationships
         public ?int $maxItems = null, // For to-many relationships
         public bool $writableOnCreate = true,

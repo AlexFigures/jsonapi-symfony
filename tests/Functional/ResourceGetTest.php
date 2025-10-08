@@ -47,7 +47,8 @@ final class ResourceGetTest extends JsonApiTestCase
         $relationshipLinks = $authorRelationship['links'];
         self::assertArrayHasKey('self', $relationshipLinks);
         self::assertArrayHasKey('related', $relationshipLinks);
-        self::assertArrayNotHasKey('data', $authorRelationship);
+        // With linkage_in_resource: 'always', data is always included
+        self::assertArrayHasKey('data', $authorRelationship);
     }
 
     public function testRelationshipLinkageIncludedWhenRequested(): void

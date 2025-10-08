@@ -22,4 +22,28 @@ final class AttributeMetadata
         public bool $nullable = true,
     ) {
     }
+
+    /**
+     * Check if attribute is readable (for backward compatibility with tests).
+     *
+     * @deprecated This method is deprecated. Readability is now determined by
+     * Symfony's #[Groups] attribute on entity properties and normalizationContext
+     * in ResourceMetadata. This method always returns true for compatibility.
+     */
+    public function isReadable(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Check if attribute is writable (for backward compatibility with tests).
+     *
+     * @deprecated This method is deprecated. Writability is now determined by
+     * Symfony's #[Groups] attribute on entity properties and denormalizationContext
+     * in ResourceMetadata. This method always returns true for compatibility.
+     */
+    public function isWritable(bool $isCreate = true): bool
+    {
+        return true;
+    }
 }

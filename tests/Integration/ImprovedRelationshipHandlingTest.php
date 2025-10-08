@@ -117,9 +117,9 @@ final class ImprovedRelationshipHandlingTest extends DoctrineIntegrationTestCase
      */
     public function testTypeValidationError(): void
     {
+        $articleId = Uuid::v4()->toString();
         $changes = new ChangeSet(
             attributes: [
-                'id' => Uuid::v4()->toString(),
                 'title' => 'Test Article',
                 'content' => 'Test content.',
             ],
@@ -130,14 +130,14 @@ final class ImprovedRelationshipHandlingTest extends DoctrineIntegrationTestCase
 
         $this->expectException(ValidationException::class);
         $this->expectExceptionMessage('Invalid relationship type');
-        
+
         try {
-            $this->validatingPersister->create('articles', $changes);
+            $this->validatingPersister->create('articles', $changes, $articleId);
         } catch (ValidationException $e) {
             // Check that error has precise pointer
             $errors = $e->getErrors();
             $this->assertCount(1, $errors);
-            $this->assertSame('/data/relationships/author/data/type', $errors[0]['source']['pointer']);
+            $this->assertSame('/data/relationships/author/data/type', $errors[0]->source?->pointer);
             throw $e;
         }
     }
@@ -172,7 +172,7 @@ final class ImprovedRelationshipHandlingTest extends DoctrineIntegrationTestCase
             // Check that error has precise pointer to the duplicate
             $errors = $e->getErrors();
             $this->assertCount(1, $errors);
-            $this->assertSame('/data/relationships/tags/data/1/id', $errors[0]['source']['pointer']);
+            $this->assertSame('/data/relationships/tags/data/1/id', $errors[0]->source?->pointer);
             throw $e;
         }
     }

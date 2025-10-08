@@ -92,10 +92,20 @@ final class SerializerEntityInstantiator
         $reflection = new \ReflectionClass($entityClass);
         $constructor = $reflection->getConstructor();
 
-        // Fallback: instantiate without the serializer when there is no constructor or it has no parameters
-        if ($constructor === null || $constructor->getNumberOfParameters() === 0) {
+        // Fallback: instantiate without the serializer when there is no constructor
+        if ($constructor === null) {
             $classMetadata = $this->em->getClassMetadata($entityClass);
             $entity = $classMetadata->newInstance();
+
+            return [
+                'entity' => $entity,
+                'remainingChanges' => $changes,
+            ];
+        }
+
+        // If constructor has no parameters, call it directly to ensure initialization
+        if ($constructor->getNumberOfParameters() === 0) {
+            $entity = new $entityClass();
 
             return [
                 'entity' => $entity,

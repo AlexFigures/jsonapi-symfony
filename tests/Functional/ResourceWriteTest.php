@@ -181,18 +181,45 @@ final class ResourceWriteTest extends JsonApiTestCase
         ($this->createController())($this->jsonRequest('POST', '/api/articles', $payload), 'articles');
     }
 
-    public function testRelationshipsInPayloadAreRejected(): void
+    public function testRelationshipsInPayloadAreAccepted(): void
     {
+        // First create an author
+        $authorPayload = [
+            'data' => [
+                'type' => 'authors',
+                'id' => 'test-author-for-rejection',
+                'attributes' => [
+                    'name' => 'Test Author',
+                ],
+            ],
+        ];
+
+        $authorResponse = ($this->createController())($this->jsonRequest('POST', '/api/authors', $authorPayload), 'authors');
+        self::assertSame(201, $authorResponse->getStatusCode());
+
+        // Now create an article with the author relationship - should work now
         $payload = [
             'data' => [
                 'type' => 'articles',
                 'attributes' => ['title' => 'With relationship'],
-                'relationships' => ['author' => []],
+                'relationships' => [
+                    'author' => [
+                        'data' => [
+                            'type' => 'authors',
+                            'id' => 'test-author-for-rejection',
+                        ],
+                    ],
+                ],
             ],
         ];
 
-        $this->expectException(BadRequestException::class);
-        ($this->createController())($this->jsonRequest('POST', '/api/articles', $payload), 'articles');
+        $response = ($this->createController())($this->jsonRequest('POST', '/api/articles', $payload), 'articles');
+        self::assertSame(201, $response->getStatusCode());
+
+        /** @var array{data: array{relationships: array<string, mixed>}} $document */
+        $document = $this->decode($response);
+        self::assertArrayHasKey('relationships', $document['data']);
+        self::assertArrayHasKey('author', $document['data']['relationships']);
     }
 
     public function testClientIdConflictProduces409(): void
@@ -254,6 +281,113 @@ final class ResourceWriteTest extends JsonApiTestCase
 
         $this->expectException(BadRequestException::class);
         ($this->updateController())($request, 'articles', '1');
+    }
+
+    public function testCreateArticleWithAuthorRelationship(): void
+    {
+        // First create an author
+        $authorPayload = [
+            'data' => [
+                'type' => 'authors',
+                'id' => 'test-author-1',
+                'attributes' => [
+                    'name' => 'Test Author',
+                ],
+            ],
+        ];
+
+        $authorResponse = ($this->createController())($this->jsonRequest('POST', '/api/authors', $authorPayload), 'authors');
+        self::assertSame(201, $authorResponse->getStatusCode());
+
+        // Now create an article with the author relationship
+        $articlePayload = [
+            'data' => [
+                'type' => 'articles',
+                'attributes' => [
+                    'title' => 'Article with Author',
+                ],
+                'relationships' => [
+                    'author' => [
+                        'data' => [
+                            'type' => 'authors',
+                            'id' => 'test-author-1',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $articleResponse = ($this->createController())($this->jsonRequest('POST', '/api/articles', $articlePayload), 'articles');
+        self::assertSame(201, $articleResponse->getStatusCode());
+
+        /** @var array{data: array{id: string, type: string, attributes: array<string, mixed>, relationships: array<string, mixed>}} $document */
+        $document = $this->decode($articleResponse);
+        $articleId = $document['data']['id'];
+
+        self::assertNotEmpty($articleId);
+        self::assertSame('articles', $document['data']['type']);
+        self::assertSame('Article with Author', $document['data']['attributes']['title']);
+
+        // Verify the relationship was saved
+        self::assertArrayHasKey('relationships', $document['data']);
+        self::assertArrayHasKey('author', $document['data']['relationships']);
+        self::assertArrayHasKey('data', $document['data']['relationships']['author']);
+        self::assertSame('authors', $document['data']['relationships']['author']['data']['type']);
+        self::assertSame('test-author-1', $document['data']['relationships']['author']['data']['id']);
+
+        // Verify in database
+        $stored = $this->repository()->findOne('articles', $articleId, new Criteria());
+        self::assertNotNull($stored);
+    }
+
+    public function testUpdateArticleWithAuthorRelationship(): void
+    {
+        // First create an author
+        $authorPayload = [
+            'data' => [
+                'type' => 'authors',
+                'id' => 'test-author-2',
+                'attributes' => [
+                    'name' => 'Another Author',
+                ],
+            ],
+        ];
+
+        $authorResponse = ($this->createController())($this->jsonRequest('POST', '/api/authors', $authorPayload), 'authors');
+        self::assertSame(201, $authorResponse->getStatusCode());
+
+        // Update article 1 with the author relationship
+        $updatePayload = [
+            'data' => [
+                'type' => 'articles',
+                'id' => '1',
+                'attributes' => [
+                    'title' => 'Updated with Author',
+                ],
+                'relationships' => [
+                    'author' => [
+                        'data' => [
+                            'type' => 'authors',
+                            'id' => 'test-author-2',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $response = ($this->updateController())($this->jsonRequest('PATCH', '/api/articles/1', $updatePayload), 'articles', '1');
+        self::assertSame(200, $response->getStatusCode());
+
+        /** @var array{data: array{attributes: array<string, mixed>, relationships: array<string, mixed>}} $document */
+        $document = $this->decode($response);
+        self::assertSame('Updated with Author', $document['data']['attributes']['title']);
+
+        // Verify the relationship was saved
+        self::assertArrayHasKey('relationships', $document['data']);
+        self::assertArrayHasKey('author', $document['data']['relationships']);
+        self::assertArrayHasKey('data', $document['data']['relationships']['author']);
+        self::assertSame('authors', $document['data']['relationships']['author']['data']['type']);
+        self::assertSame('test-author-2', $document['data']['relationships']['author']['data']['id']);
     }
 
     /**

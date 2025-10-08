@@ -47,9 +47,9 @@ final class ComplexRelationshipsTest extends DoctrineIntegrationTestCase
 
     public function testCreateArticleWithComplexRelationships(): void
     {
+        $articleId = Uuid::v4()->toString();
         $changes = new ChangeSet(
             attributes: [
-                'id' => Uuid::v4()->toString(),
                 'title' => 'Complex Article with Relationships',
                 'content' => 'This article demonstrates complex relationship handling.',
             ],
@@ -64,7 +64,7 @@ final class ComplexRelationshipsTest extends DoctrineIntegrationTestCase
             ]
         );
 
-        $article = $this->validatingPersister->create('articles', $changes);
+        $article = $this->validatingPersister->create('articles', $changes, $articleId);
 
         $this->assertInstanceOf(Article::class, $article);
         $this->assertSame('Complex Article with Relationships', $article->getTitle());
@@ -169,9 +169,9 @@ final class ComplexRelationshipsTest extends DoctrineIntegrationTestCase
 
     public function testCreateWithAttributesAndRelationships(): void
     {
+        $articleId = Uuid::v4()->toString();
         $changes = new ChangeSet(
             attributes: [
-                'id' => Uuid::v4()->toString(),
                 'title' => 'Mixed Create Test',
                 'content' => 'Testing both attributes and relationships.',
             ],
@@ -185,7 +185,7 @@ final class ComplexRelationshipsTest extends DoctrineIntegrationTestCase
             ]
         );
 
-        $article = $this->validatingPersister->create('articles', $changes);
+        $article = $this->validatingPersister->create('articles', $changes, $articleId);
 
         $this->assertSame('Mixed Create Test', $article->getTitle());
         $this->assertSame('Testing both attributes and relationships.', $article->getContent());
@@ -277,9 +277,9 @@ final class ComplexRelationshipsTest extends DoctrineIntegrationTestCase
 
     private function createTestArticle(): Article
     {
+        $articleId = Uuid::v4()->toString();
         $changes = new ChangeSet(
             attributes: [
-                'id' => Uuid::v4()->toString(),
                 'title' => 'Test Article',
                 'content' => 'Test content for relationship testing.',
             ],
@@ -294,6 +294,6 @@ final class ComplexRelationshipsTest extends DoctrineIntegrationTestCase
             ]
         );
 
-        return $this->validatingPersister->create('articles', $changes);
+        return $this->validatingPersister->create('articles', $changes, $articleId);
     }
 }

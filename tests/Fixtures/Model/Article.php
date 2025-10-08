@@ -45,6 +45,11 @@ final class Article
         return $this->author;
     }
 
+    public function setAuthor(Author $author): void
+    {
+        $this->author = $author;
+    }
+
     /**
      * @return list<Tag>
      */
