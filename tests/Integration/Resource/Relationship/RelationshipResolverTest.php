@@ -1181,5 +1181,155 @@ class RelationshipResolverTest extends TestCase
         $this->assertNotNull($book);
         $this->assertEquals('author-14', $book->getAuthor()?->getId());
     }
+
+    /**
+     * Test batch resolution eliminates N+1 query problem for to-many relationships.
+     * This test verifies that resolving multiple tags uses a single batch query
+     * instead of N individual queries.
+     */
+    public function testBatchResolutionEliminatesNPlusOneQueryProblem(): void
+    {
+        // Setup: Create 10 tags
+        $tagIds = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $tag = new Tag("tag-$i", "Tag $i");
+            $this->em->persist($tag);
+            $tagIds[] = "tag-$i";
+        }
+        $this->em->flush();
+        $this->em->clear();
+
+        // Create a book
+        $book = new Book('book-batch-1', 'Batch Test Book');
+        $this->em->persist($book);
+        $this->em->flush();
+
+        // Enable query logging to count queries
+        $logger = new \Doctrine\DBAL\Logging\DebugStack();
+        $this->em->getConnection()->getConfiguration()->setSQLLogger($logger);
+
+        // Apply relationship with all 10 tags using VERIFY policy
+        $metadata = new ResourceMetadata(
+            type: 'books',
+            class: Book::class,
+            attributes: [],
+            relationships: [
+                'tags' => new RelationshipMetadata(
+                    name: 'tags',
+                    toMany: true,
+                    targetType: 'tags',
+                    targetClass: Tag::class,
+                    linkingPolicy: RelationshipLinkingPolicy::VERIFY,
+                    semantics: RelationshipSemantics::REPLACE
+                ),
+            ]
+        );
+
+        $relationships = [
+            'tags' => [
+                'data' => array_map(fn($id) => ['type' => 'tags', 'id' => $id], $tagIds),
+            ],
+        ];
+
+        // Reset query count
+        $logger->queries = [];
+
+        $this->resolver->applyRelationships($book, $relationships, $metadata, false);
+        $this->em->flush();
+
+        // Count SELECT queries that fetch tags (the entities we're resolving)
+        $tagSelectQueries = array_filter($logger->queries, function ($query) {
+            return stripos($query['sql'], 'SELECT') === 0 &&
+                   stripos($query['sql'], 'FROM tags') !== false;
+        });
+
+        // With batch resolution, we should have:
+        // 1. One batch query to fetch all 10 tags at once (WHERE id IN (...))
+        // Total: 1 SELECT query for tags
+        //
+        // Without batch resolution (N+1 problem), we would have:
+        // 1. Ten individual queries (one per tag with WHERE id = ?)
+        // Total: 10 SELECT queries for tags
+        //
+        // Note: There may be additional queries for the inverse side of the relationship
+        // (books for each tag), but those are separate from the N+1 problem we're fixing.
+        $this->assertLessThanOrEqual(1, count($tagSelectQueries),
+            'Batch resolution should use exactly 1 SELECT query for tags, not N individual queries. Actual tag queries: ' .
+            json_encode(array_column($tagSelectQueries, 'sql'))
+        );
+
+        // Verify all tags were added
+        $this->em->clear();
+        $book = $this->em->find(Book::class, 'book-batch-1');
+        $this->assertNotNull($book);
+        $this->assertCount(10, $book->getTags());
+    }
+
+    /**
+     * Test batch resolution with missing entities throws precise error pointers.
+     */
+    public function testBatchResolutionWithMissingEntitiesThrowsPreciseErrors(): void
+    {
+        // Setup: Create only 2 tags
+        $tag1 = new Tag('tag-exists-1', 'Existing Tag 1');
+        $tag2 = new Tag('tag-exists-2', 'Existing Tag 2');
+        $this->em->persist($tag1);
+        $this->em->persist($tag2);
+        $this->em->flush();
+        $this->em->clear();
+
+        // Create a book
+        $book = new Book('book-missing-1', 'Missing Tags Test');
+        $this->em->persist($book);
+        $this->em->flush();
+
+        $metadata = new ResourceMetadata(
+            type: 'books',
+            class: Book::class,
+            attributes: [],
+            relationships: [
+                'tags' => new RelationshipMetadata(
+                    name: 'tags',
+                    toMany: true,
+                    targetType: 'tags',
+                    targetClass: Tag::class,
+                    linkingPolicy: RelationshipLinkingPolicy::VERIFY,
+                    semantics: RelationshipSemantics::REPLACE
+                ),
+            ]
+        );
+
+        // Try to add 4 tags, but only 2 exist
+        $relationships = [
+            'tags' => [
+                'data' => [
+                    ['type' => 'tags', 'id' => 'tag-exists-1'],
+                    ['type' => 'tags', 'id' => 'tag-missing-1'], // doesn't exist
+                    ['type' => 'tags', 'id' => 'tag-exists-2'],
+                    ['type' => 'tags', 'id' => 'tag-missing-2'], // doesn't exist
+                ],
+            ],
+        ];
+
+        try {
+            $this->resolver->applyRelationships($book, $relationships, $metadata, false);
+            $this->fail('Expected ValidationException for missing tags');
+        } catch (ValidationException $e) {
+            $errors = $e->getErrors();
+
+            // Should have 2 errors (one for each missing tag)
+            $this->assertCount(2, $errors);
+
+            // Check first error
+            $this->assertEquals('422', $errors[0]->status);
+            $this->assertStringContainsString('tag-missing-1', $errors[0]->detail ?? '');
+            $this->assertEquals('/data/relationships/tags/data/1/id', $errors[0]->source?->pointer);
+
+            // Check second error
+            $this->assertEquals('422', $errors[1]->status);
+            $this->assertStringContainsString('tag-missing-2', $errors[1]->detail ?? '');
+            $this->assertEquals('/data/relationships/tags/data/3/id', $errors[1]->source?->pointer);
+        }
+    }
 }
 

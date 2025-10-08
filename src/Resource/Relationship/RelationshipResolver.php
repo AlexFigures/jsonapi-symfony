@@ -240,6 +240,84 @@ class RelationshipResolver
         return $obj;
     }
 
+    /**
+     * Resolves multiple target entities in a single batch query.
+     * This eliminates the N+1 query problem for to-many relationships.
+     *
+     * @param array<int, array{type: string, id: string}> $resourceIdentifiers Array of resource identifiers
+     * @param RelationshipMetadata $meta Relationship metadata
+     * @return array<string, object> Map of ID => entity
+     * @throws ValidationException If any entities are not found (VERIFY policy only)
+     */
+    private function resolveTargetsBatch(array $resourceIdentifiers, RelationshipMetadata $meta): array
+    {
+        if (empty($resourceIdentifiers)) {
+            return [];
+        }
+
+        // Group by type (in case of polymorphic relationships)
+        $byType = [];
+        foreach ($resourceIdentifiers as $idx => $ri) {
+            $byType[$ri['type']][$idx] = $ri['id'];
+        }
+
+        $resolved = [];
+        $errors = [];
+
+        foreach ($byType as $type => $idsWithIndex) {
+            $reg = $this->registry->getByType($type);
+            $class = $reg->class;
+            $ids = array_values($idsWithIndex);
+
+            if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
+                // REFERENCE policy: create proxies for all IDs (no database query)
+                foreach ($idsWithIndex as $idx => $id) {
+                    $resolved[$id] = $this->em->getReference($class, $id);
+                }
+            } else {
+                // VERIFY policy: batch fetch all entities with single query
+                $qb = $this->em->createQueryBuilder();
+                $qb->select('e')
+                    ->from($class, 'e')
+                    ->where($qb->expr()->in('e.id', ':ids'))
+                    ->setParameter('ids', $ids);
+
+                $entities = $qb->getQuery()->getResult();
+
+                // Index by ID
+                $foundById = [];
+                $uow = $this->em->getUnitOfWork();
+                foreach ($entities as $entity) {
+                    $id = (string)$uow->getSingleIdentifierValue($entity);
+                    $foundById[$id] = $entity;
+                    $resolved[$id] = $entity;
+                }
+
+                // Check for missing entities and create precise error pointers
+                foreach ($idsWithIndex as $idx => $id) {
+                    if (!isset($foundById[$id])) {
+                        $errors[] = new ErrorObject(
+                            id: null,
+                            aboutLink: null,
+                            status: '422',
+                            code: 'validation_error',
+                            title: 'Validation Error',
+                            detail: sprintf('Related resource of type "%s" with id "%s" was not found.', $type, $id),
+                            source: new ErrorSource(pointer: $this->pointerRelationshipsIndex($meta->name, $idx).'/id'),
+                            meta: ['type' => $type, 'id' => $id]
+                        );
+                    }
+                }
+            }
+        }
+
+        if ($errors) {
+            throw new ValidationException($errors);
+        }
+
+        return $resolved;
+    }
+
     private function syncToOne(
         object $owner,
         ResourceMetadata $ownerMeta,
@@ -304,7 +382,6 @@ class RelationshipResolver
         array $desired
     ): void {
         $field = $relMeta->propertyPath ?? $relMeta->name;
-        $cm = $this->em->getClassMetadata($ownerMeta->class);
 
         // Ensure collection exists
         $collection = $this->getOrInitCollection($owner, $field);
@@ -316,32 +393,9 @@ class RelationshipResolver
             $currentById[(string)$uow->getSingleIdentifierValue($e)] = $e;
         }
 
-        // Build desired set (validate and resolve according to policy)
-        $desiredById = [];
-        $errors = [];
-        foreach ($desired as $idx => $ri) {
-            try {
-                $target = $this->resolveTarget($ri['type'], $ri['id'], $relMeta);
-                $desiredById[$ri['id']] = $target;
-            } catch (ValidationException $ve) {
-                // fix pointers to exact element
-                foreach ($ve->getErrors() as $err) {
-                    $errors[] = new ErrorObject(
-                        id: $err->id,
-                        aboutLink: $err->aboutLink,
-                        status: $err->status,
-                        code: $err->code,
-                        title: $err->title,
-                        detail: $err->detail,
-                        source: new ErrorSource(pointer: $this->pointerRelationshipsIndex($relMeta->name, $idx).'/id'),
-                        meta: $err->meta
-                    );
-                }
-            }
-        }
-        if ($errors) {
-            throw new ValidationException($errors);
-        }
+        // Build desired set using batch resolution (eliminates N+1 query problem)
+        // This resolves all entities in a single query instead of N individual queries
+        $desiredById = $this->resolveTargetsBatch($desired, $relMeta);
 
         // Determine adds/removes by semantics
         $adds = [];

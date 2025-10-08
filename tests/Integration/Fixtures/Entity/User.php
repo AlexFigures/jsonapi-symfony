@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use JsonApi\Symfony\Resource\Attribute\Attribute;
 use JsonApi\Symfony\Resource\Attribute\Id;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * Test Entity for demonstrating serialization groups.
@@ -23,47 +23,47 @@ class User
     #[ORM\Column(type: 'string', length: 36)]
     #[Id]
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['user:read'])]
     private string $id;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Attribute]
-    #[SerializationGroups(['read', 'write'])]
+    #[Groups(['user:read', 'user:write'])]
     private string $username;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Attribute]
-    #[SerializationGroups(['read', 'write'])]
+    #[Groups(['user:read', 'user:write'])]
     private string $email;
 
     // Password: write-only, never returned in response
     #[ORM\Column(type: 'string', length: 255)]
     #[Attribute]
-    #[SerializationGroups(['write'])]
+    #[Groups(['user:write'])]
     private string $password;
 
     // Slug: can only be set during creation, then read-only
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     #[Attribute]
-    #[SerializationGroups(['read', 'create'])]
+    #[Groups(['user:read', 'user:create'])]
     private string $slug;
 
     // CreatedAt: read-only, set automatically
     #[ORM\Column(type: 'datetime_immutable')]
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['user:read'])]
     private ?\DateTimeImmutable $createdAt = null;
 
     // UpdatedAt: read-only, updated automatically
     #[ORM\Column(type: 'datetime_immutable')]
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['user:read'])]
     private ?\DateTimeImmutable $updatedAt = null;
 
     // Role: can only be changed during update (not during creation)
     #[ORM\Column(type: 'string', length: 50)]
     #[Attribute]
-    #[SerializationGroups(['read', 'update'])]
+    #[Groups(['user:read', 'user:update'])]
     private string $role = 'user';
 
     public function __construct()

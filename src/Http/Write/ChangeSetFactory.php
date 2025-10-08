@@ -16,12 +16,21 @@ final class ChangeSetFactory
     }
 
     /**
-     * @param array<string, mixed> $attributes
+     * Creates a ChangeSet from JSON:API input data (attributes and relationships).
+     *
+     * This is the recommended method for creating ChangeSets as it populates both
+     * attributes and relationships, providing a unified data flow.
+     *
+     * @param string $type Resource type
+     * @param array<string, mixed> $attributes Attribute name => value map
+     * @param array<string, array{data: mixed}> $relationships Relationship name => JSON:API relationship data
+     * @return ChangeSet
+     * @throws BadRequestException If unknown attributes are provided
      */
-    public function fromAttributes(string $type, array $attributes): ChangeSet
+    public function fromInput(string $type, array $attributes, array $relationships = []): ChangeSet
     {
         $metadata = $this->registry->getByType($type);
-        $mapped = [];
+        $mappedAttributes = [];
 
         foreach ($attributes as $name => $value) {
             if (!isset($metadata->attributes[$name])) {
@@ -31,9 +40,30 @@ final class ChangeSetFactory
             /** @var AttributeMetadata $attribute */
             $attribute = $metadata->attributes[$name];
             $path = $attribute->propertyPath ?? $name;
-            $mapped[$path] = $value;
+            $mappedAttributes[$path] = $value;
         }
 
-        return new ChangeSet($mapped);
+        return new ChangeSet($mappedAttributes, $relationships);
+    }
+
+    /**
+     * Creates a ChangeSet from attributes only (legacy method).
+     *
+     * @deprecated Use fromInput() instead to populate both attributes and relationships.
+     *             This method will be removed in version 2.0.
+     *
+     * @param string $type Resource type
+     * @param array<string, mixed> $attributes Attribute name => value map
+     * @return ChangeSet
+     * @throws BadRequestException If unknown attributes are provided
+     */
+    public function fromAttributes(string $type, array $attributes): ChangeSet
+    {
+        trigger_error(
+            'ChangeSetFactory::fromAttributes() is deprecated. Use fromInput() instead to populate both attributes and relationships.',
+            E_USER_DEPRECATED
+        );
+
+        return $this->fromInput($type, $attributes, []);
     }
 }

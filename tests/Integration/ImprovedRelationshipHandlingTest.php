@@ -147,9 +147,9 @@ final class ImprovedRelationshipHandlingTest extends DoctrineIntegrationTestCase
      */
     public function testDuplicateDetection(): void
     {
+        $articleId = Uuid::v4()->toString();
         $changes = new ChangeSet(
             attributes: [
-                'id' => Uuid::v4()->toString(),
                 'title' => 'Test Article',
                 'content' => 'Test content.',
             ],
@@ -165,9 +165,9 @@ final class ImprovedRelationshipHandlingTest extends DoctrineIntegrationTestCase
 
         $this->expectException(ValidationException::class);
         $this->expectExceptionMessage('Duplicate relationship');
-        
+
         try {
-            $this->validatingPersister->create('articles', $changes);
+            $this->validatingPersister->create('articles', $changes, $articleId);
         } catch (ValidationException $e) {
             // Check that error has precise pointer to the duplicate
             $errors = $e->getErrors();

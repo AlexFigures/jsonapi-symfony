@@ -119,13 +119,12 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         // Validate before persist with create groups
         $this->validateWithGroups($entity, $type, $metadata, true);
 
-        // Persist entity in transaction with database error handling
+        // Persist entity with database error handling
+        // Note: Transaction is managed by the caller (CreateResourceController)
         try {
-            return $this->em->wrapInTransaction(function () use ($entity) {
-                $this->em->persist($entity);
-                $this->em->flush();
-                return $entity;
-            });
+            $this->em->persist($entity);
+            $this->em->flush();
+            return $entity;
         } catch (\Throwable $e) {
             throw $this->databaseErrorMapper->mapDatabaseError($type, $e);
         }
@@ -148,12 +147,11 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         // Validate before flush with update groups
         $this->validateWithGroups($entity, $type, $metadata, false);
 
-        // Update entity in transaction with database error handling
+        // Update entity with database error handling
+        // Note: Transaction is managed by the caller (UpdateResourceController)
         try {
-            return $this->em->wrapInTransaction(function () use ($entity) {
-                $this->em->flush();
-                return $entity;
-            });
+            $this->em->flush();
+            return $entity;
         } catch (\Throwable $e) {
             throw $this->databaseErrorMapper->mapDatabaseError($type, $e);
         }
@@ -170,12 +168,11 @@ final class ValidatingDoctrinePersister implements ResourcePersister
             );
         }
 
-        // Delete entity in transaction with database error handling
+        // Delete entity with database error handling
+        // Note: Transaction is managed by the caller (DeleteResourceController)
         try {
-            $this->em->wrapInTransaction(function () use ($entity) {
-                $this->em->remove($entity);
-                $this->em->flush();
-            });
+            $this->em->remove($entity);
+            $this->em->flush();
         } catch (\Throwable $e) {
             throw $this->databaseErrorMapper->mapDatabaseError($type, $e);
         }
