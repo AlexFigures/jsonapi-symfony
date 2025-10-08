@@ -337,13 +337,41 @@ final class ResourceRegistry implements ResourceRegistryInterface
         }
 
         if ($type instanceof ReflectionNamedType) {
-            return $type->isBuiltin() ? null : $type->getName();
+            if ($type->isBuiltin()) {
+                return null;
+            }
+
+            $className = $type->getName();
+
+            // Resolve "self", "static", and "parent" to actual class names
+            if ($className === 'self' || $className === 'static') {
+                return $member->getDeclaringClass()->getName();
+            }
+
+            if ($className === 'parent') {
+                $parentClass = $member->getDeclaringClass()->getParentClass();
+                return $parentClass ? $parentClass->getName() : null;
+            }
+
+            return $className;
         }
 
         if ($type instanceof ReflectionUnionType) {
             foreach ($type->getTypes() as $inner) {
                 if ($inner instanceof ReflectionNamedType && !$inner->isBuiltin()) {
-                    return $inner->getName();
+                    $className = $inner->getName();
+
+                    // Resolve "self", "static", and "parent" to actual class names
+                    if ($className === 'self' || $className === 'static') {
+                        return $member->getDeclaringClass()->getName();
+                    }
+
+                    if ($className === 'parent') {
+                        $parentClass = $member->getDeclaringClass()->getParentClass();
+                        return $parentClass ? $parentClass->getName() : null;
+                    }
+
+                    return $className;
                 }
             }
         }
@@ -351,7 +379,19 @@ final class ResourceRegistry implements ResourceRegistryInterface
         if ($type instanceof ReflectionIntersectionType) {
             foreach ($type->getTypes() as $inner) {
                 if ($inner instanceof ReflectionNamedType && !$inner->isBuiltin()) {
-                    return $inner->getName();
+                    $className = $inner->getName();
+
+                    // Resolve "self", "static", and "parent" to actual class names
+                    if ($className === 'self' || $className === 'static') {
+                        return $member->getDeclaringClass()->getName();
+                    }
+
+                    if ($className === 'parent') {
+                        $parentClass = $member->getDeclaringClass()->getParentClass();
+                        return $parentClass ? $parentClass->getName() : null;
+                    }
+
+                    return $className;
                 }
             }
         }

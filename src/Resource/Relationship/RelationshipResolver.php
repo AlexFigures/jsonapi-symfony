@@ -198,11 +198,22 @@ class RelationshipResolver
         // Skip this validation for to-many relationships where targetClass is Collection
         if ($meta->targetClass !== null && !is_a($meta->targetClass, \Doctrine\Common\Collections\Collection::class, true)) {
             $reg = $this->registry->getByType($type);
-            if (!\is_a($reg->class, $meta->targetClass, true)) {
+
+            // Resolve "self", "static", and "parent" keywords to actual class names
+            $expectedClass = $meta->targetClass;
+            if ($expectedClass === 'self' || $expectedClass === 'static') {
+                // For self-referential relationships, the target class should match the source entity class
+                // We can infer this from the targetType if it matches the current resource type
+                if ($meta->targetType !== null && $this->registry->hasType($meta->targetType)) {
+                    $expectedClass = $this->registry->getByType($meta->targetType)->class;
+                }
+            }
+
+            if (!\is_a($reg->class, $expectedClass, true)) {
                 throw new ValidationException([
                     $this->createValidationError(
                         $index === null ? $ptrBase.'/type' : $this->pointerRelationshipsIndex($relName, $index).'/type',
-                        sprintf('Type "%s" is not compatible with expected class "%s".', $type, $meta->targetClass),
+                        sprintf('Type "%s" is not compatible with expected class "%s".', $type, $expectedClass),
                         ['resolvedClass' => $reg->class]
                     )
                 ]);
