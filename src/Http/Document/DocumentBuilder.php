@@ -196,11 +196,16 @@ final class DocumentBuilder
     {
         $attributes = [];
         $restrict = $fields !== null;
+        $normalizationGroups = $metadata->getNormalizationGroups();
 
         /** @var AttributeMetadata $attribute */
         foreach ($metadata->attributes as $name => $attribute) {
-            if (!$attribute->isReadable()) {
-                continue;
+            // Check if attribute is in normalization groups (if groups are defined)
+            if (!empty($normalizationGroups)) {
+                $propertyPath = $attribute->propertyPath ?? $name;
+                if (!$this->isAttributeInGroups($model, $propertyPath, $normalizationGroups)) {
+                    continue;
+                }
             }
 
             if ($restrict && !in_array($name, $fields, true)) {
@@ -212,6 +217,40 @@ final class DocumentBuilder
         }
 
         return $attributes;
+    }
+
+    /**
+     * Check if an attribute is in the specified serialization groups.
+     *
+     * @param list<string> $groups
+     */
+    private function isAttributeInGroups(object $model, string $property, array $groups): bool
+    {
+        if (empty($groups)) {
+            return true; // If no groups defined, show all attributes
+        }
+
+        try {
+            $reflection = new \ReflectionClass($model);
+            if (!$reflection->hasProperty($property)) {
+                return true; // If property doesn't exist, show it (might be a getter)
+            }
+
+            $reflectionProperty = $reflection->getProperty($property);
+            $groupsAttributes = $reflectionProperty->getAttributes(\Symfony\Component\Serializer\Annotation\Groups::class);
+
+            if (empty($groupsAttributes)) {
+                return true; // If no groups defined on property, show it
+            }
+
+            /** @var \Symfony\Component\Serializer\Annotation\Groups $propertyGroups */
+            $propertyGroups = $groupsAttributes[0]->newInstance();
+
+            // Check if there's an intersection between property groups and requested groups
+            return !empty(array_intersect($groups, $propertyGroups->getGroups()));
+        } catch (\ReflectionException $e) {
+            return true; // On error, show the attribute
+        }
     }
 
     /**

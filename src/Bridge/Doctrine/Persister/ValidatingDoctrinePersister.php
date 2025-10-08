@@ -214,16 +214,15 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         $attributesOnlyChanges = new ChangeSet(attributes: $changes->attributes);
         $data = $this->instantiator->prepareDataForDenormalization($attributesOnlyChanges, $metadata);
 
-        // Use serialization groups from metadata or defaults
-        $operationGroups = $metadata->getOperationGroups();
-        $serializationGroups = $operationGroups->getSerializationGroups($isCreate);
+        // Get denormalization groups from metadata
+        $groups = $metadata->getDenormalizationGroups();
 
         $context = [
             AbstractNormalizer::OBJECT_TO_POPULATE => $entity,
             AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false, // Strict mode: reject unknown attributes
             AbstractNormalizer::COLLECT_DENORMALIZATION_ERRORS => true,
             'deep_object_to_populate' => true, // Enable deep updates for embeddables and nested objects
-            AbstractNormalizer::GROUPS => $serializationGroups,
+            AbstractNormalizer::GROUPS => $groups,
             'is_create' => $isCreate, // Pass operation type for relationship resolver
         ];
 

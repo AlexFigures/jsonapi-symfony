@@ -103,14 +103,16 @@ final class SerializerEntityInstantiator
             ];
         }
 
-        // Filter attributes by serialization groups
-        $filteredChanges = $this->filterBySerializationGroups($changes, $metadata, $isCreate);
-
         // Prepare data for denormalisation
-        $data = $this->prepareDataForDenormalization($filteredChanges, $metadata);
+        // No need to filter by groups - Symfony Serializer will do it automatically
+        $data = $this->prepareDataForDenormalization($changes, $metadata);
+
+        // Get denormalization groups from metadata
+        $groups = $metadata->getDenormalizationGroups();
 
         // Use the Symfony Serializer to build the object
         // It automatically calls the constructor with the correct arguments
+        // and filters attributes by groups
         $entity = $this->serializer->denormalize(
             $data,
             $entityClass,
@@ -120,17 +122,17 @@ final class SerializerEntityInstantiator
                 AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
                 // Collect all denormalization errors for better error reporting
                 AbstractNormalizer::COLLECT_DENORMALIZATION_ERRORS => true,
-                // Ignore properties that cannot be set
-                AbstractNormalizer::IGNORED_ATTRIBUTES => [],
+                // Serialization groups for filtering
+                AbstractNormalizer::GROUPS => $groups,
             ]
         );
 
         // Determine which attributes were consumed by the constructor
-        $usedAttributes = $this->getConstructorParameters($constructor, $filteredChanges, $metadata);
+        $usedAttributes = $this->getConstructorParameters($constructor, $changes, $metadata);
 
         // Build a new ChangeSet without constructor-consumed attributes
         $remainingAttributes = [];
-        foreach ($filteredChanges->attributes as $path => $value) {
+        foreach ($changes->attributes as $path => $value) {
             if (!in_array($path, $usedAttributes, true)) {
                 $remainingAttributes[$path] = $value;
             }
@@ -140,7 +142,7 @@ final class SerializerEntityInstantiator
             'entity' => $entity,
             'remainingChanges' => new ChangeSet(
                 attributes: $remainingAttributes,
-                relationships: $filteredChanges->relationships
+                relationships: $changes->relationships
             ),
         ];
     }
@@ -181,45 +183,6 @@ final class SerializerEntityInstantiator
     public function denormalizer(): DenormalizerInterface
     {
         return $this->serializer;
-    }
-
-    /**
-     * Filters attributes according to SerializationGroups.
-     *
-     * Considers the 'write', 'create', and 'update' groups:
-     * - 'write': always writable (POST and PATCH)
-     * - 'create': writable during creation only (POST)
-     * - 'update': writable during updates only (PATCH)
-     */
-    private function filterBySerializationGroups(
-        ChangeSet $changes,
-        ResourceMetadata $metadata,
-        bool $isCreate
-    ): ChangeSet {
-        $filteredAttributes = [];
-
-        foreach ($changes->attributes as $path => $value) {
-            // Look up attribute metadata by property path (same as GenericDoctrinePersister)
-            $attributeMetadata = $this->findAttributeMetadata($metadata, $path);
-
-            // If metadata is missing, keep the attribute (permissive by default)
-            if ($attributeMetadata === null) {
-                $filteredAttributes[$path] = $value;
-                continue;
-            }
-
-            // Check whether the attribute is writable
-            if ($attributeMetadata->isWritable($isCreate)) {
-                $filteredAttributes[$path] = $value;
-            }
-            // Non-writable attributes are ignored
-        }
-
-        // Preserve relationships from original ChangeSet
-        return new ChangeSet(
-            attributes: $filteredAttributes,
-            relationships: $changes->relationships
-        );
     }
 
     /**

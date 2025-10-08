@@ -118,28 +118,12 @@ class GenericDoctrinePersister implements ResourcePersister
         bool $isCreate
     ): void {
         foreach ($changes->attributes as $path => $value) {
-            // Check if this attribute can be written
-            $attributeMetadata = $this->findAttributeMetadata($metadata, $path);
-
-            if ($attributeMetadata !== null && !$attributeMetadata->isWritable($isCreate)) {
-                // Skip attributes that cannot be written
-                continue;
-            }
+            // Note: Attribute writability is now controlled by Symfony Serializer's groups
+            // during denormalization. This method receives already filtered changes.
+            // No need to check isWritable() here anymore.
 
             $this->accessor->setValue($entity, $path, $value);
         }
     }
 
-    private function findAttributeMetadata(
-        \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
-        string $path
-    ): ?\JsonApi\Symfony\Resource\Metadata\AttributeMetadata {
-        foreach ($metadata->attributes as $attribute) {
-            if ($attribute->propertyPath === $path || $attribute->name === $path) {
-                return $attribute;
-            }
-        }
-
-        return null;
-    }
 }

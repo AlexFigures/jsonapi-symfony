@@ -12,13 +12,17 @@ use JsonApi\Symfony\Resource\Attribute\Attribute;
 use JsonApi\Symfony\Resource\Attribute\Id;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
 use JsonApi\Symfony\Resource\Attribute\SortableFields;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'articles')]
 #[ORM\HasLifecycleCallbacks]
-#[JsonApiResource(type: 'articles')]
+#[JsonApiResource(
+    type: 'articles',
+    normalizationContext: ['groups' => ['article:read']],
+    denormalizationContext: ['groups' => ['article:write']],
+)]
 #[SortableFields(['title', 'createdAt', 'updatedAt', 'viewCount'])]
 class Article
 {
@@ -26,24 +30,27 @@ class Article
     #[ORM\Column(type: 'string', length: 36)]
     #[Id]
     #[Attribute]
+    #[Groups(['article:read'])]
     private string $id;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Attribute]
+    #[Groups(['article:read', 'article:write'])]
     private string $title;
 
     #[ORM\Column(type: 'text')]
     #[Attribute]
+    #[Groups(['article:read', 'article:write'])]
     private string $content;
 
     #[ORM\Column(type: 'datetime_immutable')]
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['article:read'])]
     private ?DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['article:read'])]
     private ?DateTimeImmutable $updatedAt = null;
 
     #[ORM\ManyToOne(targetEntity: Author::class, inversedBy: 'articles')]

@@ -168,6 +168,9 @@ final class ResourceRegistry implements ResourceRegistryInterface
             $resource->description,
             $sortableFields,
             $filterableFields,
+            null, // operationGroups - deprecated
+            $resource->normalizationContext,
+            $resource->denormalizationContext,
         );
     }
 
@@ -192,19 +195,14 @@ final class ResourceRegistry implements ResourceRegistryInterface
 
             [$types, $nullable] = $this->guessAttributeTypes($member);
 
-            // Extract SerializationGroups attribute if present
-            $serializationGroups = null;
-            $groupsAttributes = $member->getAttributes(\JsonApi\Symfony\Resource\Attribute\SerializationGroups::class);
-            if (count($groupsAttributes) > 0) {
-                $serializationGroups = $groupsAttributes[0]->newInstance();
-            }
+            // Serialization groups are now controlled via Symfony's #[Groups] attribute
+            // on the entity properties, not through SerializationGroups metadata
 
             $attributes[$name] = new AttributeMetadata(
                 $name,
                 $propertyPath,
                 $types,
                 $nullable,
-                $serializationGroups,
             );
         }
 

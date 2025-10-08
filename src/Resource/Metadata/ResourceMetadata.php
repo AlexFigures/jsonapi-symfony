@@ -17,6 +17,8 @@ final class ResourceMetadata
      * @param RelationshipMap $relationships
      * @param class-string    $class
      * @param list<string>    $sortableFields
+     * @param array<string, mixed> $normalizationContext
+     * @param array<string, mixed> $denormalizationContext
      */
     public function __construct(
         public string $type,
@@ -30,14 +32,46 @@ final class ResourceMetadata
         public array $sortableFields = [],
         public ?FilterableFields $filterableFields = null,
         public ?OperationGroups $operationGroups = null,
+        public array $normalizationContext = [],
+        public array $denormalizationContext = [],
     ) {
     }
 
     /**
      * Returns operation groups for this resource.
+     *
+     * @deprecated Use normalizationContext and denormalizationContext instead
      */
     public function getOperationGroups(): OperationGroups
     {
         return $this->operationGroups ?? OperationGroups::default();
+    }
+
+    /**
+     * Get serialization groups for reading.
+     *
+     * @return list<string>
+     */
+    public function getNormalizationGroups(): array
+    {
+        return $this->normalizationContext['groups'] ?? [];
+    }
+
+    /**
+     * Get serialization groups for writing.
+     * Same groups are used for both create and update operations.
+     *
+     * @return list<string>
+     */
+    public function getDenormalizationGroups(): array
+    {
+        $groups = $this->denormalizationContext['groups'] ?? [];
+
+        // Always add Default group for Symfony validation compatibility
+        if (!in_array('Default', $groups, true)) {
+            $groups[] = 'Default';
+        }
+
+        return $groups;
     }
 }

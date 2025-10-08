@@ -8,11 +8,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
 use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
 use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 
 final class SerializerEntityInstantiatorTest extends TestCase
@@ -60,6 +60,7 @@ final class SerializerEntityInstantiatorTest extends TestCase
                 'email' => new AttributeMetadata('email', 'email'),
             ],
             relationships: [],
+            denormalizationContext: ['groups' => ['entity:write']],
         );
 
         $changes = new ChangeSet([
@@ -77,106 +78,6 @@ final class SerializerEntityInstantiatorTest extends TestCase
         $this->assertEquals('john@example.com', $entity->email);
         $this->assertInstanceOf(Uuid::class, $entity->uuid);
     }
-
-    public function testSerializationGroupsCreate(): void
-    {
-        $metadata = new ResourceMetadata(
-            type: 'entities-with-groups',
-            class: EntityWithSerializationGroups::class,
-            attributes: [
-                'name' => new AttributeMetadata(
-                    'name',
-                    'name',
-                    serializationGroups: new SerializationGroups(['read', 'write'])
-                ),
-                'slug' => new AttributeMetadata(
-                    'slug',
-                    'slug',
-                    serializationGroups: new SerializationGroups(['read', 'create'])
-                ),
-                'updatedAt' => new AttributeMetadata(
-                    'updatedAt',
-                    'updatedAt',
-                    serializationGroups: new SerializationGroups(['read', 'update'])
-                ),
-            ],
-            relationships: [],
-        );
-
-        $changes = new ChangeSet([
-            'name' => 'Test Entity',
-            'slug' => 'test-entity',
-            'updatedAt' => '2025-01-01',
-        ]);
-
-        // During creation (isCreate = true)
-        $result = $this->instantiator->instantiate(
-            EntityWithSerializationGroups::class,
-            $metadata,
-            $changes,
-            isCreate: true
-        );
-
-        /** @var EntityWithSerializationGroups $entity */
-        $entity = $result['entity'];
-
-        // name and slug should be set (write and create)
-        $this->assertEquals('Test Entity', $entity->name);
-        $this->assertEquals('test-entity', $entity->slug);
-        
-        // updatedAt should NOT be set (only update, not create)
-        $this->assertNull($entity->updatedAt);
-    }
-
-    public function testSerializationGroupsUpdate(): void
-    {
-        $metadata = new ResourceMetadata(
-            type: 'entities-with-groups',
-            class: EntityWithSerializationGroups::class,
-            attributes: [
-                'name' => new AttributeMetadata(
-                    'name',
-                    'name',
-                    serializationGroups: new SerializationGroups(['read', 'write'])
-                ),
-                'slug' => new AttributeMetadata(
-                    'slug',
-                    'slug',
-                    serializationGroups: new SerializationGroups(['read', 'create'])
-                ),
-                'updatedAt' => new AttributeMetadata(
-                    'updatedAt',
-                    'updatedAt',
-                    serializationGroups: new SerializationGroups(['read', 'update'])
-                ),
-            ],
-            relationships: [],
-        );
-
-        $changes = new ChangeSet([
-            'name' => 'Updated Entity',
-            'slug' => 'should-not-change',
-            'updatedAt' => '2025-01-02',
-        ]);
-
-        // During update (isCreate = false)
-        $result = $this->instantiator->instantiate(
-            EntityWithSerializationGroups::class,
-            $metadata,
-            $changes,
-            isCreate: false
-        );
-
-        /** @var EntityWithSerializationGroups $entity */
-        $entity = $result['entity'];
-
-        // name and updatedAt should be set (write and update)
-        $this->assertEquals('Updated Entity', $entity->name);
-        $this->assertEquals('2025-01-02', $entity->updatedAt);
-        
-        // slug should NOT be set (only create, not update)
-        $this->assertNull($entity->slug);
-    }
 }
 
 // Test fixtures
@@ -189,7 +90,11 @@ class SimpleEntity
 class EntityWithConstructor
 {
     public Uuid $uuid;
+
+    #[Groups(['entity:write'])]
     public string $name;
+
+    #[Groups(['entity:write'])]
     public string $email;
 
     public function __construct(string $name, string $email)
@@ -197,22 +102,6 @@ class EntityWithConstructor
         $this->uuid = Uuid::v7();
         $this->name = $name;
         $this->email = $email;
-    }
-}
-
-class EntityWithSerializationGroups
-{
-    public Uuid $uuid;
-    public ?string $name = null;
-    public ?string $slug = null;
-    public ?string $updatedAt = null;
-
-    public function __construct(?string $name = null, ?string $slug = null, ?string $updatedAt = null)
-    {
-        $this->uuid = Uuid::v7();
-        $this->name = $name;
-        $this->slug = $slug;
-        $this->updatedAt = $updatedAt;
     }
 }
 

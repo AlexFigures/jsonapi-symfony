@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Resource\Metadata;
 
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
-
+/**
+ * Metadata for a JSON:API resource attribute.
+ *
+ * Serialization groups are now controlled via Symfony's #[Groups] attribute
+ * on the entity properties, not through this metadata.
+ */
 final class AttributeMetadata
 {
     public function __construct(
@@ -16,37 +20,6 @@ final class AttributeMetadata
          */
         public array $types = [],
         public bool $nullable = true,
-        public ?SerializationGroups $serializationGroups = null,
     ) {
-    }
-
-    /**
-     * Checks if the attribute is available for reading.
-     *
-     * By default (if SerializationGroups is not specified) the attribute is available for reading.
-     */
-    public function isReadable(): bool
-    {
-        if ($this->serializationGroups !== null) {
-            return $this->serializationGroups->canRead();
-        }
-
-        // Default behavior: attribute is available for reading
-        return true;
-    }
-
-    /**
-     * Checks if the attribute is available for writing.
-     *
-     * By default (if SerializationGroups is not specified) the attribute is available for writing.
-     */
-    public function isWritable(bool $isCreate = false): bool
-    {
-        if ($this->serializationGroups !== null) {
-            return $this->serializationGroups->canWrite($isCreate);
-        }
-
-        // Default behavior: attribute is available for writing
-        return true;
     }
 }
