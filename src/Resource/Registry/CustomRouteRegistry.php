@@ -19,11 +19,25 @@ final class CustomRouteRegistry implements CustomRouteRegistryInterface
     private array $routes = [];
 
     /**
-     * @param iterable<CustomRouteMetadata> $routes
+     * @param iterable<CustomRouteMetadata|array<string, mixed>> $routes
      */
     public function __construct(iterable $routes = [])
     {
         foreach ($routes as $route) {
+            if (is_array($route)) {
+                // Reconstruct CustomRouteMetadata from serialized array
+                $route = new CustomRouteMetadata(
+                    name: $route['name'],
+                    path: $route['path'],
+                    methods: $route['methods'],
+                    controller: $route['controller'],
+                    resourceType: $route['resourceType'] ?? null,
+                    defaults: $route['defaults'] ?? [],
+                    requirements: $route['requirements'] ?? [],
+                    description: $route['description'] ?? null,
+                    priority: $route['priority'] ?? 0,
+                );
+            }
             $this->addRoute($route);
         }
     }

@@ -6,7 +6,6 @@ namespace JsonApi\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
 
 use JsonApi\Symfony\Resource\Attribute\JsonApiCustomRoute;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata;
 use LogicException;
 use ReflectionClass;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
@@ -146,7 +145,7 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
 
     /**
      * @param list<string> $paths
-     * @return array<CustomRouteMetadata>
+     * @return array<array<string, mixed>> Serializable array of custom route data
      */
     private function discoverCustomRoutes(array $paths, ContainerBuilder $container): array
     {
@@ -218,17 +217,19 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
                             }
                         }
 
-                        $customRoutes[] = new CustomRouteMetadata(
-                            name: $customRoute->name,
-                            path: $customRoute->path,
-                            methods: $customRoute->methods,
-                            controller: $controller,
-                            resourceType: $resourceType,
-                            defaults: $customRoute->defaults,
-                            requirements: $customRoute->requirements,
-                            description: $customRoute->description,
-                            priority: $customRoute->priority,
-                        );
+                        // Store as serializable array instead of CustomRouteMetadata object
+                        // This allows the container to be dumped to XML/cache
+                        $customRoutes[] = [
+                            'name' => $customRoute->name,
+                            'path' => $customRoute->path,
+                            'methods' => $customRoute->methods,
+                            'controller' => $controller,
+                            'resourceType' => $resourceType,
+                            'defaults' => $customRoute->defaults,
+                            'requirements' => $customRoute->requirements,
+                            'description' => $customRoute->description,
+                            'priority' => $customRoute->priority,
+                        ];
                     }
                 } catch (\ReflectionException) {
                     // Skip classes that can't be reflected

@@ -63,8 +63,9 @@ final class ResourceDiscoveryPassTest extends TestCase
 
         // Should find custom routes from both entity and controller
         $this->assertNotEmpty($discoveredCustomRoutes);
-        
-        $routeNames = array_map(fn($route) => $route->name, $discoveredCustomRoutes);
+
+        // Routes are now stored as arrays (serializable format)
+        $routeNames = array_map(fn($route) => $route['name'], $discoveredCustomRoutes);
         $this->assertContains('articles.publish', $routeNames);
         $this->assertContains('articles.archive', $routeNames);
         $this->assertContains('articles.search', $routeNames);
