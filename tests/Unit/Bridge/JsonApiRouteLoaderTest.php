@@ -67,6 +67,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->assertSame('/api/articles/{id}', $showRoute->getPath());
         $this->assertSame(['GET'], $showRoute->getMethods());
         $this->assertSame('JsonApi\Symfony\Http\Controller\ResourceController', $showRoute->getDefault('_controller'));
+        $this->assertSame('[^/]+', $showRoute->getRequirement('id'));
 
         // Check resource PATCH route
         $this->assertTrue($routes->get('jsonapi.articles.update') !== null);
@@ -74,6 +75,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->assertSame('/api/articles/{id}', $updateRoute->getPath());
         $this->assertSame(['PATCH'], $updateRoute->getMethods());
         $this->assertSame('JsonApi\Symfony\Http\Controller\UpdateResourceController', $updateRoute->getDefault('_controller'));
+        $this->assertSame('[^/]+', $updateRoute->getRequirement('id'));
 
         // Check resource DELETE route
         $this->assertTrue($routes->get('jsonapi.articles.delete') !== null);
@@ -81,6 +83,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->assertSame('/api/articles/{id}', $deleteRoute->getPath());
         $this->assertSame(['DELETE'], $deleteRoute->getMethods());
         $this->assertSame('JsonApi\Symfony\Http\Controller\DeleteResourceController', $deleteRoute->getDefault('_controller'));
+        $this->assertSame('[^/]+', $deleteRoute->getRequirement('id'));
     }
 
     public function testGeneratesRelationshipRoutes(): void
@@ -117,6 +120,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->assertSame('/api/articles/{id}/relationships/author', $showRelRoute->getPath());
         $this->assertSame(['GET'], $showRelRoute->getMethods());
         $this->assertSame('JsonApi\Symfony\Http\Controller\RelationshipGetController', $showRelRoute->getDefault('_controller'));
+        $this->assertSame('[^/]+', $showRelRoute->getRequirement('id'));
 
         // Check relationship PATCH route
         $this->assertTrue($routes->get('jsonapi.articles.relationships.author.update') !== null);
@@ -124,6 +128,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->assertSame('/api/articles/{id}/relationships/author', $updateRelRoute->getPath());
         $this->assertSame(['PATCH'], $updateRelRoute->getMethods());
         $this->assertSame('JsonApi\Symfony\Http\Controller\RelationshipWriteController', $updateRelRoute->getDefault('_controller'));
+        $this->assertSame('[^/]+', $updateRelRoute->getRequirement('id'));
 
         // Check to-many relationship POST route
         $this->assertTrue($routes->get('jsonapi.articles.relationships.tags.add') !== null);
@@ -131,6 +136,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->assertSame('/api/articles/{id}/relationships/tags', $addRelRoute->getPath());
         $this->assertSame(['POST'], $addRelRoute->getMethods());
         $this->assertSame('JsonApi\Symfony\Http\Controller\RelationshipWriteController', $addRelRoute->getDefault('_controller'));
+        $this->assertSame('[^/]+', $addRelRoute->getRequirement('id'));
 
         // Check to-many relationship DELETE route
         $this->assertTrue($routes->get('jsonapi.articles.relationships.tags.remove') !== null);
@@ -138,6 +144,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->assertSame('/api/articles/{id}/relationships/tags', $removeRelRoute->getPath());
         $this->assertSame(['DELETE'], $removeRelRoute->getMethods());
         $this->assertSame('JsonApi\Symfony\Http\Controller\RelationshipWriteController', $removeRelRoute->getDefault('_controller'));
+        $this->assertSame('[^/]+', $removeRelRoute->getRequirement('id'));
 
         // Check related resource route
         $this->assertTrue($routes->get('jsonapi.articles.related.author') !== null);
@@ -145,6 +152,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->assertSame('/api/articles/{id}/author', $relatedRoute->getPath());
         $this->assertSame(['GET'], $relatedRoute->getMethods());
         $this->assertSame('JsonApi\Symfony\Http\Controller\RelatedController', $relatedRoute->getDefault('_controller'));
+        $this->assertSame('[^/]+', $relatedRoute->getRequirement('id'));
     }
 
     public function testCustomRoutePrefix(): void

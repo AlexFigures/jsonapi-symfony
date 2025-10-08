@@ -108,7 +108,7 @@ final class JsonApiRouteLoader extends Loader
                         '_controller' => 'JsonApi\Symfony\Http\Controller\ResourceController',
                         'type' => $resourceType,
                     ],
-                    requirements: ['id' => '.+'],
+                    requirements: ['id' => '[^/]+'],
                     methods: ['GET'],
                 )
             );
@@ -121,7 +121,7 @@ final class JsonApiRouteLoader extends Loader
                         '_controller' => 'JsonApi\Symfony\Http\Controller\UpdateResourceController',
                         'type' => $resourceType,
                     ],
-                    requirements: ['id' => '.+'],
+                    requirements: ['id' => '[^/]+'],
                     methods: ['PATCH'],
                 )
             );
@@ -134,7 +134,7 @@ final class JsonApiRouteLoader extends Loader
                         '_controller' => 'JsonApi\Symfony\Http\Controller\DeleteResourceController',
                         'type' => $resourceType,
                     ],
-                    requirements: ['id' => '.+'],
+                    requirements: ['id' => '[^/]+'],
                     methods: ['DELETE'],
                 )
             );
@@ -154,7 +154,7 @@ final class JsonApiRouteLoader extends Loader
                                 'type' => $resourceType,
                                 'relationship' => $relationshipName,
                             ],
-                            requirements: ['id' => '.+'],
+                            requirements: ['id' => '[^/]+'],
                             methods: ['GET'],
                         )
                     );
@@ -169,7 +169,7 @@ final class JsonApiRouteLoader extends Loader
                                 'type' => $resourceType,
                                 'relationship' => $relationshipName,
                             ],
-                            requirements: ['id' => '.+'],
+                            requirements: ['id' => '[^/]+'],
                             methods: ['PATCH'],
                         )
                     );
@@ -185,7 +185,7 @@ final class JsonApiRouteLoader extends Loader
                                     'type' => $resourceType,
                                     'relationship' => $relationshipName,
                                 ],
-                                requirements: ['id' => '.+'],
+                                requirements: ['id' => '[^/]+'],
                                 methods: ['POST'],
                             )
                         );
@@ -200,7 +200,7 @@ final class JsonApiRouteLoader extends Loader
                                     'type' => $resourceType,
                                     'relationship' => $relationshipName,
                                 ],
-                                requirements: ['id' => '.+'],
+                                requirements: ['id' => '[^/]+'],
                                 methods: ['DELETE'],
                             )
                         );
@@ -216,7 +216,7 @@ final class JsonApiRouteLoader extends Loader
                                 'type' => $resourceType,
                                 'relationship' => $relationshipName,
                             ],
-                            requirements: ['id' => '.+'],
+                            requirements: ['id' => '[^/]+'],
                             methods: ['GET'],
                         )
                     );
