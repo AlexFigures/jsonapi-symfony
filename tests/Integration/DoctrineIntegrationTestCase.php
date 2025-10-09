@@ -30,6 +30,7 @@ use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category;
+use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Comment;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Product;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\User;
@@ -78,6 +79,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             Article::class,
             Author::class,
             Category::class,
+            Comment::class,
             Tag::class,
             Product::class,
             User::class,
@@ -285,7 +287,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $platform = $connection->getDatabasePlatform()->getName();
 
         if ($platform === 'postgresql') {
-            $connection->executeStatement('TRUNCATE TABLE articles, authors, tags, article_tags, categories, products, users RESTART IDENTITY CASCADE');
+            $connection->executeStatement('TRUNCATE TABLE articles, authors, tags, article_tags, categories, comments, products, users RESTART IDENTITY CASCADE');
         } elseif ($platform === 'mysql') {
             $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 0');
             $connection->executeStatement('TRUNCATE TABLE articles');
@@ -293,6 +295,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $connection->executeStatement('TRUNCATE TABLE tags');
             $connection->executeStatement('TRUNCATE TABLE article_tags');
             $connection->executeStatement('TRUNCATE TABLE categories');
+            $connection->executeStatement('TRUNCATE TABLE comments');
             $connection->executeStatement('TRUNCATE TABLE products');
             $connection->executeStatement('TRUNCATE TABLE users');
             $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 1');
@@ -302,6 +305,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $connection->executeStatement('DELETE FROM tags');
             $connection->executeStatement('DELETE FROM article_tags');
             $connection->executeStatement('DELETE FROM categories');
+            $connection->executeStatement('DELETE FROM comments');
             $connection->executeStatement('DELETE FROM products');
             $connection->executeStatement('DELETE FROM users');
         }

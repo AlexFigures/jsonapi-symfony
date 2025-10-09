@@ -18,6 +18,7 @@ use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category;
+use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Comment;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -40,6 +41,7 @@ use Symfony\Component\Routing\RouteCollection;
  * - To-many relationships (Author hasMany Articles)
  * - Many-to-many relationships (Article hasMany Tags)
  * - Self-referencing relationships (Category with parent)
+ * - Integer primary keys with database-generated sequences (Comment)
  * - Error handling and validation
  * - JSON:API specification compliance
  */
@@ -72,7 +74,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         $routes->add('jsonapi.create', new Route('/api/{type}', methods: ['POST']));
 
         // Add type-specific routes for LinkGenerator
-        foreach (['articles', 'authors', 'tags', 'categories'] as $type) {
+        foreach (['articles', 'authors', 'tags', 'categories', 'comments'] as $type) {
             $routes->add("jsonapi.{$type}.index", new Route("/api/{$type}"));
             $routes->add("jsonapi.{$type}.show", new Route("/api/{$type}/{id}"));
 
@@ -617,6 +619,145 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         } catch (\JsonApi\Symfony\Http\Exception\NotFoundException $e) {
             self::assertSame(404, $e->getStatusCode());
         }
+    }
+
+    /**
+     * Test 12: Create resource with integer primary key and database-generated sequence.
+     *
+     * Validates:
+     * - 201 Created status for entity with integer ID
+     * - Auto-generated integer ID is returned in response
+     * - Response follows JSON:API specification format
+     * - Entity is persisted with correct data
+     * - Integer IDs are properly converted to strings in JSON:API response
+     *
+     * This test ensures the system correctly handles entities with integer sequence-based IDs,
+     * as opposed to application-generated UUIDs used by other test entities.
+     */
+    public function testCreateResourceWithIntegerSequenceId(): void
+    {
+        $payload = [
+            'data' => [
+                'type' => 'comments',
+                'attributes' => [
+                    'content' => 'This is a great article! Very informative.',
+                    'authorName' => 'Alice Johnson',
+                    'rating' => 5,
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/comments', $payload);
+        $response = ($this->controller)($request, 'comments');
+
+        // Assert HTTP status and headers
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+        self::assertSame(MediaType::JSON_API, $response->headers->get('Content-Type'));
+        self::assertNotNull($response->headers->get('Location'));
+
+        // Decode and validate response structure
+        $document = $this->decode($response);
+
+        self::assertArrayHasKey('data', $document);
+        self::assertIsArray($document['data']);
+        self::assertArrayHasKey('type', $document['data']);
+        self::assertArrayHasKey('id', $document['data']);
+        self::assertArrayHasKey('attributes', $document['data']);
+
+        self::assertSame('comments', $document['data']['type']);
+
+        // Verify ID is present and is a string representation of an integer
+        $idString = $document['data']['id'];
+        self::assertNotEmpty($idString);
+        self::assertIsString($idString);
+        self::assertMatchesRegularExpression('/^[1-9][0-9]*$/', $idString, 'ID should be a string representation of a positive integer');
+
+        // Verify attributes
+        self::assertSame('This is a great article! Very informative.', $document['data']['attributes']['content']);
+        self::assertSame('Alice Johnson', $document['data']['attributes']['authorName']);
+        self::assertSame(5, $document['data']['attributes']['rating']);
+
+        // Verify Location header matches self link
+        $selfLink = $document['data']['links']['self'] ?? null;
+        self::assertNotNull($selfLink);
+        self::assertSame($selfLink, $response->headers->get('Location'));
+
+        // Verify data persistence in PostgreSQL
+        $commentId = (int) $idString;
+        $this->em->clear();
+
+        $comment = $this->em->find(Comment::class, $commentId);
+        self::assertInstanceOf(Comment::class, $comment);
+        self::assertSame($commentId, $comment->getId());
+        self::assertSame('This is a great article! Very informative.', $comment->getContent());
+        self::assertSame('Alice Johnson', $comment->getAuthorName());
+        self::assertSame(5, $comment->getRating());
+    }
+
+    /**
+     * Test 13: Create multiple resources with integer sequence IDs to verify sequence increments.
+     *
+     * Validates:
+     * - Multiple resources can be created with auto-incrementing IDs
+     * - Each resource gets a unique, incrementing integer ID
+     * - Sequence continues correctly across multiple inserts
+     */
+    public function testCreateMultipleResourcesWithIntegerSequenceIds(): void
+    {
+        // Create first comment
+        $payload1 = [
+            'data' => [
+                'type' => 'comments',
+                'attributes' => [
+                    'content' => 'First comment',
+                    'authorName' => 'User One',
+                    'rating' => 4,
+                ],
+            ],
+        ];
+
+        $request1 = $this->createJsonApiRequest('POST', '/api/comments', $payload1);
+        $response1 = ($this->controller)($request1, 'comments');
+
+        self::assertSame(Response::HTTP_CREATED, $response1->getStatusCode());
+        $document1 = $this->decode($response1);
+        $id1 = (int) $document1['data']['id'];
+
+        // Create second comment
+        $payload2 = [
+            'data' => [
+                'type' => 'comments',
+                'attributes' => [
+                    'content' => 'Second comment',
+                    'authorName' => 'User Two',
+                    'rating' => 3,
+                ],
+            ],
+        ];
+
+        $request2 = $this->createJsonApiRequest('POST', '/api/comments', $payload2);
+        $response2 = ($this->controller)($request2, 'comments');
+
+        self::assertSame(Response::HTTP_CREATED, $response2->getStatusCode());
+        $document2 = $this->decode($response2);
+        $id2 = (int) $document2['data']['id'];
+
+        // Verify IDs are different and sequential
+        self::assertNotSame($id1, $id2);
+        self::assertGreaterThan($id1, $id2, 'Second comment ID should be greater than first');
+
+        // Verify both are persisted correctly
+        $this->em->clear();
+
+        $comment1 = $this->em->find(Comment::class, $id1);
+        $comment2 = $this->em->find(Comment::class, $id2);
+
+        self::assertInstanceOf(Comment::class, $comment1);
+        self::assertInstanceOf(Comment::class, $comment2);
+        self::assertSame('First comment', $comment1->getContent());
+        self::assertSame('Second comment', $comment2->getContent());
+        self::assertSame('User One', $comment1->getAuthorName());
+        self::assertSame('User Two', $comment2->getAuthorName());
     }
 
     /**
