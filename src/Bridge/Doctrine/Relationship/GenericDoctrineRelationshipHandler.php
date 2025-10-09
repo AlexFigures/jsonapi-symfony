@@ -434,7 +434,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
     }
 
     /**
-     * @param RelationshipMetadata $relationship
+     * @param RelationshipMetadata           $relationship
      * @param ResourceIdentifier|string|null $target
      */
     private function normalizeTargetId(RelationshipMetadata $relationship, ResourceIdentifier|string|null $target): ?string
@@ -460,7 +460,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
     }
 
     /**
-     * @param RelationshipMetadata         $relationship
+     * @param RelationshipMetadata            $relationship
      * @param list<ResourceIdentifier|string> $targets
      *
      * @return list<string>

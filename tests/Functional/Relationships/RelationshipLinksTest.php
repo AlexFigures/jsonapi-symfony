@@ -170,4 +170,3 @@ final class RelationshipLinksTest extends JsonApiTestCase
         self::assertArrayHasKey('data', $relationships['author']);
     }
 }
-

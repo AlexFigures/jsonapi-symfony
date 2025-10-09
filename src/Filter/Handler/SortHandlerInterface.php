@@ -39,17 +39,17 @@ interface SortHandlerInterface
     /**
      * Check if this handler supports the given field.
      *
-     * @param string $field The field name being sorted
-     * @return bool True if this handler can process the sort
+     * @param  string $field The field name being sorted
+     * @return bool   True if this handler can process the sort
      */
     public function supports(string $field): bool;
 
     /**
      * Handle the sort by modifying the query builder.
      *
-     * @param string $field The field name being sorted
-     * @param bool $descending True for descending order, false for ascending
-     * @param object $queryBuilder The query builder to modify (typically Doctrine QueryBuilder)
+     * @param  string $field        The field name being sorted
+     * @param  bool   $descending   True for descending order, false for ascending
+     * @param  object $queryBuilder The query builder to modify (typically Doctrine QueryBuilder)
      * @return void
      */
     public function handle(string $field, bool $descending, object $queryBuilder): void;

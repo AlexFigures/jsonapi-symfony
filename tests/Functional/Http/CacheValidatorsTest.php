@@ -11,10 +11,10 @@ use JsonApi\Symfony\Http\Cache\HashEtagGenerator;
 use JsonApi\Symfony\Http\Cache\HeadersApplier;
 use JsonApi\Symfony\Http\Cache\LastModifiedResolver;
 use JsonApi\Symfony\Http\Cache\SurrogateKeyBuilder;
-use JsonApi\Symfony\Tests\Functional\JsonApiTestCase;
 use JsonApi\Symfony\Tests\Fixtures\Model\Article;
 use JsonApi\Symfony\Tests\Fixtures\Model\Author;
 use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
+use JsonApi\Symfony\Tests\Functional\JsonApiTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -58,7 +58,7 @@ final class CacheValidatorsTest extends JsonApiTestCase
     {
         $request = Request::create('/api/articles/1', 'GET');
         $request->attributes->set('_route', 'jsonapi.resource');
-        
+
         $response = ($this->resourceController())($request, 'articles', '1');
         $this->applyCacheHeaders($request, $response);
 
@@ -71,7 +71,7 @@ final class CacheValidatorsTest extends JsonApiTestCase
     {
         $request = Request::create('/api/articles', 'GET');
         $request->attributes->set('_route', 'jsonapi.collection');
-        
+
         $response = ($this->collectionController())($request, 'articles');
         $this->applyCacheHeaders($request, $response);
 
@@ -84,19 +84,19 @@ final class CacheValidatorsTest extends JsonApiTestCase
     {
         $request1 = Request::create('/api/articles/1?include=author', 'GET');
         $request1->attributes->set('_route', 'jsonapi.resource');
-        
+
         $request2 = Request::create('/api/articles/1', 'GET');
         $request2->attributes->set('_route', 'jsonapi.resource');
-        
+
         $response1 = ($this->resourceController())($request1, 'articles', '1');
         $this->applyCacheHeaders($request1, $response1);
-        
+
         $response2 = ($this->resourceController())($request2, 'articles', '1');
         $this->applyCacheHeaders($request2, $response2);
 
         $etag1 = $response1->headers->get('ETag');
         $etag2 = $response2->headers->get('ETag');
-        
+
         self::assertNotNull($etag1);
         self::assertNotNull($etag2);
         self::assertNotEquals($etag1, $etag2, 'ETag should vary by include parameter');
@@ -106,19 +106,19 @@ final class CacheValidatorsTest extends JsonApiTestCase
     {
         $request1 = Request::create('/api/articles/1?fields[articles]=title', 'GET');
         $request1->attributes->set('_route', 'jsonapi.resource');
-        
+
         $request2 = Request::create('/api/articles/1', 'GET');
         $request2->attributes->set('_route', 'jsonapi.resource');
-        
+
         $response1 = ($this->resourceController())($request1, 'articles', '1');
         $this->applyCacheHeaders($request1, $response1);
-        
+
         $response2 = ($this->resourceController())($request2, 'articles', '1');
         $this->applyCacheHeaders($request2, $response2);
 
         $etag1 = $response1->headers->get('ETag');
         $etag2 = $response2->headers->get('ETag');
-        
+
         self::assertNotNull($etag1);
         self::assertNotNull($etag2);
         self::assertNotEquals($etag1, $etag2, 'ETag should vary by fields parameter');
@@ -129,10 +129,10 @@ final class CacheValidatorsTest extends JsonApiTestCase
         // First request to get ETag
         $request1 = Request::create('/api/articles/1', 'GET');
         $request1->attributes->set('_route', 'jsonapi.resource');
-        
+
         $response1 = ($this->resourceController())($request1, 'articles', '1');
         $this->applyCacheHeaders($request1, $response1);
-        
+
         $etag = $response1->headers->get('ETag');
         self::assertNotNull($etag);
 
@@ -140,7 +140,7 @@ final class CacheValidatorsTest extends JsonApiTestCase
         $request2 = Request::create('/api/articles/1', 'GET');
         $request2->attributes->set('_route', 'jsonapi.resource');
         $request2->headers->set('If-None-Match', $etag);
-        
+
         $response2 = ($this->resourceController())($request2, 'articles', '1');
         $this->applyCacheHeaders($request2, $response2);
 
@@ -153,7 +153,7 @@ final class CacheValidatorsTest extends JsonApiTestCase
         $request = Request::create('/api/articles/1', 'GET');
         $request->attributes->set('_route', 'jsonapi.resource');
         $request->headers->set('If-None-Match', '*');
-        
+
         $response = ($this->resourceController())($request, 'articles', '1');
         $this->applyCacheHeaders($request, $response);
 
@@ -165,7 +165,7 @@ final class CacheValidatorsTest extends JsonApiTestCase
         $request = Request::create('/api/articles/1', 'GET');
         $request->attributes->set('_route', 'jsonapi.resource');
         $request->headers->set('If-None-Match', '"different-etag"');
-        
+
         $response = ($this->resourceController())($request, 'articles', '1');
         $this->applyCacheHeaders($request, $response);
 
@@ -177,7 +177,7 @@ final class CacheValidatorsTest extends JsonApiTestCase
     {
         $request = Request::create('/api/articles/1/relationships/author', 'GET');
         $request->attributes->set('_route', 'jsonapi.relationship');
-        
+
         $response = ($this->relationshipGetController())($request, 'articles', '1', 'author');
         $this->applyCacheHeaders($request, $response);
 
@@ -188,7 +188,7 @@ final class CacheValidatorsTest extends JsonApiTestCase
     {
         $request = Request::create('/api/articles/1/author', 'GET');
         $request->attributes->set('_route', 'jsonapi.related');
-        
+
         $response = ($this->relatedController())($request, 'articles', '1', 'author');
         $this->applyCacheHeaders($request, $response);
 
@@ -199,7 +199,7 @@ final class CacheValidatorsTest extends JsonApiTestCase
     {
         $request = Request::create('/api/articles/1', 'GET');
         $request->attributes->set('_route', 'jsonapi.resource');
-        
+
         $response = ($this->resourceController())($request, 'articles', '1');
         $this->applyCacheHeaders($request, $response);
 
@@ -212,12 +212,12 @@ final class CacheValidatorsTest extends JsonApiTestCase
     {
         $request = Request::create('/api/articles/1', 'GET');
         $request->attributes->set('_route', 'jsonapi.resource');
-        
+
         $response = ($this->resourceController())($request, 'articles', '1');
-        
+
         // Set Last-Modified header manually for testing
         $response->headers->set('Last-Modified', 'Mon, 01 Jan 2024 12:00:00 GMT');
-        
+
         $this->applyCacheHeaders($request, $response);
 
         self::assertNotNull($response->headers->get('Last-Modified'));
@@ -419,4 +419,3 @@ final class CacheValidatorsTest extends JsonApiTestCase
         };
     }
 }
-

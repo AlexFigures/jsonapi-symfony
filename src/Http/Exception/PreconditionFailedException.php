@@ -9,7 +9,7 @@ use JsonApi\Symfony\Http\Error\ErrorObject;
 final class PreconditionFailedException extends JsonApiHttpException
 {
     /**
-     * @param list<ErrorObject> $errors
+     * @param list<ErrorObject>     $errors
      * @param array<string, string> $headers
      */
     public function __construct(array $errors, array $headers = [], ?\Throwable $previous = null)

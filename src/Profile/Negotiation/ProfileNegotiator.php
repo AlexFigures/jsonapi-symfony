@@ -25,8 +25,8 @@ final class ProfileNegotiator
     private bool $emitLinkHeader;
 
     /**
-     * @param list<string>                    $enabledByDefault
-     * @param array<string, list<string>>     $perType
+     * @param list<string>                                                                                   $enabledByDefault
+     * @param array<string, list<string>>                                                                    $perType
      * @param array{require_known_profiles?: bool, echo_profiles_in_content_type?: bool, link_header?: bool} $negotiation
      */
     public function __construct(

@@ -199,4 +199,3 @@ final class ContentNegotiationSubscriberTest extends TestCase
         self::assertSame('Accept', $response->headers->get('Vary'));
     }
 }
-

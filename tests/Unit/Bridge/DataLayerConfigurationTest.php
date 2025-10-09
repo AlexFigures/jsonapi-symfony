@@ -154,7 +154,7 @@ final class DataLayerConfigurationTest extends TestCase
     {
         $container = new ContainerBuilder();
         $container->setParameter('kernel.project_dir', sys_get_temp_dir());
-        
+
         $extension = new JsonApiExtension();
         $extension->load([
             [
@@ -164,10 +164,10 @@ final class DataLayerConfigurationTest extends TestCase
                 ],
             ],
         ], $container);
-        
+
         // Check that data_layer parameter is stored
         $this->assertTrue($container->hasParameter('jsonapi.data_layer'));
-        
+
         $dataLayerConfig = $container->getParameter('jsonapi.data_layer');
         $this->assertIsArray($dataLayerConfig);
         $this->assertSame('custom', $dataLayerConfig['provider']);
@@ -197,4 +197,3 @@ final class DataLayerConfigurationTest extends TestCase
         $this->assertFalse($transactionAlias->isPublic());
     }
 }
-

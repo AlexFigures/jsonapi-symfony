@@ -14,8 +14,8 @@ interface TypedResourceRepository extends ResourceRepository
     /**
      * Checks whether this repository supports the given resource type.
      *
-     * @param string $type JSON:API resource type (for example 'articles', 'users')
-     * @return bool true when the repository supports the type
+     * @param  string $type JSON:API resource type (for example 'articles', 'users')
+     * @return bool   true when the repository supports the type
      */
     public function supports(string $type): bool;
 }

@@ -14,8 +14,8 @@ interface TypedRelationshipReader extends RelationshipReader
     /**
      * Checks whether this reader supports the given resource type.
      *
-     * @param string $type JSON:API resource type (for example 'articles', 'users')
-     * @return bool true when the reader supports the type
+     * @param  string $type JSON:API resource type (for example 'articles', 'users')
+     * @return bool   true when the reader supports the type
      */
     public function supports(string $type): bool;
 }

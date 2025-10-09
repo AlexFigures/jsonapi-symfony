@@ -14,15 +14,15 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * Automatically flushes Doctrine changes after write operations.
- * 
+ *
  * This listener implements the "deferred flush" pattern inspired by API Platform:
  * - Controllers/handlers prepare entities (persist/remove) without flushing
  * - This listener flushes all changes after controller execution
  * - Allows Doctrine's CommitOrderCalculator to properly order entity insertions
- * 
+ *
  * The listener only flushes for write operations (POST, PATCH, DELETE) and
  * only if a flush was scheduled via FlushManager::scheduleFlush().
- * 
+ *
  * @internal This listener is registered automatically by the bundle
  */
 final class WriteListener implements EventSubscriberInterface
@@ -39,7 +39,7 @@ final class WriteListener implements EventSubscriberInterface
             // Execute after controller, before response is sent
             // Priority -100 ensures this runs after most other listeners
             KernelEvents::VIEW => ['onKernelView', -100],
-            
+
             // Clear scheduled flush on exception to prevent flushing invalid data
             KernelEvents::EXCEPTION => ['onKernelException', 0],
         ];
@@ -47,12 +47,12 @@ final class WriteListener implements EventSubscriberInterface
 
     /**
      * Flush Doctrine changes after controller execution.
-     * 
+     *
      * This method is called after the controller has executed and returned
      * a result. It flushes all pending Doctrine changes if:
      * 1. The request is a write operation (POST, PATCH, DELETE)
      * 2. A flush was scheduled via FlushManager::scheduleFlush()
-     * 
+     *
      * Database errors (constraint violations, etc.) are caught and converted
      * to JSON:API error responses.
      */
@@ -84,7 +84,7 @@ final class WriteListener implements EventSubscriberInterface
 
     /**
      * Clear scheduled flush when an exception occurs.
-     * 
+     *
      * This prevents flushing incomplete or invalid data when an error
      * occurs during request processing.
      */
@@ -101,24 +101,24 @@ final class WriteListener implements EventSubscriberInterface
 
     /**
      * Determine if the request is a write operation.
-     * 
+     *
      * Write operations are:
      * - POST (create resource)
      * - PATCH (update resource)
      * - DELETE (delete resource)
-     * 
+     *
      * Read operations (GET) do not trigger flush.
      */
     private function isWriteOperation(Request $request): bool
     {
         $method = $request->getMethod();
-        
+
         return in_array($method, ['POST', 'PATCH', 'DELETE'], true);
     }
 
     /**
      * Extract resource type from request for error mapping.
-     * 
+     *
      * The resource type is used to provide context in error messages.
      * It's extracted from:
      * 1. Route attribute '_jsonapi_resource_type'
@@ -137,7 +137,7 @@ final class WriteListener implements EventSubscriberInterface
         $content = $request->getContent();
         if ($content !== '' && $content !== false) {
             try {
-                $data = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
+                $data = json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
                 if (isset($data['data']['type']) && is_string($data['data']['type'])) {
                     return $data['data']['type'];
                 }
@@ -149,4 +149,3 @@ final class WriteListener implements EventSubscriberInterface
         return 'unknown';
     }
 }
-

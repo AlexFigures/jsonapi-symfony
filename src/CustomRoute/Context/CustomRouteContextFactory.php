@@ -36,17 +36,18 @@ final class CustomRouteContextFactory
         private readonly ResourceRepository $repository,
         private readonly QueryParser $queryParser,
         private readonly ErrorMapper $errorMapper,
-    ) {}
+    ) {
+    }
 
     /**
      * Create a CustomRouteContext from a request and route name.
      *
-     * @param Request $request The HTTP request
-     * @param string $routeName The route name (e.g., 'articles.publish')
+     * @param Request $request   The HTTP request
+     * @param string  $routeName The route name (e.g., 'articles.publish')
      *
      * @return CustomRouteContext The created context
      *
-     * @throws NotFoundException if the route or resource type is not found
+     * @throws NotFoundException   if the route or resource type is not found
      * @throws BadRequestException if the request body is malformed
      */
     public function create(Request $request, string $routeName): CustomRouteContext
@@ -98,7 +99,7 @@ final class CustomRouteContextFactory
     private function resolveResourceType(CustomRouteMetadata $routeMetadata): string
     {
         $resourceType = $routeMetadata->resourceType;
-        
+
         if ($resourceType === null) {
             throw new NotFoundException(
                 'Resource type not specified in route metadata. ' .
@@ -181,7 +182,7 @@ final class CustomRouteContextFactory
     private function parseRequestBody(Request $request): array
     {
         $content = (string) $request->getContent();
-        
+
         // Empty body is valid (returns empty array)
         if ($content === '') {
             return [];
@@ -203,4 +204,3 @@ final class CustomRouteContextFactory
         return $decoded;
     }
 }
-

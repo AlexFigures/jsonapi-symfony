@@ -59,9 +59,9 @@ interface TransactionManager
      * or rolled back if an exception is thrown.
      *
      * @template T
-     * @param callable():T $callback Callback to execute within the transaction
-     * @return T The return value of the callback
-     * @throws \Throwable If the callback throws an exception (after rollback)
+     * @param  callable():T $callback Callback to execute within the transaction
+     * @return T            The return value of the callback
+     * @throws \Throwable   If the callback throws an exception (after rollback)
      */
     public function transactional(callable $callback);
 }

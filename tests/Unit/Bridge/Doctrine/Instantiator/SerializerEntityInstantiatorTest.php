@@ -104,4 +104,3 @@ class EntityWithConstructor
         $this->email = $email;
     }
 }
-

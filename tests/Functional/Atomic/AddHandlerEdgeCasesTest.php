@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests edge cases for AddHandler to kill escaped mutants.
- * 
+ *
  * Targets escaped mutants in src/Atomic/Execution/Handlers/AddHandler.php:
  * - Type extraction logic (lines 34-37)
  * - Empty string validation (line 56)
@@ -150,7 +150,7 @@ final class AddHandlerEdgeCasesTest extends JsonApiTestCase
         ], content: json_encode($payload, \JSON_THROW_ON_ERROR));
 
         $response = $controller($request);
-        
+
         self::assertSame(200, $response->getStatusCode());
         $result = json_decode($response->getContent(), true);
         self::assertSame($clientId, $result['atomic:results'][0]['data']['id']);
@@ -186,7 +186,7 @@ final class AddHandlerEdgeCasesTest extends JsonApiTestCase
         ], content: json_encode($payload, \JSON_THROW_ON_ERROR));
 
         $response = $controller($request);
-        
+
         self::assertSame(200, $response->getStatusCode());
         $result = json_decode($response->getContent(), true);
         // Should have a generated ID, not empty string
@@ -224,7 +224,7 @@ final class AddHandlerEdgeCasesTest extends JsonApiTestCase
         ], content: json_encode($payload, \JSON_THROW_ON_ERROR));
 
         $response = $controller($request);
-        
+
         self::assertSame(200, $response->getStatusCode());
         $result = json_decode($response->getContent(), true);
         // Should have a generated ID, not the numeric value
@@ -262,11 +262,10 @@ final class AddHandlerEdgeCasesTest extends JsonApiTestCase
         ], content: json_encode($payload, \JSON_THROW_ON_ERROR));
 
         $response = $controller($request);
-        
+
         self::assertSame(200, $response->getStatusCode());
         $result = json_decode($response->getContent(), true);
         self::assertArrayHasKey('data', $result['atomic:results'][0]);
         self::assertArrayHasKey('id', $result['atomic:results'][0]['data']);
     }
 }
-

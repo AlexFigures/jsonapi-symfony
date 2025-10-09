@@ -9,7 +9,7 @@ use JsonApi\Symfony\Http\Error\ErrorObject;
 final class UnsupportedMediaTypeException extends JsonApiHttpException
 {
     /**
-     * @param list<ErrorObject> $errors
+     * @param list<ErrorObject>     $errors
      * @param array<string, string> $headers
      */
     public function __construct(

@@ -22,4 +22,3 @@ final class CustomRouteResponseBuilderTest extends TestCase
         self::assertTrue(true);
     }
 }
-

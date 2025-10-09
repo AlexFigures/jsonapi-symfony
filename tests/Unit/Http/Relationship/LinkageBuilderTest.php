@@ -32,7 +32,7 @@ final class LinkageBuilderTest extends TestCase
 
         $authorMetadata = new ResourceMetadata('people', AuthorResource::class, [], []);
 
-        $registry = new class($articleMetadata, $authorMetadata) implements ResourceRegistryInterface {
+        $registry = new class ($articleMetadata, $authorMetadata) implements ResourceRegistryInterface {
             public function __construct(
                 private ResourceMetadata $article,
                 private ResourceMetadata $author,
@@ -68,7 +68,7 @@ final class LinkageBuilderTest extends TestCase
             }
         };
 
-        $reader = new class implements RelationshipReader {
+        $reader = new class () implements RelationshipReader {
             public function getToOneId(string $type, string $id, string $rel): ?string
             {
                 return $rel === 'author' ? '1' : null;
@@ -111,7 +111,7 @@ final class LinkageBuilderTest extends TestCase
 
         $commentMetadata = new ResourceMetadata('comments', CommentResource::class, [], []);
 
-        $registry = new class($articleMetadata, $commentMetadata) implements ResourceRegistryInterface {
+        $registry = new class ($articleMetadata, $commentMetadata) implements ResourceRegistryInterface {
             public function __construct(
                 private ResourceMetadata $article,
                 private ResourceMetadata $comment,
@@ -147,7 +147,7 @@ final class LinkageBuilderTest extends TestCase
             }
         };
 
-        $reader = new class implements RelationshipReader {
+        $reader = new class () implements RelationshipReader {
             public function getToOneId(string $type, string $id, string $rel): ?string
             {
                 return $rel === 'comments' ? '2' : null;

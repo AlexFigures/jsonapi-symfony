@@ -7,10 +7,10 @@ namespace JsonApi\Symfony\Atomic\Execution\Handlers;
 use JsonApi\Symfony\Atomic\Execution\OperationOutcome;
 use JsonApi\Symfony\Atomic\Lid\LidRegistry;
 use JsonApi\Symfony\Atomic\Operation;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 

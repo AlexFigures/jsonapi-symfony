@@ -69,4 +69,3 @@ final class SortableFields
         $this->fields = array_values($fields);
     }
 }
-

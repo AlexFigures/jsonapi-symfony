@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests edge cases for RelationshipOps to kill escaped mutants.
- * 
+ *
  * Targets escaped mutants in src/Atomic/Execution/Handlers/RelationshipOps.php:
  * - Logical operators (||, &&)
  * - Array validation (is_array, array_is_list)
@@ -291,4 +291,3 @@ final class RelationshipOpsEdgeCasesTest extends JsonApiTestCase
         $controller($updateRequest);
     }
 }
-

@@ -21,11 +21,11 @@ final class ChangeSetFactory
      * This is the recommended method for creating ChangeSets as it populates both
      * attributes and relationships, providing a unified data flow.
      *
-     * @param string $type Resource type
-     * @param array<string, mixed> $attributes Attribute name => value map
-     * @param array<string, array{data: mixed}> $relationships Relationship name => JSON:API relationship data
+     * @param  string                            $type          Resource type
+     * @param  array<string, mixed>              $attributes    Attribute name => value map
+     * @param  array<string, array{data: mixed}> $relationships Relationship name => JSON:API relationship data
      * @return ChangeSet
-     * @throws BadRequestException If unknown attributes are provided
+     * @throws BadRequestException               If unknown attributes are provided
      */
     public function fromInput(string $type, array $attributes, array $relationships = []): ChangeSet
     {
@@ -52,16 +52,16 @@ final class ChangeSetFactory
      * @deprecated Use fromInput() instead to populate both attributes and relationships.
      *             This method will be removed in version 2.0.
      *
-     * @param string $type Resource type
-     * @param array<string, mixed> $attributes Attribute name => value map
+     * @param  string               $type       Resource type
+     * @param  array<string, mixed> $attributes Attribute name => value map
      * @return ChangeSet
-     * @throws BadRequestException If unknown attributes are provided
+     * @throws BadRequestException  If unknown attributes are provided
      */
     public function fromAttributes(string $type, array $attributes): ChangeSet
     {
         trigger_error(
             'ChangeSetFactory::fromAttributes() is deprecated. Use fromInput() instead to populate both attributes and relationships.',
-            E_USER_DEPRECATED
+            \E_USER_DEPRECATED
         );
 
         return $this->fromInput($type, $attributes, []);

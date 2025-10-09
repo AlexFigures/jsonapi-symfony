@@ -26,7 +26,7 @@ final class ValidationErrorsTest extends JsonApiTestCase
             new ConstraintViolation('Tag is invalid.', null, [], null, 'tags[0]', null),
         ]);
 
-        $controller = $this->createControllerWithValidator(new class($violations) implements ResourcePersister {
+        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourcePersister {
             public function __construct(private ConstraintViolationList $violations)
             {
             }
@@ -55,7 +55,7 @@ final class ValidationErrorsTest extends JsonApiTestCase
                     'tags' => ['data' => [['type' => 'tags', 'id' => '1']]],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
 
         $request = Request::create(
             '/api/articles',

@@ -62,16 +62,16 @@ use Attribute;
 final class JsonApiCustomRoute
 {
     /**
-     * @param string $name Route name (e.g., 'articles.publish', 'users.activate')
-     * @param string $path Route path pattern (e.g., '/articles/{id}/publish', '/users/search')
-     * @param array<string> $methods HTTP methods (e.g., ['POST'], ['GET', 'HEAD'])
-     * @param string|null $handler Handler class name implementing CustomRouteHandlerInterface (recommended, new in 0.3.0)
-     * @param string|null $controller Controller class name (legacy, still supported for backward compatibility)
-     * @param string|null $resourceType Resource type (required when used on controller/handler classes)
-     * @param array<string, mixed> $defaults Additional route defaults
+     * @param string                $name         Route name (e.g., 'articles.publish', 'users.activate')
+     * @param string                $path         Route path pattern (e.g., '/articles/{id}/publish', '/users/search')
+     * @param array<string>         $methods      HTTP methods (e.g., ['POST'], ['GET', 'HEAD'])
+     * @param string|null           $handler      Handler class name implementing CustomRouteHandlerInterface (recommended, new in 0.3.0)
+     * @param string|null           $controller   Controller class name (legacy, still supported for backward compatibility)
+     * @param string|null           $resourceType Resource type (required when used on controller/handler classes)
+     * @param array<string, mixed>  $defaults     Additional route defaults
      * @param array<string, string> $requirements Route parameter requirements
-     * @param string|null $description Optional description for documentation
-     * @param int $priority Route priority (higher values = higher priority, default: 0)
+     * @param string|null           $description  Optional description for documentation
+     * @param int                   $priority     Route priority (higher values = higher priority, default: 0)
      */
     public function __construct(
         public readonly string $name,

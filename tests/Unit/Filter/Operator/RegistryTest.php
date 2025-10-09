@@ -14,7 +14,7 @@ final class RegistryTest extends TestCase
     public function testEmptyRegistry(): void
     {
         $registry = new Registry();
-        
+
         $this->assertFalse($registry->has('eq'));
         $this->assertSame([], $registry->all());
     }
@@ -23,9 +23,9 @@ final class RegistryTest extends TestCase
     {
         $equalOperator = new EqualOperator();
         $likeOperator = new LikeOperator();
-        
+
         $registry = new Registry([$equalOperator, $likeOperator]);
-        
+
         $this->assertTrue($registry->has('eq'));
         $this->assertTrue($registry->has('like'));
         $this->assertSame($equalOperator, $registry->get('eq'));
@@ -37,9 +37,9 @@ final class RegistryTest extends TestCase
     {
         $registry = new Registry();
         $equalOperator = new EqualOperator();
-        
+
         $registry->register($equalOperator);
-        
+
         $this->assertTrue($registry->has('eq'));
         $this->assertSame($equalOperator, $registry->get('eq'));
     }
@@ -47,10 +47,10 @@ final class RegistryTest extends TestCase
     public function testGetUnknownOperatorThrowsException(): void
     {
         $registry = new Registry();
-        
+
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown operator "unknown".');
-        
+
         $registry->get('unknown');
     }
 
@@ -61,9 +61,9 @@ final class RegistryTest extends TestCase
             new EqualOperator(),
             new LikeOperator(),
         ]);
-        
+
         $registry = new Registry($operators);
-        
+
         $this->assertTrue($registry->has('eq'));
         $this->assertTrue($registry->has('like'));
         $this->assertCount(2, $registry->all());

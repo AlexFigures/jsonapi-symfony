@@ -24,7 +24,7 @@ final class FilterableFieldsTest extends TestCase
     {
         $titleField = new FilterableField('title', ['eq', 'like']);
         $statusField = new FilterableField('status', ['eq', 'in']);
-        
+
         $fields = new FilterableFields([$titleField, $statusField]);
 
         self::assertTrue($fields->isAllowed('title'));
@@ -36,7 +36,7 @@ final class FilterableFieldsTest extends TestCase
     public function testConstructorWithMixedFields(): void
     {
         $titleField = new FilterableField('title', ['eq', 'like']);
-        
+
         $fields = new FilterableFields([$titleField, 'status']);
 
         self::assertTrue($fields->isAllowed('title'));
@@ -115,7 +115,7 @@ final class FilterableFieldsTest extends TestCase
         // When duplicate field names are provided, the last one should win
         $field1 = new FilterableField('title', ['eq']);
         $field2 = new FilterableField('title', ['like']);
-        
+
         $fields = new FilterableFields([$field1, $field2]);
 
         $config = $fields->getFieldConfig('title');

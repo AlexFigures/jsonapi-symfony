@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Tests\Functional\Atomic;
 
-use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
+use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -275,4 +275,3 @@ final class LidResolutionTest extends JsonApiTestCase
         self::assertSame('Updated Name', $author->name);
     }
 }
-

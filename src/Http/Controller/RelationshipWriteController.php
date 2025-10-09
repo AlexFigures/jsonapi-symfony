@@ -14,12 +14,12 @@ use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Relationship\LinkageBuilder;
 use JsonApi\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
 use JsonApi\Symfony\Http\Write\RelationshipDocumentValidator;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use RuntimeException;
 
 #[Route(path: '/api/{type}/{id}/relationships/{rel}', methods: ['PATCH', 'POST', 'DELETE'], name: 'jsonapi.relationship.write')]
 final class RelationshipWriteController

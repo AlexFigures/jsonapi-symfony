@@ -39,4 +39,3 @@ final class SortableFieldsTest extends TestCase
         self::assertSame(['name'], $attribute->fields);
     }
 }
-

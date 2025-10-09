@@ -28,7 +28,7 @@ final class OperationGroupsTest extends TestCase
 
         $this->assertSame(['custom_create', 'Default'], $groups->getValidationGroups(true));
         $this->assertSame(['custom_update', 'Default'], $groups->getValidationGroups(false));
-        
+
         // Serialization groups should remain default
         $this->assertSame(['write', 'create', 'Default'], $groups->getSerializationGroups(true));
         $this->assertSame(['write', 'update', 'Default'], $groups->getSerializationGroups(false));
@@ -43,7 +43,7 @@ final class OperationGroupsTest extends TestCase
 
         $this->assertSame(['custom_write', 'custom_create'], $groups->getSerializationGroups(true));
         $this->assertSame(['custom_write', 'custom_update'], $groups->getSerializationGroups(false));
-        
+
         // Validation groups should remain default
         $this->assertSame(['create', 'Default'], $groups->getValidationGroups(true));
         $this->assertSame(['update', 'Default'], $groups->getValidationGroups(false));

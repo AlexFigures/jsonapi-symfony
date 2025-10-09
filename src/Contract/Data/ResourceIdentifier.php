@@ -25,7 +25,7 @@ final class ResourceIdentifier
 {
     /**
      * @param string $type Resource type (e.g., 'articles')
-     * @param string $id Resource identifier
+     * @param string $id   Resource identifier
      */
     public function __construct(
         public string $type,

@@ -6,7 +6,7 @@ namespace JsonApi\Symfony\Resource\Metadata;
 
 /**
  * Manages validation and serialization groups for different operations.
- * 
+ *
  * Follows API Platform patterns for operation-specific group handling.
  */
 final class OperationGroups
@@ -27,7 +27,7 @@ final class OperationGroups
 
     /**
      * Returns validation groups for the given operation.
-     * 
+     *
      * @return list<string>
      */
     public function getValidationGroups(bool $isCreate): array
@@ -37,7 +37,7 @@ final class OperationGroups
 
     /**
      * Returns serialization groups for the given operation.
-     * 
+     *
      * @return list<string>
      */
     public function getSerializationGroups(bool $isCreate): array
@@ -55,7 +55,7 @@ final class OperationGroups
 
     /**
      * Creates operation groups with custom validation groups.
-     * 
+     *
      * @param list<string> $createGroups
      * @param list<string> $updateGroups
      */
@@ -69,7 +69,7 @@ final class OperationGroups
 
     /**
      * Creates operation groups with custom serialization groups.
-     * 
+     *
      * @param list<string> $createGroups
      * @param list<string> $updateGroups
      */

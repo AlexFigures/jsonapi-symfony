@@ -13,10 +13,10 @@ use JsonApi\Symfony\Http\Cache\LastModifiedResolver;
 use JsonApi\Symfony\Http\Cache\SurrogateKeyBuilder;
 use JsonApi\Symfony\Http\Exception\PreconditionFailedException;
 use JsonApi\Symfony\Http\Exception\PreconditionRequiredException;
-use JsonApi\Symfony\Tests\Functional\JsonApiTestCase;
 use JsonApi\Symfony\Tests\Fixtures\Model\Article;
 use JsonApi\Symfony\Tests\Fixtures\Model\Author;
 use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
+use JsonApi\Symfony\Tests\Functional\JsonApiTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -375,4 +375,3 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
         };
     }
 }
-

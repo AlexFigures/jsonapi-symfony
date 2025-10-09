@@ -193,4 +193,3 @@ final class SurrogateKeysTest extends JsonApiTestCase
         $subscriber->onKernelResponse($event);
     }
 }
-

@@ -56,4 +56,3 @@ final class NullRelationshipReader implements RelationshipReader
         );
     }
 }
-

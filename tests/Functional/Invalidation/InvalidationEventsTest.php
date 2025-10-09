@@ -60,10 +60,10 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Verify response is successful
         self::assertSame(201, $response->getStatusCode());
 
-         self::assertCount(1, $dispatchedEvents);
-         self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
-         self::assertSame('articles', $dispatchedEvents[0]->type);
-         self::assertSame('create', $dispatchedEvents[0]->operation);
+        self::assertCount(1, $dispatchedEvents);
+        self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
+        self::assertSame('articles', $dispatchedEvents[0]->type);
+        self::assertSame('create', $dispatchedEvents[0]->operation);
     }
 
     public function testResourceUpdateDispatchesEvent(): void
@@ -98,11 +98,11 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Verify response is successful
         self::assertSame(200, $response->getStatusCode());
 
-         self::assertCount(1, $dispatchedEvents);
-         self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
-         self::assertSame('articles', $dispatchedEvents[0]->type);
-         self::assertSame('1', $dispatchedEvents[0]->id);
-         self::assertSame('update', $dispatchedEvents[0]->operation);
+        self::assertCount(1, $dispatchedEvents);
+        self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
+        self::assertSame('articles', $dispatchedEvents[0]->type);
+        self::assertSame('1', $dispatchedEvents[0]->id);
+        self::assertSame('update', $dispatchedEvents[0]->operation);
     }
 
     public function testResourceDeleteDispatchesEvent(): void
@@ -128,11 +128,11 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Verify response is successful
         self::assertSame(204, $response->getStatusCode());
 
-         self::assertCount(1, $dispatchedEvents);
-         self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
-         self::assertSame('articles', $dispatchedEvents[0]->type);
-         self::assertSame('1', $dispatchedEvents[0]->id);
-         self::assertSame('delete', $dispatchedEvents[0]->operation);
+        self::assertCount(1, $dispatchedEvents);
+        self::assertInstanceOf(ResourceChangedEvent::class, $dispatchedEvents[0]);
+        self::assertSame('articles', $dispatchedEvents[0]->type);
+        self::assertSame('1', $dispatchedEvents[0]->id);
+        self::assertSame('delete', $dispatchedEvents[0]->operation);
     }
 
     public function testRelationshipUpdateDispatchesEvent(): void
@@ -168,12 +168,12 @@ final class InvalidationEventsTest extends JsonApiTestCase
         // Verify response is successful
         self::assertSame(200, $response->getStatusCode());
 
-         self::assertCount(1, $dispatchedEvents);
-         self::assertInstanceOf(RelationshipChangedEvent::class, $dispatchedEvents[0]);
-         self::assertSame('articles', $dispatchedEvents[0]->type);
-         self::assertSame('1', $dispatchedEvents[0]->id);
-         self::assertSame('tags', $dispatchedEvents[0]->relationship);
-         self::assertSame('add', $dispatchedEvents[0]->operation); // POST = add operation
+        self::assertCount(1, $dispatchedEvents);
+        self::assertInstanceOf(RelationshipChangedEvent::class, $dispatchedEvents[0]);
+        self::assertSame('articles', $dispatchedEvents[0]->type);
+        self::assertSame('1', $dispatchedEvents[0]->id);
+        self::assertSame('tags', $dispatchedEvents[0]->relationship);
+        self::assertSame('add', $dispatchedEvents[0]->operation); // POST = add operation
     }
 
     /**
@@ -287,4 +287,3 @@ final class InvalidationEventsTest extends JsonApiTestCase
         );
     }
 }
-

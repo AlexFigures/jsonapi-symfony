@@ -11,7 +11,7 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 class JsonApiHttpException extends RuntimeException implements HttpExceptionInterface
 {
     /**
-     * @param list<ErrorObject> $errors
+     * @param list<ErrorObject>     $errors
      * @param array<string, string> $headers
      */
     public function __construct(

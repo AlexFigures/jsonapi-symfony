@@ -28,10 +28,10 @@ use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Http\Write\InputDocumentValidator;
 use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -919,9 +919,9 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
     /**
      * Helper method to create JSON:API request.
      *
-     * @param string $method HTTP method
-     * @param string $uri Request URI
-     * @param array<string, mixed> $payload Request payload
+     * @param  string               $method  HTTP method
+     * @param  string               $uri     Request URI
+     * @param  array<string, mixed> $payload Request payload
      * @return Request
      */
     private function createJsonApiRequest(string $method, string $uri, array $payload): Request
@@ -940,4 +940,3 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
         );
     }
 }
-

@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Tests edge cases for AtomicValidator to kill escaped mutants.
- * 
+ *
  * Targets escaped mutants in src/Atomic/Validation/AtomicValidator.php:
  * - Logical operators (||, &&, !)
  * - String validation (empty strings)
@@ -81,7 +81,7 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
 
         $this->expectException(BadRequestException::class);
         $this->expectExceptionMessage('Missing operation target');
-        
+
         $this->validator->validate([$operation]);
     }
 
@@ -132,7 +132,7 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
 
         $this->expectException(BadRequestException::class);
         $this->expectExceptionMessage('Unknown resource type');
-        
+
         $this->validator->validate([$operation]);
     }
 
@@ -153,7 +153,7 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
 
         $this->expectException(BadRequestException::class);
         $this->expectExceptionMessage('Unknown relationship');
-        
+
         $this->validator->validate([$operation]);
     }
 
@@ -173,7 +173,7 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
         );
 
         $this->expectException(BadRequestException::class);
-        
+
         $this->validator->validate([$operation]);
     }
 
@@ -194,7 +194,7 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
 
         $this->expectException(BadRequestException::class);
         $this->expectExceptionMessage('type');
-        
+
         $this->validator->validate([$operation]);
     }
 
@@ -214,7 +214,7 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
         );
 
         $this->expectException(BadRequestException::class);
-        
+
         $this->validator->validate([$operation]);
     }
 
@@ -235,7 +235,7 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
 
         $this->expectException(BadRequestException::class);
         $this->expectExceptionMessage('Type mismatch');
-        
+
         $this->validator->validate([$operation]);
     }
 
@@ -256,7 +256,7 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
 
         $this->expectException(BadRequestException::class);
         $this->expectExceptionMessage('Unsupported');
-        
+
         $this->validator->validate([$operation]);
     }
 
@@ -276,9 +276,8 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
         );
 
         [$validated, $lids] = $this->validator->validate([$operation]);
-        
+
         self::assertCount(1, $validated);
         self::assertSame('add', $validated[0]->op);
     }
 }
-

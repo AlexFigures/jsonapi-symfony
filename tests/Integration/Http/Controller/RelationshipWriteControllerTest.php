@@ -65,11 +65,12 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
         );
 
         // Create simple ExistenceChecker
-        $existenceChecker = new class($this->em, $this->registry) implements \JsonApi\Symfony\Contract\Data\ExistenceChecker {
+        $existenceChecker = new class ($this->em, $this->registry) implements \JsonApi\Symfony\Contract\Data\ExistenceChecker {
             public function __construct(
                 private readonly \Doctrine\ORM\EntityManagerInterface $em,
                 private readonly \JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface $registry
-            ) {}
+            ) {
+            }
 
             public function exists(string $type, string $id): bool
             {
@@ -379,4 +380,3 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
         self::assertCount(1, $updatedArticle->getTags());
     }
 }
-

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Tests\Functional\Profile;
 
-use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Exception\NotAcceptableException;
 use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Profile\Negotiation\ProfileNegotiator;
 use JsonApi\Symfony\Profile\ProfileRegistry;
 use JsonApi\Symfony\Tests\Util\FakeProfile;
@@ -127,4 +127,3 @@ final class ProfileNegotiationErrorsTest extends TestCase
         self::assertSame(['https://example.com/known-profile'], $context->activeUris());
     }
 }
-

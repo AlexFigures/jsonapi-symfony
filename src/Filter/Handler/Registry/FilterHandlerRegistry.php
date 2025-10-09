@@ -52,8 +52,8 @@ final class FilterHandlerRegistry
     /**
      * Find a handler that supports the given field and operator.
      *
-     * @param string $field The field name
-     * @param string $operator The operator
+     * @param  string                      $field    The field name
+     * @param  string                      $operator The operator
      * @return FilterHandlerInterface|null The handler or null if none found
      */
     public function findHandler(string $field, string $operator): ?FilterHandlerInterface

@@ -177,7 +177,7 @@ final class RelationshipGetControllerTest extends DoctrineIntegrationTestCase
 
         self::assertIsArray($document['data']);
         self::assertCount(2, $document['data']);
-        
+
         $tagIds = array_column($document['data'], 'id');
         self::assertContains($tag1Id, $tagIds);
         self::assertContains($tag2Id, $tagIds);
@@ -242,4 +242,3 @@ final class RelationshipGetControllerTest extends DoctrineIntegrationTestCase
         self::assertEmpty($response->getContent());
     }
 }
-

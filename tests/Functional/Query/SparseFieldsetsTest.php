@@ -204,4 +204,3 @@ final class SparseFieldsetsTest extends JsonApiTestCase
         }
     }
 }
-

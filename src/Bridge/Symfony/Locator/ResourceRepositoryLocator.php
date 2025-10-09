@@ -54,4 +54,3 @@ final class ResourceRepositoryLocator implements ResourceRepository
         return $this->fallbackRepository;
     }
 }
-

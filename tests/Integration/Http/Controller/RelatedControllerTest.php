@@ -301,4 +301,3 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
         self::assertEmpty($response->getContent());
     }
 }
-

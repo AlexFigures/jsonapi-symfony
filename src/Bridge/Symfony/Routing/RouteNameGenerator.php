@@ -26,9 +26,9 @@ final class RouteNameGenerator
     /**
      * Generate a route name for a resource action.
      *
-     * @param string $resourceType The resource type (e.g., 'blog_posts', 'articles')
-     * @param string|null $action The action (e.g., 'index', 'show', 'create') - null for relationship routes
-     * @param string|null $relationship Optional relationship name for relationship routes
+     * @param string      $resourceType       The resource type (e.g., 'blog_posts', 'articles')
+     * @param string|null $action             The action (e.g., 'index', 'show', 'create') - null for relationship routes
+     * @param string|null $relationship       Optional relationship name for relationship routes
      * @param string|null $relationshipAction Optional relationship action (e.g., 'show', 'add', 'remove')
      */
     public function generateRouteName(
@@ -73,7 +73,7 @@ final class RouteNameGenerator
 
     /**
      * Convert a string to kebab-case.
-     * 
+     *
      * Handles various input formats:
      * - snake_case: blog_posts -> blog-posts
      * - camelCase: blogPosts -> blog-posts
@@ -84,10 +84,10 @@ final class RouteNameGenerator
     {
         // Handle camelCase and PascalCase by inserting hyphens before uppercase letters
         $result = preg_replace('/([a-z])([A-Z])/', '$1-$2', $input);
-        
+
         // Replace underscores with hyphens
         $result = str_replace('_', '-', $result);
-        
+
         // Convert to lowercase
         return strtolower($result);
     }

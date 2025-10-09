@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Bridge\Serializer\Normalizer;
 
-use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use Symfony\Component\Serializer\Exception\InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
@@ -22,8 +22,8 @@ final class JsonApiRelationshipDenormalizer implements DenormalizerInterface
     }
 
     /**
-     * @param mixed $data
-     * @param class-string $type
+     * @param mixed                $data
+     * @param class-string         $type
      * @param array<string, mixed> $context
      */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
@@ -71,7 +71,7 @@ final class JsonApiRelationshipDenormalizer implements DenormalizerInterface
     }
 
     /**
-     * @param class-string $type
+     * @param class-string         $type
      * @param array<string, mixed> $context
      */
     public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool

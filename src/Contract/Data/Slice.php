@@ -34,10 +34,10 @@ use Traversable;
 final class Slice implements Countable, IteratorAggregate
 {
     /**
-     * @param list<object> $items Resource objects for the current page
-     * @param int $pageNumber Current page number (1-based)
-     * @param int $pageSize Number of items per page
-     * @param int $totalItems Total number of items across all pages
+     * @param list<object> $items      Resource objects for the current page
+     * @param int          $pageNumber Current page number (1-based)
+     * @param int          $pageSize   Number of items per page
+     * @param int          $totalItems Total number of items across all pages
      */
     public function __construct(
         public array $items,

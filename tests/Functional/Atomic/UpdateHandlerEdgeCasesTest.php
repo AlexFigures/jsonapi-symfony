@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Tests edge cases for UpdateHandler to kill escaped mutants.
- * 
+ *
  * Targets escaped mutants in src/Atomic/Execution/Handlers/UpdateHandler.php:
  * - Type extraction logic (lines 38-41)
  * - Empty string validation
@@ -205,7 +205,7 @@ final class UpdateHandlerEdgeCasesTest extends JsonApiTestCase
         ], content: json_encode($updatePayload, \JSON_THROW_ON_ERROR));
 
         $updateResponse = $controller($updateRequest);
-        
+
         self::assertSame(200, $updateResponse->getStatusCode());
         $updateResult = json_decode($updateResponse->getContent(), true);
         self::assertSame('authors', $updateResult['atomic:results'][0]['data']['type']);
@@ -246,4 +246,3 @@ final class UpdateHandlerEdgeCasesTest extends JsonApiTestCase
         $controller($request);
     }
 }
-

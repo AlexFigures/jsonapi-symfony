@@ -126,7 +126,7 @@ final class FilterableFields
     /**
      * Normalize the input fields array to a consistent format.
      *
-     * @param list<FilterableField|string> $fields
+     * @param  list<FilterableField|string>   $fields
      * @return array<string, FilterableField>
      */
     private function normalizeFields(array $fields): array

@@ -117,4 +117,3 @@ class Author
         return $this;
     }
 }
-

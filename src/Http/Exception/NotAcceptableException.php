@@ -9,7 +9,7 @@ use JsonApi\Symfony\Http\Error\ErrorObject;
 final class NotAcceptableException extends JsonApiHttpException
 {
     /**
-     * @param list<ErrorObject> $errors
+     * @param list<ErrorObject>     $errors
      * @param array<string, string> $headers
      */
     public function __construct(

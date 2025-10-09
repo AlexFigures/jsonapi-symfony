@@ -37,4 +37,3 @@ final class NullRelationshipReader implements RelationshipReader
         return new Slice([], 1, $criteria->pagination->size, 0);
     }
 }
-

@@ -17,7 +17,8 @@ final class SearchArticlesHandler implements CustomRouteHandlerInterface
 {
     public function __construct(
         private array $articles = []
-    ) {}
+    ) {
+    }
 
     public function handle(CustomRouteContext $context): CustomRouteResult
     {
@@ -30,7 +31,7 @@ final class SearchArticlesHandler implements CustomRouteHandlerInterface
         // Simple search implementation
         $results = array_filter(
             $this->articles,
-            fn($article) => str_contains(strtolower($article->title), strtolower($query))
+            fn ($article) => str_contains(strtolower($article->title), strtolower($query))
         );
 
         return CustomRouteResult::collection(array_values($results))
@@ -40,4 +41,3 @@ final class SearchArticlesHandler implements CustomRouteHandlerInterface
             ]);
     }
 }
-

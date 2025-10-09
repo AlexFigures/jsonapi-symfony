@@ -262,4 +262,3 @@ final class RelationshipEventsTest extends JsonApiTestCase
         );
     }
 }
-

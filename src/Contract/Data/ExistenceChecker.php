@@ -39,9 +39,9 @@ interface ExistenceChecker
     /**
      * Check if a resource exists.
      *
-     * @param string $type Resource type (e.g., 'articles')
-     * @param string $id Resource identifier
-     * @return bool True if the resource exists, false otherwise
+     * @param  string $type Resource type (e.g., 'articles')
+     * @param  string $id   Resource identifier
+     * @return bool   True if the resource exists, false otherwise
      */
     public function exists(string $type, string $id): bool;
 }

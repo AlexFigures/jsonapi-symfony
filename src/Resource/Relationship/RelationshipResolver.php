@@ -12,10 +12,10 @@ use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Error\ErrorObject;
 use JsonApi\Symfony\Http\Error\ErrorSource;
 use JsonApi\Symfony\Http\Exception\ValidationException;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Metadata\RelationshipSemantics;
 use JsonApi\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
+use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
+use JsonApi\Symfony\Resource\Metadata\RelationshipSemantics;
+use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
@@ -40,7 +40,7 @@ class RelationshipResolver
     }
 
     /**
-     * @param array<string, mixed> $relationshipsPayload JSON:API relationships member ("relationships": { ... })
+     * @param  array<string, mixed> $relationshipsPayload JSON:API relationships member ("relationships": { ... })
      * @throws ValidationException
      */
     public function applyRelationships(
@@ -122,7 +122,9 @@ class RelationshipResolver
                             $ri = $this->validateResourceIdentifier($relName, $item, $relMeta, (int)$i);
                             $list[] = $ri;
                         } catch (ValidationException $ve) {
-                            foreach ($ve->getErrors() as $e) { $errorBucket[] = $e; }
+                            foreach ($ve->getErrors() as $e) {
+                                $errorBucket[] = $e;
+                            }
                         }
                     }
 
@@ -139,7 +141,9 @@ class RelationshipResolver
                     'Invalid relationship payload structure.'
                 );
             } catch (ValidationException $e) {
-                foreach ($e->getErrors() as $err) { $errorBucket[] = $err; }
+                foreach ($e->getErrors() as $err) {
+                    $errorBucket[] = $err;
+                }
             }
         }
 
@@ -255,10 +259,10 @@ class RelationshipResolver
      * Resolves multiple target entities in a single batch query.
      * This eliminates the N+1 query problem for to-many relationships.
      *
-     * @param array<int, array{type: string, id: string}> $resourceIdentifiers Array of resource identifiers
-     * @param RelationshipMetadata $meta Relationship metadata
-     * @return array<string, object> Map of ID => entity
-     * @throws ValidationException If any entities are not found (VERIFY policy only)
+     * @param  array<int, array{type: string, id: string}> $resourceIdentifiers Array of resource identifiers
+     * @param  RelationshipMetadata                        $meta                Relationship metadata
+     * @return array<string, object>                       Map of ID => entity
+     * @throws ValidationException                         If any entities are not found (VERIFY policy only)
      */
     private function resolveTargetsBatch(array $resourceIdentifiers, RelationshipMetadata $meta): array
     {
@@ -411,12 +415,16 @@ class RelationshipResolver
         // Determine adds/removes by semantics
         $adds = [];
         foreach ($desiredById as $id => $obj) {
-            if (!isset($currentById[$id])) { $adds[$id] = $obj; }
+            if (!isset($currentById[$id])) {
+                $adds[$id] = $obj;
+            }
         }
         $removes = [];
         if ($relMeta->semantics === RelationshipSemantics::REPLACE) {
             foreach ($currentById as $id => $obj) {
-                if (!isset($desiredById[$id])) { $removes[$id] = $obj; }
+                if (!isset($desiredById[$id])) {
+                    $removes[$id] = $obj;
+                }
             }
         }
 
@@ -470,7 +478,9 @@ class RelationshipResolver
             // Owning side: mutate owner's collection
             if ($assoc['isOwningSide']) {
                 $col = $this->getOrInitCollection($owner, $field);
-                if (!$col->contains($target)) { $col->add($target); }
+                if (!$col->contains($target)) {
+                    $col->add($target);
+                }
 
                 // keep inverse in sync when inversedBy exists
                 if (!empty($assoc['inversedBy'])) {
@@ -492,7 +502,9 @@ class RelationshipResolver
 
         // Fallback: treat as a simple collection field
         $col = $this->getOrInitCollection($owner, $field);
-        if (!$col->contains($target)) { $col->add($target); }
+        if (!$col->contains($target)) {
+            $col->add($target);
+        }
     }
 
     private function removeLink(object $owner, ResourceMetadata $ownerMeta, string $field, object $target): void
@@ -546,9 +558,14 @@ class RelationshipResolver
         // For *ToOne inverse side, prefer setter; for *ToMany inverse side, prefer adder
         if ($inverseIsToMany) {
             $adder = $this->guessAdderName($inverseField);
-            if (method_exists($target, $adder)) { $target->{$adder}($owner); return; }
+            if (method_exists($target, $adder)) {
+                $target->{$adder}($owner);
+                return;
+            }
             $col = $this->getOrInitCollection($target, $inverseField);
-            if (!$col->contains($owner)) { $col->add($owner); }
+            if (!$col->contains($owner)) {
+                $col->add($owner);
+            }
         } else {
             $this->callSetter($target, $inverseField, $owner);
         }
@@ -558,7 +575,10 @@ class RelationshipResolver
     {
         if ($this->isToMany($assocType)) {
             $adder = $this->guessAdderName($owningField);
-            if (method_exists($target, $adder)) { $target->{$adder}($owner); return; }
+            if (method_exists($target, $adder)) {
+                $target->{$adder}($owner);
+                return;
+            }
             $this->getOrInitCollection($target, $owningField)->add($owner);
         } else {
             $this->callSetter($target, $owningField, $owner);
@@ -569,7 +589,10 @@ class RelationshipResolver
     {
         if ($this->isToMany($assocType)) {
             $remover = $this->guessRemoverName($field);
-            if (method_exists($target, $remover)) { $target->{$remover}($owner); return; }
+            if (method_exists($target, $remover)) {
+                $target->{$remover}($owner);
+                return;
+            }
             $this->getOrInitCollection($target, $field)->removeElement($owner);
         } else {
             // to-one inverse: set null if currently points to $owner
@@ -611,7 +634,9 @@ class RelationshipResolver
 
     private function isList(array $arr): bool
     {
-        if ($arr === []) { return true; }
+        if ($arr === []) {
+            return true;
+        }
         return array_is_list($arr);
     }
 

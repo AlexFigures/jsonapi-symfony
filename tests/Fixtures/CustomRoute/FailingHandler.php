@@ -18,4 +18,3 @@ final class FailingHandler implements CustomRouteHandlerInterface
         throw new \RuntimeException('Simulated handler failure');
     }
 }
-

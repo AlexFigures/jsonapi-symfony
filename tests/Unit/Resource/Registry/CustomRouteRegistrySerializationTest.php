@@ -96,7 +96,7 @@ final class CustomRouteRegistrySerializationTest extends TestCase
 
         $allRoutes = $registry->all();
         self::assertCount(2, $allRoutes);
-        
+
         // Routes should be sorted by priority (higher first)
         self::assertSame('articles.archive', $allRoutes[0]->name);
         self::assertSame(5, $allRoutes[0]->priority);
@@ -127,4 +127,3 @@ final class CustomRouteRegistrySerializationTest extends TestCase
         self::assertSame(0, $allRoutes[0]->priority);
     }
 }
-

@@ -42,9 +42,9 @@ interface RelationshipReader
      *
      * Used for GET /articles/1/relationships/author endpoint.
      *
-     * @param string $type Source resource type (e.g., 'articles')
-     * @param string $id Source resource identifier
-     * @param string $rel Relationship name (e.g., 'author')
+     * @param  string      $type Source resource type (e.g., 'articles')
+     * @param  string      $id   Source resource identifier
+     * @param  string      $rel  Relationship name (e.g., 'author')
      * @return string|null Target resource ID or null if relationship is empty
      */
     public function getToOneId(string $type, string $id, string $rel): ?string;
@@ -54,11 +54,11 @@ interface RelationshipReader
      *
      * Used for GET /articles/1/relationships/comments endpoint.
      *
-     * @param string $type Source resource type (e.g., 'articles')
-     * @param string $id Source resource identifier
-     * @param string $rel Relationship name (e.g., 'comments')
-     * @param Pagination $pagination Pagination parameters
-     * @return SliceIds Paginated collection of target resource IDs
+     * @param  string     $type       Source resource type (e.g., 'articles')
+     * @param  string     $id         Source resource identifier
+     * @param  string     $rel        Relationship name (e.g., 'comments')
+     * @param  Pagination $pagination Pagination parameters
+     * @return SliceIds   Paginated collection of target resource IDs
      */
     public function getToManyIds(string $type, string $id, string $rel, Pagination $pagination): SliceIds;
 
@@ -67,9 +67,9 @@ interface RelationshipReader
      *
      * Used for GET /articles/1/author endpoint.
      *
-     * @param string $type Source resource type (e.g., 'articles')
-     * @param string $id Source resource identifier
-     * @param string $rel Relationship name (e.g., 'author')
+     * @param  string      $type Source resource type (e.g., 'articles')
+     * @param  string      $id   Source resource identifier
+     * @param  string      $rel  Relationship name (e.g., 'author')
      * @return object|null Related resource object or null if relationship is empty
      */
     public function getRelatedResource(string $type, string $id, string $rel): ?object;
@@ -79,11 +79,11 @@ interface RelationshipReader
      *
      * Used for GET /articles/1/comments endpoint.
      *
-     * @param string $type Source resource type (e.g., 'articles')
-     * @param string $id Source resource identifier
-     * @param string $rel Relationship name (e.g., 'comments')
-     * @param Criteria $criteria Query criteria (filters, sorting, pagination)
-     * @return Slice Paginated collection of related resources
+     * @param  string   $type     Source resource type (e.g., 'articles')
+     * @param  string   $id       Source resource identifier
+     * @param  string   $rel      Relationship name (e.g., 'comments')
+     * @param  Criteria $criteria Query criteria (filters, sorting, pagination)
+     * @return Slice    Paginated collection of related resources
      */
     public function getRelatedCollection(string $type, string $id, string $rel, Criteria $criteria): Slice;
 }

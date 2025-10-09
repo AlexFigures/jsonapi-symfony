@@ -16,9 +16,9 @@ final class ResourceRegistryTest extends TestCase
     public function testGetByTypeReturnsMetadataWhenFound(): void
     {
         $registry = new ResourceRegistry([ArticleFixture::class]);
-        
+
         $metadata = $registry->getByType('articles');
-        
+
         self::assertSame('articles', $metadata->type);
         self::assertSame(ArticleFixture::class, $metadata->class);
     }
@@ -26,33 +26,33 @@ final class ResourceRegistryTest extends TestCase
     public function testGetByTypeThrowsWhenTypeNotFound(): void
     {
         $registry = new ResourceRegistry([ArticleFixture::class]);
-        
+
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Unknown resource type "unknown".');
-        
+
         $registry->getByType('unknown');
     }
 
     public function testHasTypeReturnsTrueWhenExists(): void
     {
         $registry = new ResourceRegistry([ArticleFixture::class]);
-        
+
         self::assertTrue($registry->hasType('articles'));
     }
 
     public function testHasTypeReturnsFalseWhenNotExists(): void
     {
         $registry = new ResourceRegistry([ArticleFixture::class]);
-        
+
         self::assertFalse($registry->hasType('unknown'));
     }
 
     public function testGetByClassReturnsMetadataWhenFound(): void
     {
         $registry = new ResourceRegistry([ArticleFixture::class]);
-        
+
         $metadata = $registry->getByClass(ArticleFixture::class);
-        
+
         self::assertNotNull($metadata);
         self::assertSame('articles', $metadata->type);
         self::assertSame(ArticleFixture::class, $metadata->class);
@@ -61,9 +61,9 @@ final class ResourceRegistryTest extends TestCase
     public function testGetByClassReturnsNullWhenNotFound(): void
     {
         $registry = new ResourceRegistry([ArticleFixture::class]);
-        
+
         $metadata = $registry->getByClass(AuthorFixture::class);
-        
+
         self::assertNull($metadata);
     }
 
@@ -73,9 +73,9 @@ final class ResourceRegistryTest extends TestCase
             ArticleFixture::class,
             AuthorFixture::class,
         ]);
-        
+
         $all = $registry->all();
-        
+
         self::assertCount(2, $all);
         self::assertSame('articles', $all[0]->type);
         self::assertSame('authors', $all[1]->type);
@@ -85,7 +85,7 @@ final class ResourceRegistryTest extends TestCase
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Resource class "NonExistentClass" does not exist.');
-        
+
         new ResourceRegistry(['NonExistentClass']);
     }
 
@@ -93,7 +93,7 @@ final class ResourceRegistryTest extends TestCase
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Resource type "articles" is already registered.');
-        
+
         new ResourceRegistry([
             ArticleFixture::class,
             DuplicateArticleFixture::class,
@@ -104,7 +104,7 @@ final class ResourceRegistryTest extends TestCase
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessageMatches('/Resource type mismatch/');
-        
+
         new ResourceRegistry([
             'wrong-type' => ArticleFixture::class,
         ]);
@@ -113,9 +113,9 @@ final class ResourceRegistryTest extends TestCase
     public function testAcceptsResourceInstances(): void
     {
         $registry = new ResourceRegistry([new ArticleFixture()]);
-        
+
         $metadata = $registry->getByType('articles');
-        
+
         self::assertSame('articles', $metadata->type);
         self::assertSame(ArticleFixture::class, $metadata->class);
     }
@@ -123,9 +123,9 @@ final class ResourceRegistryTest extends TestCase
     public function testAcceptsResourceClassStrings(): void
     {
         $registry = new ResourceRegistry([ArticleFixture::class]);
-        
+
         $metadata = $registry->getByType('articles');
-        
+
         self::assertSame('articles', $metadata->type);
         self::assertSame(ArticleFixture::class, $metadata->class);
     }
@@ -136,7 +136,7 @@ final class ResourceRegistryTest extends TestCase
             new ArticleFixture(),
             AuthorFixture::class,
         ]);
-        
+
         self::assertTrue($registry->hasType('articles'));
         self::assertTrue($registry->hasType('authors'));
         self::assertCount(2, $registry->all());
@@ -145,35 +145,35 @@ final class ResourceRegistryTest extends TestCase
     public function testHasTypeWithEmptyRegistry(): void
     {
         $registry = new ResourceRegistry([]);
-        
+
         self::assertFalse($registry->hasType('articles'));
     }
 
     public function testAllWithEmptyRegistry(): void
     {
         $registry = new ResourceRegistry([]);
-        
+
         $all = $registry->all();
-        
+
         self::assertSame([], $all);
     }
 
     public function testGetByClassWithEmptyRegistry(): void
     {
         $registry = new ResourceRegistry([]);
-        
+
         $metadata = $registry->getByClass(ArticleFixture::class);
-        
+
         self::assertNull($metadata);
     }
 
     public function testGetByTypeWithEmptyRegistryThrows(): void
     {
         $registry = new ResourceRegistry([]);
-        
+
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Unknown resource type "articles".');
-        
+
         $registry->getByType('articles');
     }
 }
@@ -192,4 +192,3 @@ final class AuthorFixture
 final class DuplicateArticleFixture
 {
 }
-

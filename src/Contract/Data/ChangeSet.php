@@ -36,7 +36,7 @@ namespace JsonApi\Symfony\Contract\Data;
 final class ChangeSet
 {
     /**
-     * @param array<string, mixed> $attributes Attribute name => value map
+     * @param array<string, mixed>              $attributes    Attribute name => value map
      * @param array<string, array{data: mixed}> $relationships Relationship name => JSON:API relationship data
      */
     public function __construct(

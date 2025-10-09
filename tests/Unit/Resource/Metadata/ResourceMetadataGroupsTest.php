@@ -90,4 +90,3 @@ final class ResourceMetadataGroupsTest extends TestCase
         $this->assertSame(['article:write', 'Default'], $metadata->getDenormalizationGroups());
     }
 }
-

@@ -52,4 +52,3 @@ final class ResourcePersisterLocator implements ResourcePersister
         return $this->fallbackPersister;
     }
 }
-

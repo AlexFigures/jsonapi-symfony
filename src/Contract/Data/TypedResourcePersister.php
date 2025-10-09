@@ -14,8 +14,8 @@ interface TypedResourcePersister extends ResourcePersister
     /**
      * Checks whether this persister supports the given resource type.
      *
-     * @param string $type JSON:API resource type (for example 'articles', 'users')
-     * @return bool true when the persister supports the type
+     * @param  string $type JSON:API resource type (for example 'articles', 'users')
+     * @return bool   true when the persister supports the type
      */
     public function supports(string $type): bool;
 }

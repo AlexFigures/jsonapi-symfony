@@ -27,4 +27,3 @@ final class NullExistenceChecker implements ExistenceChecker
         );
     }
 }
-

@@ -316,4 +316,3 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
         self::assertSame('authors', $document['included'][0]['type']);
     }
 }
-

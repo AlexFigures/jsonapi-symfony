@@ -13,10 +13,10 @@ use JsonApi\Symfony\Resource\Attribute\FilterableFields;
 final class ResourceMetadata
 {
     /**
-     * @param AttributeMap    $attributes
-     * @param RelationshipMap $relationships
-     * @param class-string    $class
-     * @param list<string>    $sortableFields
+     * @param AttributeMap         $attributes
+     * @param RelationshipMap      $relationships
+     * @param class-string         $class
+     * @param list<string>         $sortableFields
      * @param array<string, mixed> $normalizationContext
      * @param array<string, mixed> $denormalizationContext
      */

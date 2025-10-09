@@ -48,7 +48,8 @@ final class CustomRouteController
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly ErrorBuilder $errorBuilder,
         private readonly LoggerInterface $logger = new NullLogger(),
-    ) {}
+    ) {
+    }
 
     /**
      * Handle a custom route request.
@@ -57,8 +58,8 @@ final class CustomRouteController
      * The route name is used to resolve the handler, and the handler is
      * executed within a transaction.
      *
-     * @param Request $request The HTTP request
-     * @param string $routeName The route name (e.g., 'articles.publish')
+     * @param Request $request   The HTTP request
+     * @param string  $routeName The route name (e.g., 'articles.publish')
      *
      * @return Response The HTTP response
      */
@@ -67,33 +68,33 @@ final class CustomRouteController
         try {
             // Resolve the handler for this route
             $handler = $this->handlerRegistry->get($routeName);
-            
+
             // Create the context from the request
             $context = $this->contextFactory->create($request, $routeName);
-            
+
             $this->logger->debug('Executing custom route handler', [
                 'route' => $routeName,
                 'handler' => $handler::class,
                 'resourceType' => $context->getResourceType(),
                 'hasResource' => $context->hasResource(),
             ]);
-            
+
             // Execute the handler (with transaction wrapping)
             $result = $this->executeHandler($handler, $context);
-            
+
             // Dispatch resource changed event if applicable
             $this->dispatchEventIfNeeded($result, $context);
-            
+
             // Build the response
             $response = $this->responseBuilder->build($result, $context);
-            
+
             $this->logger->debug('Custom route handler executed successfully', [
                 'route' => $routeName,
                 'status' => $response->getStatusCode(),
             ]);
-            
+
             return $response;
-            
+
         } catch (JsonApiHttpException $e) {
             // JSON:API exceptions are already properly formatted, just re-throw
             throw $e;
@@ -104,7 +105,7 @@ final class CustomRouteController
                 'exception' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             throw $this->convertToJsonApiException($e);
         }
     }
@@ -159,7 +160,7 @@ final class CustomRouteController
     {
         $reflection = new \ReflectionClass($handler);
         $attributes = $reflection->getAttributes(NoTransaction::class);
-        
+
         return count($attributes) > 0;
     }
 
@@ -177,11 +178,11 @@ final class CustomRouteController
     ): void {
         $status = $result->getStatus();
         $resourceType = $context->getResourceType();
-        
+
         // Determine operation type based on status and result type
         $operation = null;
         $resourceId = null;
-        
+
         if ($status === Response::HTTP_CREATED && $result->isResource()) {
             $operation = 'create';
             $resourceId = $this->extractResourceId($result->getData());
@@ -193,12 +194,12 @@ final class CustomRouteController
             $operation = 'delete';
             $resourceId = $context->getParam('id');
         }
-        
+
         if ($operation !== null && $resourceId !== null) {
             $this->eventDispatcher->dispatch(
                 new ResourceChangedEvent($resourceType, (string) $resourceId, $operation)
             );
-            
+
             $this->logger->debug('Dispatched resource changed event', [
                 'resourceType' => $resourceType,
                 'resourceId' => $resourceId,
@@ -221,7 +222,7 @@ final class CustomRouteController
             if (property_exists($resource, $property)) {
                 return (string) $resource->$property;
             }
-            
+
             if (method_exists($resource, $property)) {
                 return (string) $resource->$property();
             }
@@ -273,4 +274,3 @@ final class HandlerReturnedErrorException extends \RuntimeException
         return $this->result;
     }
 }
-

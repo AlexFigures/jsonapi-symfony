@@ -8,16 +8,16 @@ use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Manages deferred flush operations for Doctrine ORM.
- * 
+ *
  * This class implements the "deferred flush" pattern where entity changes
  * are accumulated and flushed at a centralized point (typically after
  * controller execution via WriteListener).
- * 
+ *
  * Benefits:
  * - Allows Doctrine's CommitOrderCalculator to properly order entity insertions
  * - Reduces number of database round-trips (one flush per request)
  * - Enables batch operations with correct dependency ordering
- * 
+ *
  * @internal This class is used internally by the bundle's persistence layer
  */
 final class FlushManager
@@ -31,7 +31,7 @@ final class FlushManager
 
     /**
      * Schedule a flush operation to be executed later.
-     * 
+     *
      * This method is called by ResourceProcessor implementations after
      * preparing entities for persistence. The actual flush will be
      * performed by WriteListener after controller execution.
@@ -43,10 +43,10 @@ final class FlushManager
 
     /**
      * Execute the scheduled flush operation.
-     * 
+     *
      * This method is called by WriteListener after controller execution.
      * It only flushes if a flush was previously scheduled via scheduleFlush().
-     * 
+     *
      * @throws \Throwable Database errors (constraint violations, etc.)
      */
     public function flush(): void
@@ -59,7 +59,7 @@ final class FlushManager
 
     /**
      * Clear the scheduled flush flag without executing flush.
-     * 
+     *
      * This method is called by WriteListener when an exception occurs
      * to prevent flushing incomplete/invalid data.
      */
@@ -70,7 +70,7 @@ final class FlushManager
 
     /**
      * Check if a flush operation is currently scheduled.
-     * 
+     *
      * @internal Used for testing and debugging
      */
     public function isFlushScheduled(): bool
@@ -78,4 +78,3 @@ final class FlushManager
         return $this->flushScheduled;
     }
 }
-

@@ -122,4 +122,3 @@ final class HeadRequestTest extends JsonApiTestCase
         }
     }
 }
-

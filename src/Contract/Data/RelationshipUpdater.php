@@ -46,10 +46,10 @@ interface RelationshipUpdater
      *
      * Used for PATCH /articles/1/relationships/author endpoint.
      *
-     * @param string $type Source resource type (e.g., 'articles')
-     * @param string $id Source resource identifier
-     * @param string $rel Relationship name (e.g., 'author')
-     * @param ResourceIdentifier|null $target Target resource identifier or null to clear relationship
+     * @param  string                  $type   Source resource type (e.g., 'articles')
+     * @param  string                  $id     Source resource identifier
+     * @param  string                  $rel    Relationship name (e.g., 'author')
+     * @param  ResourceIdentifier|null $target Target resource identifier or null to clear relationship
      * @return void
      */
     public function replaceToOne(string $type, string $id, string $rel, ?ResourceIdentifier $target): void;
@@ -59,10 +59,10 @@ interface RelationshipUpdater
      *
      * Used for PATCH /articles/1/relationships/tags endpoint.
      *
-     * @param string $type Source resource type (e.g., 'articles')
-     * @param string $id Source resource identifier
-     * @param string $rel Relationship name (e.g., 'tags')
-     * @param list<ResourceIdentifier> $targets Target resource identifiers
+     * @param  string                   $type    Source resource type (e.g., 'articles')
+     * @param  string                   $id      Source resource identifier
+     * @param  string                   $rel     Relationship name (e.g., 'tags')
+     * @param  list<ResourceIdentifier> $targets Target resource identifiers
      * @return void
      */
     public function replaceToMany(string $type, string $id, string $rel, array $targets): void;
@@ -72,10 +72,10 @@ interface RelationshipUpdater
      *
      * Used for POST /articles/1/relationships/tags endpoint.
      *
-     * @param string $type Source resource type (e.g., 'articles')
-     * @param string $id Source resource identifier
-     * @param string $rel Relationship name (e.g., 'tags')
-     * @param list<ResourceIdentifier> $targets Target resource identifiers to add
+     * @param  string                   $type    Source resource type (e.g., 'articles')
+     * @param  string                   $id      Source resource identifier
+     * @param  string                   $rel     Relationship name (e.g., 'tags')
+     * @param  list<ResourceIdentifier> $targets Target resource identifiers to add
      * @return void
      */
     public function addToMany(string $type, string $id, string $rel, array $targets): void;
@@ -85,10 +85,10 @@ interface RelationshipUpdater
      *
      * Used for DELETE /articles/1/relationships/tags endpoint.
      *
-     * @param string $type Source resource type (e.g., 'articles')
-     * @param string $id Source resource identifier
-     * @param string $rel Relationship name (e.g., 'tags')
-     * @param list<ResourceIdentifier> $targets Target resource identifiers to remove
+     * @param  string                   $type    Source resource type (e.g., 'articles')
+     * @param  string                   $id      Source resource identifier
+     * @param  string                   $rel     Relationship name (e.g., 'tags')
+     * @param  list<ResourceIdentifier> $targets Target resource identifiers to remove
      * @return void
      */
     public function removeFromToMany(string $type, string $id, string $rel, array $targets): void;

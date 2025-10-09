@@ -82,10 +82,10 @@ final class SortingWhitelistTest extends TestCase
 
         $registry = $this->createMock(ResourceRegistryInterface::class);
         $registry->method('hasType')->willReturnCallback(
-            fn(string $type) => in_array($type, ['articles', 'authors'], true)
+            fn (string $type) => in_array($type, ['articles', 'authors'], true)
         );
         $registry->method('getByType')->willReturnCallback(
-            fn(string $type) => match ($type) {
+            fn (string $type) => match ($type) {
                 'articles' => $articlesMetadata,
                 'authors' => $authorsMetadata,
             }
@@ -98,4 +98,3 @@ final class SortingWhitelistTest extends TestCase
         self::assertSame([], $whitelist->allowedFor('unknown'));
     }
 }
-

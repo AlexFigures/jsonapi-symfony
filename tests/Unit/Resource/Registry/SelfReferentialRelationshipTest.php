@@ -64,4 +64,3 @@ class SelfReferentialEntity
         $this->parent = $parent;
     }
 }
-

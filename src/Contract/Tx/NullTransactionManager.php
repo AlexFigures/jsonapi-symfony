@@ -19,4 +19,3 @@ final class NullTransactionManager implements TransactionManager
         return $callback();
     }
 }
-

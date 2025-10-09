@@ -448,7 +448,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'], // Wrong content type
-            json_encode($payload, JSON_THROW_ON_ERROR)
+            json_encode($payload, \JSON_THROW_ON_ERROR)
         );
 
         try {
@@ -763,9 +763,9 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
     /**
      * Helper method to create a JSON:API compliant request.
      *
-     * @param string $method HTTP method
-     * @param string $uri Request URI
-     * @param array<string, mixed> $payload Request payload
+     * @param  string               $method  HTTP method
+     * @param  string               $uri     Request URI
+     * @param  array<string, mixed> $payload Request payload
      * @return Request
      */
     private function createJsonApiRequest(string $method, string $uri, array $payload): Request
@@ -777,9 +777,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
             [],
             [],
             ['CONTENT_TYPE' => MediaType::JSON_API],
-            json_encode($payload, JSON_THROW_ON_ERROR)
+            json_encode($payload, \JSON_THROW_ON_ERROR)
         );
     }
 }
-
-

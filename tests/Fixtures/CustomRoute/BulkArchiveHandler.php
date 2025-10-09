@@ -15,7 +15,8 @@ final class BulkArchiveHandler implements CustomRouteHandlerInterface
 {
     public function __construct(
         private array $articles = []
-    ) {}
+    ) {
+    }
 
     public function handle(CustomRouteContext $context): CustomRouteResult
     {
@@ -43,4 +44,3 @@ final class BulkArchiveHandler implements CustomRouteHandlerInterface
             ]);
     }
 }
-

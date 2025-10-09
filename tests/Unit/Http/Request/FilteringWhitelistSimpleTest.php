@@ -25,7 +25,7 @@ final class FilteringWhitelistSimpleTest extends TestCase
         $whitelist = new FilteringWhitelist($registry, $errorMapper);
 
         // Test with no type in registry
-        $registry->method('hasType')->willReturnCallback(function($type) {
+        $registry->method('hasType')->willReturnCallback(function ($type) {
             return $type === 'articles';
         });
 

@@ -41,9 +41,9 @@ final class LinkGeneratorTest extends TestCase
             ->willReturn('https://example.com/api/articles/123');
 
         $linkGenerator = new LinkGenerator($urlGenerator);
-        
+
         $result = $linkGenerator->resourceSelf('articles', '123');
-        
+
         $this->assertSame('https://example.com/api/articles/123', $result);
     }
 
@@ -61,9 +61,9 @@ final class LinkGeneratorTest extends TestCase
             ->willReturn('https://example.com/api/articles/123/relationships/author');
 
         $linkGenerator = new LinkGenerator($urlGenerator);
-        
+
         $result = $linkGenerator->relationshipSelf('articles', '123', 'author');
-        
+
         $this->assertSame('https://example.com/api/articles/123/relationships/author', $result);
     }
 
@@ -81,9 +81,9 @@ final class LinkGeneratorTest extends TestCase
             ->willReturn('https://example.com/api/articles/123/author');
 
         $linkGenerator = new LinkGenerator($urlGenerator);
-        
+
         $result = $linkGenerator->relationshipRelated('articles', '123', 'author');
-        
+
         $this->assertSame('https://example.com/api/articles/123/author', $result);
     }
 
@@ -98,17 +98,17 @@ final class LinkGeneratorTest extends TestCase
             });
 
         $linkGenerator = new LinkGenerator($urlGenerator);
-        
+
         $request = Request::create('https://example.com/api/articles?page[number]=2');
         $pagination = new Pagination(number: 2, size: 10);
-        
+
         $result = $linkGenerator->collectionPagination('articles', $pagination, 50, $request);
-        
+
         $this->assertArrayHasKey('first', $result);
         $this->assertArrayHasKey('last', $result);
         $this->assertArrayHasKey('prev', $result);
         $this->assertArrayHasKey('next', $result);
-        
+
         $this->assertStringContainsString('page[number]=1', $result['first']);
         $this->assertStringContainsString('page[number]=5', $result['last']);
         $this->assertStringContainsString('page[number]=1', $result['prev']);
@@ -126,12 +126,12 @@ final class LinkGeneratorTest extends TestCase
             });
 
         $linkGenerator = new LinkGenerator($urlGenerator);
-        
+
         $request = Request::create('https://example.com/api/articles?page[number]=1');
         $pagination = new Pagination(number: 1, size: 10);
-        
+
         $result = $linkGenerator->collectionPagination('articles', $pagination, 50, $request);
-        
+
         $this->assertArrayHasKey('first', $result);
         $this->assertArrayHasKey('last', $result);
         $this->assertArrayNotHasKey('prev', $result);
@@ -149,12 +149,12 @@ final class LinkGeneratorTest extends TestCase
             });
 
         $linkGenerator = new LinkGenerator($urlGenerator);
-        
+
         $request = Request::create('https://example.com/api/articles?page[number]=5');
         $pagination = new Pagination(number: 5, size: 10);
-        
+
         $result = $linkGenerator->collectionPagination('articles', $pagination, 50, $request);
-        
+
         $this->assertArrayHasKey('first', $result);
         $this->assertArrayHasKey('last', $result);
         $this->assertArrayHasKey('prev', $result);
@@ -175,11 +175,10 @@ final class LinkGeneratorTest extends TestCase
             ->willReturn('https://example.com/api/articles');
 
         $linkGenerator = new LinkGenerator($urlGenerator);
-        
+
         $request = Request::create('https://example.com/api/articles');
         $pagination = new Pagination(number: 1, size: 10);
-        
+
         $linkGenerator->collectionPagination('articles', $pagination, 10, $request);
     }
 }
-

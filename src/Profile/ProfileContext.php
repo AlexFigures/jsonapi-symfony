@@ -40,9 +40,9 @@ final class ProfileContext
     private ?array $relationshipHooks = null;
 
     /**
-     * @param array<string, ProfileInterface>      $activeProfiles
+     * @param array<string, ProfileInterface>       $activeProfiles
      * @param array<string, list<ProfileInterface>> $profilesPerType
-     * @param array<string, list<string>>          $sources
+     * @param array<string, list<string>>           $sources
      */
     public function __construct(array $activeProfiles, array $profilesPerType = [], array $sources = [])
     {

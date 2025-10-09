@@ -17,7 +17,7 @@ final class InputDocumentErrorsTest extends JsonApiTestCase
                 'type' => 'authors',
                 'attributes' => ['title' => 'Test'],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
         $request = Request::create(
             '/api/articles',
             'POST',
@@ -44,7 +44,7 @@ final class InputDocumentErrorsTest extends JsonApiTestCase
                 'type' => 'articles',
                 'attributes' => ['title' => 'Updated'],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
         $request = Request::create(
             '/api/articles/1',
             'PATCH',

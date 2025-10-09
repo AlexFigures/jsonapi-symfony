@@ -14,22 +14,22 @@ use JsonApi\Symfony\Http\Exception\ForbiddenException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Http\Exception\UnprocessableEntityException;
 use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
-use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
 use JsonApi\Symfony\Http\Link\LinkGenerator;
 use JsonApi\Symfony\Http\Negotiation\MediaType;
+use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
+use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Http\Write\InputDocumentValidator;
 use JsonApi\Symfony\Http\Write\WriteConfig;
 use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use RuntimeException;
 
 #[Route(path: '/api/{type}', methods: ['POST'], name: 'jsonapi.create')]
 final class CreateResourceController

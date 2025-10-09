@@ -53,4 +53,3 @@ final class NullRelationshipUpdater implements RelationshipUpdater
         );
     }
 }
-

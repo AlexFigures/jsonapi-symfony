@@ -11,6 +11,7 @@ use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship as RelationshipAttribute;
 use JsonApi\Symfony\Resource\Attribute\SortableFields;
 use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
+use JsonApi\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use LogicException;
@@ -239,6 +240,14 @@ final class ResourceRegistry implements ResourceRegistryInterface
 
             $targetType = $instance->targetType ?? $this->guessTargetType($targetClass);
 
+            // Convert linkingPolicy from string to enum if needed
+            $linkingPolicy = RelationshipLinkingPolicy::REFERENCE; // default
+            if ($instance->linkingPolicy !== null) {
+                $linkingPolicy = $instance->linkingPolicy instanceof RelationshipLinkingPolicy
+                    ? $instance->linkingPolicy
+                    : RelationshipLinkingPolicy::from($instance->linkingPolicy);
+            }
+
             $relationships[$name] = new RelationshipMetadata(
                 $name,
                 $instance->toMany,
@@ -246,6 +255,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
                 $propertyPath,
                 $targetClass,
                 $nullable,
+                $linkingPolicy,
             );
         }
 

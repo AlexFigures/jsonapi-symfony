@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Tests\Functional;
 
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Atomic\AtomicConfig;
 use JsonApi\Symfony\Atomic\Execution\AtomicTransaction;
 use JsonApi\Symfony\Atomic\Execution\Handlers\AddHandler;
@@ -18,6 +15,9 @@ use JsonApi\Symfony\Atomic\Parser\AtomicRequestParser;
 use JsonApi\Symfony\Atomic\Result\ResultBuilder;
 use JsonApi\Symfony\Atomic\Validation\AtomicValidator;
 use JsonApi\Symfony\Bridge\Symfony\Controller\AtomicController;
+use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceRepository;
+use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Http\Controller\CollectionController;
 use JsonApi\Symfony\Http\Controller\CreateResourceController;
 use JsonApi\Symfony\Http\Controller\DeleteResourceController;
@@ -32,12 +32,12 @@ use JsonApi\Symfony\Http\Error\ErrorBuilder;
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Error\JsonApiExceptionListener;
 use JsonApi\Symfony\Http\Link\LinkGenerator;
+use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use JsonApi\Symfony\Http\Relationship\LinkageBuilder;
 use JsonApi\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
 use JsonApi\Symfony\Http\Request\PaginationConfig;
 use JsonApi\Symfony\Http\Request\QueryParser;
 use JsonApi\Symfony\Http\Request\SortingWhitelist;
-use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Http\Write\InputDocumentValidator;
@@ -63,14 +63,14 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
-use Symfony\Component\HttpKernel\Event\ExceptionEvent;
-use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 abstract class JsonApiTestCase extends TestCase
 {
@@ -230,7 +230,7 @@ abstract class JsonApiTestCase extends TestCase
     {
         $listener = new JsonApiExceptionListener(
             $this->errorMapper(),
-            new class($correlationId) extends CorrelationIdProvider {
+            new class ($correlationId) extends CorrelationIdProvider {
                 public function __construct(private string $id)
                 {
                 }

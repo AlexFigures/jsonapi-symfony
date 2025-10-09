@@ -796,7 +796,7 @@ final class OpenApiSpecGenerator
 
     private function studly(string $value): string
     {
-        $segments = preg_split('/[^a-zA-Z0-9]+/', $value, -1, PREG_SPLIT_NO_EMPTY);
+        $segments = preg_split('/[^a-zA-Z0-9]+/', $value, -1, \PREG_SPLIT_NO_EMPTY);
         if ($segments === false || $segments === []) {
             return ucfirst($value);
         }

@@ -30,7 +30,7 @@ final class FilteringWhitelistSecurityTest extends TestCase
         $filterableFields = new FilterableFields([
             new FilterableField('title', ['eq'])
         ]);
-        
+
         $metadata = new ResourceMetadata(
             type: 'articles',
             class: 'App\\Entity\\Article',

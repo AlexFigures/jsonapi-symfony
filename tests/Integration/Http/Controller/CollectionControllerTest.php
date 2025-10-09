@@ -1182,7 +1182,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         self::assertContains('articles', $includedTypes);
 
         // Count articles in included (should be at least 2 - the other articles by same author)
-        $includedArticles = array_filter($document['included'], fn($item) => $item['type'] === 'articles');
+        $includedArticles = array_filter($document['included'], fn ($item) => $item['type'] === 'articles');
         self::assertGreaterThanOrEqual(2, count($includedArticles));
     }
 
@@ -1245,8 +1245,8 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         self::assertContains('tags', $includedTypes);
 
         // Verify counts
-        $authors = array_filter($document['included'], fn($item) => $item['type'] === 'authors');
-        $tags = array_filter($document['included'], fn($item) => $item['type'] === 'tags');
+        $authors = array_filter($document['included'], fn ($item) => $item['type'] === 'authors');
+        $tags = array_filter($document['included'], fn ($item) => $item['type'] === 'tags');
 
         self::assertCount(1, $authors);
         self::assertCount(3, $tags); // All 3 unique tags should be included
@@ -1343,7 +1343,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
 
         // Included author should have all fields (no sparse fieldsets applied)
         self::assertArrayHasKey('included', $document);
-        $author = array_values(array_filter($document['included'], fn($item) => $item['type'] === 'authors'))[0];
+        $author = array_values(array_filter($document['included'], fn ($item) => $item['type'] === 'authors'))[0];
         self::assertArrayHasKey('name', $author['attributes']);
         self::assertArrayHasKey('email', $author['attributes']);
     }
@@ -1383,7 +1383,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
 
         // Included author should only have 'name' attribute
         self::assertArrayHasKey('included', $document);
-        $author = array_values(array_filter($document['included'], fn($item) => $item['type'] === 'authors'))[0];
+        $author = array_values(array_filter($document['included'], fn ($item) => $item['type'] === 'authors'))[0];
         self::assertArrayHasKey('name', $author['attributes']);
         self::assertArrayNotHasKey('email', $author['attributes']);
     }
@@ -1437,13 +1437,13 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
 
         // Included author should only have 'name' attribute
         self::assertArrayHasKey('included', $document);
-        $authors = array_filter($document['included'], fn($item) => $item['type'] === 'authors');
+        $authors = array_filter($document['included'], fn ($item) => $item['type'] === 'authors');
         $author = array_values($authors)[0];
         self::assertArrayHasKey('name', $author['attributes']);
         self::assertArrayNotHasKey('email', $author['attributes']);
 
         // Included tags should only have 'name' attribute
-        $tags = array_filter($document['included'], fn($item) => $item['type'] === 'tags');
+        $tags = array_filter($document['included'], fn ($item) => $item['type'] === 'tags');
         foreach ($tags as $tag) {
             self::assertArrayHasKey('name', $tag['attributes']);
             self::assertCount(1, $tag['attributes']); // Only 'name' field
@@ -1503,8 +1503,8 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         self::assertContains('articles', $includedTypes);
 
         // Verify we have the expected resources
-        $authors = array_filter($document['included'], fn($item) => $item['type'] === 'authors');
-        $articles = array_filter($document['included'], fn($item) => $item['type'] === 'articles');
+        $authors = array_filter($document['included'], fn ($item) => $item['type'] === 'authors');
+        $articles = array_filter($document['included'], fn ($item) => $item['type'] === 'articles');
 
         self::assertCount(1, $authors); // One author
         self::assertGreaterThanOrEqual(2, count($articles)); // At least 2 other articles by same author
@@ -1513,9 +1513,9 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
     /**
      * Helper method to create JSON:API GET request.
      *
-     * @param string $method HTTP method
-     * @param string $uri Request URI
-     * @param array<string, mixed> $query Query parameters
+     * @param  string               $method HTTP method
+     * @param  string               $uri    Request URI
+     * @param  array<string, mixed> $query  Query parameters
      * @return Request
      */
     private function createJsonApiGetRequest(string $method, string $uri, array $query = []): Request
@@ -1530,4 +1530,3 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         );
     }
 }
-

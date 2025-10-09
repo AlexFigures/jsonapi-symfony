@@ -33,12 +33,13 @@ final class CustomRouteResponseBuilder
         private readonly DocumentBuilder $documentBuilder,
         private readonly LinkGenerator $linkGenerator,
         private readonly ErrorBuilder $errorBuilder,
-    ) {}
+    ) {
+    }
 
     /**
      * Build a Symfony Response from a CustomRouteResult.
      *
-     * @param CustomRouteResult $result The result from the handler
+     * @param CustomRouteResult  $result  The result from the handler
      * @param CustomRouteContext $context The request context
      *
      * @return Response The Symfony HTTP response
@@ -131,7 +132,7 @@ final class CustomRouteResponseBuilder
     private function buildResourceResponse(CustomRouteResult $result, CustomRouteContext $context): JsonResponse
     {
         $resource = $result->getData();
-        
+
         if (!is_object($resource)) {
             return $this->buildInternalErrorResponse('Resource result must contain an object');
         }
@@ -179,14 +180,14 @@ final class CustomRouteResponseBuilder
     private function buildCollectionResponse(CustomRouteResult $result, CustomRouteContext $context): JsonResponse
     {
         $resources = $result->getData();
-        
+
         if (!is_array($resources)) {
             return $this->buildInternalErrorResponse('Collection result must contain an array');
         }
 
         $totalItems = $result->getTotalItems() ?? count($resources);
         $criteria = $context->getCriteria();
-        
+
         // Create a Slice for pagination
         $slice = new Slice(
             items: $resources,
@@ -304,4 +305,3 @@ final class CustomRouteResponseBuilder
         );
     }
 }
-

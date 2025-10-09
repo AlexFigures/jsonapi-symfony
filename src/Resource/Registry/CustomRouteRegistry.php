@@ -52,8 +52,8 @@ final class CustomRouteRegistry implements CustomRouteRegistryInterface
     {
         // Sort by priority (higher priority first)
         $routes = $this->routes;
-        usort($routes, static fn(CustomRouteMetadata $a, CustomRouteMetadata $b) => $b->priority <=> $a->priority);
-        
+        usort($routes, static fn (CustomRouteMetadata $a, CustomRouteMetadata $b) => $b->priority <=> $a->priority);
+
         return $routes;
     }
 
@@ -61,7 +61,7 @@ final class CustomRouteRegistry implements CustomRouteRegistryInterface
     {
         return array_values(array_filter(
             $this->all(),
-            static fn(CustomRouteMetadata $route) => $route->resourceType === $resourceType
+            static fn (CustomRouteMetadata $route) => $route->resourceType === $resourceType
         ));
     }
 }

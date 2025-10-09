@@ -149,7 +149,7 @@ final class ChangeSetFactoryTest extends TestCase
 
         // Suppress deprecation warning for this test
         $errorReporting = error_reporting();
-        error_reporting($errorReporting & ~E_USER_DEPRECATED);
+        error_reporting($errorReporting & ~\E_USER_DEPRECATED);
 
         $changeSet = $this->factory->fromAttributes('articles', ['title' => 'Test']);
 
@@ -177,7 +177,7 @@ final class ChangeSetFactoryTest extends TestCase
         // Capture deprecation warnings
         $deprecations = [];
         set_error_handler(function ($errno, $errstr) use (&$deprecations) {
-            if ($errno === E_USER_DEPRECATED) {
+            if ($errno === \E_USER_DEPRECATED) {
                 $deprecations[] = $errstr;
             }
             return true;
@@ -215,4 +215,3 @@ final class ChangeSetFactoryTest extends TestCase
         $this->assertEquals($relationships, $changeSet->relationships);
     }
 }
-

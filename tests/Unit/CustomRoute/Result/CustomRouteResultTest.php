@@ -247,4 +247,3 @@ final class CustomRouteResultTest extends TestCase
         self::assertFalse($noContentResult->isResource());
     }
 }
-

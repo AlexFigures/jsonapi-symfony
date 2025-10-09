@@ -65,7 +65,7 @@ final class ResourceDiscoveryPassTest extends TestCase
         $this->assertNotEmpty($discoveredCustomRoutes);
 
         // Routes are now stored as arrays (serializable format)
-        $routeNames = array_map(fn($route) => $route['name'], $discoveredCustomRoutes);
+        $routeNames = array_map(fn ($route) => $route['name'], $discoveredCustomRoutes);
         $this->assertContains('articles.publish', $routeNames);
         $this->assertContains('articles.archive', $routeNames);
         $this->assertContains('articles.search', $routeNames);

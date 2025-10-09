@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Tests\Functional\Atomic;
 
-use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
+use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -307,4 +307,3 @@ final class AtomicTransactionalityTest extends JsonApiTestCase
         self::assertSame(1, $count, 'Should still have only 1 author');
     }
 }
-

@@ -11,7 +11,7 @@ class TestAuthor
 {
     public string $id = '';
     public string $name = '';
-    
+
     /** @var Collection<int, TestBook> */
     public Collection $books;
 

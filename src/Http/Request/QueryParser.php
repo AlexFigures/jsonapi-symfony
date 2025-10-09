@@ -10,13 +10,13 @@ use JsonApi\Symfony\Http\Error\ErrorObject;
 use JsonApi\Symfony\Http\Error\ErrorSource;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
+use JsonApi\Symfony\Http\Request\FilteringWhitelist;
+use JsonApi\Symfony\Http\Safety\LimitsEnforcer;
 use JsonApi\Symfony\Query\Criteria;
 use JsonApi\Symfony\Query\Pagination;
 use JsonApi\Symfony\Query\Sorting;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
-use JsonApi\Symfony\Http\Request\FilteringWhitelist;
-use JsonApi\Symfony\Http\Safety\LimitsEnforcer;
 use Symfony\Component\HttpFoundation\Request;
 
 final class QueryParser

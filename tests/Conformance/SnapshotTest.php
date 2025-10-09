@@ -102,7 +102,7 @@ final class SnapshotTest extends JsonApiTestCase
                     ],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
 
         $request = Request::create(
             '/api/operations',
@@ -171,7 +171,7 @@ final class SnapshotTest extends JsonApiTestCase
     /**
      * Normalize document by replacing dynamic values with placeholders.
      *
-     * @param array<string, mixed> $document
+     * @param  array<string, mixed> $document
      * @return array<string, mixed>
      */
     private function normalizeDocument(array $document): array
@@ -182,7 +182,7 @@ final class SnapshotTest extends JsonApiTestCase
     /**
      * Recursively normalize values in the document.
      *
-     * @param mixed $value
+     * @param  mixed $value
      * @return mixed
      */
     private function normalizeValue(mixed $value): mixed
@@ -216,7 +216,7 @@ final class SnapshotTest extends JsonApiTestCase
     /**
      * Normalize links by replacing dynamic parts.
      *
-     * @param array<string, mixed> $links
+     * @param  array<string, mixed> $links
      * @return array<string, mixed>
      */
     private function normalizeLinks(array $links): array
@@ -241,4 +241,3 @@ final class SnapshotTest extends JsonApiTestCase
         return $normalized;
     }
 }
-

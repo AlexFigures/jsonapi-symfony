@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Http\Error;
 
 use DateTimeImmutable;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Exception\ConflictException;
 use JsonApi\Symfony\Http\Exception\ForbiddenException;
@@ -16,6 +15,7 @@ use JsonApi\Symfony\Http\Exception\NotAcceptableException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Http\Exception\UnprocessableEntityException;
 use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use JsonApi\Symfony\Http\Negotiation\MediaType;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -55,7 +55,7 @@ final class JsonApiExceptionListener implements EventSubscriberInterface
 
         if ($this->exposeDebugMeta) {
             $debugMeta = [
-                'timestamp' => (new DateTimeImmutable())->format(DATE_ATOM),
+                'timestamp' => (new DateTimeImmutable())->format(\DATE_ATOM),
                 'exceptionClass' => $throwable::class,
             ];
 

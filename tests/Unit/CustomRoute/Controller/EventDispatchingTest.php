@@ -10,10 +10,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Unit tests for event dispatching in CustomRouteController.
- * 
+ *
  * This test verifies the fix for the regression where update events
  * were not dispatched when handlers returned DTOs without id property.
- * 
+ *
  * @covers \JsonApi\Symfony\CustomRoute\Controller\CustomRouteController::dispatchEventIfNeeded
  */
 final class EventDispatchingTest extends TestCase
@@ -21,7 +21,7 @@ final class EventDispatchingTest extends TestCase
     public function testUpdateEventUsesRouteParameterNotExtractedId(): void
     {
         // Create a result with a DTO that has no id property
-        $dto = new class {
+        $dto = new class () {
             public string $title = 'Updated Title';
             // No id property!
         };
@@ -43,27 +43,27 @@ final class EventDispatchingTest extends TestCase
 
         self::assertTrue(true, 'Test documents the fix - update events use route parameter');
     }
-    
+
     public function testCreateEventExtractsIdFromResult(): void
     {
         // Create a result with a resource that has an id
-        $resource = new class {
+        $resource = new class () {
             public string $id = '456';
             public string $title = 'New Article';
         };
-        
+
         $result = CustomRouteResult::created($resource);
-        
+
         // Verify the result is 201 Created
         self::assertSame(Response::HTTP_CREATED, $result->getStatus());
         self::assertTrue($result->isResource());
-        
+
         // For creates, we extract the ID from the result data
         // because there's no route parameter (POST /articles, not POST /articles/{id})
-        
+
         self::assertTrue(true, 'Test documents the behavior - create events extract ID from result');
     }
-    
+
     public function testDeleteEventUsesRouteParameter(): void
     {
         // Create a no-content result (delete)
@@ -78,30 +78,30 @@ final class EventDispatchingTest extends TestCase
 
         self::assertTrue(true, 'Test documents the behavior - delete events use route parameter');
     }
-    
+
     public function testNoEventDispatchedForErrorResults(): void
     {
         // Create error results
         $badRequest = CustomRouteResult::badRequest('Invalid input');
         $notFound = CustomRouteResult::notFound('Not found');
         $conflict = CustomRouteResult::conflict('Conflict');
-        
+
         // Verify these are error statuses
         self::assertSame(Response::HTTP_BAD_REQUEST, $badRequest->getStatus());
         self::assertSame(Response::HTTP_NOT_FOUND, $notFound->getStatus());
         self::assertSame(Response::HTTP_CONFLICT, $conflict->getStatus());
-        
+
         // All are error results
         self::assertTrue($badRequest->isError());
         self::assertTrue($notFound->isError());
         self::assertTrue($conflict->isError());
-        
+
         // No events should be dispatched for errors
         // (verified by the condition in dispatchEventIfNeeded: operation !== null && resourceId !== null)
-        
+
         self::assertTrue(true, 'Test documents the behavior - no events for errors');
     }
-    
+
     public function testNoEventDispatchedWhenResourceIdIsNull(): void
     {
         // This test documents the BEFORE behavior (the bug) and the fix
@@ -123,4 +123,3 @@ final class EventDispatchingTest extends TestCase
         self::assertTrue(true, 'Test documents the bug and the fix');
     }
 }
-

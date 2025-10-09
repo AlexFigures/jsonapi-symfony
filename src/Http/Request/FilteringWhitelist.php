@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Request;
 
-use JsonApi\Symfony\Filter\Ast\Node;
 use JsonApi\Symfony\Filter\Ast\Between;
 use JsonApi\Symfony\Filter\Ast\Comparison;
 use JsonApi\Symfony\Filter\Ast\Conjunction;
 use JsonApi\Symfony\Filter\Ast\Disjunction;
 use JsonApi\Symfony\Filter\Ast\Group;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use JsonApi\Symfony\Filter\Ast\Node;
 use JsonApi\Symfony\Filter\Ast\NullCheck;
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
+use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 final class FilteringWhitelist
 {

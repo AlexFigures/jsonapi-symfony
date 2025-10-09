@@ -42,19 +42,19 @@ interface FilterHandlerInterface
     /**
      * Check if this handler supports the given field and operator combination.
      *
-     * @param string $field The field name being filtered
-     * @param string $operator The operator being used
-     * @return bool True if this handler can process the filter
+     * @param  string $field    The field name being filtered
+     * @param  string $operator The operator being used
+     * @return bool   True if this handler can process the filter
      */
     public function supports(string $field, string $operator): bool;
 
     /**
      * Handle the filter by modifying the query builder.
      *
-     * @param string $field The field name being filtered
-     * @param string $operator The operator being used
-     * @param list<mixed> $values The filter values
-     * @param object $queryBuilder The query builder to modify (typically Doctrine QueryBuilder)
+     * @param  string      $field        The field name being filtered
+     * @param  string      $operator     The operator being used
+     * @param  list<mixed> $values       The filter values
+     * @param  object      $queryBuilder The query builder to modify (typically Doctrine QueryBuilder)
      * @return void
      */
     public function handle(string $field, string $operator, array $values, object $queryBuilder): void;

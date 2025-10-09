@@ -272,4 +272,3 @@ final class DeleteResourceControllerTest extends DoctrineIntegrationTestCase
         ($this->controller)('tags', $tagId);
     }
 }
-

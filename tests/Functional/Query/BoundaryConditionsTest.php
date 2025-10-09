@@ -11,7 +11,7 @@ use Throwable;
 
 /**
  * Tests boundary conditions for pagination parameters.
- * 
+ *
  * These tests ensure that edge cases for page[size] and page[number]
  * are properly validated and handled, which helps kill mutation testing
  * escaped mutants related to boundary condition operators (>, >=, <, <=).
@@ -23,12 +23,12 @@ final class BoundaryConditionsTest extends JsonApiTestCase
         // Default max size is 100 (from PaginationConfig)
         $request = Request::create('/api/articles?page[size]=100', 'GET');
         $response = ($this->collectionController())($request, 'articles');
-        
+
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
-        
+
         /** @var array{data: list<array<string, mixed>>, meta: array{size: int}} $document */
         $document = $this->decode($response);
-        
+
         // Should succeed with max size
         self::assertSame(100, $document['meta']['size']);
     }
@@ -37,14 +37,14 @@ final class BoundaryConditionsTest extends JsonApiTestCase
     {
         // Try to exceed max size (100)
         $request = Request::create('/api/articles?page[size]=101', 'GET');
-        
+
         try {
             ($this->collectionController())($request, 'articles');
             self::fail('Expected exception to be thrown.');
         } catch (Throwable $exception) {
             $response = $this->handleException($request, $exception);
         }
-        
+
         $errors = $this->assertErrors($response, 400);
         self::assertSame('page-size-too-large', $errors[0]['code']);
         $this->assertErrorParameter($errors[0], 'page[size]');
@@ -56,12 +56,12 @@ final class BoundaryConditionsTest extends JsonApiTestCase
         // Minimum valid page size is 1
         $request = Request::create('/api/articles?page[size]=1', 'GET');
         $response = ($this->collectionController())($request, 'articles');
-        
+
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
-        
+
         /** @var array{data: list<array<string, mixed>>, meta: array{size: int}} $document */
         $document = $this->decode($response);
-        
+
         self::assertSame(1, $document['meta']['size']);
         self::assertCount(1, $document['data']);
     }
@@ -70,14 +70,14 @@ final class BoundaryConditionsTest extends JsonApiTestCase
     {
         // Page size must be at least 1
         $request = Request::create('/api/articles?page[size]=0', 'GET');
-        
+
         try {
             ($this->collectionController())($request, 'articles');
             self::fail('Expected exception to be thrown.');
         } catch (Throwable $exception) {
             $response = $this->handleException($request, $exception);
         }
-        
+
         $errors = $this->assertErrors($response, 400);
         self::assertSame('invalid-parameter', $errors[0]['code']);
         $this->assertErrorParameter($errors[0], 'page[size]');
@@ -88,14 +88,14 @@ final class BoundaryConditionsTest extends JsonApiTestCase
     {
         // Negative page size is invalid
         $request = Request::create('/api/articles?page[size]=-1', 'GET');
-        
+
         try {
             ($this->collectionController())($request, 'articles');
             self::fail('Expected exception to be thrown.');
         } catch (Throwable $exception) {
             $response = $this->handleException($request, $exception);
         }
-        
+
         $errors = $this->assertErrors($response, 400);
         self::assertSame('invalid-parameter', $errors[0]['code']);
         $this->assertErrorParameter($errors[0], 'page[size]');
@@ -106,12 +106,12 @@ final class BoundaryConditionsTest extends JsonApiTestCase
         // Minimum valid page number is 1
         $request = Request::create('/api/articles?page[number]=1', 'GET');
         $response = ($this->collectionController())($request, 'articles');
-        
+
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
-        
+
         /** @var array{meta: array{page: int}} $document */
         $document = $this->decode($response);
-        
+
         self::assertSame(1, $document['meta']['page']);
     }
 
@@ -119,14 +119,14 @@ final class BoundaryConditionsTest extends JsonApiTestCase
     {
         // Page number must be at least 1
         $request = Request::create('/api/articles?page[number]=0', 'GET');
-        
+
         try {
             ($this->collectionController())($request, 'articles');
             self::fail('Expected exception to be thrown.');
         } catch (Throwable $exception) {
             $response = $this->handleException($request, $exception);
         }
-        
+
         $errors = $this->assertErrors($response, 400);
         self::assertSame('invalid-parameter', $errors[0]['code']);
         $this->assertErrorParameter($errors[0], 'page[number]');
@@ -137,14 +137,14 @@ final class BoundaryConditionsTest extends JsonApiTestCase
     {
         // Negative page number is invalid
         $request = Request::create('/api/articles?page[number]=-1', 'GET');
-        
+
         try {
             ($this->collectionController())($request, 'articles');
             self::fail('Expected exception to be thrown.');
         } catch (Throwable $exception) {
             $response = $this->handleException($request, $exception);
         }
-        
+
         $errors = $this->assertErrors($response, 400);
         self::assertSame('invalid-parameter', $errors[0]['code']);
         $this->assertErrorParameter($errors[0], 'page[number]');
@@ -155,12 +155,12 @@ final class BoundaryConditionsTest extends JsonApiTestCase
         // Test size = max - 1 (99)
         $request = Request::create('/api/articles?page[size]=99', 'GET');
         $response = ($this->collectionController())($request, 'articles');
-        
+
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
-        
+
         /** @var array{meta: array{size: int}} $document */
         $document = $this->decode($response);
-        
+
         self::assertSame(99, $document['meta']['size']);
     }
 
@@ -169,12 +169,12 @@ final class BoundaryConditionsTest extends JsonApiTestCase
         // Test size = min + 1 (2)
         $request = Request::create('/api/articles?page[size]=2', 'GET');
         $response = ($this->collectionController())($request, 'articles');
-        
+
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
-        
+
         /** @var array{data: list<array<string, mixed>>, meta: array{size: int}} $document */
         $document = $this->decode($response);
-        
+
         self::assertSame(2, $document['meta']['size']);
         self::assertLessThanOrEqual(2, count($document['data']));
     }
@@ -184,12 +184,12 @@ final class BoundaryConditionsTest extends JsonApiTestCase
         // Test number = min + 1 (2)
         $request = Request::create('/api/articles?page[number]=2&page[size]=5', 'GET');
         $response = ($this->collectionController())($request, 'articles');
-        
+
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
-        
+
         /** @var array{meta: array{page: int}} $document */
         $document = $this->decode($response);
-        
+
         self::assertSame(2, $document['meta']['page']);
     }
 
@@ -197,14 +197,14 @@ final class BoundaryConditionsTest extends JsonApiTestCase
     {
         // Test size = max + 100 (200)
         $request = Request::create('/api/articles?page[size]=200', 'GET');
-        
+
         try {
             ($this->collectionController())($request, 'articles');
             self::fail('Expected exception to be thrown.');
         } catch (Throwable $exception) {
             $response = $this->handleException($request, $exception);
         }
-        
+
         $errors = $this->assertErrors($response, 400);
         self::assertSame('page-size-too-large', $errors[0]['code']);
     }
@@ -214,12 +214,12 @@ final class BoundaryConditionsTest extends JsonApiTestCase
         // Test requesting a page number far beyond available data
         $request = Request::create('/api/articles?page[number]=1000&page[size]=10', 'GET');
         $response = ($this->collectionController())($request, 'articles');
-        
+
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
-        
+
         /** @var array{data: list<array<string, mixed>>, meta: array{page: int}} $document */
         $document = $this->decode($response);
-        
+
         // Should return empty data but still be valid
         self::assertSame(1000, $document['meta']['page']);
         self::assertSame([], $document['data']);
@@ -230,12 +230,12 @@ final class BoundaryConditionsTest extends JsonApiTestCase
         // Test max size with page number 1
         $request = Request::create('/api/articles?page[number]=1&page[size]=100', 'GET');
         $response = ($this->collectionController())($request, 'articles');
-        
+
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
-        
+
         /** @var array{meta: array{page: int, size: int}} $document */
         $document = $this->decode($response);
-        
+
         self::assertSame(1, $document['meta']['page']);
         self::assertSame(100, $document['meta']['size']);
     }
@@ -245,15 +245,14 @@ final class BoundaryConditionsTest extends JsonApiTestCase
         // Test minimum valid values: page[number]=1, page[size]=1
         $request = Request::create('/api/articles?page[number]=1&page[size]=1', 'GET');
         $response = ($this->collectionController())($request, 'articles');
-        
+
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
-        
+
         /** @var array{data: list<array<string, mixed>>, meta: array{page: int, size: int}} $document */
         $document = $this->decode($response);
-        
+
         self::assertSame(1, $document['meta']['page']);
         self::assertSame(1, $document['meta']['size']);
         self::assertCount(1, $document['data']);
     }
 }
-

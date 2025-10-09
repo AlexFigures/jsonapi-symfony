@@ -179,4 +179,3 @@ final class IncludedDeduplicationTest extends JsonApiTestCase
         self::assertSame($identifiers1, $identifiers2, 'Included resources should be consistent across requests');
     }
 }
-

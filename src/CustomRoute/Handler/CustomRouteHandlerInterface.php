@@ -81,4 +81,3 @@ interface CustomRouteHandlerInterface
      */
     public function handle(CustomRouteContext $context): CustomRouteResult;
 }
-

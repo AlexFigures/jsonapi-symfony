@@ -59,7 +59,7 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
     }
 
     /**
-     * @param list<string> $paths
+     * @param  list<string>                $paths
      * @return array<string, class-string> Map of resource type => class name
      */
     private function discoverResources(array $paths, ContainerBuilder $container): array
@@ -118,7 +118,7 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
     /**
      * Extract fully qualified class name from a PHP file.
      *
-     * @param string $filePath Absolute path to the PHP file
+     * @param  string            $filePath Absolute path to the PHP file
      * @return class-string|null
      */
     private function extractClassName(string $filePath): ?string
@@ -144,7 +144,7 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
     }
 
     /**
-     * @param list<string> $paths
+     * @param  list<string>                $paths
      * @return array<array<string, mixed>> Serializable array of custom route data
      */
     private function discoverCustomRoutes(array $paths, ContainerBuilder $container): array
@@ -288,4 +288,3 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
         return $container->getParameterBag()->resolveValue($path);
     }
 }
-

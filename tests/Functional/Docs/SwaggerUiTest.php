@@ -125,4 +125,3 @@ final class SwaggerUiTest extends TestCase
         self::assertStringContainsString('filter: true', $content);
     }
 }
-

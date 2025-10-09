@@ -14,7 +14,7 @@ final class RelationshipErrorsTest extends JsonApiTestCase
     {
         $payload = json_encode([
             'data' => ['type' => 'tags', 'id' => 'x'],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
         $request = Request::create(
             '/api/articles/1/relationships/author',
             'PATCH',
@@ -44,7 +44,7 @@ final class RelationshipErrorsTest extends JsonApiTestCase
     {
         $payload = json_encode([
             'data' => ['type' => 'authors', 'id' => '1'],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
         $request = Request::create(
             '/api/articles/1/relationships/author',
             'POST',
@@ -76,7 +76,7 @@ final class RelationshipErrorsTest extends JsonApiTestCase
             'data' => [
                 ['type' => 'tags', 'id' => '999'],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
         $request = Request::create(
             '/api/articles/1/relationships/tags',
             'POST',

@@ -37,4 +37,3 @@ use Attribute;
 final class NoTransaction
 {
 }
-

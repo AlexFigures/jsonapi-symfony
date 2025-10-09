@@ -116,4 +116,3 @@ HTML;
         return new Response($html, Response::HTTP_OK, ['Content-Type' => 'text/html; charset=UTF-8']);
     }
 }
-

@@ -24,7 +24,7 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
         $this->assertCount(1, $data);
         $this->assertSame('Test Article 1', $data[0]['attributes']['title']);
@@ -36,10 +36,10 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
         $this->assertGreaterThan(0, count($data));
-        
+
         foreach ($data as $article) {
             $this->assertNotSame('Test Article 1', $article['attributes']['title']);
         }
@@ -51,9 +51,9 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
-        
+
         foreach ($data as $article) {
             $this->assertLessThan(100, $article['attributes']['viewCount']);
         }
@@ -65,9 +65,9 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
-        
+
         foreach ($data as $article) {
             $this->assertLessThanOrEqual(100, $article['attributes']['viewCount']);
         }
@@ -79,9 +79,9 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
-        
+
         foreach ($data as $article) {
             $this->assertGreaterThan(50, $article['attributes']['viewCount']);
         }
@@ -93,9 +93,9 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
-        
+
         foreach ($data as $article) {
             $this->assertGreaterThanOrEqual(50, $article['attributes']['viewCount']);
         }
@@ -107,10 +107,10 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
         $this->assertGreaterThan(0, count($data));
-        
+
         foreach ($data as $article) {
             $this->assertStringContainsString('Test', $article['attributes']['title']);
         }
@@ -122,9 +122,9 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
-        
+
         foreach ($data as $article) {
             $this->assertContains($article['attributes']['status'], ['published', 'draft']);
         }
@@ -136,9 +136,9 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
-        
+
         foreach ($data as $article) {
             $this->assertNull($article['attributes']['deletedAt'] ?? null);
         }
@@ -150,9 +150,9 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
-        
+
         foreach ($data as $article) {
             $viewCount = $article['attributes']['viewCount'];
             $this->assertGreaterThanOrEqual(10, $viewCount);
@@ -166,9 +166,9 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
-        
+
         foreach ($data as $article) {
             $this->assertStringContainsString('Test', $article['attributes']['title']);
             $this->assertSame('published', $article['attributes']['status']);
@@ -181,9 +181,9 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
-        
+
         foreach ($data as $article) {
             $this->assertContains($article['attributes']['status'], ['published', 'draft']);
         }
@@ -195,10 +195,10 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
         $this->assertLessThanOrEqual(5, count($data));
-        
+
         foreach ($data as $article) {
             $this->assertSame('published', $article['attributes']['status']);
         }
@@ -210,10 +210,10 @@ final class FilteringTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray()['data'];
-        
-        $previousViewCount = PHP_INT_MAX;
+
+        $previousViewCount = \PHP_INT_MAX;
         foreach ($data as $article) {
             $this->assertSame('published', $article['attributes']['status']);
             $viewCount = $article['attributes']['viewCount'];
@@ -271,4 +271,3 @@ final class FilteringTest extends JsonApiTestCase
         $em->flush();
     }
 }
-

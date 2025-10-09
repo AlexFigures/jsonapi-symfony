@@ -12,16 +12,16 @@ namespace JsonApi\Symfony\Resource\Metadata;
 final class CustomRouteMetadata
 {
     /**
-     * @param string $name Route name
-     * @param string $path Route path pattern
-     * @param array<string> $methods HTTP methods
-     * @param string|null $handler Handler class name (new in 0.3.0, takes precedence over controller)
-     * @param string|null $controller Controller class name (legacy, for backward compatibility)
-     * @param string|null $resourceType Associated resource type (if any)
-     * @param array<string, mixed> $defaults Route defaults
+     * @param string                $name         Route name
+     * @param string                $path         Route path pattern
+     * @param array<string>         $methods      HTTP methods
+     * @param string|null           $handler      Handler class name (new in 0.3.0, takes precedence over controller)
+     * @param string|null           $controller   Controller class name (legacy, for backward compatibility)
+     * @param string|null           $resourceType Associated resource type (if any)
+     * @param array<string, mixed>  $defaults     Route defaults
      * @param array<string, string> $requirements Route requirements
-     * @param string|null $description Route description
-     * @param int $priority Route priority
+     * @param string|null           $description  Route description
+     * @param int                   $priority     Route priority
      */
     public function __construct(
         public readonly string $name,

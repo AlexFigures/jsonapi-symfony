@@ -7,9 +7,9 @@ namespace JsonApi\Symfony\Atomic\Execution\Handlers;
 use JsonApi\Symfony\Atomic\Execution\OperationOutcome;
 use JsonApi\Symfony\Atomic\Lid\LidRegistry;
 use JsonApi\Symfony\Atomic\Operation;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 
 final class RemoveHandler
 {

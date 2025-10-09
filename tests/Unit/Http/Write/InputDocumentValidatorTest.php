@@ -59,7 +59,7 @@ final class InputDocumentValidatorTest extends TestCase
 
     private function createValidator(ResourceMetadata $metadata): InputDocumentValidator
     {
-        $registry = new class($metadata) implements ResourceRegistryInterface {
+        $registry = new class ($metadata) implements ResourceRegistryInterface {
             public function __construct(private ResourceMetadata $metadata)
             {
             }

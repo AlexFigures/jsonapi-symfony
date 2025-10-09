@@ -44,13 +44,13 @@ final class CustomRouteResult
     private const TYPE_ERROR = 'error';
 
     /**
-     * @param string $type Result type (resource, collection, no_content, error)
-     * @param mixed $data The data to return (entity, array of entities, error details, or null)
-     * @param int $status HTTP status code
-     * @param array<string, mixed> $meta Top-level meta object
-     * @param array<string, string> $links Top-level links object
-     * @param array<string, string> $headers Additional HTTP headers
-     * @param int|null $totalItems Total item count for collections (for pagination)
+     * @param string                $type       Result type (resource, collection, no_content, error)
+     * @param mixed                 $data       The data to return (entity, array of entities, error details, or null)
+     * @param int                   $status     HTTP status code
+     * @param array<string, mixed>  $meta       Top-level meta object
+     * @param array<string, string> $links      Top-level links object
+     * @param array<string, string> $headers    Additional HTTP headers
+     * @param int|null              $totalItems Total item count for collections (for pagination)
      */
     private function __construct(
         private readonly string $type,
@@ -60,7 +60,8 @@ final class CustomRouteResult
         private readonly array $links = [],
         private readonly array $headers = [],
         private readonly ?int $totalItems = null,
-    ) {}
+    ) {
+    }
 
     // ========== Factory Methods: Success Responses ==========
 
@@ -76,7 +77,7 @@ final class CustomRouteResult
      * ```
      *
      * @param object $resource The resource entity to return
-     * @param int $status HTTP status code (default: 200 OK)
+     * @param int    $status   HTTP status code (default: 200 OK)
      *
      * @return self
      */
@@ -96,9 +97,9 @@ final class CustomRouteResult
      * return CustomRouteResult::collection($articles, 100);
      * ```
      *
-     * @param list<object> $resources Array of resource entities
-     * @param int|null $totalItems Total number of items (for pagination). If null, uses count($resources)
-     * @param int $status HTTP status code (default: 200 OK)
+     * @param list<object> $resources  Array of resource entities
+     * @param int|null     $totalItems Total number of items (for pagination). If null, uses count($resources)
+     * @param int          $status     HTTP status code (default: 200 OK)
      *
      * @return self
      */
@@ -394,7 +395,7 @@ final class CustomRouteResult
      *     ->withHeader('X-Rate-Limit-Remaining', '99');
      * ```
      *
-     * @param string $name Header name
+     * @param string $name  Header name
      * @param string $value Header value
      *
      * @return self New instance with added header
@@ -540,5 +541,3 @@ final class CustomRouteResult
         return $this->type === self::TYPE_NO_CONTENT;
     }
 }
-
-

@@ -371,4 +371,3 @@ final class InvalidFieldNamesTest extends JsonApiTestCase
         self::assertStringContainsString('../../../etc/passwd', $errors[0]['detail']);
     }
 }
-

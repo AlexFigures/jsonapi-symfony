@@ -19,11 +19,11 @@ final class EagerLoadingTest extends JsonApiTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Enable query logging
         $this->queryLogger = new DebugStack();
         $this->getEntityManager()->getConnection()->getConfiguration()->setSQLLogger($this->queryLogger);
-        
+
         $this->loadFixtures();
     }
 
@@ -44,21 +44,24 @@ final class EagerLoadingTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray();
         $this->assertArrayHasKey('data', $data);
         $this->assertArrayHasKey('included', $data);
-        
+
         // Count queries
         $queryCount = count($this->queryLogger->queries);
-        
+
         // Should be approximately:
         // 1. SELECT articles with JOIN author
         // 2. COUNT query for pagination
         // Total: ~2-3 queries (not 1 + N where N is number of articles)
-        $this->assertLessThan(5, $queryCount, 
-            sprintf('Expected less than 5 queries, got %d. Queries: %s', 
-                $queryCount, 
+        $this->assertLessThan(
+            5,
+            $queryCount,
+            sprintf(
+                'Expected less than 5 queries, got %d. Queries: %s',
+                $queryCount,
                 json_encode(array_column($this->queryLogger->queries, 'sql'))
             )
         );
@@ -74,21 +77,24 @@ final class EagerLoadingTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray();
         $this->assertArrayHasKey('data', $data);
         $this->assertArrayHasKey('included', $data);
-        
+
         // Count queries
         $queryCount = count($this->queryLogger->queries);
-        
+
         // Should be approximately:
         // 1. SELECT articles with JOIN author and JOIN tags
         // 2. COUNT query for pagination
         // Total: ~2-4 queries (not 1 + N + M where N is articles and M is tags)
-        $this->assertLessThan(6, $queryCount, 
-            sprintf('Expected less than 6 queries, got %d. Queries: %s', 
-                $queryCount, 
+        $this->assertLessThan(
+            6,
+            $queryCount,
+            sprintf(
+                'Expected less than 6 queries, got %d. Queries: %s',
+                $queryCount,
                 json_encode(array_column($this->queryLogger->queries, 'sql'))
             )
         );
@@ -104,24 +110,27 @@ final class EagerLoadingTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray();
         $this->assertArrayHasKey('data', $data);
-        
+
         // Count queries
         $queryCount = count($this->queryLogger->queries);
-        
+
         // Should be approximately:
         // 1. SELECT articles with WHERE and JOIN author
         // 2. COUNT query for pagination
         // Total: ~2-4 queries
-        $this->assertLessThan(6, $queryCount, 
-            sprintf('Expected less than 6 queries, got %d. Queries: %s', 
-                $queryCount, 
+        $this->assertLessThan(
+            6,
+            $queryCount,
+            sprintf(
+                'Expected less than 6 queries, got %d. Queries: %s',
+                $queryCount,
                 json_encode(array_column($this->queryLogger->queries, 'sql'))
             )
         );
-        
+
         // Verify filtering worked
         foreach ($data['data'] as $article) {
             $this->assertSame('published', $article['attributes']['status']);
@@ -138,17 +147,20 @@ final class EagerLoadingTest extends JsonApiTestCase
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray();
         $this->assertArrayHasKey('data', $data);
-        
+
         // Count queries
         $queryCount = count($this->queryLogger->queries);
-        
+
         // Should use JOIN to fetch tags in same query
-        $this->assertLessThan(5, $queryCount, 
-            sprintf('Expected less than 5 queries for ManyToMany, got %d. Queries: %s', 
-                $queryCount, 
+        $this->assertLessThan(
+            5,
+            $queryCount,
+            sprintf(
+                'Expected less than 5 queries for ManyToMany, got %d. Queries: %s',
+                $queryCount,
                 json_encode(array_column($this->queryLogger->queries, 'sql'))
             )
         );
@@ -160,29 +172,33 @@ final class EagerLoadingTest extends JsonApiTestCase
         $this->queryLogger->queries = [];
 
         // Complex query with filtering, sorting, pagination, and includes
-        $response = $this->client->request('GET', 
+        $response = $this->client->request(
+            'GET',
             '/api/articles?filter[viewCount][gte]=50&include=author,tags&sort=-viewCount&page[number]=1&page[size]=5'
         );
 
         $this->assertResponseIsSuccessful();
         $this->assertJsonApiResponse($response);
-        
+
         $data = $response->toArray();
         $this->assertArrayHasKey('data', $data);
-        
+
         // Count queries
         $queryCount = count($this->queryLogger->queries);
-        
+
         // Even with complex query, should not have N+1 problem
-        $this->assertLessThan(8, $queryCount, 
-            sprintf('Expected less than 8 queries for complex query, got %d. Queries: %s', 
-                $queryCount, 
+        $this->assertLessThan(
+            8,
+            $queryCount,
+            sprintf(
+                'Expected less than 8 queries for complex query, got %d. Queries: %s',
+                $queryCount,
                 json_encode(array_column($this->queryLogger->queries, 'sql'))
             )
         );
-        
+
         // Verify results are correct
-        $previousViewCount = PHP_INT_MAX;
+        $previousViewCount = \PHP_INT_MAX;
         foreach ($data['data'] as $article) {
             $viewCount = $article['attributes']['viewCount'];
             $this->assertGreaterThanOrEqual(50, $viewCount);
@@ -222,13 +238,13 @@ final class EagerLoadingTest extends JsonApiTestCase
             $article->setStatus($i % 2 === 0 ? 'published' : 'draft');
             $article->setViewCount($i * 10);
             $article->setAuthor($authors[$i % count($authors)]);
-            
+
             // Add random tags
             $numTags = rand(1, 3);
             for ($j = 0; $j < $numTags; $j++) {
                 $article->addTag($tags[rand(0, count($tags) - 1)]);
             }
-            
+
             $em->persist($article);
         }
 
@@ -236,4 +252,3 @@ final class EagerLoadingTest extends JsonApiTestCase
         $em->clear();
     }
 }
-

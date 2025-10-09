@@ -14,9 +14,8 @@ interface TypedRelationshipUpdater extends RelationshipUpdater
     /**
      * Checks if this updater supports the specified resource type.
      *
-     * @param string $type JSON:API resource type (e.g., 'articles', 'users')
-     * @return bool true if the updater supports this type
+     * @param  string $type JSON:API resource type (e.g., 'articles', 'users')
+     * @return bool   true if the updater supports this type
      */
     public function supports(string $type): bool;
 }
-

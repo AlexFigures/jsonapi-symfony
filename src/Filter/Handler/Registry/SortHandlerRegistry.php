@@ -52,7 +52,7 @@ final class SortHandlerRegistry
     /**
      * Find a handler that supports the given field.
      *
-     * @param string $field The field name
+     * @param  string                    $field The field name
      * @return SortHandlerInterface|null The handler or null if none found
      */
     public function findHandler(string $field): ?SortHandlerInterface

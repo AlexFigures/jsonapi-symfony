@@ -19,7 +19,7 @@ final class ResourceDiscoveryPassTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create temporary directory for test fixtures
         $this->fixturesDir = sys_get_temp_dir() . '/jsonapi_test_' . uniqid();
         mkdir($this->fixturesDir, 0777, true);
@@ -28,7 +28,7 @@ final class ResourceDiscoveryPassTest extends TestCase
     protected function tearDown(): void
     {
         parent::tearDown();
-        
+
         // Clean up temporary directory
         if (is_dir($this->fixturesDir)) {
             $this->removeDirectory($this->fixturesDir);
@@ -114,15 +114,15 @@ final class ResourceDiscoveryPassTest extends TestCase
         $container = new ContainerBuilder();
         $container->setParameter('jsonapi.resource_paths', ['/non/existent/path']);
         $container->setParameter('kernel.project_dir', '/tmp');
-        
+
         $container->register(ResourceRegistry::class)
             ->setArgument(0, []);
-        
+
         $pass = new ResourceDiscoveryPass();
         $pass->process($container);
-        
+
         $discoveredResources = $container->getParameter('jsonapi.discovered_resources');
-        
+
         // Should return empty array for non-existent directory
         $this->assertIsArray($discoveredResources);
         $this->assertEmpty($discoveredResources);
@@ -195,7 +195,7 @@ PHP;
     private function createRegularFile(string $className): void
     {
         $namespace = 'JsonApi\\Symfony\\Tests\\Fixtures\\Discovery';
-        
+
         $content = <<<PHP
 <?php
 
@@ -227,4 +227,3 @@ PHP;
         rmdir($dir);
     }
 }
-

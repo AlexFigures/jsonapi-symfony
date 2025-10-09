@@ -16,7 +16,7 @@ use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 /**
  * Maps database exceptions to JSON:API errors.
- * 
+ *
  * Handles constraint violations, optimistic locking, and other database-level errors
  * with proper JSON:API error formatting and source pointers.
  */
@@ -30,7 +30,7 @@ final class DatabaseErrorMapper
 
     /**
      * Maps database exceptions to appropriate HTTP exceptions.
-     * 
+     *
      * @throws ConflictException|ValidationException
      */
     public function mapDatabaseError(string $resourceType, \Throwable $exception): \Throwable
@@ -52,9 +52,9 @@ final class DatabaseErrorMapper
         $metadata = $this->registry->getByType($resourceType);
         $constraintName = $this->extractConstraintName($exception);
         $field = $this->mapConstraintToField($metadata, $constraintName);
-        
+
         $pointer = $field ? sprintf('/data/attributes/%s', $field) : '/data';
-        $message = $field 
+        $message = $field
             ? sprintf('The value for "%s" is already in use.', $field)
             : 'A unique constraint violation occurred.';
 
@@ -71,11 +71,11 @@ final class DatabaseErrorMapper
         $metadata = $this->registry->getByType($resourceType);
         $constraintName = $this->extractConstraintName($exception);
         $relationship = $this->mapConstraintToRelationship($metadata, $constraintName);
-        
-        $pointer = $relationship 
+
+        $pointer = $relationship
             ? sprintf('/data/relationships/%s/data', $relationship)
             : '/data/relationships';
-        
+
         $message = $relationship
             ? sprintf('The referenced "%s" does not exist.', $relationship)
             : 'A referenced entity does not exist.';
@@ -124,16 +124,16 @@ final class DatabaseErrorMapper
     private function extractConstraintName(\Throwable $exception): ?string
     {
         $message = $exception->getMessage();
-        
+
         // Try to extract constraint name from common database error patterns
         if (preg_match('/constraint ["`]?([^"`\s]+)["`]?/i', $message, $matches)) {
             return $matches[1];
         }
-        
+
         if (preg_match('/key ["`]?([^"`\s]+)["`]?/i', $message, $matches)) {
             return $matches[1];
         }
-        
+
         return null;
     }
 
@@ -149,9 +149,9 @@ final class DatabaseErrorMapper
         // Try to match constraint name to attribute names
         foreach ($metadata->attributes as $attributeName => $attributeMetadata) {
             $propertyPath = $attributeMetadata->propertyPath ?? $attributeName;
-            
+
             // Check if constraint name contains the property path or attribute name
-            if (stripos($constraintName, $propertyPath) !== false || 
+            if (stripos($constraintName, $propertyPath) !== false ||
                 stripos($constraintName, $attributeName) !== false) {
                 return $attributeName;
             }
@@ -172,9 +172,9 @@ final class DatabaseErrorMapper
         // Try to match constraint name to relationship names
         foreach ($metadata->relationships as $relationshipName => $relationshipMetadata) {
             $propertyPath = $relationshipMetadata->propertyPath ?? $relationshipName;
-            
+
             // Check if constraint name contains the property path or relationship name
-            if (stripos($constraintName, $propertyPath) !== false || 
+            if (stripos($constraintName, $propertyPath) !== false ||
                 stripos($constraintName, $relationshipName) !== false) {
                 return $relationshipName;
             }

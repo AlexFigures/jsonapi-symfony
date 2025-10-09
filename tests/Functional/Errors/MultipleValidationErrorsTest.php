@@ -36,7 +36,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             new ConstraintViolation('ID is invalid.', null, [], null, 'id', 'invalid-id'),
         ]);
 
-        $controller = $this->createControllerWithValidator(new class($violations) implements ResourcePersister {
+        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourcePersister {
             public function __construct(private ConstraintViolationList $violations)
             {
             }
@@ -67,7 +67,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
                     'author' => ['data' => ['type' => 'authors', 'id' => '1']],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
 
         $request = Request::create(
             '/api/articles',
@@ -103,7 +103,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             new ConstraintViolation('At least one tag is required.', null, [], null, 'tags', []),
         ]);
 
-        $controller = $this->createControllerWithValidator(new class($violations) implements ResourcePersister {
+        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourcePersister {
             public function __construct(private ConstraintViolationList $violations)
             {
             }
@@ -132,7 +132,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
                     'tags' => ['data' => []],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
 
         $request = Request::create(
             '/api/articles',
@@ -169,7 +169,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             new ConstraintViolation('Tags must not be empty.', null, [], null, 'tags', []),
         ]);
 
-        $controller = $this->createControllerWithValidator(new class($violations) implements ResourcePersister {
+        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourcePersister {
             public function __construct(private ConstraintViolationList $violations)
             {
             }
@@ -200,7 +200,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
                     'tags' => ['data' => []],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
 
         $request = Request::create(
             '/api/articles',
@@ -238,7 +238,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             new ConstraintViolation('Author is required.', null, [], null, 'author', null),
         ]);
 
-        $controller = $this->createControllerWithValidator(new class($violations) implements ResourcePersister {
+        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourcePersister {
             public function __construct(private ConstraintViolationList $violations)
             {
             }
@@ -268,7 +268,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
                     'author' => ['data' => null],
                 ],
             ],
-        ], JSON_THROW_ON_ERROR);
+        ], \JSON_THROW_ON_ERROR);
 
         $request = Request::create(
             '/api/articles',
@@ -320,4 +320,3 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
         );
     }
 }
-
