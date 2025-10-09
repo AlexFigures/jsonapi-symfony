@@ -8,38 +8,52 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JsonApi\Symfony\Resource\Attribute\Attribute;
+use JsonApi\Symfony\Resource\Attribute\FilterableFields;
 use JsonApi\Symfony\Resource\Attribute\Id;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship;
+use JsonApi\Symfony\Resource\Attribute\SortableFields;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'authors')]
-#[JsonApiResource(type: 'authors')]
+#[JsonApiResource(
+    type: 'authors',
+    normalizationContext: ['groups' => ['author:read']],
+    denormalizationContext: ['groups' => ['author:write']],
+)]
+#[FilterableFields(['name', 'email'])]
+#[SortableFields(['name', 'email'])]
 class Author
 {
     #[ORM\Id]
     #[ORM\Column(type: 'string', length: 36)]
     #[Id]
     #[Attribute]
+    #[Groups(['author:read'])]
     private string $id;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Attribute]
+    #[Groups(['author:read', 'author:write'])]
     private string $name;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Attribute]
+    #[Groups(['author:read', 'author:write'])]
     private string $email;
 
     /**
      * @var Collection<int, Article>
      */
     #[ORM\OneToMany(targetEntity: Article::class, mappedBy: 'author')]
-    #[Relationship(toMany: true, targetType: 'articles', inverse: 'author')]
+    #[Relationship(toMany: true, inverse: 'author', targetType: 'articles')]
     private Collection $articles;
 
     public function __construct()
     {
+        $this->id = Uuid::v4()->toRfc4122();
         $this->articles = new ArrayCollection();
     }
 

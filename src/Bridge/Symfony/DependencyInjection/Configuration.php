@@ -72,8 +72,8 @@ final class Configuration implements ConfigurationInterface
             ->end();
 
         $dataLayerChildren
-            ->scalarNode('persister')
-            ->info('Custom ResourcePersister service ID (only when provider=custom)')
+            ->scalarNode('processor')
+            ->info('Custom ResourceProcessor service ID (only when provider=custom)')
             ->defaultNull()
             ->end();
 

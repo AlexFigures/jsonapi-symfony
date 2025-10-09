@@ -23,7 +23,7 @@ final class NotEqualOperator extends AbstractOperator
             throw new \InvalidArgumentException('NotEqualOperator requires at least one value.');
         }
 
-        $paramName = 'ne_' . uniqid('', true);
+        $paramName = 'ne_' . str_replace('.', '_', uniqid('', true));
 
         return new DoctrineExpression(
             sprintf('%s != :%s', $dqlField, $paramName),

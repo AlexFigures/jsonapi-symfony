@@ -31,7 +31,8 @@ services:
         alias: JsonApi\Symfony\StressApp\StressInMemoryRepository
         public: true
 
-    # Persister
+    # Processor (note: InMemoryPersister implements the old ResourcePersister interface,
+    # but it's compatible with ResourceProcessor since they have the same method signatures)
     JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister:
         arguments:
             $repository: '@JsonApi\Symfony\StressApp\StressInMemoryRepository'
@@ -39,7 +40,7 @@ services:
             $transactionManager: '@JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager'
         public: true
 
-    JsonApi\Symfony\Contract\Data\ResourcePersister:
+    JsonApi\Symfony\Contract\Data\ResourceProcessor:
         alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister
         public: true
 

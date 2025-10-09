@@ -14,6 +14,7 @@ use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship;
 use JsonApi\Symfony\Resource\Attribute\SortableFields;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'articles')]
@@ -23,7 +24,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
     normalizationContext: ['groups' => ['article:read']],
     denormalizationContext: ['groups' => ['article:write']],
 )]
-#[SortableFields(['title', 'createdAt', 'updatedAt', 'viewCount'])]
+#[SortableFields(['title', 'createdAt', 'updatedAt', 'viewCount', 'author.name'])]
 class Article
 {
     #[ORM\Id]
@@ -70,6 +71,7 @@ class Article
 
     public function __construct()
     {
+        $this->id = Uuid::v4()->toRfc4122();
         $this->tags = new ArrayCollection();
     }
 
@@ -169,4 +171,3 @@ class Article
         return $this;
     }
 }
-

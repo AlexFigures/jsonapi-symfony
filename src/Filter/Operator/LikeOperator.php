@@ -23,7 +23,7 @@ final class LikeOperator extends AbstractOperator
             throw new \InvalidArgumentException('LikeOperator requires at least one value.');
         }
 
-        $paramName = 'like_' . uniqid('', true);
+        $paramName = 'like_' . str_replace('.', '_', uniqid('', true));
 
         // Add wildcards for partial matching
         $pattern = '%' . $values[0] . '%';

@@ -251,18 +251,46 @@ GET /api/articles?sort=-createdAt,title
 
 #### `write.allow_relationship_writes`
 
-**Type:** `boolean`  
+**Type:** `boolean`
 **Default:** `false`
 
-Enable relationship modification endpoints:
-- `PATCH /api/articles/1/relationships/tags` - Replace relationship
-- `POST /api/articles/1/relationships/tags` - Add to relationship
-- `DELETE /api/articles/1/relationships/tags` - Remove from relationship
+Enable relationship writes in resource creation/update requests and dedicated relationship modification endpoints:
+
+**When enabled:**
+- Relationships can be included in `POST /api/articles` and `PATCH /api/articles/1` requests
+- Dedicated relationship endpoints are available:
+  - `PATCH /api/articles/1/relationships/tags` - Replace relationship
+  - `POST /api/articles/1/relationships/tags` - Add to relationship
+  - `DELETE /api/articles/1/relationships/tags` - Remove from relationship
 
 ```yaml
 jsonapi:
     write:
         allow_relationship_writes: true
+```
+
+**Example with relationships in resource creation:**
+```json
+POST /api/articles
+{
+  "data": {
+    "type": "articles",
+    "attributes": {
+      "title": "My Article"
+    },
+    "relationships": {
+      "author": {
+        "data": { "type": "authors", "id": "123" }
+      },
+      "tags": {
+        "data": [
+          { "type": "tags", "id": "1" },
+          { "type": "tags", "id": "2" }
+        ]
+      }
+    }
+  }
+}
 ```
 
 ---
@@ -295,6 +323,96 @@ POST /api/authors
 ```
 
 **When disabled:** Returns `403 Forbidden` if client provides ID.
+
+---
+
+### Relationships
+
+#### `relationships.linkage_in_resource`
+
+**Type:** `enum('never', 'when_included', 'always')`
+**Default:** `always`
+
+Controls when to include relationship linkage data (`data` field with resource identifiers) in resource responses.
+
+**Values:**
+- `never` - Never include `data` in relationships (only `links`)
+- `when_included` - Include `data` only when the relationship is in the `?include` query parameter
+- `always` - Always include `data` (recommended for JSON:API spec compliance)
+
+```yaml
+jsonapi:
+    relationships:
+        linkage_in_resource: always
+```
+
+**Example response with `always`:**
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "relationships": {
+      "author": {
+        "links": {
+          "self": "/api/articles/1/relationships/author",
+          "related": "/api/articles/1/author"
+        },
+        "data": { "type": "authors", "id": "123" }
+      },
+      "tags": {
+        "links": {
+          "self": "/api/articles/1/relationships/tags",
+          "related": "/api/articles/1/tags"
+        },
+        "data": [
+          { "type": "tags", "id": "1" },
+          { "type": "tags", "id": "2" }
+        ]
+      }
+    }
+  }
+}
+```
+
+**Example response with `never`:**
+```json
+{
+  "data": {
+    "type": "articles",
+    "id": "1",
+    "relationships": {
+      "author": {
+        "links": {
+          "self": "/api/articles/1/relationships/author",
+          "related": "/api/articles/1/author"
+        }
+      }
+    }
+  }
+}
+```
+
+**Performance note:** Using `when_included` or `never` can reduce response size for resources with many relationships, but may require additional requests to fetch relationship data.
+
+---
+
+#### `relationships.write_response`
+
+**Type:** `enum('linkage', '204')`
+**Default:** `linkage`
+
+Controls the response format for relationship write operations (`PATCH/POST/DELETE /api/{type}/{id}/relationships/{rel}`).
+
+**Values:**
+- `linkage` - Return `200 OK` with relationship linkage data
+- `204` - Return `204 No Content` (no response body)
+
+```yaml
+jsonapi:
+    relationships:
+        write_response: linkage
+```
 
 ---
 

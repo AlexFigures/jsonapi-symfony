@@ -10,14 +10,14 @@ use JsonApi\Symfony\Atomic\Operation;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 final class AddHandler
 {
     public function __construct(
-        private readonly ResourcePersister $persister,
+        private readonly ResourceProcessor $processor,
         private readonly ChangeSetFactory $changeSet,
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
@@ -57,7 +57,7 @@ final class AddHandler
             $clientId = $data['id'];
         }
 
-        $model = $this->persister->create($type, $changes, $clientId);
+        $model = $this->processor->processCreate($type, $changes, $clientId);
 
         $metadata = $this->registry->getByType($type);
         $idProperty = $metadata->idPropertyPath ?? 'id';

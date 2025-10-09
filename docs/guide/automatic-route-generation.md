@@ -209,12 +209,14 @@ jsonapi_auto:
 
 ## ID Requirements
 
-By default the `{id}` placeholder accepts any value (`.+` regex).
+By default the `{id}` placeholder accepts any value except forward slashes (`[^/]+` regex).
 
 This allows:
 - UUID: `550e8400-e29b-41d4-a716-446655440000`
 - Numbers: `123`
 - Strings: `my-article-slug`
+
+The regex excludes forward slashes to prevent conflicts with relationship routes like `/api/articles/{id}/relationships/author`.
 
 Restrict the format by redefining the route:
 

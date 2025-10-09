@@ -9,8 +9,8 @@ use JsonApi\Symfony\Resource\Attribute\Attribute;
 use JsonApi\Symfony\Resource\Attribute\Id;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
 use JsonApi\Symfony\Resource\Attribute\SortableFields;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * Example entity demonstrating the use of SortableFields attribute.
@@ -36,11 +36,11 @@ class Category
     public int $sortOrder;
 
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['category:read'])]
     public DateTimeImmutable $createdAt;
 
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['category:read'])]
     public ?DateTimeImmutable $updatedAt = null;
 
     #[Attribute]
@@ -68,11 +68,11 @@ class Brand
     public bool $isActive;
 
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['tag:read'])]
     public DateTimeImmutable $createdAt;
 
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['tag:read'])]
     public ?DateTimeImmutable $updatedAt = null;
 }
 
@@ -100,11 +100,11 @@ class Manufacturer
     public ?string $legalEntity = null;
 
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['company:read'])]
     public DateTimeImmutable $createdAt;
 
     #[Attribute]
-    #[SerializationGroups(['read'])]
+    #[Groups(['company:read'])]
     public ?DateTimeImmutable $updatedAt = null;
 }
 

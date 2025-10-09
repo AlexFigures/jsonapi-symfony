@@ -23,8 +23,8 @@ final class BetweenOperator extends AbstractOperator
             throw new \InvalidArgumentException('BetweenOperator requires exactly two values (min and max).');
         }
 
-        $paramMin = 'between_min_' . uniqid('', true);
-        $paramMax = 'between_max_' . uniqid('', true);
+        $paramMin = 'between_min_' . str_replace('.', '_', uniqid('', true));
+        $paramMax = 'between_max_' . str_replace('.', '_', uniqid('', true));
 
         return new DoctrineExpression(
             sprintf('%s BETWEEN :%s AND :%s', $dqlField, $paramMin, $paramMax),

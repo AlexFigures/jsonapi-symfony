@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Controller;
 
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Events\ResourceChangedEvent;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
+use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -18,7 +19,7 @@ final class DeleteResourceController
 {
     public function __construct(
         private readonly ResourceRegistryInterface $registry,
-        private readonly ResourcePersister $persister,
+        private readonly ResourceProcessor $processor,
         private readonly TransactionManager $transaction,
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {
@@ -31,7 +32,8 @@ final class DeleteResourceController
         }
 
         $this->transaction->transactional(function () use ($type, $id): void {
-            $this->persister->delete($type, $id);
+            // Process entity deletion (remove + schedule flush, flush handled by WriteListener)
+            $this->processor->processDelete($type, $id);
         });
 
         // Dispatch event after successful deletion

@@ -11,14 +11,14 @@ use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 final class UpdateHandler
 {
     public function __construct(
-        private readonly ResourcePersister $persister,
+        private readonly ResourceProcessor $processor,
         private readonly ChangeSetFactory $changeSet,
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
@@ -58,7 +58,7 @@ final class UpdateHandler
 
         /** @var array<string, mixed> $attributes */
         $changes = $this->changeSet->fromAttributes($type, $attributes);
-        $model = $this->persister->update($type, $id, $changes);
+        $model = $this->processor->processUpdate($type, $id, $changes);
 
         $metadata = $this->registry->getByType($type);
         $idProperty = $metadata->idPropertyPath ?? 'id';

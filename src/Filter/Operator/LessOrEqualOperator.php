@@ -23,7 +23,7 @@ final class LessOrEqualOperator extends AbstractOperator
             throw new \InvalidArgumentException('LessOrEqualOperator requires at least one value.');
         }
 
-        $paramName = 'lte_' . uniqid('', true);
+        $paramName = 'lte_' . str_replace('.', '_', uniqid('', true));
 
         return new DoctrineExpression(
             sprintf('%s <= :%s', $dqlField, $paramName),

@@ -9,7 +9,6 @@ use JsonApi\Symfony\Resource\Attribute\Attribute;
 use JsonApi\Symfony\Resource\Attribute\Id;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use JsonApi\Symfony\Resource\Attribute\Relationship;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
 use JsonApi\Symfony\Resource\Attribute\SortableFields;
 
 #[JsonApiResource(type: 'articles')]
@@ -33,7 +32,6 @@ final class Article
     }
 
     #[Attribute(name: 'createdAt')]
-    #[SerializationGroups(['read'])]
     public function getCreatedAt(): DateTimeImmutable
     {
         return $this->createdAt;

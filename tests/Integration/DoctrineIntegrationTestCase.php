@@ -10,9 +10,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use JsonApi\Symfony\Bridge\Doctrine\Flush\FlushManager;
 use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use JsonApi\Symfony\Bridge\Doctrine\Persister\GenericDoctrinePersister;
-use JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister;
+use JsonApi\Symfony\Bridge\Doctrine\Persister\GenericDoctrineProcessor;
+use JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
 use JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
 use JsonApi\Symfony\Http\Error\ErrorBuilder;
 use JsonApi\Symfony\Http\Error\ErrorMapper;
@@ -28,7 +29,7 @@ use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\EntityWithConstructor;
+use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Product;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\User;
@@ -43,12 +44,13 @@ abstract class DoctrineIntegrationTestCase extends TestCase
     protected EntityManagerInterface $em;
     protected ResourceRegistryInterface $registry;
     protected GenericDoctrineRepository $repository;
-    protected GenericDoctrinePersister $persister;
-    protected ValidatingDoctrinePersister $validatingPersister;
+    protected GenericDoctrineProcessor $processor;
+    protected ValidatingDoctrineProcessor $validatingProcessor;
     protected DoctrineTransactionManager $transactionManager;
     protected PropertyAccessorInterface $accessor;
     protected ValidatorInterface $validator;
     protected ConstraintViolationMapper $violationMapper;
+    protected FlushManager $flushManager;
 
     /**
      * Returns the DSN used to connect to the database.
@@ -75,7 +77,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $this->registry = new ResourceRegistry([
             Article::class,
             Author::class,
-            EntityWithConstructor::class,
+            Category::class,
             Tag::class,
             Product::class,
             User::class,
@@ -114,11 +116,15 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $this->accessor,
         );
 
-        $this->persister = new GenericDoctrinePersister(
+        // Create FlushManager
+        $this->flushManager = new FlushManager($this->em);
+
+        $this->processor = new GenericDoctrineProcessor(
             $this->em,
             $this->registry,
             $this->accessor,
             $instantiator,
+            $this->flushManager,
         );
 
         // Validator for ValidatingDoctrinePersister
@@ -150,15 +156,15 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $this->accessor,
         );
 
-        $this->validatingPersister = new ValidatingDoctrinePersister(
+        $this->validatingProcessor = new ValidatingDoctrineProcessor(
             $this->em,
             $this->registry,
             $this->accessor,
             $this->validator,
             $this->violationMapper,
             $instantiator,
-            $databaseErrorMapper,
             $relationshipResolver,
+            $this->flushManager,
         );
 
         $this->transactionManager = new DoctrineTransactionManager($this->em);
@@ -279,21 +285,38 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $platform = $connection->getDatabasePlatform()->getName();
 
         if ($platform === 'postgresql') {
-            $connection->executeStatement('TRUNCATE TABLE articles, authors, tags, article_tags RESTART IDENTITY CASCADE');
+            $connection->executeStatement('TRUNCATE TABLE articles, authors, tags, article_tags, categories, products, users RESTART IDENTITY CASCADE');
         } elseif ($platform === 'mysql') {
             $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 0');
             $connection->executeStatement('TRUNCATE TABLE articles');
             $connection->executeStatement('TRUNCATE TABLE authors');
             $connection->executeStatement('TRUNCATE TABLE tags');
             $connection->executeStatement('TRUNCATE TABLE article_tags');
+            $connection->executeStatement('TRUNCATE TABLE categories');
+            $connection->executeStatement('TRUNCATE TABLE products');
+            $connection->executeStatement('TRUNCATE TABLE users');
             $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 1');
         } elseif ($platform === 'sqlite') {
             $connection->executeStatement('DELETE FROM articles');
             $connection->executeStatement('DELETE FROM authors');
             $connection->executeStatement('DELETE FROM tags');
             $connection->executeStatement('DELETE FROM article_tags');
+            $connection->executeStatement('DELETE FROM categories');
+            $connection->executeStatement('DELETE FROM products');
+            $connection->executeStatement('DELETE FROM users');
         }
 
         $this->em->clear();
+    }
+
+    /**
+     * Helper method to flush changes in tests.
+     *
+     * Tests that use processor methods need to call this to persist changes to the database.
+     * This mimics what WriteListener does in production.
+     */
+    protected function flush(): void
+    {
+        $this->flushManager->flush();
     }
 }

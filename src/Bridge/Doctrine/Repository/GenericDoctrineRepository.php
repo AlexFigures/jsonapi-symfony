@@ -140,7 +140,7 @@ class GenericDoctrineRepository implements ResourceRepository
                     }
                 }
 
-                return array_unique($relatedEntities, SORT_REGULAR);
+                return array_unique($relatedEntities, \SORT_REGULAR);
             }
         } else {
             // For *ToOne relationships, get the foreign key values from source entities
@@ -165,8 +165,15 @@ class GenericDoctrineRepository implements ResourceRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * Apply sorting to the query builder.
+     *
+     * @param list<Sorting> $sorting
+     */
     private function applySorting(QueryBuilder $qb, array $sorting): void
     {
+        $joinedForSort = [];
+
         foreach ($sorting as $sort) {
             /** @var Sorting $sort */
 
@@ -177,9 +184,37 @@ class GenericDoctrineRepository implements ResourceRepository
                 continue;
             }
 
-            // Default sorting behavior
             $direction = $sort->desc ? 'DESC' : 'ASC';
-            $qb->addOrderBy('e.' . $sort->field, $direction);
+
+            // Check if this is a relationship field path (e.g., "author.name")
+            if (str_contains($sort->field, '.')) {
+                $segments = explode('.', $sort->field);
+                $fieldName = array_pop($segments); // Last segment is the actual field
+                $relationshipPath = implode('.', $segments); // Everything before is the relationship path
+
+                // Build the join path and alias
+                $currentAlias = 'e';
+                $fullJoinPath = '';
+
+                foreach ($segments as $index => $relationshipName) {
+                    $fullJoinPath = $currentAlias . '.' . $relationshipName;
+                    $joinAlias = 'sort_' . str_replace('.', '_', implode('_', array_slice($segments, 0, $index + 1)));
+
+                    // Create JOIN if not already created
+                    if (!isset($joinedForSort[$fullJoinPath])) {
+                        $qb->leftJoin($fullJoinPath, $joinAlias);
+                        $joinedForSort[$fullJoinPath] = $joinAlias;
+                    }
+
+                    $currentAlias = $joinAlias;
+                }
+
+                // Add ORDER BY using the final join alias
+                $qb->addOrderBy($currentAlias . '.' . $fieldName, $direction);
+            } else {
+                // Direct field on the root entity
+                $qb->addOrderBy('e.' . $sort->field, $direction);
+            }
         }
     }
 

@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use JsonApi\Symfony\Bridge\Doctrine\Flush\FlushManager;
+use JsonApi\Symfony\Bridge\Symfony\EventListener\WriteListener;
 use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
 use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
 use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
@@ -58,7 +60,7 @@ use JsonApi\Symfony\Invalidation\SurrogatePurgerInterface;
 use JsonApi\Symfony\Contract\Data\ExistenceChecker;
 use JsonApi\Symfony\Contract\Data\RelationshipReader;
 use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use JsonApi\Symfony\Contract\Data\ResourceRepository;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
@@ -520,11 +522,11 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set('jsonapi.null_resource_persister', \JsonApi\Symfony\Contract\Data\NullResourcePersister::class)
+        ->set('jsonapi.null_resource_processor', \JsonApi\Symfony\Bridge\Symfony\Null\NullResourceProcessor::class)
     ;
 
     $services
-        ->alias(ResourcePersister::class, 'jsonapi.null_resource_persister')
+        ->alias(ResourceProcessor::class, 'jsonapi.null_resource_processor')
     ;
 
     $services
@@ -631,8 +633,26 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
+    // FlushManager - centralized flush control
     $services
-        ->set(\JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister::class)
+        ->set(FlushManager::class)
+        ->args([
+            service('doctrine.orm.default_entity_manager'),
+        ])
+    ;
+
+    // WriteListener - automatically flushes after write operations
+    $services
+        ->set(WriteListener::class)
+        ->args([
+            service(FlushManager::class),
+            service(\JsonApi\Symfony\Http\Validation\DatabaseErrorMapper::class),
+        ])
+        ->tag('kernel.event_subscriber')
+    ;
+
+    $services
+        ->set(\JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
             service(ResourceRegistryInterface::class),
@@ -640,8 +660,8 @@ return static function (ContainerConfigurator $configurator): void {
             service('validator'),
             service(ConstraintViolationMapper::class),
             service(\JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class),
-            service(\JsonApi\Symfony\Http\Validation\DatabaseErrorMapper::class),
             service(\JsonApi\Symfony\Resource\Relationship\RelationshipResolver::class),
+            service(FlushManager::class),
         ])
     ;
 

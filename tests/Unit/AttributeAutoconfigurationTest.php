@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Tests\Unit;
 
 use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -33,6 +34,53 @@ final class AttributeAutoconfigurationTest extends TestCase
 
         // Check that JsonApiResource attribute is registered for autoconfiguration
         self::assertArrayHasKey(JsonApiResource::class, $autoconfiguredAttributes);
+    }
+
+    public function testDoctrineProviderAliasesResourceProcessor(): void
+    {
+        $container = new ContainerBuilder();
+        $extension = new JsonApiExtension();
+
+        // Set required parameters
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+
+        // Load with default configuration (provider defaults to 'doctrine')
+        $extension->load([], $container);
+
+        // Verify that ResourceProcessor is aliased to ValidatingDoctrineProcessor
+        self::assertTrue($container->hasAlias(ResourceProcessor::class));
+        $alias = $container->getAlias(ResourceProcessor::class);
+        self::assertSame(
+            'JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor',
+            (string) $alias
+        );
+    }
+
+    public function testCustomProviderAliasesResourceProcessor(): void
+    {
+        $container = new ContainerBuilder();
+        $extension = new JsonApiExtension();
+
+        // Set required parameters
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+
+        // Register a custom processor service
+        $container->register('my_custom_processor', \stdClass::class);
+
+        // Load with custom provider configuration
+        $extension->load([
+            [
+                'data_layer' => [
+                    'provider' => 'custom',
+                    'processor' => 'my_custom_processor',
+                ],
+            ],
+        ], $container);
+
+        // Verify that ResourceProcessor is aliased to the custom processor
+        self::assertTrue($container->hasAlias(ResourceProcessor::class));
+        $alias = $container->getAlias(ResourceProcessor::class);
+        self::assertSame('my_custom_processor', (string) $alias);
     }
 }
 

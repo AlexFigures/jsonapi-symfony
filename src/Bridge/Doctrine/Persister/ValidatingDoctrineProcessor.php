@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Bridge\Doctrine\Persister;
 
 use Doctrine\ORM\EntityManagerInterface;
+use JsonApi\Symfony\Bridge\Doctrine\Flush\FlushManager;
 use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
 use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use JsonApi\Symfony\Http\Exception\ConflictException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
-use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
@@ -26,9 +26,9 @@ use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * Doctrine Persister with automatic validation through Symfony Validator.
+ * Doctrine Processor with automatic validation through Symfony Validator.
  *
- * Extends GenericDoctrinePersister by adding validation before persist().
+ * Validates entities before persisting using Symfony Validator.
  *
  * Uses Symfony Validator constraints on Entity:
  * - #[Assert\NotBlank]
@@ -38,8 +38,10 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  *
  * Supports entities with constructors requiring parameters
  * through SerializerEntityInstantiator (uses Symfony Serializer, like API Platform).
+ *
+ * This processor does NOT call flush() - flushing is handled by WriteListener.
  */
-final class ValidatingDoctrinePersister implements ResourcePersister
+final class ValidatingDoctrineProcessor implements ResourceProcessor
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
@@ -48,12 +50,12 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         private readonly ValidatorInterface $validator,
         private readonly ConstraintViolationMapper $violationMapper,
         private readonly SerializerEntityInstantiator $instantiator,
-        private readonly DatabaseErrorMapper $databaseErrorMapper,
         private readonly RelationshipResolver $relationshipResolver,
+        private readonly FlushManager $flushManager,
     ) {
     }
 
-    public function create(string $type, ChangeSet $changes, ?string $clientId = null): object
+    public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
     {
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->class;
@@ -119,18 +121,14 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         // Validate before persist with create groups
         $this->validateWithGroups($entity, $type, $metadata, true);
 
-        // Persist entity with database error handling
-        // Note: Transaction is managed by the caller (CreateResourceController)
-        try {
-            $this->em->persist($entity);
-            $this->em->flush();
-            return $entity;
-        } catch (\Throwable $e) {
-            throw $this->databaseErrorMapper->mapDatabaseError($type, $e);
-        }
+        // Persist entity and schedule flush
+        $this->em->persist($entity);
+        $this->flushManager->scheduleFlush();
+
+        return $entity;
     }
 
-    public function update(string $type, string $id, ChangeSet $changes): object
+    public function processUpdate(string $type, string $id, ChangeSet $changes): object
     {
         $metadata = $this->registry->getByType($type);
         $entity = $this->em->find($metadata->class, $id);
@@ -147,17 +145,13 @@ final class ValidatingDoctrinePersister implements ResourcePersister
         // Validate before flush with update groups
         $this->validateWithGroups($entity, $type, $metadata, false);
 
-        // Update entity with database error handling
-        // Note: Transaction is managed by the caller (UpdateResourceController)
-        try {
-            $this->em->flush();
-            return $entity;
-        } catch (\Throwable $e) {
-            throw $this->databaseErrorMapper->mapDatabaseError($type, $e);
-        }
+        // Entity is already managed, schedule flush
+        $this->flushManager->scheduleFlush();
+
+        return $entity;
     }
 
-    public function delete(string $type, string $id): void
+    public function processDelete(string $type, string $id): void
     {
         $metadata = $this->registry->getByType($type);
         $entity = $this->em->find($metadata->class, $id);
@@ -168,14 +162,9 @@ final class ValidatingDoctrinePersister implements ResourcePersister
             );
         }
 
-        // Delete entity with database error handling
-        // Note: Transaction is managed by the caller (DeleteResourceController)
-        try {
-            $this->em->remove($entity);
-            $this->em->flush();
-        } catch (\Throwable $e) {
-            throw $this->databaseErrorMapper->mapDatabaseError($type, $e);
-        }
+        // Mark entity for removal and schedule flush
+        $this->em->remove($entity);
+        $this->flushManager->scheduleFlush();
     }
 
     /**

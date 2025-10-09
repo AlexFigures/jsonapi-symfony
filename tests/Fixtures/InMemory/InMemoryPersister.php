@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Tests\Fixtures\InMemory;
 
 use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use JsonApi\Symfony\Http\Exception\ConflictException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
@@ -14,7 +14,7 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Uid\Uuid;
 
-final class InMemoryPersister implements ResourcePersister
+final class InMemoryPersister implements ResourceProcessor
 {
     private PropertyAccessorInterface $accessor;
 
@@ -27,7 +27,7 @@ final class InMemoryPersister implements ResourcePersister
         $this->accessor = $accessor ?? PropertyAccess::createPropertyAccessor();
     }
 
-    public function create(string $type, ChangeSet $changes, ?string $clientId = null): object
+    public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
     {
         $metadata = $this->metadata($type);
         $id = $clientId ?? Uuid::v4()->toRfc4122();
@@ -50,7 +50,7 @@ final class InMemoryPersister implements ResourcePersister
         return $model;
     }
 
-    public function update(string $type, string $id, ChangeSet $changes): object
+    public function processUpdate(string $type, string $id, ChangeSet $changes): object
     {
         $model = $this->repository->get($type, $id);
         if ($model === null) {
@@ -71,7 +71,7 @@ final class InMemoryPersister implements ResourcePersister
         return $model;
     }
 
-    public function delete(string $type, string $id): void
+    public function processDelete(string $type, string $id): void
     {
         if (!$this->repository->has($type, $id)) {
             throw new NotFoundException(sprintf('Resource "%s" with id "%s" was not found.', $type, $id));

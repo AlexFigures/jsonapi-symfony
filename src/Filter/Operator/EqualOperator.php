@@ -23,7 +23,7 @@ final class EqualOperator extends AbstractOperator
             throw new \InvalidArgumentException('EqualOperator requires at least one value.');
         }
 
-        $paramName = 'eq_' . uniqid('', true);
+        $paramName = 'eq_' . str_replace('.', '_', uniqid('', true));
 
         return new DoctrineExpression(
             sprintf('%s = :%s', $dqlField, $paramName),

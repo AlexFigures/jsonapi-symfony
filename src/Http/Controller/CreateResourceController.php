@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Controller;
 
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Events\ResourceChangedEvent;
 use JsonApi\Symfony\Http\Document\DocumentBuilder;
@@ -15,6 +15,7 @@ use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Http\Exception\UnprocessableEntityException;
 use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
+use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
 use JsonApi\Symfony\Http\Link\LinkGenerator;
 use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
@@ -37,7 +38,7 @@ final class CreateResourceController
         private readonly ResourceRegistryInterface $registry,
         private readonly InputDocumentValidator $validator,
         private readonly ChangeSetFactory $changes,
-        private readonly ResourcePersister $persister,
+        private readonly ResourceProcessor $processor,
         private readonly TransactionManager $transaction,
         private readonly DocumentBuilder $document,
         private readonly LinkGenerator $links,
@@ -65,14 +66,15 @@ final class CreateResourceController
         try {
             $model = $this->transaction->transactional(function () use ($type, $input) {
                 // Create ChangeSet with both attributes and relationships
-                // The persister will handle applying both before validation
+                // The processor will handle applying both before validation
                 $changes = $this->changes->fromInput(
                     $type,
                     $input['attributes'],
                     $input['relationships']
                 );
 
-                $entity = $this->persister->create($type, $changes, $input['id']);
+                // Process entity creation (validation + persist, flush handled by WriteListener)
+                $entity = $this->processor->processCreate($type, $changes, $input['id']);
 
                 return $entity;
             });

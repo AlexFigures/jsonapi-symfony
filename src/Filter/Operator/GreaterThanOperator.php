@@ -23,7 +23,7 @@ final class GreaterThanOperator extends AbstractOperator
             throw new \InvalidArgumentException('GreaterThanOperator requires at least one value.');
         }
 
-        $paramName = 'gt_' . uniqid('', true);
+        $paramName = 'gt_' . str_replace('.', '_', uniqid('', true));
 
         return new DoctrineExpression(
             sprintf('%s > :%s', $dqlField, $paramName),

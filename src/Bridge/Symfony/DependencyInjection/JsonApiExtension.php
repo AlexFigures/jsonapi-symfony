@@ -104,7 +104,7 @@ final class JsonApiExtension extends Extension
     /**
      * Configure data layer service aliases based on configuration.
      *
-     * @param array{provider: string, repository: string|null, persister: string|null, relationship_reader: string|null, transaction_manager: string|null} $config
+     * @param array{provider: string, repository: string|null, processor: string|null, relationship_reader: string|null, transaction_manager: string|null} $config
      */
     private function configureDataLayer(ContainerBuilder $container, array $config): void
     {
@@ -116,8 +116,8 @@ final class JsonApiExtension extends Extension
             )->setPublic(false);
 
             $container->setAlias(
-                'JsonApi\Symfony\Contract\Data\ResourcePersister',
-                'JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister'
+                'JsonApi\Symfony\Contract\Data\ResourceProcessor',
+                'JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor'
             )->setPublic(false);
 
             $container->setAlias(
@@ -138,10 +138,10 @@ final class JsonApiExtension extends Extension
                 )->setPublic(false);
             }
 
-            if ($config['persister'] !== null) {
+            if ($config['processor'] !== null) {
                 $container->setAlias(
-                    'JsonApi\Symfony\Contract\Data\ResourcePersister',
-                    $config['persister']
+                    'JsonApi\Symfony\Contract\Data\ResourceProcessor',
+                    $config['processor']
                 )->setPublic(false);
             }
 

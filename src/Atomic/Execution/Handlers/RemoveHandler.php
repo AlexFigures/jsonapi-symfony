@@ -9,12 +9,12 @@ use JsonApi\Symfony\Atomic\Lid\LidRegistry;
 use JsonApi\Symfony\Atomic\Operation;
 use JsonApi\Symfony\Http\Error\ErrorMapper;
 use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 
 final class RemoveHandler
 {
     public function __construct(
-        private readonly ResourcePersister $persister,
+        private readonly ResourceProcessor $processor,
         private readonly ErrorMapper $errors,
     ) {
     }
@@ -42,7 +42,7 @@ final class RemoveHandler
             ]);
         }
 
-        $this->persister->delete($ref->type, $id);
+        $this->processor->processDelete($ref->type, $id);
 
         return OperationOutcome::empty();
     }

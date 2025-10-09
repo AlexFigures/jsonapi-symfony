@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\Http\Controller;
 
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use JsonApi\Symfony\Contract\Tx\TransactionManager;
 use JsonApi\Symfony\Events\ResourceChangedEvent;
 use JsonApi\Symfony\Http\Document\DocumentBuilder;
@@ -14,6 +14,7 @@ use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Http\Exception\UnprocessableEntityException;
 use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
+use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
 use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Http\Write\ChangeSetFactory;
 use JsonApi\Symfony\Http\Write\InputDocumentValidator;
@@ -34,7 +35,7 @@ final class UpdateResourceController
         private readonly ResourceRegistryInterface $registry,
         private readonly InputDocumentValidator $validator,
         private readonly ChangeSetFactory $changes,
-        private readonly ResourcePersister $persister,
+        private readonly ResourceProcessor $processor,
         private readonly TransactionManager $transaction,
         private readonly DocumentBuilder $document,
         private readonly ErrorMapper $errors,
@@ -55,14 +56,15 @@ final class UpdateResourceController
         try {
             $model = $this->transaction->transactional(function () use ($type, $id, $input) {
                 // Create ChangeSet with both attributes and relationships
-                // The persister will handle applying both before validation
+                // The processor will handle applying both before validation
                 $changes = $this->changes->fromInput(
                     $type,
                     $input['attributes'],
                     $input['relationships']
                 );
 
-                $entity = $this->persister->update($type, $id, $changes);
+                // Process entity update (validation + changes, flush handled by WriteListener)
+                $entity = $this->processor->processUpdate($type, $id, $changes);
 
                 return $entity;
             });

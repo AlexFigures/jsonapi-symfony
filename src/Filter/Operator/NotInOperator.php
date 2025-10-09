@@ -23,7 +23,7 @@ final class NotInOperator extends AbstractOperator
             throw new \InvalidArgumentException('NotInOperator requires at least one value.');
         }
 
-        $paramName = 'nin_' . uniqid('', true);
+        $paramName = 'nin_' . str_replace('.', '_', uniqid('', true));
 
         return new DoctrineExpression(
             sprintf('%s NOT IN (:%s)', $dqlField, $paramName),

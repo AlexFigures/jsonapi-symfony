@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace JsonApi\Symfony\Bridge\Doctrine\Persister;
 
 use Doctrine\ORM\EntityManagerInterface;
+use JsonApi\Symfony\Bridge\Doctrine\Flush\FlushManager;
 use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
 use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
+use JsonApi\Symfony\Contract\Data\ResourceProcessor;
 use JsonApi\Symfony\Http\Exception\ConflictException;
 use JsonApi\Symfony\Http\Exception\NotFoundException;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
@@ -15,24 +16,27 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * Generic Doctrine persister for JSON:API resources.
+ * Generic Doctrine processor for JSON:API resources.
  *
  * Handles entity creation, updating, and deletion.
  *
  * Supports entities with constructors requiring parameters
  * through SerializerEntityInstantiator (uses Symfony Serializer, like API Platform).
+ *
+ * This processor does NOT call flush() - flushing is handled by WriteListener.
  */
-class GenericDoctrinePersister implements ResourcePersister
+class GenericDoctrineProcessor implements ResourceProcessor
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
         private readonly SerializerEntityInstantiator $instantiator,
+        private readonly FlushManager $flushManager,
     ) {
     }
 
-    public function create(string $type, ChangeSet $changes, ?string $clientId = null): object
+    public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
     {
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->class;
@@ -72,13 +76,14 @@ class GenericDoctrinePersister implements ResourcePersister
         // Apply remaining attributes considering serialization groups
         $this->applyAttributes($entity, $metadata, $remainingChanges, true);
 
+        // Persist entity and schedule flush
         $this->em->persist($entity);
-        $this->em->flush();
+        $this->flushManager->scheduleFlush();
 
         return $entity;
     }
 
-    public function update(string $type, string $id, ChangeSet $changes): object
+    public function processUpdate(string $type, string $id, ChangeSet $changes): object
     {
         $metadata = $this->registry->getByType($type);
         $entity = $this->em->find($metadata->class, $id);
@@ -91,12 +96,14 @@ class GenericDoctrinePersister implements ResourcePersister
 
         // Apply attributes considering serialization groups
         $this->applyAttributes($entity, $metadata, $changes, false);
-        $this->em->flush();
+
+        // Entity is already managed, schedule flush
+        $this->flushManager->scheduleFlush();
 
         return $entity;
     }
 
-    public function delete(string $type, string $id): void
+    public function processDelete(string $type, string $id): void
     {
         $metadata = $this->registry->getByType($type);
         $entity = $this->em->find($metadata->class, $id);
@@ -107,8 +114,9 @@ class GenericDoctrinePersister implements ResourcePersister
             );
         }
 
+        // Mark entity for removal and schedule flush
         $this->em->remove($entity);
-        $this->em->flush();
+        $this->flushManager->scheduleFlush();
     }
 
     private function applyAttributes(
