@@ -335,6 +335,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->set(OpenApiSpecGenerator::class)
         ->args([
             service(ResourceRegistryInterface::class),
+            service(CustomRouteRegistryInterface::class)->nullOnInvalid(),
             '%jsonapi.docs.generator.openapi%',
             '%jsonapi.route_prefix%',
             '%jsonapi.relationships.write_response%',

@@ -6,8 +6,10 @@ namespace JsonApi\Symfony\Docs\OpenApi;
 
 use JsonApi\Symfony\Http\Negotiation\MediaType;
 use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
+use JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata;
 use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
 use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
+use JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use LogicException;
 
@@ -34,6 +36,7 @@ final class OpenApiSpecGenerator
      */
     public function __construct(
         private readonly ResourceRegistryInterface $registry,
+        private readonly ?CustomRouteRegistryInterface $customRouteRegistry,
         private readonly array $config,
         private readonly string $routePrefix,
         private readonly string $relationshipWriteMode,
@@ -77,6 +80,13 @@ final class OpenApiSpecGenerator
             }
 
             $tags[] = $tag;
+        }
+
+        // Add custom routes
+        if ($this->customRouteRegistry !== null) {
+            foreach ($this->customRouteRegistry->all() as $customRoute) {
+                $paths = $this->mergePaths($paths, $this->buildCustomRoutePaths($customRoute));
+            }
         }
 
         ksort($paths);
@@ -816,5 +826,172 @@ final class OpenApiSpecGenerator
             'schema' => ['type' => 'string'],
             'description' => 'Resource identifier',
         ];
+    }
+
+    /**
+     * Build OpenAPI paths for a custom route.
+     *
+     * @return array<string, OpenApiSchema>
+     */
+    private function buildCustomRoutePaths(CustomRouteMetadata $route): array
+    {
+        $paths = [];
+        $path = $route->path;
+
+        // Extract path parameters
+        $parameters = $this->extractPathParameters($path);
+
+        // Add id parameter if present in path
+        if (str_contains($path, '{id}')) {
+            $parameters[] = $this->idParameter();
+        }
+
+        foreach ($route->methods as $method) {
+            $methodLower = strtolower($method);
+            $operationId = $this->generateCustomRouteOperationId($route);
+
+            $operation = [
+                'operationId' => $operationId,
+                'summary' => $route->description ?? $this->generateCustomRouteSummary($route),
+                'tags' => $route->resourceType !== null ? [$route->resourceType] : [],
+                'parameters' => $parameters,
+                'responses' => [
+                    '200' => [
+                        'description' => 'Successful response',
+                        'content' => [
+                            MediaType::JSON_API => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'data' => [
+                                            'oneOf' => [
+                                                ['type' => 'object'],
+                                                ['type' => 'array', 'items' => ['type' => 'object']],
+                                                ['type' => 'null'],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    '400' => [
+                        'description' => 'Bad Request',
+                        'content' => [
+                            MediaType::JSON_API => [
+                                'schema' => ['$ref' => '#/components/schemas/ErrorDocument'],
+                            ],
+                        ],
+                    ],
+                    '404' => [
+                        'description' => 'Not Found',
+                        'content' => [
+                            MediaType::JSON_API => [
+                                'schema' => ['$ref' => '#/components/schemas/ErrorDocument'],
+                            ],
+                        ],
+                    ],
+                ],
+            ];
+
+            // Add request body for POST, PUT, PATCH methods
+            if (in_array($methodLower, ['post', 'put', 'patch'], true)) {
+                $operation['requestBody'] = [
+                    'required' => true,
+                    'content' => [
+                        MediaType::JSON_API => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'data' => [
+                                        'type' => 'object',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+            }
+
+            $paths[$path][$methodLower] = $operation;
+        }
+
+        return $paths;
+    }
+
+    /**
+     * Generate operation ID for a custom route.
+     */
+    private function generateCustomRouteOperationId(CustomRouteMetadata $route): string
+    {
+        // Extract the action from the route name (e.g., 'articles.publish' -> 'publish')
+        $parts = explode('.', $route->name);
+        $action = end($parts);
+
+        // Convert action to camelCase (e.g., 'publish' -> 'publish', 'bulk-archive' -> 'bulkArchive')
+        $actionCamel = lcfirst($this->studly($action));
+
+        // If there's a resource type, include it
+        if ($route->resourceType !== null) {
+            $resourcePart = $this->studly($route->resourceType);
+
+            // Determine if we should use singular or plural form
+            // If the path contains {id}, it's a single resource operation -> use singular
+            // Otherwise, it's a collection operation -> use plural
+            $useSingular = str_contains($route->path, '{id}');
+
+            if ($useSingular && str_ends_with($resourcePart, 's') && strlen($resourcePart) > 1) {
+                // Remove trailing 's' to get singular form
+                // This is a simple heuristic - for more complex cases, use a proper inflector
+                $resourcePart = substr($resourcePart, 0, -1);
+            }
+
+            return $actionCamel . $resourcePart;
+        }
+
+        return $actionCamel;
+    }
+
+    /**
+     * Generate summary for a custom route.
+     */
+    private function generateCustomRouteSummary(CustomRouteMetadata $route): string
+    {
+        $parts = explode('.', $route->name);
+        $action = end($parts);
+
+        if ($route->resourceType !== null) {
+            return ucfirst($action) . ' ' . $route->resourceType;
+        }
+
+        return ucfirst($action);
+    }
+
+    /**
+     * Extract path parameters from a route path.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function extractPathParameters(string $path): array
+    {
+        $parameters = [];
+        preg_match_all('/\{([^}]+)\}/', $path, $matches);
+
+        foreach ($matches[1] as $paramName) {
+            // Skip 'id' as it's handled separately
+            if ($paramName === 'id') {
+                continue;
+            }
+
+            $parameters[] = [
+                'name' => $paramName,
+                'in' => 'path',
+                'required' => true,
+                'schema' => ['type' => 'string'],
+                'description' => ucfirst($paramName) . ' parameter',
+            ];
+        }
+
+        return $parameters;
     }
 }
