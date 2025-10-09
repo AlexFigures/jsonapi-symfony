@@ -52,6 +52,7 @@ use JsonApi\Symfony\Profile\Builtin\RelationshipCountsProfile;
 use JsonApi\Symfony\Profile\Builtin\SoftDeleteProfile;
 use JsonApi\Symfony\Profile\Negotiation\ProfileNegotiator;
 use JsonApi\Symfony\Profile\ProfileRegistry;
+use JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
 use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use JsonApi\Symfony\Invalidation\InvalidationDispatcher;
@@ -335,7 +336,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->set(OpenApiSpecGenerator::class)
         ->args([
             service(ResourceRegistryInterface::class),
-            service(CustomRouteRegistryInterface::class)->nullOnInvalid(),
+            service(CustomRouteRegistryInterface::class),
             '%jsonapi.docs.generator.openapi%',
             '%jsonapi.route_prefix%',
             '%jsonapi.relationships.write_response%',
