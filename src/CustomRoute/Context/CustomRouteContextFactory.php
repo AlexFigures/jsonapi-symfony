@@ -72,6 +72,7 @@ final class CustomRouteContextFactory
             routeParams: $routeParams,
             criteria: $criteria,
             body: $body,
+            repository: $this->repository,
         );
     }
 
@@ -121,7 +122,9 @@ final class CustomRouteContextFactory
      */
     private function extractRouteParams(Request $request): array
     {
-        return $request->attributes->get('_route_params', []);
+        $params = $request->attributes->get('_route_params', []);
+
+        return is_array($params) ? $params : [];
     }
 
     /**

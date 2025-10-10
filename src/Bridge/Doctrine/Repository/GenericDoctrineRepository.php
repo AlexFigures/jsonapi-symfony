@@ -49,6 +49,13 @@ class GenericDoctrineRepository implements ResourceRepository
             $this->filterCompiler->apply($qb, $criteria->filter, $platform);
         }
 
+        // Apply custom conditions (for custom route handlers)
+        if ($criteria->customConditions !== []) {
+            foreach ($criteria->customConditions as $condition) {
+                $condition($qb);
+            }
+        }
+
         // Apply eager loading for includes (prevent N+1 queries)
         $this->applyEagerLoading($qb, $metadata, $criteria->include);
 

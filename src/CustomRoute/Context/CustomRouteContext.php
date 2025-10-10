@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace JsonApi\Symfony\CustomRoute\Context;
 
+use JsonApi\Symfony\Contract\Data\ResourceRepository;
+use JsonApi\Symfony\CustomRoute\Query\CriteriaBuilder;
 use JsonApi\Symfony\Query\Criteria;
 use LogicException;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,6 +33,7 @@ final class CustomRouteContext
      * @param array<string, mixed> $routeParams  Route parameters from the URL path
      * @param Criteria             $criteria     Parsed JSON:API query criteria (includes, fields, filters, etc.)
      * @param array<string, mixed> $body         Decoded request body (empty array if no body)
+     * @param ResourceRepository   $repository   Repository for fetching resources with criteria
      */
     public function __construct(
         private readonly Request $request,
@@ -39,6 +42,7 @@ final class CustomRouteContext
         private readonly array $routeParams,
         private readonly Criteria $criteria,
         private readonly array $body,
+        private readonly ResourceRepository $repository,
     ) {
     }
 
@@ -207,12 +211,12 @@ final class CustomRouteContext
      * $page = $context->getQueryParam('page', 1);    // 1 (default)
      * ```
      *
-     * @param string $name    The query parameter name
-     * @param mixed  $default Default value if parameter doesn't exist
+     * @param string                              $name    The query parameter name
+     * @param bool|float|int|string|null          $default Default value if parameter doesn't exist
      *
      * @return mixed The parameter value or default
      */
-    public function getQueryParam(string $name, mixed $default = null): mixed
+    public function getQueryParam(string $name, bool|float|int|string|null $default = null): mixed
     {
         return $this->request->query->get($name, $default);
     }
@@ -227,5 +231,69 @@ final class CustomRouteContext
     public function hasQueryParam(string $name): bool
     {
         return $this->request->query->has($name);
+    }
+
+    /**
+     * Get a CriteriaBuilder for modifying query criteria.
+     *
+     * This allows handlers to add custom filters and conditions to the
+     * already-parsed JSON:API query parameters. The builder provides a
+     * fluent API that's easier to use than manually constructing Filter AST.
+     *
+     * Example:
+     * ```php
+     * $criteria = $context->criteria()
+     *     ->addFilter('category.id', 'eq', $categoryId)
+     *     ->addFilter('status', 'eq', 'published')
+     *     ->build();
+     *
+     * $slice = $context->getRepository()->findCollection('articles', $criteria);
+     * ```
+     *
+     * For complex conditions:
+     * ```php
+     * $criteria = $context->criteria()
+     *     ->addCustomCondition(function($qb) use ($categoryId) {
+     *         $qb->andWhere('e.category = :cat')
+     *            ->setParameter('cat', $categoryId);
+     *     })
+     *     ->build();
+     * ```
+     *
+     * @return CriteriaBuilder Builder for modifying criteria
+     *
+     * @since 0.3.0
+     */
+    public function criteria(): CriteriaBuilder
+    {
+        return new CriteriaBuilder($this->criteria);
+    }
+
+    /**
+     * Get the repository for fetching resources.
+     *
+     * Use this to fetch collections or single resources with automatic
+     * application of filters, sorting, pagination, and includes from
+     * the query string.
+     *
+     * Example:
+     * ```php
+     * // Fetch collection with all query parameters applied
+     * $slice = $context->getRepository()->findCollection('articles', $context->getCriteria());
+     *
+     * // Or with modified criteria
+     * $criteria = $context->criteria()
+     *     ->addFilter('status', 'eq', 'published')
+     *     ->build();
+     * $slice = $context->getRepository()->findCollection('articles', $criteria);
+     * ```
+     *
+     * @return ResourceRepository The repository for resource operations
+     *
+     * @since 0.3.0
+     */
+    public function getRepository(): ResourceRepository
+    {
+        return $this->repository;
     }
 }
