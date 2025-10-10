@@ -359,6 +359,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 name: 'articles.publish',
                 path: '/api/articles/{id}/publish',
                 methods: ['POST'],
+                handler: null,
                 controller: 'App\Controller\PublishController',
                 resourceType: 'articles',
                 defaults: ['_format' => 'json'],
@@ -370,6 +371,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 name: 'articles.search',
                 path: '/api/articles/search',
                 methods: ['GET'],
+                handler: null,
                 controller: 'App\Controller\SearchController',
                 resourceType: 'articles',
                 defaults: [],
@@ -414,6 +416,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 name: 'jsonapi.products.publish',
                 path: '/api/products/{id}/publish',
                 methods: ['POST'],
+                handler: null,
                 controller: 'App\Controller\PublishController',
                 resourceType: 'products',
                 defaults: [],
@@ -426,6 +429,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 name: 'jsonapi.products.actions.archive',
                 path: '/api/products/{id}/archive',
                 methods: ['POST'],
+                handler: null,
                 controller: 'App\Controller\ArchiveController',
                 resourceType: 'products',
                 defaults: [],
@@ -438,6 +442,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 name: 'custom.products.special',
                 path: '/api/products/special',
                 methods: ['GET'],
+                handler: null,
                 controller: 'App\Controller\SpecialController',
                 resourceType: 'products',
                 defaults: [],
@@ -484,6 +489,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 name: 'articles.search',
                 path: '/api/articles/search',
                 methods: ['GET'],
+                handler: null,
                 controller: 'App\Controller\SearchController',
                 resourceType: 'articles',
                 defaults: [],
@@ -496,6 +502,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 name: 'articles.archive',
                 path: '/api/articles/archive',
                 methods: ['POST'],
+                handler: null,
                 controller: 'App\Controller\ArchiveController',
                 resourceType: 'articles',
                 defaults: [],
@@ -531,5 +538,80 @@ final class JsonApiRouteLoaderTest extends TestCase
         $archiveRoute = $routes->get('articles.archive');
         $this->assertNotNull($archiveRoute);
         $this->assertSame('/api/articles/archive', $archiveRoute->getPath());
+    }
+
+    /**
+     * Test that resource types with multiple underscores generate correct routes.
+     *
+     * This test verifies that resource types like 'category_synonyms' work correctly
+     * with both snake_case and kebab-case naming conventions.
+     */
+    public function testResourceTypeWithMultipleUnderscores(): void
+    {
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('all')->willReturn([
+            new ResourceMetadata(
+                type: 'category_synonyms',
+                class: 'App\Entity\CategorySynonym',
+                attributes: [],
+                relationships: [
+                    new RelationshipMetadata(
+                        name: 'category',
+                        toMany: false,
+                        targetType: 'categories',
+                        propertyPath: 'category',
+                    ),
+                ],
+            ),
+        ]);
+
+        // Test with snake_case naming convention (default)
+        $snakeLoader = new JsonApiRouteLoader($registry, '/api', true);
+        $snakeRoutes = $snakeLoader->load('.', 'jsonapi');
+
+        // Verify route names use snake_case
+        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.index'));
+        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.show'));
+        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.create'));
+        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.update'));
+        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.delete'));
+
+        // Verify relationship routes
+        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.relationships.category.show'));
+        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.related.category'));
+
+        // Verify URL paths use resource type as-is (with underscores)
+        $indexRoute = $snakeRoutes->get('jsonapi.category_synonyms.index');
+        $this->assertSame('/api/category_synonyms', $indexRoute->getPath());
+
+        $showRoute = $snakeRoutes->get('jsonapi.category_synonyms.show');
+        $this->assertSame('/api/category_synonyms/{id}', $showRoute->getPath());
+
+        // Test with kebab-case naming convention
+        $routeNameGenerator = new RouteNameGenerator(RouteNameGenerator::KEBAB_CASE);
+        $kebabLoader = new JsonApiRouteLoader($registry, '/api', true, [], [], $routeNameGenerator);
+        $kebabRoutes = $kebabLoader->load('.', 'jsonapi');
+
+        // Verify route names use kebab-case
+        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.index'));
+        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.show'));
+        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.create'));
+        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.update'));
+        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.delete'));
+
+        // Verify relationship routes use kebab-case
+        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.relationships.category.show'));
+        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.related.category'));
+
+        // Verify URL paths still use resource type as-is (with underscores, NOT hyphens)
+        $kebabIndexRoute = $kebabRoutes->get('jsonapi.category-synonyms.index');
+        $this->assertSame('/api/category_synonyms', $kebabIndexRoute->getPath());
+
+        $kebabShowRoute = $kebabRoutes->get('jsonapi.category-synonyms.show');
+        $this->assertSame('/api/category_synonyms/{id}', $kebabShowRoute->getPath());
+
+        // Verify old snake_case route names don't exist when using kebab-case
+        $this->assertNull($kebabRoutes->get('jsonapi.category_synonyms.index'));
+        $this->assertNull($kebabRoutes->get('jsonapi.category_synonyms.relationships.category.show'));
     }
 }

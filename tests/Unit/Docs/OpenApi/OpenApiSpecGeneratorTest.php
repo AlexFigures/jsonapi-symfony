@@ -142,6 +142,13 @@ final class OpenApiSpecGeneratorTest extends TestCase
         );
     }
 
+    /**
+     * Test that OpenAPI spec correctly handles resources with kebab-case type names.
+     *
+     * Note: Resource type format (kebab-case, snake_case, etc.) is defined in the
+     * entity metadata, NOT by the jsonapi.routing.naming_convention config.
+     * The naming_convention config only affects Symfony route names.
+     */
     public function testHandlesKebabCaseResourceTypes(): void
     {
         $blogPostMetadata = new ResourceMetadata(
@@ -216,6 +223,13 @@ final class OpenApiSpecGeneratorTest extends TestCase
         self::assertSame('getBlogPosts', $spec['paths']['/api/blog-posts/{id}']['get']['operationId']);
     }
 
+    /**
+     * Test that OpenAPI spec correctly handles resources with snake_case type names.
+     *
+     * Note: Resource type format (kebab-case, snake_case, etc.) is defined in the
+     * entity metadata, NOT by the jsonapi.routing.naming_convention config.
+     * The naming_convention config only affects Symfony route names.
+     */
     public function testHandlesSnakeCaseResourceTypes(): void
     {
         $userProfileMetadata = new ResourceMetadata(

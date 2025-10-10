@@ -681,6 +681,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->args([
             service('doctrine.orm.default_entity_manager'),
             service(ResourceRegistryInterface::class),
+            service(PropertyAccessorInterface::class),
         ])
     ;
 

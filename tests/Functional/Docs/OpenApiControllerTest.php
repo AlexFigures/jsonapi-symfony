@@ -411,7 +411,18 @@ final class OpenApiControllerTest extends TestCase
         self::assertArrayHasKey('200', $publishPath['post']['responses']);
     }
 
-    public function testCustomRoutesRespectNamingConvention(): void
+    /**
+     * Test that custom routes preserve the resource type format in URL paths.
+     *
+     * Note: The jsonapi.routing.naming_convention config affects ONLY route names
+     * (internal Symfony identifiers), NOT the URL paths. URL paths always use
+     * the resource type as defined in the entity metadata.
+     *
+     * For example, with resource type 'blog-posts':
+     * - Route name (with kebab-case convention): jsonapi.blog-posts.index
+     * - URL path: /api/blog-posts (uses resource type as-is)
+     */
+    public function testCustomRoutesPreserveResourceTypeFormat(): void
     {
         // Create registry with kebab-case resource type
         $blogPostMetadata = new ResourceMetadata(
@@ -492,7 +503,7 @@ final class OpenApiControllerTest extends TestCase
         $response = ($controller)();
         $spec = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
 
-        // Verify path preserves kebab-case
+        // Verify path preserves the resource type format (kebab-case in this case)
         self::assertArrayHasKey('/api/blog-posts/{id}/publish', $spec['paths']);
 
         // Verify operation ID uses StudlyCase and singular form (because path contains {id})

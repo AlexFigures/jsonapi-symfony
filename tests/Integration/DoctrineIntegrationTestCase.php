@@ -29,6 +29,7 @@ use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category;
+use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Comment;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Product;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
@@ -79,6 +80,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             Article::class,
             Author::class,
             Category::class,
+            CategorySynonym::class,
             Comment::class,
             Tag::class,
             Product::class,

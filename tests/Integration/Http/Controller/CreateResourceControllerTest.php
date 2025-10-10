@@ -18,6 +18,7 @@ use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category;
+use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Comment;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
@@ -74,7 +75,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         $routes->add('jsonapi.create', new Route('/api/{type}', methods: ['POST']));
 
         // Add type-specific routes for LinkGenerator
-        foreach (['articles', 'authors', 'tags', 'categories', 'comments'] as $type) {
+        foreach (['articles', 'authors', 'tags', 'categories', 'category_synonyms', 'comments'] as $type) {
             $routes->add("jsonapi.{$type}.index", new Route("/api/{$type}"));
             $routes->add("jsonapi.{$type}.show", new Route("/api/{$type}/{id}"));
 
@@ -84,6 +85,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
             $routes->add("jsonapi.{$type}.related.parent", new Route("/api/{$type}/{id}/parent"));
             $routes->add("jsonapi.{$type}.related.children", new Route("/api/{$type}/{id}/children"));
             $routes->add("jsonapi.{$type}.related.articles", new Route("/api/{$type}/{id}/articles"));
+            $routes->add("jsonapi.{$type}.related.category", new Route("/api/{$type}/{id}/category"));
 
             // Relationship routes
             $routes->add("jsonapi.{$type}.relationships.author.show", new Route("/api/{$type}/{id}/relationships/author"));
@@ -91,6 +93,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
             $routes->add("jsonapi.{$type}.relationships.parent.show", new Route("/api/{$type}/{id}/relationships/parent"));
             $routes->add("jsonapi.{$type}.relationships.children.show", new Route("/api/{$type}/{id}/relationships/children"));
             $routes->add("jsonapi.{$type}.relationships.articles.show", new Route("/api/{$type}/{id}/relationships/articles"));
+            $routes->add("jsonapi.{$type}.relationships.category.show", new Route("/api/{$type}/{id}/relationships/category"));
         }
 
         $context = new RequestContext();
@@ -758,6 +761,125 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         self::assertSame('Second comment', $comment2->getContent());
         self::assertSame('User One', $comment1->getAuthorName());
         self::assertSame('User Two', $comment2->getAuthorName());
+    }
+
+    /**
+     * Test creating a resource with underscore in type name (category_synonyms).
+     *
+     * This test validates that:
+     * - Resources with underscores in type names are created correctly
+     * - Integer sequence IDs work with underscore resource types
+     * - Relationships work with underscore resource types
+     * - The resource type format is preserved in responses
+     *
+     * This is important for verifying naming convention handling (snake_case vs kebab-case).
+     */
+    public function testCreateResourceWithUnderscoreTypeName(): void
+    {
+        // Create a category first (required for relationship)
+        $category = new Category();
+        $category->setName('Electronics');
+        $this->em->persist($category);
+        $this->em->flush();
+
+        $categoryId = (string) $category->getId();
+
+        // Test 1: Create category synonym without relationship
+        $payload1 = [
+            'data' => [
+                'type' => 'category_synonyms',
+                'attributes' => [
+                    'name' => 'Electronic Devices',
+                    'isMain' => true,
+                    'isActive' => true,
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/category_synonyms', $payload1);
+        $response = ($this->controller)($request, 'category_synonyms');
+
+        // Assert HTTP status and headers
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+        self::assertSame(MediaType::JSON_API, $response->headers->get('Content-Type'));
+        self::assertNotNull($response->headers->get('Location'));
+
+        // Decode and validate response structure
+        $document = $this->decode($response);
+
+        self::assertArrayHasKey('data', $document);
+        self::assertIsArray($document['data']);
+        self::assertSame('category_synonyms', $document['data']['type']);
+        self::assertArrayHasKey('id', $document['data']);
+        self::assertArrayHasKey('attributes', $document['data']);
+
+        // Verify attributes
+        self::assertSame('Electronic Devices', $document['data']['attributes']['name']);
+        self::assertTrue($document['data']['attributes']['isMain']);
+        self::assertTrue($document['data']['attributes']['isActive']);
+
+        // Verify ID is string (JSON:API requirement)
+        self::assertIsString($document['data']['id']);
+
+        // Verify database state
+        $synonymId = (int) $document['data']['id'];
+        $this->em->clear();
+        $synonym = $this->em->find(CategorySynonym::class, $synonymId);
+        self::assertNotNull($synonym);
+        self::assertSame('Electronic Devices', $synonym->getName());
+        self::assertTrue($synonym->isMain());
+        self::assertTrue($synonym->isActive());
+
+        // Test 2: Create category synonym with relationship
+        $payload2 = [
+            'data' => [
+                'type' => 'category_synonyms',
+                'attributes' => [
+                    'name' => 'Electronics & Gadgets',
+                    'isMain' => false,
+                    'isActive' => true,
+                ],
+                'relationships' => [
+                    'category' => [
+                        'data' => [
+                            'type' => 'categories',
+                            'id' => $categoryId,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/category_synonyms', $payload2);
+        $response = ($this->controller)($request, 'category_synonyms');
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        self::assertSame('category_synonyms', $document['data']['type']);
+        self::assertSame('Electronics & Gadgets', $document['data']['attributes']['name']);
+        self::assertFalse($document['data']['attributes']['isMain']);
+
+        // Verify relationship in response
+        self::assertArrayHasKey('relationships', $document['data']);
+        self::assertArrayHasKey('category', $document['data']['relationships']);
+        self::assertArrayHasKey('data', $document['data']['relationships']['category']);
+        self::assertSame('categories', $document['data']['relationships']['category']['data']['type']);
+        self::assertSame($categoryId, $document['data']['relationships']['category']['data']['id']);
+
+        // Verify database state with relationship
+        $synonym2Id = (int) $document['data']['id'];
+        $this->em->clear();
+        $synonym2 = $this->em->find(CategorySynonym::class, $synonym2Id);
+        self::assertNotNull($synonym2);
+        self::assertNotNull($synonym2->getCategory());
+        self::assertSame('Electronics', $synonym2->getCategory()->getName());
+
+        // Test 3: Verify Location header format
+        $locationHeader = $response->headers->get('Location');
+        self::assertStringContainsString('/api/category_synonyms/', $locationHeader);
+        self::assertStringContainsString((string) $synonym2Id, $locationHeader);
     }
 
     /**

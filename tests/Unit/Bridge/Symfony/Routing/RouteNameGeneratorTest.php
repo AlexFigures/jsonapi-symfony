@@ -90,4 +90,41 @@ final class RouteNameGeneratorTest extends TestCase
 
         $generator->generateRouteName('articles', null);
     }
+
+    /**
+     * Test that resource types with multiple underscores are handled correctly.
+     *
+     * This is important for real-world scenarios where resource types like
+     * 'category_synonyms', 'product_variants', etc. are common.
+     */
+    public function testMultipleUnderscoresInResourceType(): void
+    {
+        // Test snake_case convention (should preserve underscores)
+        $snakeGenerator = new RouteNameGenerator(RouteNameGenerator::SNAKE_CASE);
+        self::assertSame('jsonapi.category_synonyms.index', $snakeGenerator->generateRouteName('category_synonyms', 'index'));
+        self::assertSame('jsonapi.category_synonyms.show', $snakeGenerator->generateRouteName('category_synonyms', 'show'));
+        self::assertSame('jsonapi.category_synonyms.create', $snakeGenerator->generateRouteName('category_synonyms', 'create'));
+        self::assertSame(
+            'jsonapi.category_synonyms.relationships.category.show',
+            $snakeGenerator->generateRouteName('category_synonyms', null, 'category', 'show')
+        );
+        self::assertSame(
+            'jsonapi.category_synonyms.related.category',
+            $snakeGenerator->generateRouteName('category_synonyms', null, 'category')
+        );
+
+        // Test kebab-case convention (should convert underscores to hyphens)
+        $kebabGenerator = new RouteNameGenerator(RouteNameGenerator::KEBAB_CASE);
+        self::assertSame('jsonapi.category-synonyms.index', $kebabGenerator->generateRouteName('category_synonyms', 'index'));
+        self::assertSame('jsonapi.category-synonyms.show', $kebabGenerator->generateRouteName('category_synonyms', 'show'));
+        self::assertSame('jsonapi.category-synonyms.create', $kebabGenerator->generateRouteName('category_synonyms', 'create'));
+        self::assertSame(
+            'jsonapi.category-synonyms.relationships.category.show',
+            $kebabGenerator->generateRouteName('category_synonyms', null, 'category', 'show')
+        );
+        self::assertSame(
+            'jsonapi.category-synonyms.related.category',
+            $kebabGenerator->generateRouteName('category_synonyms', null, 'category')
+        );
+    }
 }

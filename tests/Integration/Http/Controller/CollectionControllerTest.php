@@ -35,6 +35,7 @@ use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category;
+use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
 use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\HttpFoundation\Request;
@@ -89,7 +90,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         $routes->add('jsonapi.resource', new Route('/api/{type}/{id}'));
 
         // Add type-specific routes for LinkGenerator
-        foreach (['articles', 'authors', 'tags', 'categories'] as $type) {
+        foreach (['articles', 'authors', 'tags', 'categories', 'category_synonyms', 'comments'] as $type) {
             $routes->add("jsonapi.{$type}.index", new Route("/api/{$type}"));
             $routes->add("jsonapi.{$type}.show", new Route("/api/{$type}/{id}"));
 
@@ -99,6 +100,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
             $routes->add("jsonapi.{$type}.related.parent", new Route("/api/{$type}/{id}/parent"));
             $routes->add("jsonapi.{$type}.related.children", new Route("/api/{$type}/{id}/children"));
             $routes->add("jsonapi.{$type}.related.articles", new Route("/api/{$type}/{id}/articles"));
+            $routes->add("jsonapi.{$type}.related.category", new Route("/api/{$type}/{id}/category"));
 
             // Relationship routes
             $routes->add("jsonapi.{$type}.relationships.author.show", new Route("/api/{$type}/{id}/relationships/author"));
@@ -106,6 +108,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
             $routes->add("jsonapi.{$type}.relationships.parent.show", new Route("/api/{$type}/{id}/relationships/parent"));
             $routes->add("jsonapi.{$type}.relationships.children.show", new Route("/api/{$type}/{id}/relationships/children"));
             $routes->add("jsonapi.{$type}.relationships.articles.show", new Route("/api/{$type}/{id}/relationships/articles"));
+            $routes->add("jsonapi.{$type}.relationships.category.show", new Route("/api/{$type}/{id}/relationships/category"));
         }
 
         $context = new RequestContext();
@@ -1508,6 +1511,117 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
 
         self::assertCount(1, $authors); // One author
         self::assertGreaterThanOrEqual(2, count($articles)); // At least 2 other articles by same author
+    }
+
+    /**
+     * Test 31: Collection with resource type containing underscore (category_synonyms).
+     *
+     * Tests that resources with underscores in their type names work correctly
+     * with filtering, sorting, and pagination. This is important for verifying
+     * that naming conventions (snake_case vs kebab-case) are handled properly.
+     */
+    public function testCollectionWithUnderscoreResourceType(): void
+    {
+        // Create a category first
+        $category = new Category();
+        $category->setName('Electronics');
+        $this->em->persist($category);
+        $this->em->flush();
+
+        // Create multiple category synonyms
+        $synonym1 = new CategorySynonym();
+        $synonym1->setName('Electronic Devices');
+        $synonym1->setCategory($category);
+        $this->em->persist($synonym1);
+
+        $synonym2 = new CategorySynonym();
+        $synonym2->setName('Electronics & Gadgets');
+        $synonym2->setCategory($category);
+        $this->em->persist($synonym2);
+
+        $synonym3 = new CategorySynonym();
+        $synonym3->setName('Tech Products');
+        $synonym3->setCategory($category);
+        $this->em->persist($synonym3);
+
+        $this->em->flush();
+        $this->em->clear();
+
+        // Test 1: Basic collection fetch
+        $request = $this->createJsonApiGetRequest('GET', '/api/category_synonyms');
+        $response = ($this->controller)($request, 'category_synonyms');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        self::assertArrayHasKey('data', $document);
+        self::assertIsArray($document['data']);
+        self::assertCount(3, $document['data']);
+
+        // Verify resource type
+        foreach ($document['data'] as $resource) {
+            self::assertSame('category_synonyms', $resource['type']);
+            self::assertArrayHasKey('attributes', $resource);
+            self::assertArrayHasKey('name', $resource['attributes']);
+        }
+
+        // Test 2: Filtering by isActive
+        $request = $this->createJsonApiGetRequest('GET', '/api/category_synonyms?filter[isActive][eq]=true');
+        $response = ($this->controller)($request, 'category_synonyms');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        self::assertCount(2, $document['data']); // Only active synonyms
+
+        // Test 3: Filtering by isMain
+        $request = $this->createJsonApiGetRequest('GET', '/api/category_synonyms?filter[isMain][eq]=true');
+        $response = ($this->controller)($request, 'category_synonyms');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        self::assertCount(1, $document['data']); // Only main synonym
+        self::assertSame('Electronic Devices', $document['data'][0]['attributes']['name']);
+
+        // Test 4: Sorting by name
+        $request = $this->createJsonApiGetRequest('GET', '/api/category_synonyms?sort=name');
+        $response = ($this->controller)($request, 'category_synonyms');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        $names = array_column(array_column($document['data'], 'attributes'), 'name');
+        self::assertSame(['Electronic Devices', 'Electronics & Gadgets', 'Tech Products'], $names);
+
+        // Test 5: Include category relationship
+        $request = $this->createJsonApiGetRequest('GET', '/api/category_synonyms?include=category');
+        $response = ($this->controller)($request, 'category_synonyms');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        self::assertArrayHasKey('included', $document);
+        self::assertCount(1, $document['included']); // One category
+        self::assertSame('categories', $document['included'][0]['type']);
+        self::assertSame('Electronics', $document['included'][0]['attributes']['name']);
+
+        // Verify relationships are present
+        foreach ($document['data'] as $resource) {
+            self::assertArrayHasKey('relationships', $resource);
+            self::assertArrayHasKey('category', $resource['relationships']);
+        }
+
+        // Test 6: Pagination
+        $request = $this->createJsonApiGetRequest('GET', '/api/category_synonyms?page[size]=2&page[number]=1');
+        $response = ($this->controller)($request, 'category_synonyms');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        self::assertCount(2, $document['data']); // First page with 2 items
     }
 
     /**
