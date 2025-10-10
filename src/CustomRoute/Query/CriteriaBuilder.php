@@ -175,8 +175,8 @@ final class CriteriaBuilder
     /**
      * Merge additional filters with existing filters using AND logic.
      *
-     * @param Node|null   $existingFilter The existing filter AST (may be null)
-     * @param list<Node>  $newFilters     New filter nodes to add
+     * @param Node|null  $existingFilter The existing filter AST (may be null)
+     * @param list<Node> $newFilters     New filter nodes to add
      *
      * @return Node The merged filter AST
      */
@@ -202,4 +202,3 @@ final class CriteriaBuilder
         return new Conjunction([$existingFilter, ...$newFilters]);
     }
 }
-

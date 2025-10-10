@@ -146,7 +146,14 @@ final class CustomRouteContextFactory
             return null;
         }
 
-        $id = (string) $routeParams['id'];
+        $idValue = $routeParams['id'];
+
+        // Ensure ID is a string or can be converted to string
+        if (!is_scalar($idValue)) {
+            throw new BadRequestException('Route parameter "id" must be a scalar value.');
+        }
+
+        $id = (string) $idValue;
 
         // Load the resource using parsed criteria (supports includes and sparse fieldsets)
         $resource = $this->repository->findOne($resourceType, $id, $criteria);

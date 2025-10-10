@@ -19,4 +19,3 @@ final class FailingHandler implements CustomRouteHandlerInterface
         throw new RuntimeException('Handler failed intentionally');
     }
 }
-

@@ -31,4 +31,3 @@ final class DeleteArticleHandler implements CustomRouteHandlerInterface
         return CustomRouteResult::noContent();
     }
 }
-

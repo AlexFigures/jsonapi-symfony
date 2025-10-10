@@ -30,7 +30,7 @@ final class OpenApiControllerTest extends TestCase
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('application/vnd.oai.openapi+json', $response->headers->get('Content-Type'));
 
-        $content = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $content = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertSame('3.1.0', $content['openapi']);
         self::assertSame('Test API', $content['info']['title']);
         self::assertArrayHasKey('/api/articles', $content['paths']);
@@ -91,7 +91,7 @@ final class OpenApiControllerTest extends TestCase
         );
 
         $response = ($controller)();
-        $content = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $content = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
 
         // Verify all major OpenAPI sections are present
         self::assertArrayHasKey('openapi', $content);
@@ -174,4 +174,3 @@ final class Article
     ) {
     }
 }
-

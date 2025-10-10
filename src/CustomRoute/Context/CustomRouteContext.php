@@ -211,8 +211,8 @@ final class CustomRouteContext
      * $page = $context->getQueryParam('page', 1);    // 1 (default)
      * ```
      *
-     * @param string                              $name    The query parameter name
-     * @param bool|float|int|string|null          $default Default value if parameter doesn't exist
+     * @param string                     $name    The query parameter name
+     * @param bool|float|int|string|null $default Default value if parameter doesn't exist
      *
      * @return mixed The parameter value or default
      */

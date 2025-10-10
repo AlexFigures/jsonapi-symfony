@@ -13,7 +13,7 @@ use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 
 /**
  * Test handler for creating an article with tags in one operation.
- * 
+ *
  * This demonstrates a custom creation endpoint with business logic.
  */
 final class CreateArticleWithTagsHandler implements CustomRouteHandlerInterface
@@ -53,4 +53,3 @@ final class CreateArticleWithTagsHandler implements CustomRouteHandlerInterface
         return CustomRouteResult::created($article);
     }
 }
-

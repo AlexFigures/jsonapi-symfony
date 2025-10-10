@@ -19,4 +19,3 @@ final class ErrorReturningHandler implements CustomRouteHandlerInterface
         return CustomRouteResult::badRequest('Validation failed');
     }
 }
-

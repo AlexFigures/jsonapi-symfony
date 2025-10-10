@@ -58,4 +58,3 @@ final class CategorySynonymsByCategoryHandler implements CustomRouteHandlerInter
         return CustomRouteResult::collection($slice->items, $slice->totalItems);
     }
 }
-

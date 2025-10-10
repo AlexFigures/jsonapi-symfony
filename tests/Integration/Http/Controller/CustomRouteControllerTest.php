@@ -204,14 +204,16 @@ final class CustomRouteControllerTest extends DoctrineIntegrationTestCase
         ];
 
         // Create handler locator
-        $handlerLocator = new class($this->handlers) implements ContainerInterface {
-            public function __construct(private array $handlers) {}
-            
+        $handlerLocator = new class ($this->handlers) implements ContainerInterface {
+            public function __construct(private array $handlers)
+            {
+            }
+
             public function get(string $id): object
             {
                 return $this->handlers[$id] ?? throw new \RuntimeException("Handler not found: {$id}");
             }
-            
+
             public function has(string $id): bool
             {
                 return isset($this->handlers[$id]);
@@ -687,4 +689,3 @@ final class CustomRouteControllerTest extends DoctrineIntegrationTestCase
         self::assertCount(0, $document['data']);
     }
 }
-

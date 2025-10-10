@@ -169,7 +169,7 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
         $book->setTitle('Ghost Publisher Book');
 
         $metadata = $this->registry->getByType('books-reference');
-        
+
         $relationshipsPayload = [
             'publisher' => [
                 'data' => [
@@ -213,7 +213,7 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
         $book->setTitle('Biology 101');
 
         $metadata = $this->registry->getByType('books-verify');
-        
+
         $relationshipsPayload = [
             'publisher' => [
                 'data' => [
@@ -598,7 +598,7 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
             $isInitialized = $initProperty->getValue($rawGrandparent);
 
             // Log the current state for debugging
-            fwrite(STDERR, sprintf(
+            fwrite(\STDERR, sprintf(
                 "\n[DEBUG] Grandparent is a proxy. Initialized: %s\n",
                 $isInitialized ? 'YES' : 'NO'
             ));
@@ -620,7 +620,7 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
             self::assertSame('Books', $name, 'Should be able to access grandparent name via reflection when using VERIFY policy');
         } else {
             // If it's not a proxy, that's even better - it means find() loaded it eagerly
-            fwrite(STDERR, "\n[DEBUG] Grandparent is NOT a proxy (loaded eagerly)\n");
+            fwrite(\STDERR, "\n[DEBUG] Grandparent is NOT a proxy (loaded eagerly)\n");
             self::assertSame('Books', $rawGrandparent->getName());
         }
     }
@@ -886,4 +886,3 @@ class CategoryWithVerifyPolicy
         return $this;
     }
 }
-

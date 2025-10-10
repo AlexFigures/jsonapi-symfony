@@ -12,7 +12,7 @@ use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
 
 /**
  * Test handler for publishing an article.
- * 
+ *
  * This is a write operation that modifies the article, so it runs in a transaction.
  */
 final class PublishArticleHandler implements CustomRouteHandlerInterface
@@ -29,10 +29,9 @@ final class PublishArticleHandler implements CustomRouteHandlerInterface
 
         // Simulate publishing logic
         $article->setTitle($article->getTitle() . ' [PUBLISHED]');
-        
+
         $this->em->flush();
 
         return CustomRouteResult::resource($article);
     }
 }
-

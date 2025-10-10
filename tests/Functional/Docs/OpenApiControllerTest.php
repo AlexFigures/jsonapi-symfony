@@ -64,7 +64,7 @@ final class OpenApiControllerTest extends TestCase
         self::assertSame(200, $response->getStatusCode());
         self::assertSame('application/vnd.oai.openapi+json', $response->headers->get('Content-Type'));
 
-        $spec = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $spec = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
 
         // Verify OpenAPI version and info
         self::assertSame('3.1.0', $spec['openapi']);
@@ -154,7 +154,7 @@ final class OpenApiControllerTest extends TestCase
         );
 
         $response = ($controller)();
-        $spec = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $spec = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
 
         // Verify relationship paths exist
         self::assertArrayHasKey('/api/articles/{id}/relationships/author', $spec['paths']);
@@ -218,7 +218,7 @@ final class OpenApiControllerTest extends TestCase
         );
 
         $response = ($controller)();
-        $spec = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $spec = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
 
         // Verify collection GET response references collection document
         $collectionGetResponse = $spec['paths']['/api/articles']['get']['responses']['200']['content'][MediaType::JSON_API];
@@ -268,7 +268,7 @@ final class OpenApiControllerTest extends TestCase
         );
 
         $response = ($controller)();
-        $spec = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $spec = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
 
         self::assertCount(3, $spec['servers']);
         self::assertSame('https://api.production.test', $spec['servers'][0]['url']);
@@ -387,7 +387,7 @@ final class OpenApiControllerTest extends TestCase
         );
 
         $response = ($controller)();
-        $spec = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $spec = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
 
         // Verify custom route paths are included
         self::assertArrayHasKey('/api/articles/{id}/publish', $spec['paths']);
@@ -501,7 +501,7 @@ final class OpenApiControllerTest extends TestCase
         );
 
         $response = ($controller)();
-        $spec = json_decode($response->getContent(), true, 512, JSON_THROW_ON_ERROR);
+        $spec = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
 
         // Verify path preserves the resource type format (kebab-case in this case)
         self::assertArrayHasKey('/api/blog-posts/{id}/publish', $spec['paths']);
@@ -549,4 +549,3 @@ final class OpenApiControllerTest extends TestCase
         return $registry;
     }
 }
-
