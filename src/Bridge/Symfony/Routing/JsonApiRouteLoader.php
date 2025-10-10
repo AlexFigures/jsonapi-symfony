@@ -152,7 +152,7 @@ final class JsonApiRouteLoader extends Loader
                             defaults: [
                                 '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipGetController',
                                 'type' => $resourceType,
-                                'relationship' => $relationshipName,
+                                'rel' => $relationshipName,
                             ],
                             requirements: ['id' => '[^/]+'],
                             methods: ['GET'],
@@ -167,7 +167,7 @@ final class JsonApiRouteLoader extends Loader
                             defaults: [
                                 '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipWriteController',
                                 'type' => $resourceType,
-                                'relationship' => $relationshipName,
+                                'rel' => $relationshipName,
                             ],
                             requirements: ['id' => '[^/]+'],
                             methods: ['PATCH'],
@@ -183,7 +183,7 @@ final class JsonApiRouteLoader extends Loader
                                 defaults: [
                                     '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipWriteController',
                                     'type' => $resourceType,
-                                    'relationship' => $relationshipName,
+                                    'rel' => $relationshipName,
                                 ],
                                 requirements: ['id' => '[^/]+'],
                                 methods: ['POST'],
@@ -198,7 +198,7 @@ final class JsonApiRouteLoader extends Loader
                                 defaults: [
                                     '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipWriteController',
                                     'type' => $resourceType,
-                                    'relationship' => $relationshipName,
+                                    'rel' => $relationshipName,
                                 ],
                                 requirements: ['id' => '[^/]+'],
                                 methods: ['DELETE'],
@@ -214,7 +214,7 @@ final class JsonApiRouteLoader extends Loader
                             defaults: [
                                 '_controller' => 'JsonApi\Symfony\Http\Controller\RelatedController',
                                 'type' => $resourceType,
-                                'relationship' => $relationshipName,
+                                'rel' => $relationshipName,
                             ],
                             requirements: ['id' => '[^/]+'],
                             methods: ['GET'],
