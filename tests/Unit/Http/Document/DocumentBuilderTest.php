@@ -165,6 +165,85 @@ final class DocumentBuilderTest extends TestCase
         self::assertSame(['https://profiles.test/a'], $resourceDocument['meta']['profiles']);
         self::assertSame(['https://profiles.test/a'], $resourceDocument['data']['relationships']['comments']['meta']['profiles']);
     }
+
+    public function testVersionedDtoIsUsedWhenHeaderPresent(): void
+    {
+        $metadata = new ResourceMetadata(
+            type: 'versioned-articles',
+            class: VersionedArticle::class,
+            attributes: [
+                'title' => new AttributeMetadata('title', 'title'),
+            ],
+            relationships: [],
+            dtoClasses: ['v1' => VersionedArticleV1Dto::class],
+        );
+
+        $registry = new class ($metadata) implements ResourceRegistryInterface {
+            public function __construct(private ResourceMetadata $metadata)
+            {
+            }
+
+            public function getByType(string $type): ResourceMetadata
+            {
+                return $this->metadata;
+            }
+
+            public function hasType(string $type): bool
+            {
+                return $type === $this->metadata->type;
+            }
+
+            public function getByClass(string $class): ?ResourceMetadata
+            {
+                return $class === $this->metadata->class ? $this->metadata : null;
+            }
+
+            public function all(): array
+            {
+                return [$this->metadata];
+            }
+        };
+
+        $urls = new class () implements UrlGeneratorInterface {
+            private RequestContext $context;
+
+            public function __construct()
+            {
+                $this->context = new RequestContext();
+            }
+
+            public function generate(string $name, array $parameters = [], int $referenceType = self::ABSOLUTE_PATH): string
+            {
+                return $name . ':' . http_build_query($parameters);
+            }
+
+            public function setContext(RequestContext $context): void
+            {
+                $this->context = $context;
+            }
+
+            public function getContext(): RequestContext
+            {
+                return $this->context;
+            }
+        };
+
+        $builder = new DocumentBuilder(
+            $registry,
+            PropertyAccess::createPropertyAccessor(),
+            new LinkGenerator($urls),
+            'when_included'
+        );
+
+        $article = new VersionedArticle('1', 'hello world');
+
+        $request = Request::create('https://api.test/versioned-articles/1');
+        $request->headers->set('X-API-Version', 'v1');
+
+        $document = $builder->buildResource('versioned-articles', $article, new Criteria(), $request);
+
+        self::assertSame('HELLO WORLD', $document['data']['attributes']['title']);
+    }
 }
 
 final class Article
@@ -175,6 +254,24 @@ final class Article
         public string $title,
         public array $comments,
     ) {
+    }
+}
+
+final class VersionedArticle
+{
+    public function __construct(
+        public string $id,
+        public string $title,
+    ) {
+    }
+}
+
+final class VersionedArticleV1Dto
+{
+    public function __construct(
+        public string $title,
+    ) {
+        $this->title = strtoupper($title);
     }
 }
 

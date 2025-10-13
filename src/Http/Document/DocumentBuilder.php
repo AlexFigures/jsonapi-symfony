@@ -17,6 +17,9 @@ use stdClass;
 use Stringable;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
+use ReflectionClass;
+use ReflectionException;
+use RuntimeException;
 
 final class DocumentBuilder
 {
@@ -26,6 +29,7 @@ final class DocumentBuilder
         private readonly LinkGenerator $links,
         private readonly string $relationshipLinkageMode = 'when_included',
         private readonly ?LimitsEnforcer $limits = null,
+        private readonly string $apiVersionHeader = 'X-API-Version',
     ) {
     }
 
@@ -48,10 +52,12 @@ final class DocumentBuilder
         $includeTree = $this->buildIncludeTree($criteria);
         $context = ProfileContext::fromRequest($request);
 
+        $version = $this->resolveRequestedVersion($request);
+
         foreach ($models as $model) {
-            $data[] = $this->buildResourceObject($type, $model, $criteria, $context);
+            $data[] = $this->buildResourceObject($type, $model, $criteria, $context, $version);
             if ($includeTree !== []) {
-                $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context);
+                $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context, $version);
             }
         }
 
@@ -121,8 +127,10 @@ final class DocumentBuilder
         $visited = [];
         $context = ProfileContext::fromRequest($request);
 
+        $version = $this->resolveRequestedVersion($request);
+
         if ($includeTree !== []) {
-            $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context);
+            $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context, $version);
         }
 
         /** @var array<string, string|list<string>> $links */
@@ -138,7 +146,7 @@ final class DocumentBuilder
         $document = [
             'jsonapi' => ['version' => '1.1'],
             'links' => $links,
-            'data' => $this->buildResourceObject($type, $model, $criteria, $context),
+            'data' => $this->buildResourceObject($type, $model, $criteria, $context, $version),
         ];
 
         if ($included !== []) {
@@ -162,11 +170,12 @@ final class DocumentBuilder
      *     relationships?: array<string, array<string, mixed>>
      * }
      */
-    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null): array
+    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null, ?string $version = null): array
     {
         $metadata = $this->registry->getByType($type);
         $fields = $criteria->fields[$type] ?? null;
-        $attributes = $this->buildAttributes($metadata, $model, $fields);
+        $viewModel = $this->transformModel($metadata, $model, $version);
+        $attributes = $this->buildAttributes($metadata, $viewModel, $fields);
         $id = $this->resolveId($metadata, $model);
 
         $resource = [
@@ -376,7 +385,7 @@ final class DocumentBuilder
      * @param array<string, array<string, mixed>> $included
      * @param array<string, bool>                 $visited
      */
-    private function gatherIncluded(string $type, object $model, array $includeTree, Criteria $criteria, array &$included, array &$visited, ?ProfileContext $context): void
+    private function gatherIncluded(string $type, object $model, array $includeTree, Criteria $criteria, array &$included, array &$visited, ?ProfileContext $context, ?string $version): void
     {
         if ($includeTree === []) {
             return;
@@ -422,7 +431,7 @@ final class DocumentBuilder
                     $relatedType = $metadataForClass->type;
                 }
 
-                $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria, $context);
+                $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria, $context, $version);
                 $typeValue = $resource['type'];
                 $idValue = $resource['id'];
 
@@ -436,10 +445,10 @@ final class DocumentBuilder
                     $visited[$identifier] = true;
                     $included[$identifier] = $resource;
                     if ($children !== []) {
-                        $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context);
+                        $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context, $version);
                     }
                 } elseif ($children !== []) {
-                    $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context);
+                    $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context, $version);
                 }
             }
         }
@@ -515,7 +524,95 @@ final class DocumentBuilder
             return (string) $value;
         }
 
-        throw new \RuntimeException(sprintf('Unable to resolve resource identifier for %s.', $metadata->class));
+        throw new RuntimeException(sprintf('Unable to resolve resource identifier for %s.', $metadata->class));
+    }
+
+    private function resolveRequestedVersion(Request $request): ?string
+    {
+        $headerValue = $request->headers->get($this->apiVersionHeader);
+        if ($headerValue === null) {
+            return null;
+        }
+
+        $version = trim($headerValue);
+
+        return $version === '' ? null : $version;
+    }
+
+    private function transformModel(ResourceMetadata $metadata, object $model, ?string $version): object
+    {
+        $dtoClass = $metadata->getDtoClass($version);
+        if ($dtoClass === null) {
+            return $model;
+        }
+
+        $attributeValues = [];
+        foreach ($metadata->attributes as $name => $attribute) {
+            $attributeValues[$name] = $this->accessor->getValue($model, $attribute->propertyPath ?? $name);
+        }
+
+        try {
+            $reflection = new ReflectionClass($dtoClass);
+        } catch (ReflectionException $exception) {
+            throw new RuntimeException(sprintf('Unable to reflect DTO "%s" for resource "%s".', $dtoClass, $metadata->type), 0, $exception);
+        }
+
+        $constructor = $reflection->getConstructor();
+        $usedInConstructor = [];
+
+        if ($constructor !== null) {
+            $arguments = [];
+            foreach ($constructor->getParameters() as $parameter) {
+                $name = $parameter->getName();
+                if (array_key_exists($name, $attributeValues)) {
+                    $arguments[] = $attributeValues[$name];
+                    $usedInConstructor[$name] = true;
+                    continue;
+                }
+
+                if ($parameter->isDefaultValueAvailable()) {
+                    $arguments[] = $parameter->getDefaultValue();
+                    continue;
+                }
+
+                if ($parameter->allowsNull()) {
+                    $arguments[] = null;
+                    continue;
+                }
+
+                throw new RuntimeException(sprintf(
+                    'Unable to map constructor parameter "$%s" for DTO "%s" (version "%s") on resource "%s".',
+                    $name,
+                    $dtoClass,
+                    (string) $version,
+                    $metadata->type
+                ));
+            }
+
+            try {
+                $dto = $reflection->newInstanceArgs($arguments);
+            } catch (\Throwable $exception) {
+                throw new RuntimeException(sprintf('Failed to instantiate DTO "%s" for resource "%s".', $dtoClass, $metadata->type), 0, $exception);
+            }
+        } else {
+            try {
+                $dto = $reflection->newInstance();
+            } catch (\Throwable $exception) {
+                throw new RuntimeException(sprintf('Failed to instantiate DTO "%s" for resource "%s".', $dtoClass, $metadata->type), 0, $exception);
+            }
+        }
+
+        foreach ($attributeValues as $name => $value) {
+            if (isset($usedInConstructor[$name])) {
+                continue;
+            }
+
+            if ($this->accessor->isWritable($dto, $name)) {
+                $this->accessor->setValue($dto, $name, $value);
+            }
+        }
+
+        return $dto;
     }
 
     private function normalizeAttributeValue(mixed $value): mixed

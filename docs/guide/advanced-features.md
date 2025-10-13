@@ -14,6 +14,7 @@
 5. [Atomic Operations](#atomic-operations)
 6. [Custom Filter Operators](#custom-filter-operators)
 7. [Cache Invalidation](#cache-invalidation)
+8. [API Versioning with DTOs](#api-versioning-with-dtos)
 
 ---
 
@@ -659,6 +660,68 @@ The bundle automatically invalidates cache on resource changes:
 // - jsonapi:articles
 // - jsonapi:articles:1
 ```
+
+---
+
+## API Versioning with DTOs
+
+Use the `#[JsonApiDto]` attribute to map API versions to dedicated DTO classes while keeping your domain entities free to evolve.
+
+### Declare DTOs on the Resource Class
+
+```php
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiDto;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+
+#[JsonApiResource(type: 'articles')]
+#[JsonApiDto(version: 'v1', class: ArticleV1Dto::class)]
+#[JsonApiDto(version: 'v2', class: ArticleV2Dto::class)]
+final class Article
+{
+    #[Id]
+    public string $id;
+
+    #[Attribute]
+    public string $title;
+}
+
+final class ArticleV1Dto
+{
+    public function __construct(public string $title)
+    {
+        $this->title = strtoupper($title); // API v1 wants uppercase titles
+    }
+}
+
+final class ArticleV2Dto
+{
+    public string $title;
+    public string $subtitle;
+}
+```
+
+Each DTO can expose a stable shape per API version. Constructors receive attribute values that share their parameter names with the attribute names defined on the resource metadata. DTOs without constructors should provide writable public properties so the bundle can hydrate them.
+
+### Requesting a Specific Version
+
+Send the desired version in the `X-API-Version` header:
+
+```bash
+curl -H "X-API-Version: v1" \
+     -H "Accept: application/vnd.api+json" \
+     http://localhost:8000/api/articles/1
+```
+
+If the requested version has no DTO mapping, the bundle falls back to the original model ensuring backward compatibility.
+
+### Design Guidelines
+
+- Keep DTO constructors lightweight—avoid database access or service lookups.
+- Reuse existing serialization groups; DTOs automatically honor the groups configured on the resource metadata.
+- Version identifiers are free-form strings (`v1`, `2025-10`, `beta`), allowing flexible versioning strategies.
+- Because relationships still resolve against the original entity, DTOs can focus purely on attribute shape.
 
 ---
 

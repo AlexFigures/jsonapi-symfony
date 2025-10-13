@@ -7,6 +7,7 @@ namespace AlexFigures\Symfony\Resource\Registry;
 use AlexFigures\Symfony\Resource\Attribute\Attribute as AttributeAttribute;
 use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
 use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiDto;
 use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use AlexFigures\Symfony\Resource\Attribute\Relationship as RelationshipAttribute;
 use AlexFigures\Symfony\Resource\Attribute\SortableFields;
@@ -117,6 +118,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
         $attributes = [];
         $relationships = [];
         $idPropertyPath = null;
+        $dtoClasses = [];
 
         foreach ($reflection->getProperties() as $property) {
             if ($this->hasAttribute($property, Id::class)) {
@@ -139,6 +141,26 @@ final class ResourceRegistry implements ResourceRegistryInterface
 
             $attributes = $this->extractAttributes($attributes, $method, $propertyPath);
             $relationships = $this->extractRelationships($relationships, $method, $propertyPath);
+        }
+
+        // Extract DTO mappings (API version => DTO class)
+        foreach ($reflection->getAttributes(JsonApiDto::class, ReflectionAttribute::IS_INSTANCEOF) as $dtoAttribute) {
+            /** @var JsonApiDto $dto */
+            $dto = $dtoAttribute->newInstance();
+
+            if ($dto->version === '') {
+                throw new LogicException(sprintf('DTO version must be a non-empty string on %s.', $class));
+            }
+
+            if (isset($dtoClasses[$dto->version])) {
+                throw new LogicException(sprintf('Duplicate DTO version "%s" detected on %s.', $dto->version, $class));
+            }
+
+            if (!class_exists($dto->class)) {
+                throw new LogicException(sprintf('DTO class "%s" declared on %s does not exist.', $dto->class, $class));
+            }
+
+            $dtoClasses[$dto->version] = $dto->class;
         }
 
         // Extract sortable fields from SortableFields attribute
@@ -172,6 +194,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
             null, // operationGroups - deprecated
             $resource->normalizationContext,
             $resource->denormalizationContext,
+            $dtoClasses,
         );
     }
 

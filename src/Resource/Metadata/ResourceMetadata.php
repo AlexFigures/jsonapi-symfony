@@ -13,12 +13,13 @@ use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
 final class ResourceMetadata
 {
     /**
-     * @param AttributeMap         $attributes
-     * @param RelationshipMap      $relationships
-     * @param class-string         $class
-     * @param list<string>         $sortableFields
-     * @param array<string, mixed> $normalizationContext
-     * @param array<string, mixed> $denormalizationContext
+     * @param AttributeMap                 $attributes
+     * @param RelationshipMap              $relationships
+     * @param class-string                 $class
+     * @param list<string>                 $sortableFields
+     * @param array<string, mixed>         $normalizationContext
+     * @param array<string, mixed>         $denormalizationContext
+     * @param array<string, class-string>  $dtoClasses
      */
     public function __construct(
         public string $type,
@@ -34,6 +35,7 @@ final class ResourceMetadata
         public ?OperationGroups $operationGroups = null,
         public array $normalizationContext = [],
         public array $denormalizationContext = [],
+        public array $dtoClasses = [],
     ) {
     }
 
@@ -73,5 +75,21 @@ final class ResourceMetadata
         }
 
         return $groups;
+    }
+
+    /**
+     * Resolve the DTO class for the provided API version.
+     *
+     * @param non-empty-string|null $version
+     *
+     * @return class-string|null
+     */
+    public function getDtoClass(?string $version): ?string
+    {
+        if ($version === null || $version === '') {
+            return null;
+        }
+
+        return $this->dtoClasses[$version] ?? null;
     }
 }
