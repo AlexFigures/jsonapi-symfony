@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Contract\Data;
+namespace AlexFigures\Symfony\Contract\Data;
 
-use JsonApi\Symfony\Http\Exception\NotImplementedException;
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Http\Exception\NotImplementedException;
+use AlexFigures\Symfony\Query\Criteria;
 
 /**
  * Null Object implementation of ResourceRepository.

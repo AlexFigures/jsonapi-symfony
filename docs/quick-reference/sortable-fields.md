@@ -3,7 +3,7 @@
 ## Basic Usage
 
 ```php
-use JsonApi\Symfony\Resource\Attribute\{JsonApiResource, SortableFields};
+use AlexFigures\Symfony\Resource\Attribute\{JsonApiResource, SortableFields};
 
 #[JsonApiResource(type: 'articles')]
 #[SortableFields(['title', 'createdAt', 'updatedAt'])]

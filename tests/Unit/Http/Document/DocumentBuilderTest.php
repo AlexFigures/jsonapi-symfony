@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Document;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Document;
 
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Profile\Hook\DocumentHook;
-use JsonApi\Symfony\Profile\ProfileContext;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
-use JsonApi\Symfony\Tests\Util\FakeProfile;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Profile\Hook\DocumentHook;
+use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Tests\Util\FakeProfile;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;

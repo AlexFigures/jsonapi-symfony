@@ -20,7 +20,7 @@ Custom filter handlers must implement the `FilterHandlerInterface`:
 ```php
 <?php
 
-namespace JsonApi\Symfony\Filter\Handler;
+namespace AlexFigures\Symfony\Filter\Handler;
 
 interface FilterHandlerInterface
 {
@@ -49,7 +49,7 @@ interface FilterHandlerInterface
 namespace App\Filter;
 
 use Doctrine\ORM\QueryBuilder;
-use JsonApi\Symfony\Filter\Handler\FilterHandlerInterface;
+use AlexFigures\Symfony\Filter\Handler\FilterHandlerInterface;
 
 final class FullTextSearchFilter implements FilterHandlerInterface
 {
@@ -115,7 +115,7 @@ GET /api/articles?filter[search][eq]=symfony
 namespace App\Filter;
 
 use Doctrine\ORM\QueryBuilder;
-use JsonApi\Symfony\Filter\Handler\FilterHandlerInterface;
+use AlexFigures\Symfony\Filter\Handler\FilterHandlerInterface;
 
 final class GeospatialDistanceFilter implements FilterHandlerInterface
 {
@@ -181,7 +181,7 @@ Custom sort handlers must implement the `SortHandlerInterface`:
 ```php
 <?php
 
-namespace JsonApi\Symfony\Filter\Handler;
+namespace AlexFigures\Symfony\Filter\Handler;
 
 interface SortHandlerInterface
 {
@@ -210,7 +210,7 @@ interface SortHandlerInterface
 namespace App\Sort;
 
 use Doctrine\ORM\QueryBuilder;
-use JsonApi\Symfony\Filter\Handler\SortHandlerInterface;
+use AlexFigures\Symfony\Filter\Handler\SortHandlerInterface;
 
 final class RelevanceSorter implements SortHandlerInterface
 {

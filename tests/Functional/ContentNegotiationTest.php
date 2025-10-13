@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Functional;
+namespace AlexFigures\Symfony\Tests\Functional;
 
-use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
-use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;

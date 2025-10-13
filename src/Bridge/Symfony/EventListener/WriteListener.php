@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\EventListener;
+namespace AlexFigures\Symfony\Bridge\Symfony\EventListener;
 
-use JsonApi\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;

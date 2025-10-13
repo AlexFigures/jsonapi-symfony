@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Resource\Attribute;
+namespace AlexFigures\Symfony\Tests\Unit\Resource\Attribute;
 
-use JsonApi\Symfony\Resource\Attribute\FilterableField;
-use JsonApi\Symfony\Resource\Attribute\FilterableFields;
+use AlexFigures\Symfony\Resource\Attribute\FilterableField;
+use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
 use PHPUnit\Framework\TestCase;
 
 final class FilterableFieldsTest extends TestCase

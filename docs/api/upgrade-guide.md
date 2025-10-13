@@ -188,7 +188,7 @@ Breaking changes will be documented here when they occur.
 
 **Before:**
 ```php
-use JsonApi\Symfony\OldInterface;
+use AlexFigures\Symfony\OldInterface;
 
 class MyRepository implements OldInterface
 {
@@ -198,7 +198,7 @@ class MyRepository implements OldInterface
 
 **After:**
 ```php
-use JsonApi\Symfony\NewInterface;
+use AlexFigures\Symfony\NewInterface;
 
 class MyRepository implements NewInterface
 {
@@ -275,7 +275,7 @@ use Rector\Config\RectorConfig;
 return RectorConfig::configure()
     ->withPaths([__DIR__ . '/src'])
     ->withSets([
-        \JsonApi\Symfony\Rector\JsonApiSetList::UPGRADE_10,
+        \AlexFigures\Symfony\Rector\JsonApiSetList::UPGRADE_10,
     ]);
 ```
 

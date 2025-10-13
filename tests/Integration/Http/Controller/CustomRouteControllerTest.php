@@ -2,43 +2,43 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
-use JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
-use JsonApi\Symfony\CustomRoute\Context\CustomRouteContextFactory;
-use JsonApi\Symfony\CustomRoute\Controller\CustomRouteController;
-use JsonApi\Symfony\CustomRoute\Handler\CustomRouteHandlerRegistry;
-use JsonApi\Symfony\CustomRoute\Response\CustomRouteResponseBuilder;
-use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use JsonApi\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use JsonApi\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use JsonApi\Symfony\Filter\Operator\EqualOperator;
-use JsonApi\Symfony\Filter\Operator\Registry;
-use JsonApi\Symfony\Filter\Parser\FilterParser;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Http\Request\FilteringWhitelist;
-use JsonApi\Symfony\Http\Request\PaginationConfig;
-use JsonApi\Symfony\Http\Request\QueryParser;
-use JsonApi\Symfony\Http\Request\SortingWhitelist;
-use JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata;
-use JsonApi\Symfony\Resource\Registry\CustomRouteRegistry;
-use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use JsonApi\Symfony\Tests\Integration\Fixtures\CustomRoute\CategorySynonymsByCategoryHandler;
-use JsonApi\Symfony\Tests\Integration\Fixtures\CustomRoute\CreateArticleWithTagsHandler;
-use JsonApi\Symfony\Tests\Integration\Fixtures\CustomRoute\DeleteArticleHandler;
-use JsonApi\Symfony\Tests\Integration\Fixtures\CustomRoute\ErrorReturningHandler;
-use JsonApi\Symfony\Tests\Integration\Fixtures\CustomRoute\FailingHandler;
-use JsonApi\Symfony\Tests\Integration\Fixtures\CustomRoute\PublishArticleHandler;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContextFactory;
+use AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController;
+use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerRegistry;
+use AlexFigures\Symfony\CustomRoute\Response\CustomRouteResponseBuilder;
+use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\Symfony\Filter\Operator\EqualOperator;
+use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Filter\Parser\FilterParser;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
+use AlexFigures\Symfony\Http\Request\PaginationConfig;
+use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Http\Request\SortingWhitelist;
+use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
+use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry;
+use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute\CategorySynonymsByCategoryHandler;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute\CreateArticleWithTagsHandler;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute\DeleteArticleHandler;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute\ErrorReturningHandler;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute\FailingHandler;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute\PublishArticleHandler;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
@@ -560,7 +560,7 @@ final class CustomRouteControllerTest extends DoctrineIntegrationTestCase
     {
         $request = Request::create('/api/test/failing', 'GET');
 
-        $this->expectException(\JsonApi\Symfony\Http\Exception\JsonApiHttpException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\JsonApiHttpException::class);
         $this->expectExceptionMessage('An unexpected error occurred');
 
         ($this->controller)($request, 'jsonapi.test.failing');

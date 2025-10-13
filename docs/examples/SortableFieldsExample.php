@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use DateTimeImmutable;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\Relationship;
-use JsonApi\Symfony\Resource\Attribute\SortableFields;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Attribute\SortableFields;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 /**

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Cache;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Cache;
 
-use JsonApi\Symfony\Http\Cache\ConditionalRequestEvaluator;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\PreconditionFailedException;
-use JsonApi\Symfony\Http\Exception\PreconditionRequiredException;
+use AlexFigures\Symfony\Http\Cache\ConditionalRequestEvaluator;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\PreconditionFailedException;
+use AlexFigures\Symfony\Http\Exception\PreconditionRequiredException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

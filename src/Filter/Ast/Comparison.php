@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Ast;
+namespace AlexFigures\Symfony\Filter\Ast;
 
 /**
  * Represents a primitive comparison like eq, lt, etc.

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Resource\Attribute;
+namespace AlexFigures\Symfony\Resource\Attribute;
 
+use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use Attribute;
-use JsonApi\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 
 /**
  * Marks a property or method as a JSON:API relationship.

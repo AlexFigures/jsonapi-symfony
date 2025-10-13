@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Profile;
+namespace AlexFigures\Symfony\Tests\Unit\Profile;
 
-use JsonApi\Symfony\Profile\Descriptor\ProfileDescriptor;
-use JsonApi\Symfony\Profile\ProfileRegistry;
-use JsonApi\Symfony\Tests\Util\FakeProfile;
+use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\Symfony\Profile\ProfileRegistry;
+use AlexFigures\Symfony\Tests\Util\FakeProfile;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

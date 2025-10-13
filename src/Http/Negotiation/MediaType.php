@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Negotiation;
+namespace AlexFigures\Symfony\Http\Negotiation;
 
 final class MediaType
 {

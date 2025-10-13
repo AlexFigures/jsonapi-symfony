@@ -2,33 +2,33 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
-use JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use JsonApi\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use JsonApi\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use JsonApi\Symfony\Filter\Operator\BetweenOperator;
-use JsonApi\Symfony\Filter\Operator\EqualOperator;
-use JsonApi\Symfony\Filter\Operator\GreaterOrEqualOperator;
-use JsonApi\Symfony\Filter\Operator\GreaterThanOperator;
-use JsonApi\Symfony\Filter\Operator\InOperator;
-use JsonApi\Symfony\Filter\Operator\IsNullOperator;
-use JsonApi\Symfony\Filter\Operator\LessOrEqualOperator;
-use JsonApi\Symfony\Filter\Operator\LessThanOperator;
-use JsonApi\Symfony\Filter\Operator\LikeOperator;
-use JsonApi\Symfony\Filter\Operator\NotEqualOperator;
-use JsonApi\Symfony\Filter\Operator\NotInOperator;
-use JsonApi\Symfony\Filter\Operator\Registry;
-use JsonApi\Symfony\Http\Controller\ResourceController;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Http\Request\QueryParser;
-use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\Symfony\Filter\Operator\BetweenOperator;
+use AlexFigures\Symfony\Filter\Operator\EqualOperator;
+use AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\GreaterThanOperator;
+use AlexFigures\Symfony\Filter\Operator\InOperator;
+use AlexFigures\Symfony\Filter\Operator\IsNullOperator;
+use AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\LessThanOperator;
+use AlexFigures\Symfony\Filter\Operator\LikeOperator;
+use AlexFigures\Symfony\Filter\Operator\NotEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\NotInOperator;
+use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Http\Controller\ResourceController;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGenerator;
@@ -79,7 +79,7 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
         $context->setHost('localhost');
 
         $urlGenerator = new UrlGenerator($routes, $context);
-        $linkGenerator = new \JsonApi\Symfony\Http\Link\LinkGenerator($urlGenerator);
+        $linkGenerator = new \AlexFigures\Symfony\Http\Link\LinkGenerator($urlGenerator);
 
         // Set up operator registry
         $operatorRegistry = new Registry([
@@ -115,20 +115,20 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
         );
 
         // Set up error handling
-        $errorBuilder = new \JsonApi\Symfony\Http\Error\ErrorBuilder(true);
-        $errorMapper = new \JsonApi\Symfony\Http\Error\ErrorMapper($errorBuilder);
+        $errorBuilder = new \AlexFigures\Symfony\Http\Error\ErrorBuilder(true);
+        $errorMapper = new \AlexFigures\Symfony\Http\Error\ErrorMapper($errorBuilder);
 
         // Set up pagination configuration
-        $paginationConfig = new \JsonApi\Symfony\Http\Request\PaginationConfig(defaultSize: 10, maxSize: 100);
+        $paginationConfig = new \AlexFigures\Symfony\Http\Request\PaginationConfig(defaultSize: 10, maxSize: 100);
 
         // Set up sorting whitelist
-        $sortingWhitelist = new \JsonApi\Symfony\Http\Request\SortingWhitelist($this->registry);
+        $sortingWhitelist = new \AlexFigures\Symfony\Http\Request\SortingWhitelist($this->registry);
 
         // Set up filtering whitelist
-        $filteringWhitelist = new \JsonApi\Symfony\Http\Request\FilteringWhitelist($this->registry, $errorMapper);
+        $filteringWhitelist = new \AlexFigures\Symfony\Http\Request\FilteringWhitelist($this->registry, $errorMapper);
 
         // Set up filter parser
-        $filterParser = new \JsonApi\Symfony\Filter\Parser\FilterParser();
+        $filterParser = new \AlexFigures\Symfony\Filter\Parser\FilterParser();
 
         $queryParser = new QueryParser(
             $this->registry,

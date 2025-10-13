@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Bridge;
+namespace AlexFigures\Symfony\Tests\Unit\Bridge;
 
-use JsonApi\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader;
-use JsonApi\Symfony\Bridge\Symfony\Routing\RouteNameGenerator;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader;
+use AlexFigures\Symfony\Bridge\Symfony\Routing\RouteNameGenerator;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -353,9 +353,9 @@ final class JsonApiRouteLoaderTest extends TestCase
         $registry = $this->createMock(ResourceRegistryInterface::class);
         $registry->method('all')->willReturn([]);
 
-        $customRouteRegistry = $this->createMock(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface::class);
+        $customRouteRegistry = $this->createMock(\AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface::class);
         $customRouteRegistry->method('all')->willReturn([
-            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+            new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata(
                 name: 'articles.publish',
                 path: '/api/articles/{id}/publish',
                 methods: ['POST'],
@@ -367,7 +367,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 description: 'Publish an article',
                 priority: 0,
             ),
-            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+            new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata(
                 name: 'articles.search',
                 path: '/api/articles/search',
                 methods: ['GET'],
@@ -407,12 +407,12 @@ final class JsonApiRouteLoaderTest extends TestCase
         $registry = $this->createMock(ResourceRegistryInterface::class);
         $registry->method('all')->willReturn([]);
 
-        $routeNameGenerator = new \JsonApi\Symfony\Bridge\Symfony\Routing\RouteNameGenerator('kebab-case');
+        $routeNameGenerator = new \AlexFigures\Symfony\Bridge\Symfony\Routing\RouteNameGenerator('kebab-case');
 
-        $customRouteRegistry = $this->createMock(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface::class);
+        $customRouteRegistry = $this->createMock(\AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface::class);
         $customRouteRegistry->method('all')->willReturn([
             // This should be transformed (canonical 3-part pattern)
-            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+            new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata(
                 name: 'jsonapi.products.publish',
                 path: '/api/products/{id}/publish',
                 methods: ['POST'],
@@ -425,7 +425,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 priority: 0,
             ),
             // This should NOT be transformed (4-part pattern)
-            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+            new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata(
                 name: 'jsonapi.products.actions.archive',
                 path: '/api/products/{id}/archive',
                 methods: ['POST'],
@@ -438,7 +438,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 priority: 0,
             ),
             // This should NOT be transformed (doesn't start with jsonapi.)
-            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+            new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata(
                 name: 'custom.products.special',
                 path: '/api/products/special',
                 methods: ['GET'],
@@ -474,7 +474,7 @@ final class JsonApiRouteLoaderTest extends TestCase
     {
         $registry = $this->createMock(ResourceRegistryInterface::class);
         $registry->method('all')->willReturn([
-            new \JsonApi\Symfony\Resource\Metadata\ResourceMetadata(
+            new \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata(
                 type: 'articles',
                 class: 'App\Entity\Article',
                 attributes: [],
@@ -482,10 +482,10 @@ final class JsonApiRouteLoaderTest extends TestCase
             ),
         ]);
 
-        $customRouteRegistry = $this->createMock(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface::class);
+        $customRouteRegistry = $this->createMock(\AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface::class);
         $customRouteRegistry->method('all')->willReturn([
             // High priority route - should be added BEFORE auto-generated routes
-            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+            new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata(
                 name: 'articles.search',
                 path: '/api/articles/search',
                 methods: ['GET'],
@@ -498,7 +498,7 @@ final class JsonApiRouteLoaderTest extends TestCase
                 priority: 10, // High priority
             ),
             // Low priority route - should be added AFTER auto-generated routes
-            new \JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata(
+            new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata(
                 name: 'articles.archive',
                 path: '/api/articles/archive',
                 methods: ['POST'],

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
 
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 

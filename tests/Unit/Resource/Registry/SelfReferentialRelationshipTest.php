@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Resource\Registry;
+namespace AlexFigures\Symfony\Tests\Unit\Resource\Registry;
 
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\Relationship;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**

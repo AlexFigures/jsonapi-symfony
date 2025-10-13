@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Functional\Errors;
+namespace AlexFigures\Symfony\Tests\Functional\Errors;
 
-use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;

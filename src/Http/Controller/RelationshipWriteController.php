@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Controller;
+namespace AlexFigures\Symfony\Http\Controller;
 
-use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
-use JsonApi\Symfony\Events\RelationshipChangedEvent;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Http\Relationship\LinkageBuilder;
-use JsonApi\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
-use JsonApi\Symfony\Http\Write\RelationshipDocumentValidator;
+use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\Events\RelationshipChangedEvent;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
+use AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
+use AlexFigures\Symfony\Http\Write\RelationshipDocumentValidator;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

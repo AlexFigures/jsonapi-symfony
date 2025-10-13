@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
-use JsonApi\Symfony\Http\Controller\DeleteResourceController;
-use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
+use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -194,7 +194,7 @@ final class DeleteResourceControllerTest extends DoctrineIntegrationTestCase
     {
         $nonExistentId = '00000000-0000-0000-0000-000000000000';
 
-        $this->expectException(\JsonApi\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
 
         ($this->controller)('tags', $nonExistentId);
     }
@@ -207,7 +207,7 @@ final class DeleteResourceControllerTest extends DoctrineIntegrationTestCase
      */
     public function testErrorUnknownResourceType(): void
     {
-        $this->expectException(\JsonApi\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessage('Resource type "unknown-type" not found');
 
         ($this->controller)('unknown-type', 'some-id');
@@ -267,7 +267,7 @@ final class DeleteResourceControllerTest extends DoctrineIntegrationTestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
 
         // Second delete fails with 404
-        $this->expectException(\JsonApi\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
 
         ($this->controller)('tags', $tagId);
     }

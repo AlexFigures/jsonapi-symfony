@@ -102,11 +102,11 @@ Create a simple `Article` class:
 namespace App\Entity;
 
 use DateTimeImmutable;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\Relationship;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Attribute\SerializationGroups;
 
 #[JsonApiResource(type: 'articles')]
 class Article
@@ -141,9 +141,9 @@ Create an `Author` class:
 // src/Entity/Author.php
 namespace App\Entity;
 
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 
 #[JsonApiResource(type: 'authors')]
 class Author
@@ -215,9 +215,9 @@ If you want to use a custom data layer instead of Doctrine, you can implement th
 namespace App\Repository;
 
 use App\Entity\Article;
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Query\Criteria;
 
 class ArticleRepository implements ResourceRepository
 {
@@ -348,7 +348,7 @@ public string $id;
 Mark properties as JSON:API attributes:
 
 ```php
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
+use AlexFigures\Symfony\Resource\Attribute\SerializationGroups;
 
 #[Attribute(name: 'title')]  // Optional: custom name
 #[SerializationGroups(['read', 'write'])]  // Can be read and written

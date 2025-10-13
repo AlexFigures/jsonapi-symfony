@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Functional;
+namespace AlexFigures\Symfony\Tests\Functional;
 
+use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Tag;
 use Doctrine\DBAL\Logging\DebugStack;
-use JsonApi\Symfony\Tests\Fixtures\Model\Article;
-use JsonApi\Symfony\Tests\Fixtures\Model\Author;
-use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
 
 /**
  * Test that eager loading prevents N+1 query problems.

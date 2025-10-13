@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Doctrine\Transaction;
+namespace AlexFigures\Symfony\Bridge\Doctrine\Transaction;
 
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use Doctrine\ORM\EntityManagerInterface;
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
 
 /**
  * Doctrine-backed transaction manager implementation.

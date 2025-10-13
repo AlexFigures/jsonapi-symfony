@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Serializer\Normalizer;
+namespace AlexFigures\Symfony\Bridge\Serializer\Normalizer;
 
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
-use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
 use Symfony\Component\Serializer\Exception\InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 

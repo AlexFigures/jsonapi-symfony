@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Validation;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Validation;
 
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\ConflictException;
+use AlexFigures\Symfony\Http\Exception\ValidationException;
+use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\OptimisticLockException;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\ValidationException;
-use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 
 final class DatabaseErrorMapperTest extends TestCase

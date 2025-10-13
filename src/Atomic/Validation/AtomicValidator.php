@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Atomic\Validation;
+namespace AlexFigures\Symfony\Atomic\Validation;
 
-use JsonApi\Symfony\Atomic\AtomicConfig;
-use JsonApi\Symfony\Atomic\Lid\LidRegistry;
-use JsonApi\Symfony\Atomic\Operation;
-use JsonApi\Symfony\Atomic\Ref;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Atomic\AtomicConfig;
+use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
+use AlexFigures\Symfony\Atomic\Operation;
+use AlexFigures\Symfony\Atomic\Ref;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 final class AtomicValidator
 {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Link;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Link;
 
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Query\Pagination;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Query\Pagination;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;

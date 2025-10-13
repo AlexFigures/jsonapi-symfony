@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\DependencyInjection;
+namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection;
 
-use JsonApi\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use LogicException;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\IntegerNodeDefinition;

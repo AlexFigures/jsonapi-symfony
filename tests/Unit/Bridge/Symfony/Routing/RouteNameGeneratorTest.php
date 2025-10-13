@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Bridge\Symfony\Routing;
+namespace AlexFigures\Symfony\Tests\Unit\Bridge\Symfony\Routing;
 
-use JsonApi\Symfony\Bridge\Symfony\Routing\RouteNameGenerator;
+use AlexFigures\Symfony\Bridge\Symfony\Routing\RouteNameGenerator;
 use PHPUnit\Framework\TestCase;
 
 final class RouteNameGeneratorTest extends TestCase

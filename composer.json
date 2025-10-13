@@ -1,5 +1,5 @@
 {
-  "name": "jsonapi/symfony-jsonapi-bundle",
+  "name": "alexfigures/symfony-jsonapi-bundle",
   "description": "JSON:API 1.1 bundle for Symfony 7 with DX-first design",
   "type": "symfony-bundle",
   "license": "MIT",
@@ -33,14 +33,14 @@
   },
   "autoload": {
     "psr-4": {
-      "JsonApi\\Symfony\\": "src/"
+      "AlexFigures\\Symfony\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "JsonApi\\Symfony\\Tests\\": "tests/",
-      "JsonApi\\Symfony\\StressApp\\": "scripts/stress/app/",
-      "JsonApi\\Symfony\\StressTest\\": "scripts/stress/"
+      "AlexFigures\\Symfony\\Tests\\": "tests/",
+      "AlexFigures\\Symfony\\StressApp\\": "scripts/stress/app/",
+      "AlexFigures\\Symfony\\StressTest\\": "scripts/stress/"
     }
   },
   "extra": {

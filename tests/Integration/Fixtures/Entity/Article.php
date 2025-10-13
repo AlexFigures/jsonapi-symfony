@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Fixtures\Entity;
+namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
 
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Attribute\SortableFields;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\Relationship;
-use JsonApi\Symfony\Resource\Attribute\SortableFields;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 
@@ -56,7 +57,7 @@ class Article
 
     #[ORM\ManyToOne(targetEntity: Author::class, inversedBy: 'articles')]
     #[ORM\JoinColumn(name: 'author_id', referencedColumnName: 'id', nullable: true)]
-    #[Relationship(targetType: 'authors')]
+    #[Relationship(targetType: 'authors', linkingPolicy: RelationshipLinkingPolicy::VERIFY)]
     private ?Author $author = null;
 
     /**
@@ -66,7 +67,7 @@ class Article
     #[ORM\JoinTable(name: 'article_tags')]
     #[ORM\JoinColumn(name: 'article_id', referencedColumnName: 'id')]
     #[ORM\InverseJoinColumn(name: 'tag_id', referencedColumnName: 'id')]
-    #[Relationship(toMany: true, targetType: 'tags')]
+    #[Relationship(toMany: true, targetType: 'tags', linkingPolicy: RelationshipLinkingPolicy::VERIFY)]
     private Collection $tags;
 
     public function __construct()

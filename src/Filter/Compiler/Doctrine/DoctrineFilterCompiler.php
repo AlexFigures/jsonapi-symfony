@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Compiler\Doctrine;
+namespace AlexFigures\Symfony\Filter\Compiler\Doctrine;
 
+use AlexFigures\Symfony\Filter\Ast\Comparison;
+use AlexFigures\Symfony\Filter\Ast\Conjunction;
+use AlexFigures\Symfony\Filter\Ast\Disjunction;
+use AlexFigures\Symfony\Filter\Ast\Node;
+use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\Symfony\Filter\Operator\Registry;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\ORM\QueryBuilder;
-use JsonApi\Symfony\Filter\Ast\Comparison;
-use JsonApi\Symfony\Filter\Ast\Conjunction;
-use JsonApi\Symfony\Filter\Ast\Disjunction;
-use JsonApi\Symfony\Filter\Ast\Node;
-use JsonApi\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use JsonApi\Symfony\Filter\Operator\Registry;
 
 /**
  * Compiles filter ASTs into Doctrine ORM QueryBuilder expressions.
@@ -46,7 +46,7 @@ final class DoctrineFilterCompiler
     /**
      * Recursively compile AST node into DQL expression.
      */
-    private function compileNode(Node $node, string $rootAlias, AbstractPlatform $platform): ?\JsonApi\Symfony\Filter\Operator\DoctrineExpression
+    private function compileNode(Node $node, string $rootAlias, AbstractPlatform $platform): ?\AlexFigures\Symfony\Filter\Operator\DoctrineExpression
     {
         if ($node instanceof Comparison) {
             return $this->compileComparison($node, $rootAlias, $platform);
@@ -63,7 +63,7 @@ final class DoctrineFilterCompiler
         throw new \InvalidArgumentException(sprintf('Unsupported AST node type: %s', get_class($node)));
     }
 
-    private function compileComparison(Comparison $node, string $rootAlias, AbstractPlatform $platform): \JsonApi\Symfony\Filter\Operator\DoctrineExpression
+    private function compileComparison(Comparison $node, string $rootAlias, AbstractPlatform $platform): \AlexFigures\Symfony\Filter\Operator\DoctrineExpression
     {
         // Check for custom filter handler first
         $customHandler = $this->filterHandlers->findHandler($node->fieldPath, $node->operator);
@@ -86,7 +86,7 @@ final class DoctrineFilterCompiler
         return $operator->compile($rootAlias, $dqlField, $node->values, $platform);
     }
 
-    private function compileConjunction(Conjunction $node, string $rootAlias, AbstractPlatform $platform): ?\JsonApi\Symfony\Filter\Operator\DoctrineExpression
+    private function compileConjunction(Conjunction $node, string $rootAlias, AbstractPlatform $platform): ?\AlexFigures\Symfony\Filter\Operator\DoctrineExpression
     {
         if ($node->children === []) {
             return null;
@@ -109,10 +109,10 @@ final class DoctrineFilterCompiler
 
         $dql = '(' . implode(' AND ', $expressions) . ')';
 
-        return new \JsonApi\Symfony\Filter\Operator\DoctrineExpression($dql, $allParameters);
+        return new \AlexFigures\Symfony\Filter\Operator\DoctrineExpression($dql, $allParameters);
     }
 
-    private function compileDisjunction(Disjunction $node, string $rootAlias, AbstractPlatform $platform): ?\JsonApi\Symfony\Filter\Operator\DoctrineExpression
+    private function compileDisjunction(Disjunction $node, string $rootAlias, AbstractPlatform $platform): ?\AlexFigures\Symfony\Filter\Operator\DoctrineExpression
     {
         if ($node->children === []) {
             return null;
@@ -135,7 +135,7 @@ final class DoctrineFilterCompiler
 
         $dql = '(' . implode(' OR ', $expressions) . ')';
 
-        return new \JsonApi\Symfony\Filter\Operator\DoctrineExpression($dql, $allParameters);
+        return new \AlexFigures\Symfony\Filter\Operator\DoctrineExpression($dql, $allParameters);
     }
 
     /**

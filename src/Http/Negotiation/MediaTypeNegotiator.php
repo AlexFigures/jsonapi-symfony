@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Negotiation;
+namespace AlexFigures\Symfony\Http\Negotiation;
 
-use JsonApi\Symfony\Atomic\AtomicConfig;
-use JsonApi\Symfony\Http\Exception\NotAcceptableException;
-use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\Symfony\Atomic\AtomicConfig;
+use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
+use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use Symfony\Component\HttpFoundation\Request;
 
 final class MediaTypeNegotiator

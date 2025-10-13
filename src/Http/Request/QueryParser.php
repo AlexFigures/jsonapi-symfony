@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Request;
+namespace AlexFigures\Symfony\Http\Request;
 
-use JsonApi\Symfony\Filter\Parser\FilterParser;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Error\ErrorObject;
-use JsonApi\Symfony\Http\Error\ErrorSource;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Http\Request\FilteringWhitelist;
-use JsonApi\Symfony\Http\Safety\LimitsEnforcer;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Pagination;
-use JsonApi\Symfony\Query\Sorting;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Filter\Parser\FilterParser;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Error\ErrorObject;
+use AlexFigures\Symfony\Http\Error\ErrorSource;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
+use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\Symfony\Query\Sorting;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 final class QueryParser
@@ -216,9 +216,9 @@ final class QueryParser
     /**
      * Parse filter parameter from request.
      *
-     * @return \JsonApi\Symfony\Filter\Ast\Node|null
+     * @return \AlexFigures\Symfony\Filter\Ast\Node|null
      */
-    private function parseFilter(string $type, Request $request): ?\JsonApi\Symfony\Filter\Ast\Node
+    private function parseFilter(string $type, Request $request): ?\AlexFigures\Symfony\Filter\Ast\Node
     {
         /** @var array<string, mixed> $query */
         $query = $request->query->all();

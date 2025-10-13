@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\EventSubscriber;
+namespace AlexFigures\Symfony\Bridge\Symfony\EventSubscriber;
 
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Profile\Negotiation\ProfileNegotiator;
-use JsonApi\Symfony\Profile\ProfileContext;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator;
+use AlexFigures\Symfony\Profile\ProfileContext;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Resource\Attribute;
+namespace AlexFigures\Symfony\Tests\Unit\Resource\Attribute;
 
-use JsonApi\Symfony\Resource\Attribute\JsonApiCustomRoute;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
 use PHPUnit\Framework\TestCase;
 
 final class JsonApiCustomRouteTest extends TestCase

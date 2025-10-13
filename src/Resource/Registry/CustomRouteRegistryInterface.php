@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Resource\Registry;
+namespace AlexFigures\Symfony\Resource\Registry;
 
-use JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata;
+use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
 
 interface CustomRouteRegistryInterface
 {

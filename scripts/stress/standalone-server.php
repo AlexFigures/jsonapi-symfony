@@ -15,20 +15,20 @@ declare(strict_types=1);
  *   php scripts/stress/standalone-server.php 8765
  */
 
-use JsonApi\Symfony\Http\Controller\CollectionController;
-use JsonApi\Symfony\Http\Controller\ResourceController;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Http\Request\PaginationConfig;
-use JsonApi\Symfony\Http\Request\QueryParser;
-use JsonApi\Symfony\Http\Request\SortingWhitelist;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
-use JsonApi\Symfony\StressApp\StressInMemoryRepository;
-use JsonApi\Symfony\Tests\Fixtures\Model\Article;
-use JsonApi\Symfony\Tests\Fixtures\Model\Author;
-use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
+use AlexFigures\Symfony\Http\Controller\CollectionController;
+use AlexFigures\Symfony\Http\Controller\ResourceController;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Http\Request\PaginationConfig;
+use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Http\Request\SortingWhitelist;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
+use AlexFigures\Symfony\StressApp\StressInMemoryRepository;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Tag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PropertyAccess\PropertyAccess;

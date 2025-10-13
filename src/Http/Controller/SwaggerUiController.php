@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Controller;
+namespace AlexFigures\Symfony\Http\Controller;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

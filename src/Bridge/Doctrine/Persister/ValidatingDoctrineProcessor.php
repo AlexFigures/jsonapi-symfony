@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Doctrine\Persister;
+namespace AlexFigures\Symfony\Bridge\Doctrine\Persister;
 
+use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Http\Exception\ConflictException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
 use Doctrine\ORM\EntityManagerInterface;
-use JsonApi\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
-use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
-use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Serializer\Exception\ExtraAttributesException;
 use Symfony\Component\Serializer\Exception\MissingConstructorArgumentsException;
@@ -175,7 +175,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     private function denormalizeInto(
         object $entity,
         ChangeSet $changes,
-        \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
         bool $isCreate
     ): void {
 
@@ -193,7 +193,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     private function denormalizeAttributes(
         object $entity,
         ChangeSet $changes,
-        \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
         bool $isCreate
     ): void {
         // Create ChangeSet with only attributes for denormalization
@@ -227,9 +227,9 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
 
 
     private function findAttributeMetadata(
-        \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
         string $path
-    ): ?\JsonApi\Symfony\Resource\Metadata\AttributeMetadata {
+    ): ?\AlexFigures\Symfony\Resource\Metadata\AttributeMetadata {
         foreach ($metadata->attributes as $attribute) {
             if ($attribute->propertyPath === $path || $attribute->name === $path) {
                 return $attribute;
@@ -242,12 +242,12 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     /**
      * Validates entity with operation-specific groups and throws exception on errors.
      *
-     * @throws \JsonApi\Symfony\Http\Exception\ValidationException
+     * @throws \AlexFigures\Symfony\Http\Exception\ValidationException
      */
     private function validateWithGroups(
         object $entity,
         string $type,
-        \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
         bool $isCreate
     ): void {
         // Use validation groups from metadata or defaults

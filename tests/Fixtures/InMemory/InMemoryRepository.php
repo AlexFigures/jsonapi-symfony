@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
 
+use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Sorting;
+use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Tag;
 use DateInterval;
 use DateTimeImmutable;
-use JsonApi\Symfony\Contract\Data\ResourceIdentifier;
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Sorting;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
-use JsonApi\Symfony\Tests\Fixtures\Model\Article;
-use JsonApi\Symfony\Tests\Fixtures\Model\Author;
-use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
 use ReflectionClass;
 use RuntimeException;
 use Stringable;

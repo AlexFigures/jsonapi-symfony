@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
 
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
-use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Http\Exception\ConflictException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Uid\Uuid;

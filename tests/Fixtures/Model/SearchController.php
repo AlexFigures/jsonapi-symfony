@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Fixtures\Model;
+namespace AlexFigures\Symfony\Tests\Fixtures\Model;
 
-use JsonApi\Symfony\Resource\Attribute\JsonApiCustomRoute;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
 
 /**
  * Example controller with custom routes defined via attributes.

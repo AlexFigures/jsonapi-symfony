@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Profile;
+namespace AlexFigures\Symfony\Tests\Unit\Profile;
 
-use JsonApi\Symfony\Http\Exception\NotAcceptableException;
-use JsonApi\Symfony\Profile\Negotiation\ProfileNegotiator;
-use JsonApi\Symfony\Profile\ProfileContext;
-use JsonApi\Symfony\Profile\ProfileRegistry;
-use JsonApi\Symfony\Tests\Util\FakeProfile;
+use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
+use AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator;
+use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\Symfony\Profile\ProfileRegistry;
+use AlexFigures\Symfony\Tests\Util\FakeProfile;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;

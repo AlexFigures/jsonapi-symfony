@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Contract\Resource;
+namespace AlexFigures\Symfony\Contract\Resource;
 
 /**
  * Provides metadata about a JSON:API resource type.

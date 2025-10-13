@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\Bundle;
+namespace AlexFigures\Symfony\Bridge\Symfony\Bundle;
 
-use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\Compiler\CustomRouteHandlerPass;
-use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
-use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
+use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\CustomRouteHandlerPass;
+use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
+use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;

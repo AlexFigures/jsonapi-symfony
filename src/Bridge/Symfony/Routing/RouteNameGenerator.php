@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\Routing;
+namespace AlexFigures\Symfony\Bridge\Symfony\Routing;
 
 /**
  * Generates route names for JSON:API resources based on configured naming convention.

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\CustomRoute\Handler;
+namespace AlexFigures\Symfony\CustomRoute\Handler;
 
-use JsonApi\Symfony\CustomRoute\Context\CustomRouteContext;
-use JsonApi\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
 
 /**
  * Interface for custom route handlers.

@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Request;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Request;
 
-use JsonApi\Symfony\Filter\Ast\Between;
-use JsonApi\Symfony\Filter\Ast\Comparison;
-use JsonApi\Symfony\Filter\Ast\Group;
-use JsonApi\Symfony\Filter\Ast\NullCheck;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Request\FilteringWhitelist;
-use JsonApi\Symfony\Resource\Attribute\FilterableField;
-use JsonApi\Symfony\Resource\Attribute\FilterableFields;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Filter\Ast\Between;
+use AlexFigures\Symfony\Filter\Ast\Comparison;
+use AlexFigures\Symfony\Filter\Ast\Group;
+use AlexFigures\Symfony\Filter\Ast\NullCheck;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
+use AlexFigures\Symfony\Resource\Attribute\FilterableField;
+use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 
 final class FilteringWhitelistSecurityTest extends TestCase

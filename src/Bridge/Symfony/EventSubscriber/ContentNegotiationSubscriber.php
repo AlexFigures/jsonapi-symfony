@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\EventSubscriber;
+namespace AlexFigures\Symfony\Bridge\Symfony\EventSubscriber;
 
-use JsonApi\Symfony\Http\Exception\NotAcceptableException;
-use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
+use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

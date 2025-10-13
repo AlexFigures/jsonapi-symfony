@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Resource\Metadata;
+namespace AlexFigures\Symfony\Resource\Metadata;
 
-use JsonApi\Symfony\Resource\Attribute\FilterableFields;
+use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
 
 /**
  * @psalm-type AttributeMap = array<string, AttributeMetadata>

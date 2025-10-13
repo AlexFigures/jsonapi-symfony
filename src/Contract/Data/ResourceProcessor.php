@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Contract\Data;
+namespace AlexFigures\Symfony\Contract\Data;
 
-use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Http\Exception\ConflictException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
 
 /**
  * Processes JSON:API resource write operations.

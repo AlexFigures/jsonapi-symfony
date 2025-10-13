@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\StressApp;
+namespace AlexFigures\Symfony\StressApp;
 
-use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRepository;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRepository;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 /**

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\Locator;
+namespace AlexFigures\Symfony\Bridge\Symfony\Locator;
 
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
-use JsonApi\Symfony\Contract\Data\TypedResourcePersister;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Contract\Data\ResourcePersister;
+use AlexFigures\Symfony\Contract\Data\TypedResourcePersister;
 
 /**
  * Locator for finding suitable Persister by resource type.

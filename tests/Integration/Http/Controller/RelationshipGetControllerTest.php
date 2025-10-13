@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
-use JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
-use JsonApi\Symfony\Http\Controller\RelationshipGetController;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Http\Relationship\LinkageBuilder;
-use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
+use AlexFigures\Symfony\Http\Controller\RelationshipGetController;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
+use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGenerator;
@@ -59,7 +59,7 @@ final class RelationshipGetControllerTest extends DoctrineIntegrationTestCase
         $context->setHost('localhost');
 
         $urlGenerator = new UrlGenerator($routes, $context);
-        $linkGenerator = new \JsonApi\Symfony\Http\Link\LinkGenerator($urlGenerator);
+        $linkGenerator = new \AlexFigures\Symfony\Http\Link\LinkGenerator($urlGenerator);
 
         $relationshipHandler = new GenericDoctrineRelationshipHandler(
             $this->em,
@@ -67,7 +67,7 @@ final class RelationshipGetControllerTest extends DoctrineIntegrationTestCase
             $this->accessor
         );
 
-        $paginationConfig = new \JsonApi\Symfony\Http\Request\PaginationConfig(defaultSize: 10, maxSize: 100);
+        $paginationConfig = new \AlexFigures\Symfony\Http\Request\PaginationConfig(defaultSize: 10, maxSize: 100);
 
         $linkageBuilder = new LinkageBuilder(
             $this->registry,

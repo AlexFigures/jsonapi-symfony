@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Resource\Attribute;
+namespace AlexFigures\Symfony\Resource\Attribute;
 
 use Attribute as PhpAttribute;
 

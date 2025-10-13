@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Link;
+namespace AlexFigures\Symfony\Http\Link;
 
-use JsonApi\Symfony\Query\Pagination;
+use AlexFigures\Symfony\Query\Pagination;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 

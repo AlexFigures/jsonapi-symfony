@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Fixtures\Entity;
+namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
 
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use Doctrine\ORM\Mapping as ORM;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**

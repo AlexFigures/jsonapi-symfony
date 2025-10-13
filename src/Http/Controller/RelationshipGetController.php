@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Controller;
+namespace AlexFigures\Symfony\Http\Controller;
 
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Http\Relationship\LinkageBuilder;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;

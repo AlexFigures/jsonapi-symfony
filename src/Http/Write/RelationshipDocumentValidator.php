@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Write;
+namespace AlexFigures\Symfony\Http\Write;
 
-use JsonApi\Symfony\Contract\Data\ExistenceChecker;
-use JsonApi\Symfony\Http\Error\ErrorCodes;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\MethodNotAllowedException;
-use JsonApi\Symfony\Http\Exception\MultiErrorException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Contract\Data\ExistenceChecker;
+use AlexFigures\Symfony\Http\Error\ErrorCodes;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Exception\ConflictException;
+use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
+use AlexFigures\Symfony\Http\Exception\MultiErrorException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 final class RelationshipDocumentValidator
 {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Resource\Attribute;
+namespace AlexFigures\Symfony\Tests\Unit\Resource\Attribute;
 
-use JsonApi\Symfony\Resource\Attribute\SortableFields;
+use AlexFigures\Symfony\Resource\Attribute\SortableFields;
 use PHPUnit\Framework\TestCase;
 
 final class SortableFieldsTest extends TestCase

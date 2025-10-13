@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Atomic\Execution;
+namespace AlexFigures\Symfony\Atomic\Execution;
 
 final class OperationOutcome
 {

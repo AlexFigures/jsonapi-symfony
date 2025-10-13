@@ -2,82 +2,82 @@
 
 declare(strict_types=1);
 
-use JsonApi\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use JsonApi\Symfony\Bridge\Symfony\EventListener\WriteListener;
-use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
-use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
-use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
-use JsonApi\Symfony\Http\Controller\CollectionController;
-use JsonApi\Symfony\Http\Controller\CreateResourceController;
-use JsonApi\Symfony\Http\Controller\DeleteResourceController;
-use JsonApi\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
-use JsonApi\Symfony\Http\Controller\RelatedController;
-use JsonApi\Symfony\Http\Controller\RelationshipGetController;
-use JsonApi\Symfony\Http\Controller\RelationshipWriteController;
-use JsonApi\Symfony\Http\Controller\ResourceController;
-use JsonApi\Symfony\Http\Controller\UpdateResourceController;
-use JsonApi\Symfony\Http\Controller\OpenApiController;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Error\CorrelationIdProvider;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Error\JsonApiExceptionListener;
-use JsonApi\Symfony\Http\Cache\CacheKeyBuilder;
-use JsonApi\Symfony\Http\Cache\ConditionalRequestEvaluator;
-use JsonApi\Symfony\Http\Cache\EtagGeneratorInterface;
-use JsonApi\Symfony\Http\Cache\HashEtagGenerator;
-use JsonApi\Symfony\Http\Cache\HeadersApplier;
-use JsonApi\Symfony\Http\Cache\LastModifiedResolver;
-use JsonApi\Symfony\Http\Cache\SurrogateKeyBuilder;
-use JsonApi\Symfony\Http\Cache\VersionEtagGenerator;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Http\Safety\LimitsEnforcer;
-use JsonApi\Symfony\Http\Safety\RequestComplexityScorer;
-use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
-use JsonApi\Symfony\Http\Request\PaginationConfig;
-use JsonApi\Symfony\Http\Request\QueryParser;
-use JsonApi\Symfony\Http\Request\SortingWhitelist;
-use JsonApi\Symfony\Http\Request\FilteringWhitelist;
-use JsonApi\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use JsonApi\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
-use JsonApi\Symfony\Http\Relationship\LinkageBuilder;
-use JsonApi\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
-use JsonApi\Symfony\Http\Write\ChangeSetFactory;
-use JsonApi\Symfony\Http\Write\InputDocumentValidator;
-use JsonApi\Symfony\Http\Write\RelationshipDocumentValidator;
-use JsonApi\Symfony\Http\Write\WriteConfig;
-use JsonApi\Symfony\Profile\Builtin\AuditTrailProfile;
-use JsonApi\Symfony\Profile\Builtin\RelationshipCountsProfile;
-use JsonApi\Symfony\Profile\Builtin\SoftDeleteProfile;
-use JsonApi\Symfony\Profile\Negotiation\ProfileNegotiator;
-use JsonApi\Symfony\Profile\ProfileRegistry;
-use JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
-use JsonApi\Symfony\Invalidation\InvalidationDispatcher;
-use JsonApi\Symfony\Invalidation\NullPurger;
-use JsonApi\Symfony\Invalidation\SurrogatePurgerInterface;
-use JsonApi\Symfony\Contract\Data\ExistenceChecker;
-use JsonApi\Symfony\Contract\Data\RelationshipReader;
-use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
-use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use JsonApi\Symfony\Filter\Operator\BetweenOperator;
-use JsonApi\Symfony\Filter\Operator\EqualOperator;
-use JsonApi\Symfony\Filter\Operator\GreaterOrEqualOperator;
-use JsonApi\Symfony\Filter\Operator\GreaterThanOperator;
-use JsonApi\Symfony\Filter\Operator\InOperator;
-use JsonApi\Symfony\Filter\Operator\NotInOperator;
-use JsonApi\Symfony\Filter\Operator\IsNullOperator;
-use JsonApi\Symfony\Filter\Operator\LessOrEqualOperator;
-use JsonApi\Symfony\Filter\Operator\LessThanOperator;
-use JsonApi\Symfony\Filter\Operator\LikeOperator;
-use JsonApi\Symfony\Filter\Operator\NotEqualOperator;
-use JsonApi\Symfony\Filter\Operator\Registry;
-use JsonApi\Symfony\Filter\Parser\FilterParser;
+use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\Symfony\Bridge\Symfony\EventListener\WriteListener;
+use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
+use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
+use AlexFigures\Symfony\Http\Controller\CollectionController;
+use AlexFigures\Symfony\Http\Controller\CreateResourceController;
+use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
+use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
+use AlexFigures\Symfony\Http\Controller\RelatedController;
+use AlexFigures\Symfony\Http\Controller\RelationshipGetController;
+use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
+use AlexFigures\Symfony\Http\Controller\ResourceController;
+use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
+use AlexFigures\Symfony\Http\Controller\OpenApiController;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\CorrelationIdProvider;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Error\JsonApiExceptionListener;
+use AlexFigures\Symfony\Http\Cache\CacheKeyBuilder;
+use AlexFigures\Symfony\Http\Cache\ConditionalRequestEvaluator;
+use AlexFigures\Symfony\Http\Cache\EtagGeneratorInterface;
+use AlexFigures\Symfony\Http\Cache\HashEtagGenerator;
+use AlexFigures\Symfony\Http\Cache\HeadersApplier;
+use AlexFigures\Symfony\Http\Cache\LastModifiedResolver;
+use AlexFigures\Symfony\Http\Cache\SurrogateKeyBuilder;
+use AlexFigures\Symfony\Http\Cache\VersionEtagGenerator;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
+use AlexFigures\Symfony\Http\Safety\RequestComplexityScorer;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\Symfony\Http\Request\PaginationConfig;
+use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Http\Request\SortingWhitelist;
+use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
+use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
+use AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
+use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
+use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
+use AlexFigures\Symfony\Http\Write\RelationshipDocumentValidator;
+use AlexFigures\Symfony\Http\Write\WriteConfig;
+use AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile;
+use AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile;
+use AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile;
+use AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator;
+use AlexFigures\Symfony\Profile\ProfileRegistry;
+use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Invalidation\InvalidationDispatcher;
+use AlexFigures\Symfony\Invalidation\NullPurger;
+use AlexFigures\Symfony\Invalidation\SurrogatePurgerInterface;
+use AlexFigures\Symfony\Contract\Data\ExistenceChecker;
+use AlexFigures\Symfony\Contract\Data\RelationshipReader;
+use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\Symfony\Filter\Operator\BetweenOperator;
+use AlexFigures\Symfony\Filter\Operator\EqualOperator;
+use AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\GreaterThanOperator;
+use AlexFigures\Symfony\Filter\Operator\InOperator;
+use AlexFigures\Symfony\Filter\Operator\NotInOperator;
+use AlexFigures\Symfony\Filter\Operator\IsNullOperator;
+use AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\LessThanOperator;
+use AlexFigures\Symfony\Filter\Operator\LikeOperator;
+use AlexFigures\Symfony\Filter\Operator\NotEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Filter\Parser\FilterParser;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -261,14 +261,14 @@ return static function (ContainerConfigurator $configurator): void {
 
     // Custom route registry
     $services
-        ->set(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistry::class)
+        ->set(\AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry::class)
         ->args([
             [], // Will be replaced by ResourceDiscoveryPass
         ])
     ;
 
     $services
-        ->alias(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface::class, \JsonApi\Symfony\Resource\Registry\CustomRouteRegistry::class)
+        ->alias(\AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface::class, \AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry::class)
     ;
 
     $services
@@ -353,7 +353,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set(\JsonApi\Symfony\Http\Controller\SwaggerUiController::class)
+        ->set(\AlexFigures\Symfony\Http\Controller\SwaggerUiController::class)
         ->args([
             '%jsonapi.docs.ui%',
         ])
@@ -475,7 +475,7 @@ return static function (ContainerConfigurator $configurator): void {
 
     // Route name generator
     $services
-        ->set(\JsonApi\Symfony\Bridge\Symfony\Routing\RouteNameGenerator::class)
+        ->set(\AlexFigures\Symfony\Bridge\Symfony\Routing\RouteNameGenerator::class)
         ->args([
             '%jsonapi.routing.naming_convention%',
         ])
@@ -483,15 +483,15 @@ return static function (ContainerConfigurator $configurator): void {
 
     // Automatic route loader
     $services
-        ->set(\JsonApi\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader::class)
+        ->set(\AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader::class)
         ->args([
             service(ResourceRegistry::class),
             '%jsonapi.route_prefix%',
             true, // enableRelationshipRoutes
             '%jsonapi.docs.generator.openapi%',
             '%jsonapi.docs.ui%',
-            service(\JsonApi\Symfony\Bridge\Symfony\Routing\RouteNameGenerator::class),
-            service(\JsonApi\Symfony\Resource\Registry\CustomRouteRegistry::class),
+            service(\AlexFigures\Symfony\Bridge\Symfony\Routing\RouteNameGenerator::class),
+            service(\AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry::class),
         ])
         ->tag('routing.loader')
     ;
@@ -500,7 +500,7 @@ return static function (ContainerConfigurator $configurator): void {
     // Registered with low priority so users can override them
 
     $services
-        ->set('jsonapi.null_existence_checker', \JsonApi\Symfony\Contract\Data\NullExistenceChecker::class)
+        ->set('jsonapi.null_existence_checker', \AlexFigures\Symfony\Contract\Data\NullExistenceChecker::class)
     ;
 
     $services
@@ -508,7 +508,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set('jsonapi.null_relationship_reader', \JsonApi\Symfony\Contract\Data\NullRelationshipReader::class)
+        ->set('jsonapi.null_relationship_reader', \AlexFigures\Symfony\Contract\Data\NullRelationshipReader::class)
     ;
 
     $services
@@ -516,7 +516,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set('jsonapi.null_relationship_updater', \JsonApi\Symfony\Contract\Data\NullRelationshipUpdater::class)
+        ->set('jsonapi.null_relationship_updater', \AlexFigures\Symfony\Contract\Data\NullRelationshipUpdater::class)
     ;
 
     $services
@@ -524,7 +524,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set('jsonapi.null_resource_processor', \JsonApi\Symfony\Bridge\Symfony\Null\NullResourceProcessor::class)
+        ->set('jsonapi.null_resource_processor', \AlexFigures\Symfony\Bridge\Symfony\Null\NullResourceProcessor::class)
     ;
 
     $services
@@ -532,7 +532,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set('jsonapi.null_resource_repository', \JsonApi\Symfony\Contract\Data\NullResourceRepository::class)
+        ->set('jsonapi.null_resource_repository', \AlexFigures\Symfony\Contract\Data\NullResourceRepository::class)
     ;
 
     $services
@@ -540,7 +540,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set('jsonapi.null_transaction_manager', \JsonApi\Symfony\Contract\Tx\NullTransactionManager::class)
+        ->set('jsonapi.null_transaction_manager', \AlexFigures\Symfony\Contract\Tx\NullTransactionManager::class)
     ;
 
     $services
@@ -600,7 +600,7 @@ return static function (ContainerConfigurator $configurator): void {
     // SerializerEntityInstantiator - uses the Symfony Serializer to instantiate entities
     // Mirrors the approach used by API Platform
     $services
-        ->set(\JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class)
+        ->set(\AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
             service(PropertyAccessorInterface::class),
@@ -608,7 +608,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set(\JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository::class)
+        ->set(\AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
             service(ResourceRegistryInterface::class),
@@ -618,15 +618,15 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set(\JsonApi\Symfony\Http\Validation\DatabaseErrorMapper::class)
+        ->set(\AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper::class)
         ->args([
             service(ResourceRegistryInterface::class),
-            service(\JsonApi\Symfony\Http\Error\ErrorMapper::class),
+            service(\AlexFigures\Symfony\Http\Error\ErrorMapper::class),
         ])
     ;
 
     $services
-        ->set(\JsonApi\Symfony\Resource\Relationship\RelationshipResolver::class)
+        ->set(\AlexFigures\Symfony\Resource\Relationship\RelationshipResolver::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
             service(ResourceRegistryInterface::class),
@@ -648,36 +648,36 @@ return static function (ContainerConfigurator $configurator): void {
         ->set(WriteListener::class)
         ->args([
             service(FlushManager::class),
-            service(\JsonApi\Symfony\Http\Validation\DatabaseErrorMapper::class),
+            service(\AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper::class),
         ])
         ->tag('kernel.event_subscriber')
     ;
 
     $services
-        ->set(\JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor::class)
+        ->set(\AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
             service('validator'),
             service(ConstraintViolationMapper::class),
-            service(\JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class),
-            service(\JsonApi\Symfony\Resource\Relationship\RelationshipResolver::class),
+            service(\AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class),
+            service(\AlexFigures\Symfony\Resource\Relationship\RelationshipResolver::class),
             service(FlushManager::class),
         ])
     ;
 
     $services
-        ->set(\JsonApi\Symfony\Bridge\Serializer\Normalizer\JsonApiRelationshipDenormalizer::class)
+        ->set(\AlexFigures\Symfony\Bridge\Serializer\Normalizer\JsonApiRelationshipDenormalizer::class)
         ->args([
-            service(\JsonApi\Symfony\Resource\Relationship\RelationshipResolver::class),
+            service(\AlexFigures\Symfony\Resource\Relationship\RelationshipResolver::class),
             service(ResourceRegistryInterface::class),
         ])
         ->tag('serializer.normalizer', ['priority' => 100]) // High priority to handle relationships first
     ;
 
     $services
-        ->set(\JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler::class)
+        ->set(\AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
             service(ResourceRegistryInterface::class),
@@ -686,7 +686,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set(\JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager::class)
+        ->set(\AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
         ])

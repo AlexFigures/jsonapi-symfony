@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Validation;
+namespace AlexFigures\Symfony\Filter\Validation;
 
 /**
  * Value object describing which fields/operators are allowed per resource type.

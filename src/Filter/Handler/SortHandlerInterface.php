@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Handler;
+namespace AlexFigures\Symfony\Filter\Handler;
 
 /**
  * Interface for custom sort handlers.

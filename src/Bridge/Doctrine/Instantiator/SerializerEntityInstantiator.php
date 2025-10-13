@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Doctrine\Instantiator;
+namespace AlexFigures\Symfony\Bridge\Doctrine\Instantiator;
 
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Doctrine\ORM\EntityManagerInterface;
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
@@ -205,7 +205,7 @@ final class SerializerEntityInstantiator
     private function findAttributeMetadata(
         ResourceMetadata $metadata,
         string $path
-    ): ?\JsonApi\Symfony\Resource\Metadata\AttributeMetadata {
+    ): ?\AlexFigures\Symfony\Resource\Metadata\AttributeMetadata {
         foreach ($metadata->attributes as $attribute) {
             if ($attribute->propertyPath === $path || $attribute->name === $path) {
                 return $attribute;

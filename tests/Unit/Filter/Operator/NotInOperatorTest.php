@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Filter\Operator;
+namespace AlexFigures\Symfony\Tests\Unit\Filter\Operator;
 
+use AlexFigures\Symfony\Filter\Operator\NotInOperator;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use JsonApi\Symfony\Filter\Operator\NotInOperator;
 use PHPUnit\Framework\TestCase;
 
 final class NotInOperatorTest extends TestCase

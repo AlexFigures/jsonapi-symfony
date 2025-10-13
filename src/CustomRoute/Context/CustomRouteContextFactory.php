@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\CustomRoute\Context;
+namespace AlexFigures\Symfony\CustomRoute\Context;
 
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Http\Request\QueryParser;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata;
-use JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
+use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
 

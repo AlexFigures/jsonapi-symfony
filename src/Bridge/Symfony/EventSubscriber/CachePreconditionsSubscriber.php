@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\EventSubscriber;
+namespace AlexFigures\Symfony\Bridge\Symfony\EventSubscriber;
 
+use AlexFigures\Symfony\Http\Cache\CacheKeyBuilder;
+use AlexFigures\Symfony\Http\Cache\ConditionalRequestEvaluator;
+use AlexFigures\Symfony\Http\Cache\EtagGeneratorInterface;
+use AlexFigures\Symfony\Http\Cache\HeadersApplier;
+use AlexFigures\Symfony\Http\Cache\LastModifiedResolver;
+use AlexFigures\Symfony\Http\Cache\SurrogateKeyBuilder;
 use DateTimeImmutable;
-use JsonApi\Symfony\Http\Cache\CacheKeyBuilder;
-use JsonApi\Symfony\Http\Cache\ConditionalRequestEvaluator;
-use JsonApi\Symfony\Http\Cache\EtagGeneratorInterface;
-use JsonApi\Symfony\Http\Cache\HeadersApplier;
-use JsonApi\Symfony\Http\Cache\LastModifiedResolver;
-use JsonApi\Symfony\Http\Cache\SurrogateKeyBuilder;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

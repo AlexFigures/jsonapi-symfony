@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\CustomRoute\Response;
+namespace AlexFigures\Symfony\CustomRoute\Response;
 
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\CustomRoute\Context\CustomRouteContext;
-use JsonApi\Symfony\CustomRoute\Result\CustomRouteResult;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorCodes;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorCodes;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 

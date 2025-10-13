@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit;
+namespace AlexFigures\Symfony\Tests\Unit;
 
-use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;

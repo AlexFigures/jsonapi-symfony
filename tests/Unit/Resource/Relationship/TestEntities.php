@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Resource\Relationship;
+namespace AlexFigures\Symfony\Tests\Unit\Resource\Relationship;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;

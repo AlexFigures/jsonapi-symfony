@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Sort;
 
 use Doctrine\ORM\QueryBuilder;
-use JsonApi\Symfony\Filter\Handler\SortHandlerInterface;
+use AlexFigures\Symfony\Filter\Handler\SortHandlerInterface;
 
 /**
  * Example custom sort handler for relevance-based sorting.

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Validation;
+namespace AlexFigures\Symfony\Http\Validation;
 
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Error\ErrorObject;
-use JsonApi\Symfony\Http\Exception\ValidationException;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Error\ErrorObject;
+use AlexFigures\Symfony\Http\Exception\ValidationException;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\Serializer\Exception\ExtraAttributesException;
 use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use Symfony\Component\Serializer\Exception\PartialDenormalizationException;

@@ -149,9 +149,9 @@ jsonapi:
 // src/JsonApi/MongoDB/MongoRepository.php
 namespace App\JsonApi\MongoDB;
 
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Query\Criteria;
 
 final class MongoRepository implements ResourceRepository
 {
@@ -250,7 +250,7 @@ When using `provider: custom`, you need to implement these contracts:
 ### ResourceRepository
 
 ```php
-namespace JsonApi\Symfony\Contract\Data;
+namespace AlexFigures\Symfony\Contract\Data;
 
 interface ResourceRepository
 {
@@ -262,7 +262,7 @@ interface ResourceRepository
 ### ResourcePersister
 
 ```php
-namespace JsonApi\Symfony\Contract\Data;
+namespace AlexFigures\Symfony\Contract\Data;
 
 interface ResourcePersister
 {
@@ -275,7 +275,7 @@ interface ResourcePersister
 ### RelationshipReader
 
 ```php
-namespace JsonApi\Symfony\Contract\Data;
+namespace AlexFigures\Symfony\Contract\Data;
 
 interface RelationshipReader
 {
@@ -287,7 +287,7 @@ interface RelationshipReader
 ### TransactionManager
 
 ```php
-namespace JsonApi\Symfony\Contract\Tx;
+namespace AlexFigures\Symfony\Contract\Tx;
 
 interface TransactionManager
 {
@@ -358,7 +358,7 @@ services:
 **Solution**: Ensure your class implements the correct contract:
 
 ```php
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
 
 class MyRepository implements ResourceRepository
 {

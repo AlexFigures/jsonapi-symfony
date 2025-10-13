@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Cache;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Cache;
 
-use JsonApi\Symfony\Http\Cache\VersionEtagGenerator;
+use AlexFigures\Symfony\Http\Cache\VersionEtagGenerator;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

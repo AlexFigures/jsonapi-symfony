@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Exception;
+namespace AlexFigures\Symfony\Http\Exception;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
 

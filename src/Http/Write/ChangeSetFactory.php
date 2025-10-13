@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Write;
+namespace AlexFigures\Symfony\Http\Write;
 
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 final class ChangeSetFactory
 {

@@ -20,7 +20,7 @@ The simplest way to use `FilterableFields` is to provide a list of field names t
 ```php
 <?php
 
-use JsonApi\Symfony\Resource\Attribute\{JsonApiResource, FilterableFields};
+use AlexFigures\Symfony\Resource\Attribute\{JsonApiResource, FilterableFields};
 
 #[JsonApiResource(type: 'articles')]
 #[FilterableFields(['title', 'status', 'createdAt', 'authorId'])]
@@ -61,7 +61,7 @@ You can restrict which operators are allowed for each field using the `Filterabl
 ```php
 <?php
 
-use JsonApi\Symfony\Resource\Attribute\{JsonApiResource, FilterableFields, FilterableField};
+use AlexFigures\Symfony\Resource\Attribute\{JsonApiResource, FilterableFields, FilterableField};
 
 #[JsonApiResource(type: 'products')]
 #[FilterableFields([
@@ -112,7 +112,7 @@ For complex filtering logic, you can create custom filter handlers:
 ```php
 <?php
 
-use JsonApi\Symfony\Resource\Attribute\{JsonApiResource, FilterableFields, FilterableField};
+use AlexFigures\Symfony\Resource\Attribute\{JsonApiResource, FilterableFields, FilterableField};
 
 #[JsonApiResource(type: 'articles')]
 #[FilterableFields([

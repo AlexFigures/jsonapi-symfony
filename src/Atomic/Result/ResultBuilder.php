@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Atomic\Result;
+namespace AlexFigures\Symfony\Atomic\Result;
 
-use JsonApi\Symfony\Atomic\AtomicConfig;
-use JsonApi\Symfony\Atomic\Execution\OperationOutcome;
-use JsonApi\Symfony\Atomic\Operation;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Atomic\AtomicConfig;
+use AlexFigures\Symfony\Atomic\Execution\OperationOutcome;
+use AlexFigures\Symfony\Atomic\Operation;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Query\Criteria;
 use Symfony\Component\HttpFoundation\Request;
 
 final class ResultBuilder

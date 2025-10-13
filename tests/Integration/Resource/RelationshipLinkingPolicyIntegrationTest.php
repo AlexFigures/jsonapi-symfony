@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Resource;
+namespace AlexFigures\Symfony\Tests\Integration\Resource;
 
+use AlexFigures\Symfony\Http\Exception\ValidationException;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
+use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
+use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use Doctrine\ORM\Mapping as ORM;
-use JsonApi\Symfony\Http\Exception\ValidationException;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\Relationship;
-use JsonApi\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
-use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
-use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 /**

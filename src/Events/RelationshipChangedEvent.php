@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Events;
+namespace AlexFigures\Symfony\Events;
 
 final class RelationshipChangedEvent
 {

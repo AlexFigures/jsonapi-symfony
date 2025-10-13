@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Ast;
+namespace AlexFigures\Symfony\Filter\Ast;
 
 /**
  * Represents a grouped sub-expression, preserving explicit parentheses.

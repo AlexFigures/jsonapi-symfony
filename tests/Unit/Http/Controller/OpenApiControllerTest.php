@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Controller;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Controller;
 
-use JsonApi\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
-use JsonApi\Symfony\Http\Controller\OpenApiController;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
+use AlexFigures\Symfony\Http\Controller\OpenApiController;
+use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

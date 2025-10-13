@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Relationship;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Relationship;
 
+use AlexFigures\Symfony\Contract\Data\RelationshipReader;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Contract\Data\SliceIds;
+use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
+use AlexFigures\Symfony\Http\Request\PaginationConfig;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use BadMethodCallException;
-use JsonApi\Symfony\Contract\Data\RelationshipReader;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Contract\Data\SliceIds;
-use JsonApi\Symfony\Http\Relationship\LinkageBuilder;
-use JsonApi\Symfony\Http\Request\PaginationConfig;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -74,7 +74,7 @@ final class LinkageBuilderTest extends TestCase
                 return $rel === 'author' ? '1' : null;
             }
 
-            public function getToManyIds(string $type, string $id, string $rel, \JsonApi\Symfony\Query\Pagination $pagination): SliceIds
+            public function getToManyIds(string $type, string $id, string $rel, \AlexFigures\Symfony\Query\Pagination $pagination): SliceIds
             {
                 throw new BadMethodCallException('Not implemented.');
             }
@@ -153,7 +153,7 @@ final class LinkageBuilderTest extends TestCase
                 return $rel === 'comments' ? '2' : null;
             }
 
-            public function getToManyIds(string $type, string $id, string $rel, \JsonApi\Symfony\Query\Pagination $pagination): SliceIds
+            public function getToManyIds(string $type, string $id, string $rel, \AlexFigures\Symfony\Query\Pagination $pagination): SliceIds
             {
                 throw new BadMethodCallException('Not implemented.');
             }

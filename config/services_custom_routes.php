@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
-use JsonApi\Symfony\CustomRoute\Context\CustomRouteContextFactory;
-use JsonApi\Symfony\CustomRoute\Controller\CustomRouteController;
-use JsonApi\Symfony\CustomRoute\Handler\CustomRouteHandlerRegistry;
-use JsonApi\Symfony\CustomRoute\Response\CustomRouteResponseBuilder;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Http\Request\QueryParser;
-use JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContextFactory;
+use AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController;
+use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerRegistry;
+use AlexFigures\Symfony\CustomRoute\Response\CustomRouteResponseBuilder;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -41,7 +41,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(ResourceRepository::class),
             service(QueryParser::class),
-            service(\JsonApi\Symfony\Http\Error\ErrorMapper::class),
+            service(\AlexFigures\Symfony\Http\Error\ErrorMapper::class),
         ])
     ;
 

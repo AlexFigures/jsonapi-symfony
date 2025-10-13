@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Controller;
+namespace AlexFigures\Symfony\Http\Controller;
 
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
-use JsonApi\Symfony\Events\ResourceChangedEvent;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\ForbiddenException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Http\Exception\UnprocessableEntityException;
-use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
-use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
-use JsonApi\Symfony\Http\Write\ChangeSetFactory;
-use JsonApi\Symfony\Http\Write\InputDocumentValidator;
-use JsonApi\Symfony\Http\Write\WriteConfig;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\Events\ResourceChangedEvent;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Exception\ForbiddenException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Http\Exception\UnprocessableEntityException;
+use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
+use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
+use AlexFigures\Symfony\Http\Write\WriteConfig;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

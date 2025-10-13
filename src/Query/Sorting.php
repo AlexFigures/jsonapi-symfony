@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Query;
+namespace AlexFigures\Symfony\Query;
 
 use InvalidArgumentException;
 

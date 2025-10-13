@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Relationship;
+namespace AlexFigures\Symfony\Http\Relationship;
 
-use JsonApi\Symfony\Contract\Data\RelationshipReader;
-use JsonApi\Symfony\Contract\Data\ResourceIdentifier;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Http\Request\PaginationConfig;
-use JsonApi\Symfony\Query\Pagination;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Contract\Data\RelationshipReader;
+use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Http\Request\PaginationConfig;
+use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use LogicException;
 use Symfony\Component\HttpFoundation\Request;
 

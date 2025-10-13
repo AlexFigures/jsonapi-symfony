@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Profile;
+namespace AlexFigures\Symfony\Tests\Unit\Profile;
 
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Contract\Data\ResourceIdentifier;
-use JsonApi\Symfony\Profile\Hook\DocumentHook;
-use JsonApi\Symfony\Profile\Hook\QueryHook;
-use JsonApi\Symfony\Profile\Hook\ReadHook;
-use JsonApi\Symfony\Profile\Hook\RelationshipHook;
-use JsonApi\Symfony\Profile\Hook\WriteHook;
-use JsonApi\Symfony\Profile\ProfileContext;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Tests\Util\FakeProfile;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
+use AlexFigures\Symfony\Profile\Hook\DocumentHook;
+use AlexFigures\Symfony\Profile\Hook\QueryHook;
+use AlexFigures\Symfony\Profile\Hook\ReadHook;
+use AlexFigures\Symfony\Profile\Hook\RelationshipHook;
+use AlexFigures\Symfony\Profile\Hook\WriteHook;
+use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Tests\Util\FakeProfile;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,7 +28,7 @@ final class ProfileContextTest extends TestCase
             {
             }
 
-            public function onResourceRelationships(ProfileContext $context, \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata, array &$relationshipsPayload, object $model): void
+            public function onResourceRelationships(ProfileContext $context, \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata, array &$relationshipsPayload, object $model): void
             {
             }
 

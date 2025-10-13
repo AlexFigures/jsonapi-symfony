@@ -22,8 +22,8 @@ Define custom routes directly on your entity classes using the `#[JsonApiCustomR
 ```php
 <?php
 
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\JsonApiCustomRoute;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
 
 #[JsonApiResource(type: 'articles')]
 #[JsonApiCustomRoute(
@@ -52,7 +52,7 @@ You can also define custom routes on dedicated controller classes:
 ```php
 <?php
 
-use JsonApi\Symfony\Resource\Attribute\JsonApiCustomRoute;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
 
 #[JsonApiCustomRoute(
     name: 'articles.search',
@@ -389,3 +389,256 @@ Custom routes work alongside the automatically generated JSON:API routes. The li
 - Your custom routes: `POST /articles/{id}/publish`, `GET /articles/search`, etc.
 
 All routes respect your configured route prefix and naming convention settings.
+
+## Advanced: Filtering, Sorting, and Pagination in Custom Routes
+
+**New in 0.3.0**: Custom route handlers can leverage the full power of JSON:API query parameters (filtering, sorting, pagination) using the `CriteriaBuilder` API.
+
+### The Problem
+
+When implementing custom routes that return collections, you often need to:
+1. Apply custom business logic (e.g., filter by a path parameter like `categoryId`)
+2. Support standard JSON:API query parameters (`filter`, `sort`, `page`)
+3. Avoid duplicating the filtering/sorting/pagination logic
+
+### The Solution: CriteriaBuilder
+
+The `CriteriaBuilder` provides a fluent API for adding custom filters and conditions to the already-parsed JSON:API query parameters.
+
+#### Basic Example: Adding Custom Filters
+
+```php
+<?php
+
+namespace App\CustomRoute;
+
+use AlexFigures\Symfony\CustomRoute\Attribute\NoTransaction;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
+
+#[NoTransaction]
+final class CategoryArticlesHandler implements CustomRouteHandlerInterface
+{
+    public function handle(CustomRouteContext $context): CustomRouteResult
+    {
+        $categoryId = $context->getParam('categoryId');
+
+        // Build criteria with custom condition for categoryId
+        // This merges with any filters/sorting/pagination from query string
+        $criteria = $context->criteria()
+            ->addCustomCondition(function ($qb) use ($categoryId) {
+                $qb->andWhere('e.category = :categoryId')
+                   ->setParameter('categoryId', $categoryId);
+            })
+            ->build();
+
+        // Use repository to fetch collection with all criteria applied
+        // This automatically handles: filters, sorting, pagination, includes
+        $slice = $context->getRepository()->findCollection('articles', $criteria);
+
+        return CustomRouteResult::collection($slice->items, $slice->totalItems);
+    }
+}
+```
+
+**Route Definition:**
+```php
+#[JsonApiResource(type: 'articles')]
+#[JsonApiCustomRoute(
+    name: 'categories.articles',
+    path: '/categories/{categoryId}/articles',
+    methods: ['GET'],
+    handler: CategoryArticlesHandler::class,
+    resourceType: 'articles'
+)]
+class Article {}
+```
+
+**API Request:**
+```http
+GET /api/categories/123/articles?filter[status][eq]=published&sort=-createdAt&page[size]=10&page[number]=1
+```
+
+This request will:
+1. Filter articles by `categoryId=123` (from path)
+2. Filter by `status=published` (from query string)
+3. Sort by `createdAt` descending
+4. Return page 1 with 10 items per page
+
+### CriteriaBuilder API
+
+#### Method: `addFilter(string $field, string $operator, mixed $value)`
+
+Add a simple filter condition. Supports all standard JSON:API operators:
+
+```php
+$criteria = $context->criteria()
+    ->addFilter('status', 'eq', 'published')
+    ->addFilter('views', 'gte', 1000)
+    ->addFilter('tags', 'in', ['php', 'symfony'])
+    ->build();
+```
+
+**Supported operators:**
+- `eq` - equals
+- `ne` - not equals
+- `lt` - less than
+- `lte` - less than or equal
+- `gt` - greater than
+- `gte` - greater than or equal
+- `in` - in array
+- `nin` - not in array
+- `like` - SQL LIKE pattern
+- `ilike` - case-insensitive LIKE
+
+#### Method: `addCustomCondition(callable $modifier)`
+
+Add complex conditions using a QueryBuilder modifier callback:
+
+```php
+$criteria = $context->criteria()
+    ->addCustomCondition(function ($qb) {
+        $qb->andWhere('e.publishedAt IS NOT NULL')
+           ->andWhere('e.publishedAt <= :now')
+           ->setParameter('now', new \DateTimeImmutable());
+    })
+    ->build();
+```
+
+**Use cases for custom conditions:**
+- Subqueries
+- Complex joins
+- Database-specific functions
+- OR conditions across multiple fields
+- Filtering by associations
+
+#### Method: `build()`
+
+Build the final Criteria with all modifications applied:
+
+```php
+$criteria = $context->criteria()
+    ->addFilter('status', 'eq', 'published')
+    ->addCustomCondition(function ($qb) use ($userId) {
+        $qb->andWhere('e.author = :userId')
+           ->setParameter('userId', $userId);
+    })
+    ->build();
+
+$slice = $context->getRepository()->findCollection('articles', $criteria);
+```
+
+### Complete Example: Multi-Tenant Articles
+
+```php
+<?php
+
+namespace App\CustomRoute;
+
+use AlexFigures\Symfony\CustomRoute\Attribute\NoTransaction;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
+
+/**
+ * Get articles for a specific tenant with full JSON:API query support.
+ */
+#[NoTransaction]
+final class TenantArticlesHandler implements CustomRouteHandlerInterface
+{
+    public function handle(CustomRouteContext $context): CustomRouteResult
+    {
+        $tenantId = $context->getParam('tenantId');
+
+        // Verify tenant exists (business logic)
+        // ... tenant validation code ...
+
+        // Build criteria with tenant filter + all query string parameters
+        $criteria = $context->criteria()
+            ->addCustomCondition(function ($qb) use ($tenantId) {
+                // Filter by tenant (from path parameter)
+                $qb->andWhere('e.tenant = :tenantId')
+                   ->setParameter('tenantId', $tenantId);
+            })
+            ->build();
+
+        // Fetch collection with automatic:
+        // - Filtering (from query string + custom condition)
+        // - Sorting (from query string)
+        // - Pagination (from query string)
+        // - Includes (from query string)
+        $slice = $context->getRepository()->findCollection('articles', $criteria);
+
+        return CustomRouteResult::collection($slice->items, $slice->totalItems);
+    }
+}
+```
+
+**Supported API Requests:**
+
+```http
+# Basic request
+GET /api/tenants/123/articles
+
+# With filtering
+GET /api/tenants/123/articles?filter[status][eq]=published
+
+# With sorting
+GET /api/tenants/123/articles?sort=-createdAt,title
+
+# With pagination
+GET /api/tenants/123/articles?page[size]=20&page[number]=2
+
+# Combined
+GET /api/tenants/123/articles?filter[status][eq]=published&sort=-createdAt&page[size]=10&include=author
+```
+
+### Benefits
+
+1. **No Code Duplication**: Reuse existing filtering/sorting/pagination logic
+2. **Consistent API**: All JSON:API query parameters work the same way
+3. **Type Safety**: CriteriaBuilder provides a type-safe API
+4. **Flexibility**: Combine standard filters with custom business logic
+5. **Performance**: Automatic query optimization and eager loading
+
+### Best Practices
+
+1. **Use `addCustomCondition` for associations**: Filtering by relationships requires special handling
+2. **Validate path parameters**: Always verify that path parameters (like `categoryId`) are valid
+3. **Use `#[NoTransaction]` for read-only handlers**: Improves performance
+4. **Return proper totals**: Always pass `$slice->totalItems` to `CustomRouteResult::collection()`
+5. **Document expected query parameters**: Use the `description` parameter in `#[JsonApiCustomRoute]`
+
+### Migration from Direct EntityManager Usage
+
+**Before (manual filtering):**
+```php
+public function handle(CustomRouteContext $context): CustomRouteResult
+{
+    $categoryId = $context->getParam('categoryId');
+
+    // Manual query - ignores query string parameters!
+    $articles = $this->em->getRepository(Article::class)
+        ->findBy(['category' => $categoryId]);
+
+    return CustomRouteResult::collection($articles);
+}
+```
+
+**After (with CriteriaBuilder):**
+```php
+public function handle(CustomRouteContext $context): CustomRouteResult
+{
+    $categoryId = $context->getParam('categoryId');
+
+    // Automatic filtering, sorting, pagination from query string
+    $criteria = $context->criteria()
+        ->addCustomCondition(fn($qb) => $qb->andWhere('e.category = :cat')->setParameter('cat', $categoryId))
+        ->build();
+
+    $slice = $context->getRepository()->findCollection('articles', $criteria);
+
+    return CustomRouteResult::collection($slice->items, $slice->totalItems);
+}
+```

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Profile\Hook;
+namespace AlexFigures\Symfony\Profile\Hook;
 
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Profile\ProfileContext;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Profile\ProfileContext;
 
 interface WriteHook
 {

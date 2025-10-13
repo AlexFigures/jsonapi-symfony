@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\Null;
+namespace AlexFigures\Symfony\Bridge\Symfony\Null;
 
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
 use LogicException;
 
 /**

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Bridge\Doctrine\Instantiator;
+namespace AlexFigures\Symfony\Tests\Unit\Bridge\Doctrine\Instantiator;
 
+use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\Serializer\Annotation\Groups;

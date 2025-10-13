@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
+namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
 
-use JsonApi\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 

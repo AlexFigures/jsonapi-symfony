@@ -2,26 +2,26 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
-use JsonApi\Symfony\Http\Controller\CreateResourceController;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
-use JsonApi\Symfony\Http\Write\ChangeSetFactory;
-use JsonApi\Symfony\Http\Write\InputDocumentValidator;
-use JsonApi\Symfony\Http\Write\WriteConfig;
-use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Comment;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\Symfony\Http\Controller\CreateResourceController;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
+use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
+use AlexFigures\Symfony\Http\Write\WriteConfig;
+use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Comment;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -457,7 +457,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'tags');
             self::fail('Expected UnsupportedMediaTypeException to be thrown');
-        } catch (\JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException $e) {
+        } catch (\AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException $e) {
             self::assertSame(415, $e->getStatusCode());
         }
     }
@@ -484,7 +484,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'tags');
             self::fail('Expected BadRequestException to be thrown');
-        } catch (\JsonApi\Symfony\Http\Exception\BadRequestException $e) {
+        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
             self::assertSame(400, $e->getStatusCode());
         }
     }
@@ -508,7 +508,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'tags');
             self::fail('Expected BadRequestException to be thrown');
-        } catch (\JsonApi\Symfony\Http\Exception\BadRequestException $e) {
+        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
             self::assertSame(400, $e->getStatusCode());
         }
     }
@@ -533,7 +533,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'tags');
             self::fail('Expected ConflictException to be thrown');
-        } catch (\JsonApi\Symfony\Http\Exception\ConflictException $e) {
+        } catch (\AlexFigures\Symfony\Http\Exception\ConflictException $e) {
             self::assertSame(409, $e->getStatusCode());
         }
     }
@@ -559,7 +559,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'tags');
             self::fail('Expected ForbiddenException to be thrown');
-        } catch (\JsonApi\Symfony\Http\Exception\ForbiddenException $e) {
+        } catch (\AlexFigures\Symfony\Http\Exception\ForbiddenException $e) {
             self::assertSame(403, $e->getStatusCode());
         }
     }
@@ -619,7 +619,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'unknown-type');
             self::fail('Expected NotFoundException to be thrown');
-        } catch (\JsonApi\Symfony\Http\Exception\NotFoundException $e) {
+        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
             self::assertSame(404, $e->getStatusCode());
         }
     }
@@ -880,6 +880,291 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         $locationHeader = $response->headers->get('Location');
         self::assertStringContainsString('/api/category_synonyms/', $locationHeader);
         self::assertStringContainsString((string) $synonym2Id, $locationHeader);
+    }
+
+    /**
+     * Test 14: Error handling - non-existent relationship resource (to-one).
+     *
+     * Validates:
+     * - 422 Unprocessable Entity when referenced author doesn't exist
+     * - Error contains proper JSON pointer to the relationship
+     * - Error message indicates which resource was not found
+     *
+     * This tests the VERIFY linking policy behavior where the library
+     * validates that referenced resources actually exist in the database.
+     */
+    public function testErrorNonExistentToOneRelationship(): void
+    {
+        $nonExistentAuthorId = '00000000-0000-0000-0000-000000000099';
+
+        $payload = [
+            'data' => [
+                'type' => 'articles',
+                'attributes' => [
+                    'title' => 'Test Article',
+                    'content' => 'Test content',
+                ],
+                'relationships' => [
+                    'author' => [
+                        'data' => [
+                            'type' => 'authors',
+                            'id' => $nonExistentAuthorId,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/articles', $payload);
+
+        try {
+            ($this->controller)($request, 'articles');
+            self::fail('Expected ValidationException to be thrown');
+        } catch (\AlexFigures\Symfony\Http\Exception\ValidationException $e) {
+            // Verify HTTP status code
+            self::assertSame(422, $e->getStatusCode());
+
+            // Verify error details
+            $errors = $e->getErrors();
+            self::assertNotEmpty($errors, 'Expected at least one error');
+
+            $firstError = $errors[0];
+            self::assertSame('422', $firstError->status);
+            self::assertSame('validation_error', $firstError->code);
+
+            // Verify error message mentions the missing resource
+            self::assertStringContainsString('authors', $firstError->detail);
+            self::assertStringContainsString($nonExistentAuthorId, $firstError->detail);
+            self::assertStringContainsString('not found', strtolower($firstError->detail));
+
+            // Verify JSON pointer points to the relationship
+            // For to-one relationships, pointer is: /data/relationships
+            self::assertNotNull($firstError->source);
+            $pointer = $firstError->source->pointer ?? '';
+            self::assertSame('/data/relationships', $pointer);
+        }
+    }
+
+    /**
+     * Test 15: Error handling - non-existent relationship resource (to-many).
+     *
+     * Validates:
+     * - 422 Unprocessable Entity when one or more referenced tags don't exist
+     * - Error contains proper JSON pointer to the specific array index
+     * - Error message indicates which resource was not found
+     */
+    public function testErrorNonExistentToManyRelationship(): void
+    {
+        // Create one valid tag
+        $validTag = new Tag();
+        $validTag->setName('PHP');
+        $this->em->persist($validTag);
+        $this->em->flush();
+        $validTagId = $validTag->getId();
+        $this->em->clear();
+
+        $nonExistentTagId = '00000000-0000-0000-0000-000000000099';
+
+        $payload = [
+            'data' => [
+                'type' => 'articles',
+                'attributes' => [
+                    'title' => 'Test Article',
+                    'content' => 'Test content',
+                ],
+                'relationships' => [
+                    'tags' => [
+                        'data' => [
+                            ['type' => 'tags', 'id' => $validTagId],      // Valid
+                            ['type' => 'tags', 'id' => $nonExistentTagId], // Invalid
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/articles', $payload);
+
+        try {
+            ($this->controller)($request, 'articles');
+            self::fail('Expected ValidationException to be thrown');
+        } catch (\AlexFigures\Symfony\Http\Exception\ValidationException $e) {
+            // Verify HTTP status code
+            self::assertSame(422, $e->getStatusCode());
+
+            // Verify error details
+            $errors = $e->getErrors();
+            self::assertNotEmpty($errors, 'Expected at least one error');
+
+            $firstError = $errors[0];
+            self::assertSame('422', $firstError->status);
+            self::assertSame('validation_error', $firstError->code);
+
+            // Verify error message mentions the missing resource
+            self::assertStringContainsString('tags', $firstError->detail);
+            self::assertStringContainsString($nonExistentTagId, $firstError->detail);
+            self::assertStringContainsString('not found', strtolower($firstError->detail));
+
+            // Verify JSON pointer points to the specific array index
+            // For to-many relationships, pointer is: /data/relationships/{rel}/data/{index}/id
+            self::assertNotNull($firstError->source);
+            $pointer = $firstError->source->pointer ?? '';
+            self::assertSame('/data/relationships/tags/data/1/id', $pointer);
+        }
+    }
+
+    /**
+     * Test 16: Create resource with OneToMany relationship (inverse side).
+     *
+     * Validates:
+     * - Creating Author with references to existing Articles (OneToMany)
+     * - OneToMany relationships are handled correctly
+     * - Response includes relationship data
+     * - Database state reflects the relationship
+     *
+     * Note: In JSON:API, OneToMany is the inverse side of ManyToOne.
+     * The owning side is Article.author (ManyToOne), so when creating
+     * an Author with articles, we're setting the inverse side.
+     */
+    public function testCreateResourceWithOneToManyRelationship(): void
+    {
+        // Create articles first (they will be linked to the new author)
+        $article1 = new Article();
+        $article1->setTitle('First Article');
+        $article1->setContent('Content 1');
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Second Article');
+        $article2->setContent('Content 2');
+        $this->em->persist($article2);
+
+        $this->em->flush();
+        $article1Id = $article1->getId();
+        $article2Id = $article2->getId();
+        $this->em->clear();
+
+        // Create Author with references to existing articles
+        $payload = [
+            'data' => [
+                'type' => 'authors',
+                'attributes' => [
+                    'name' => 'Jane Doe',
+                    'email' => 'jane@example.com',
+                ],
+                'relationships' => [
+                    'articles' => [
+                        'data' => [
+                            ['type' => 'articles', 'id' => $article1Id],
+                            ['type' => 'articles', 'id' => $article2Id],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/authors', $payload);
+        $response = ($this->controller)($request, 'authors');
+
+        // Assert response
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        $authorId = $document['data']['id'];
+
+        // Verify relationships in response
+        self::assertArrayHasKey('relationships', $document['data']);
+        self::assertArrayHasKey('articles', $document['data']['relationships']);
+
+        // Verify database state - check that articles now have this author
+        $this->em->clear();
+        $author = $this->em->find(Author::class, $authorId);
+        self::assertInstanceOf(Author::class, $author);
+        self::assertSame('Jane Doe', $author->getName());
+
+        // Check that articles are linked to the author
+        $linkedArticle1 = $this->em->find(Article::class, $article1Id);
+        $linkedArticle2 = $this->em->find(Article::class, $article2Id);
+
+        self::assertNotNull($linkedArticle1);
+        self::assertNotNull($linkedArticle2);
+        self::assertNotNull($linkedArticle1->getAuthor());
+        self::assertNotNull($linkedArticle2->getAuthor());
+        self::assertSame($authorId, $linkedArticle1->getAuthor()->getId());
+        self::assertSame($authorId, $linkedArticle2->getAuthor()->getId());
+
+        // Verify author's articles collection
+        self::assertCount(2, $author->getArticles());
+    }
+
+    /**
+     * Test 17: Error - Create resource with OneToMany relationship to non-existent resources.
+     *
+     * Validates:
+     * - 422 Unprocessable Entity when referenced articles don't exist
+     * - Error contains proper JSON pointer to the specific array index
+     * - Error message indicates which resource was not found
+     */
+    public function testErrorCreateResourceWithNonExistentOneToManyRelationship(): void
+    {
+        // Create one valid article
+        $validArticle = new Article();
+        $validArticle->setTitle('Valid Article');
+        $validArticle->setContent('Valid content');
+        $this->em->persist($validArticle);
+        $this->em->flush();
+        $validArticleId = $validArticle->getId();
+        $this->em->clear();
+
+        $nonExistentArticleId = '00000000-0000-0000-0000-000000000099';
+
+        // Try to create Author with one valid and one non-existent article
+        $payload = [
+            'data' => [
+                'type' => 'authors',
+                'attributes' => [
+                    'name' => 'John Smith',
+                    'email' => 'john@example.com',
+                ],
+                'relationships' => [
+                    'articles' => [
+                        'data' => [
+                            ['type' => 'articles', 'id' => $validArticleId],      // Valid
+                            ['type' => 'articles', 'id' => $nonExistentArticleId], // Invalid
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/authors', $payload);
+
+        try {
+            ($this->controller)($request, 'authors');
+            self::fail('Expected ValidationException to be thrown');
+        } catch (\AlexFigures\Symfony\Http\Exception\ValidationException $e) {
+            // Verify HTTP status code
+            self::assertSame(422, $e->getStatusCode());
+
+            // Verify error details
+            $errors = $e->getErrors();
+            self::assertNotEmpty($errors, 'Expected at least one error');
+
+            $firstError = $errors[0];
+            self::assertSame('422', $firstError->status);
+            self::assertSame('validation_error', $firstError->code);
+
+            // Verify error message mentions the missing resource
+            self::assertStringContainsString('articles', $firstError->detail);
+            self::assertStringContainsString($nonExistentArticleId, $firstError->detail);
+            self::assertStringContainsString('not found', strtolower($firstError->detail));
+
+            // Verify JSON pointer points to the specific array index
+            // For OneToMany relationships, pointer is: /data/relationships/{rel}/data/{index}/id
+            self::assertNotNull($firstError->source);
+            $pointer = $firstError->source->pointer ?? '';
+            self::assertSame('/data/relationships/articles/data/1/id', $pointer);
+        }
     }
 
     /**

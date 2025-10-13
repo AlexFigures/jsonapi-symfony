@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Contract\Data;
+namespace AlexFigures\Symfony\Contract\Data;
 
-use JsonApi\Symfony\Http\Exception\NotImplementedException;
+use AlexFigures\Symfony\Http\Exception\NotImplementedException;
 
 /**
  * Null Object implementation of RelationshipUpdater.

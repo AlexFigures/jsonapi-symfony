@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Functional;
+namespace AlexFigures\Symfony\Tests\Functional;
 
-use JsonApi\Symfony\Tests\Fixtures\Model\Article;
-use JsonApi\Symfony\Tests\Fixtures\Model\Author;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
 
 /**
  * Test filtering functionality with all operators.

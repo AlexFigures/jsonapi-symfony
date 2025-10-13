@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Bridge\Symfony\EventSubscriber;
+namespace AlexFigures\Symfony\Tests\Unit\Bridge\Symfony\EventSubscriber;
 
-use JsonApi\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
-use JsonApi\Symfony\Http\Exception\NotAcceptableException;
-use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
+use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

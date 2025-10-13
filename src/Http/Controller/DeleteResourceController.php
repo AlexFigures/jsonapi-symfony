@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Controller;
+namespace AlexFigures\Symfony\Http\Controller;
 
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
-use JsonApi\Symfony\Events\ResourceChangedEvent;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\Events\ResourceChangedEvent;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;

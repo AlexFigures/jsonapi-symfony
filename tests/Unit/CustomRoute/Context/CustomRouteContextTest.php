@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\CustomRoute\Context;
+namespace AlexFigures\Symfony\Tests\Unit\CustomRoute\Context;
 
-use JsonApi\Symfony\CustomRoute\Context\CustomRouteContext;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Pagination;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Pagination;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @covers \JsonApi\Symfony\CustomRoute\Context\CustomRouteContext
+ * @covers \AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext
  */
 final class CustomRouteContextTest extends TestCase
 {
@@ -93,7 +93,7 @@ final class CustomRouteContextTest extends TestCase
         $criteria = new Criteria(new Pagination(1, 10));
         $criteria->include = ['author', 'comments'];
         $criteria->fields = ['articles' => ['title', 'body']];
-        $criteria->sort = [new \JsonApi\Symfony\Query\Sorting('createdAt', false)];
+        $criteria->sort = [new \AlexFigures\Symfony\Query\Sorting('createdAt', false)];
 
         $context = $this->createContext(criteria: $criteria);
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Operator;
+namespace AlexFigures\Symfony\Filter\Operator;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 

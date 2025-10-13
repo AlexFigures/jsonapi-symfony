@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Doctrine\Repository;
+namespace AlexFigures\Symfony\Bridge\Doctrine\Repository;
 
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Sorting;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use JsonApi\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Sorting;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 /**
  * Generic Doctrine repository for JSON:API resources.
@@ -241,7 +241,7 @@ class GenericDoctrineRepository implements ResourceRepository
      *
      * @param list<string> $includes
      */
-    private function applyEagerLoading(QueryBuilder $qb, \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata, array $includes): void
+    private function applyEagerLoading(QueryBuilder $qb, \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata, array $includes): void
     {
         if ($includes === []) {
             return;

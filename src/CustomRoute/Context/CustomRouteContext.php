@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\CustomRoute\Context;
+namespace AlexFigures\Symfony\CustomRoute\Context;
 
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\CustomRoute\Query\CriteriaBuilder;
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\CustomRoute\Query\CriteriaBuilder;
+use AlexFigures\Symfony\Query\Criteria;
 use LogicException;
 use Symfony\Component\HttpFoundation\Request;
 

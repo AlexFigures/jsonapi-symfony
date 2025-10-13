@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Fixtures\Model;
+namespace AlexFigures\Symfony\Tests\Fixtures\Model;
 
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiCustomRoute;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 
 /**
  * Example entity with custom routes defined via attributes.

@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\CustomRoute\Controller;
+namespace AlexFigures\Symfony\CustomRoute\Controller;
 
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
-use JsonApi\Symfony\CustomRoute\Attribute\NoTransaction;
-use JsonApi\Symfony\CustomRoute\Context\CustomRouteContextFactory;
-use JsonApi\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
-use JsonApi\Symfony\CustomRoute\Handler\CustomRouteHandlerRegistry;
-use JsonApi\Symfony\CustomRoute\Response\CustomRouteResponseBuilder;
-use JsonApi\Symfony\CustomRoute\Result\CustomRouteResult;
-use JsonApi\Symfony\Events\ResourceChangedEvent;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorCodes;
-use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\CustomRoute\Attribute\NoTransaction;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContextFactory;
+use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerRegistry;
+use AlexFigures\Symfony\CustomRoute\Response\CustomRouteResponseBuilder;
+use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\Symfony\Events\ResourceChangedEvent;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorCodes;
+use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpFoundation\Request;

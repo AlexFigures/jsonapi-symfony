@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
+namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
 
-use JsonApi\Symfony\Resource\Attribute\JsonApiCustomRoute;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use LogicException;
 use ReflectionClass;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;

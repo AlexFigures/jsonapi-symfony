@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\Null;
+namespace AlexFigures\Symfony\Bridge\Symfony\Null;
 
-use JsonApi\Symfony\Contract\Data\RelationshipReader;
-use JsonApi\Symfony\Contract\Data\SliceIds;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Pagination;
+use AlexFigures\Symfony\Contract\Data\RelationshipReader;
+use AlexFigures\Symfony\Contract\Data\SliceIds;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Pagination;
 use LogicException;
 
 /**
@@ -47,7 +47,7 @@ final class NullRelationshipReader implements RelationshipReader
         );
     }
 
-    public function getRelatedCollection(string $type, string $id, string $rel, Criteria $criteria): \JsonApi\Symfony\Contract\Data\Slice
+    public function getRelatedCollection(string $type, string $id, string $rel, Criteria $criteria): \AlexFigures\Symfony\Contract\Data\Slice
     {
         throw new LogicException(
             'No RelationshipReader implementation found. ' .

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Profile\Builtin;
+namespace AlexFigures\Symfony\Profile\Builtin;
 
-use JsonApi\Symfony\Profile\Descriptor\ProfileDescriptor;
-use JsonApi\Symfony\Profile\ProfileInterface;
+use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\Symfony\Profile\ProfileInterface;
 
 /**
  * @phpstan-type RelationshipCountsConfig array{documentation?: string}

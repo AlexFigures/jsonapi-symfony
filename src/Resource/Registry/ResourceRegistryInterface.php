@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Resource\Registry;
+namespace AlexFigures\Symfony\Resource\Registry;
 
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 
 interface ResourceRegistryInterface
 {

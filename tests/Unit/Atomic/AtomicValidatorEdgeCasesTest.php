@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Atomic;
+namespace AlexFigures\Symfony\Tests\Unit\Atomic;
 
-use JsonApi\Symfony\Atomic\AtomicConfig;
-use JsonApi\Symfony\Atomic\Operation;
-use JsonApi\Symfony\Atomic\Ref;
-use JsonApi\Symfony\Atomic\Validation\AtomicValidator;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
-use JsonApi\Symfony\Tests\Fixtures\Model\Article;
-use JsonApi\Symfony\Tests\Fixtures\Model\Author;
+use AlexFigures\Symfony\Atomic\AtomicConfig;
+use AlexFigures\Symfony\Atomic\Operation;
+use AlexFigures\Symfony\Atomic\Ref;
+use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

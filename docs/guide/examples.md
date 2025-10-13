@@ -446,7 +446,7 @@ class Article
 
 ```php
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use JsonApi\Symfony\Http\Exception\ValidationException;
+use AlexFigures\Symfony\Http\Exception\ValidationException;
 
 class DoctrineArticlePersister implements ResourcePersister
 {
@@ -542,10 +542,10 @@ public function create(string $type, ChangeSet $changes, ?string $clientId = nul
 // src/JsonApi/Profile/SoftDeleteProfile.php
 namespace App\JsonApi\Profile;
 
-use JsonApi\Symfony\Profile\Hook\QueryHook;
-use JsonApi\Symfony\Profile\Hook\WriteHook;
-use JsonApi\Symfony\Profile\ProfileInterface;
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Profile\Hook\QueryHook;
+use AlexFigures\Symfony\Profile\Hook\WriteHook;
+use AlexFigures\Symfony\Profile\ProfileInterface;
+use AlexFigures\Symfony\Query\Criteria;
 
 class SoftDeleteProfile implements ProfileInterface
 {

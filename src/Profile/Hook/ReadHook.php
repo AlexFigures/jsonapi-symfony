@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Profile\Hook;
+namespace AlexFigures\Symfony\Profile\Hook;
 
-use JsonApi\Symfony\Profile\ProfileContext;
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\Symfony\Query\Criteria;
 
 interface ReadHook
 {

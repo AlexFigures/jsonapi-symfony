@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Atomic\Execution;
+namespace AlexFigures\Symfony\Atomic\Execution;
 
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 
 final class AtomicTransaction
 {

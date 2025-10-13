@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Cache;
+namespace AlexFigures\Symfony\Http\Cache;
 
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\PreconditionFailedException;
+use AlexFigures\Symfony\Http\Exception\PreconditionRequiredException;
 use DateTimeImmutable;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\PreconditionFailedException;
-use JsonApi\Symfony\Http\Exception\PreconditionRequiredException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 

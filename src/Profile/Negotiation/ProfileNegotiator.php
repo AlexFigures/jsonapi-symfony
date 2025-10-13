@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Profile\Negotiation;
+namespace AlexFigures\Symfony\Profile\Negotiation;
 
-use JsonApi\Symfony\Http\Exception\NotAcceptableException;
-use JsonApi\Symfony\Profile\ProfileContext;
-use JsonApi\Symfony\Profile\ProfileInterface;
-use JsonApi\Symfony\Profile\ProfileRegistry;
+use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
+use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\Symfony\Profile\ProfileInterface;
+use AlexFigures\Symfony\Profile\ProfileRegistry;
 use Symfony\Component\HttpFoundation\Request;
 
 final class ProfileNegotiator

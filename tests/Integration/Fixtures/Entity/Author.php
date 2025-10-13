@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Fixtures\Entity;
+namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
 
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Attribute\SortableFields;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\FilterableFields;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\Relationship;
-use JsonApi\Symfony\Resource\Attribute\SortableFields;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 
@@ -48,7 +49,7 @@ class Author
      * @var Collection<int, Article>
      */
     #[ORM\OneToMany(targetEntity: Article::class, mappedBy: 'author')]
-    #[Relationship(toMany: true, inverse: 'author', targetType: 'articles')]
+    #[Relationship(toMany: true, inverse: 'author', targetType: 'articles', linkingPolicy: RelationshipLinkingPolicy::VERIFY)]
     private Collection $articles;
 
     public function __construct()

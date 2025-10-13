@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Contract\Data;
+namespace AlexFigures\Symfony\Contract\Data;
 
 /**
  * Represents attribute and relationship changes for create/update operations.

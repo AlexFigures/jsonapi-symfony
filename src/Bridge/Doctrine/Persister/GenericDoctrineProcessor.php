@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Doctrine\Persister;
+namespace AlexFigures\Symfony\Bridge\Doctrine\Persister;
 
+use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Http\Exception\ConflictException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use JsonApi\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
-use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -121,7 +121,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
 
     private function applyAttributes(
         object $entity,
-        \JsonApi\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
         ChangeSet $changes,
         bool $isCreate
     ): void {

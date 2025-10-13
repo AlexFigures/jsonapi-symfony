@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\Locator;
+namespace AlexFigures\Symfony\Bridge\Symfony\Locator;
 
-use JsonApi\Symfony\Contract\Data\Criteria;
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Contract\Data\TypedResourceRepository;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Contract\Data\Criteria;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Contract\Data\TypedResourceRepository;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
 
 /**
  * Locator for finding suitable Repository by resource type.

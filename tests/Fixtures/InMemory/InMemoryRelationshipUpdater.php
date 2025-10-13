@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
 
-use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
-use JsonApi\Symfony\Contract\Data\ResourceIdentifier;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
+use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use ReflectionClass;
 use ReflectionException;
 use Stringable;

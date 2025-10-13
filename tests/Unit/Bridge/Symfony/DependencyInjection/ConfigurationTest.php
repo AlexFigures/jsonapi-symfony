@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Bridge\Symfony\DependencyInjection;
+namespace AlexFigures\Symfony\Tests\Unit\Bridge\Symfony\DependencyInjection;
 
-use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\Configuration;
+use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Configuration;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Processor;
 

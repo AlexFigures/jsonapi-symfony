@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Filter;
 
 use Doctrine\ORM\QueryBuilder;
-use JsonApi\Symfony\Filter\Ast\Comparison;
-use JsonApi\Symfony\Filter\Handler\FilterHandlerInterface;
+use AlexFigures\Symfony\Filter\Ast\Comparison;
+use AlexFigures\Symfony\Filter\Handler\FilterHandlerInterface;
 
 /**
  * Example custom filter handler for full-text search.

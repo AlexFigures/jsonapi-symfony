@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Resource\Registry;
+namespace AlexFigures\Symfony\Resource\Registry;
 
-use JsonApi\Symfony\Resource\Attribute\Attribute as AttributeAttribute;
-use JsonApi\Symfony\Resource\Attribute\FilterableFields;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\Relationship as RelationshipAttribute;
-use JsonApi\Symfony\Resource\Attribute\SortableFields;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Attribute\Attribute as AttributeAttribute;
+use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship as RelationshipAttribute;
+use AlexFigures\Symfony\Resource\Attribute\SortableFields;
+use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use LogicException;
 use ReflectionAttribute;
 use ReflectionClass;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\CustomRoute\Controller;
+namespace AlexFigures\Symfony\Tests\Unit\CustomRoute\Controller;
 
-use JsonApi\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
  * This test verifies the fix for the regression where update events
  * were not dispatched when handlers returned DTOs without id property.
  *
- * @covers \JsonApi\Symfony\CustomRoute\Controller\CustomRouteController::dispatchEventIfNeeded
+ * @covers \AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController::dispatchEventIfNeeded
  */
 final class EventDispatchingTest extends TestCase
 {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Resource\Metadata;
+namespace AlexFigures\Symfony\Tests\Unit\Resource\Metadata;
 
-use JsonApi\Symfony\Resource\Metadata\OperationGroups;
+use AlexFigures\Symfony\Resource\Metadata\OperationGroups;
 use PHPUnit\Framework\TestCase;
 
 final class OperationGroupsTest extends TestCase

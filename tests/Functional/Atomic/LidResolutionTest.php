@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Functional\Atomic;
+namespace AlexFigures\Symfony\Tests\Functional\Atomic;
 
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

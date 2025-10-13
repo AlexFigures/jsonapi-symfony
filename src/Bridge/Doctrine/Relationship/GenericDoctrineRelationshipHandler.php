@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Doctrine\Relationship;
+namespace AlexFigures\Symfony\Bridge\Doctrine\Relationship;
 
+use AlexFigures\Symfony\Contract\Data\RelationshipReader;
+use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
+use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Contract\Data\SliceIds;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use InvalidArgumentException;
-use JsonApi\Symfony\Contract\Data\RelationshipReader;
-use JsonApi\Symfony\Contract\Data\RelationshipUpdater;
-use JsonApi\Symfony\Contract\Data\ResourceIdentifier;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Contract\Data\SliceIds;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Pagination;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 /**

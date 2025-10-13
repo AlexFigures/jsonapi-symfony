@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\CustomRoute\Query;
+namespace AlexFigures\Symfony\CustomRoute\Query;
 
+use AlexFigures\Symfony\Filter\Ast\Comparison;
+use AlexFigures\Symfony\Filter\Ast\Conjunction;
+use AlexFigures\Symfony\Filter\Ast\Node;
+use AlexFigures\Symfony\Query\Criteria;
 use Doctrine\ORM\QueryBuilder;
-use JsonApi\Symfony\Filter\Ast\Comparison;
-use JsonApi\Symfony\Filter\Ast\Conjunction;
-use JsonApi\Symfony\Filter\Ast\Node;
-use JsonApi\Symfony\Query\Criteria;
 
 /**
  * Fluent builder for modifying Criteria with custom filters and conditions.

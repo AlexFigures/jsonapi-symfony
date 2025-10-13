@@ -456,7 +456,7 @@ ruleset:
 ### 8.1 Custom Repository (Doctrine)
 
 ```php
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class DoctrineRepository implements ResourceRepository

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Query;
+namespace AlexFigures\Symfony\Query;
 
-use JsonApi\Symfony\Filter\Ast\Node;
+use AlexFigures\Symfony\Filter\Ast\Node;
 
 final class Criteria
 {

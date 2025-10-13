@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Util;
+namespace AlexFigures\Symfony\Tests\Util;
 
-use JsonApi\Symfony\Profile\Descriptor\ProfileDescriptor;
-use JsonApi\Symfony\Profile\ProfileInterface;
+use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\Symfony\Profile\ProfileInterface;
 
 final class FakeProfile implements ProfileInterface
 {

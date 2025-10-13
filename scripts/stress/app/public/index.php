@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use JsonApi\Symfony\StressApp\Kernel;
+use AlexFigures\Symfony\StressApp\Kernel;
 use Symfony\Component\HttpFoundation\Request;
 
 require_once dirname(__DIR__, 4) . '/vendor/autoload.php';

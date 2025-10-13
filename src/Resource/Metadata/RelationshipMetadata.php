@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Resource\Metadata;
+namespace AlexFigures\Symfony\Resource\Metadata;
 
 final class RelationshipMetadata
 {

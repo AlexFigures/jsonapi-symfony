@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Operator;
+namespace AlexFigures\Symfony\Filter\Operator;
 
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 
 /**
  * Shared defaults for operator implementations.

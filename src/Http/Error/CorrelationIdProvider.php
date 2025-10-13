@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Error;
+namespace AlexFigures\Symfony\Http\Error;
 
 use Symfony\Component\Uid\Uuid;
 

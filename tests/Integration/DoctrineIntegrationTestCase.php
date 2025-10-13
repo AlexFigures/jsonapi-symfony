@@ -2,38 +2,38 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration;
+namespace AlexFigures\Symfony\Tests\Integration;
 
+use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\Symfony\Bridge\Doctrine\Persister\GenericDoctrineProcessor;
+use AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
+use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
+use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Comment;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Product;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\User;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
-use JsonApi\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use JsonApi\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use JsonApi\Symfony\Bridge\Doctrine\Persister\GenericDoctrineProcessor;
-use JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
-use JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
-use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use JsonApi\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use JsonApi\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use JsonApi\Symfony\Filter\Operator\Registry;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
-use JsonApi\Symfony\Http\Validation\DatabaseErrorMapper;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
-use JsonApi\Symfony\Resource\Relationship\RelationshipResolver;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Comment;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Product;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\User;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -91,17 +91,17 @@ abstract class DoctrineIntegrationTestCase extends TestCase
 
         // Create minimal dependencies for repository
         $operatorRegistry = new Registry([
-            new \JsonApi\Symfony\Filter\Operator\EqualOperator(),
-            new \JsonApi\Symfony\Filter\Operator\NotEqualOperator(),
-            new \JsonApi\Symfony\Filter\Operator\LikeOperator(),
-            new \JsonApi\Symfony\Filter\Operator\InOperator(),
-            new \JsonApi\Symfony\Filter\Operator\NotInOperator(),
-            new \JsonApi\Symfony\Filter\Operator\GreaterThanOperator(),
-            new \JsonApi\Symfony\Filter\Operator\GreaterOrEqualOperator(),
-            new \JsonApi\Symfony\Filter\Operator\LessThanOperator(),
-            new \JsonApi\Symfony\Filter\Operator\LessOrEqualOperator(),
-            new \JsonApi\Symfony\Filter\Operator\BetweenOperator(),
-            new \JsonApi\Symfony\Filter\Operator\IsNullOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\EqualOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\NotEqualOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\LikeOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\InOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\NotInOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\GreaterThanOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\LessThanOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\BetweenOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\IsNullOperator(),
         ]);
         $filterHandlerRegistry = new FilterHandlerRegistry([]);
         $filterCompiler = new DoctrineFilterCompiler($operatorRegistry, $filterHandlerRegistry);
@@ -140,8 +140,8 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         // Provide a simplified version for tests
         $this->violationMapper = new ConstraintViolationMapper(
             $this->registry,
-            new \JsonApi\Symfony\Http\Error\ErrorMapper(
-                new \JsonApi\Symfony\Http\Error\ErrorBuilder(false)
+            new \AlexFigures\Symfony\Http\Error\ErrorMapper(
+                new \AlexFigures\Symfony\Http\Error\ErrorBuilder(false)
             ),
         );
 

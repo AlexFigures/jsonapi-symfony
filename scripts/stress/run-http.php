@@ -28,7 +28,7 @@ declare(strict_types=1);
 require __DIR__ . '/../../vendor/autoload.php';
 require __DIR__ . '/http-client.php';
 
-use JsonApi\Symfony\StressTest\HttpClient;
+use AlexFigures\Symfony\StressTest\HttpClient;
 
 // Configuration
 $config = [

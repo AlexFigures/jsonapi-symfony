@@ -23,11 +23,11 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\Relationship;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Attribute\SerializationGroups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
@@ -333,9 +333,9 @@ If you need resource-specific behaviour, implement a dedicated repository or per
 // src/JsonApi/Repository/ArticleRepository.php
 namespace App\JsonApi\Repository;
 
-use JsonApi\Symfony\Contract\Data\TypedResourceRepository;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Slice;
+use AlexFigures\Symfony\Contract\Data\TypedResourceRepository;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Slice;
 
 final class ArticleRepository implements TypedResourceRepository
 {

@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Document;
+namespace AlexFigures\Symfony\Http\Document;
 
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Http\Safety\LimitsEnforcer;
-use JsonApi\Symfony\Profile\ProfileContext;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
+use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use stdClass;
 use Stringable;
 use Symfony\Component\HttpFoundation\Request;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Request;
+namespace AlexFigures\Symfony\Http\Request;
 
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 final class SortingWhitelist
 {

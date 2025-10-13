@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Cache;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Cache;
 
-use JsonApi\Symfony\Http\Cache\HeadersApplier;
+use AlexFigures\Symfony\Http\Cache\HeadersApplier;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 

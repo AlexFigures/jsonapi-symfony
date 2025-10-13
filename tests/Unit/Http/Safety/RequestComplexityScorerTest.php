@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Safety;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Safety;
 
-use JsonApi\Symfony\Http\Safety\RequestComplexityScorer;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Pagination;
-use JsonApi\Symfony\Query\Sorting;
+use AlexFigures\Symfony\Http\Safety\RequestComplexityScorer;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\Symfony\Query\Sorting;
 use PHPUnit\Framework\TestCase;
 
 final class RequestComplexityScorerTest extends TestCase

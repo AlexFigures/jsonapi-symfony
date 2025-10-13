@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
-use JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
-use JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use JsonApi\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use JsonApi\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use JsonApi\Symfony\Filter\Operator\EqualOperator;
-use JsonApi\Symfony\Filter\Operator\Registry;
-use JsonApi\Symfony\Http\Controller\RelatedController;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Http\Request\QueryParser;
-use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
+use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\Symfony\Filter\Operator\EqualOperator;
+use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Http\Controller\RelatedController;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGenerator;
@@ -70,7 +70,7 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
         $context->setHost('localhost');
 
         $urlGenerator = new UrlGenerator($routes, $context);
-        $linkGenerator = new \JsonApi\Symfony\Http\Link\LinkGenerator($urlGenerator);
+        $linkGenerator = new \AlexFigures\Symfony\Http\Link\LinkGenerator($urlGenerator);
 
         $operatorRegistry = new Registry([new EqualOperator()]);
         $filterHandlerRegistry = new FilterHandlerRegistry();
@@ -97,12 +97,12 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
             'always'
         );
 
-        $errorBuilder = new \JsonApi\Symfony\Http\Error\ErrorBuilder(true);
-        $errorMapper = new \JsonApi\Symfony\Http\Error\ErrorMapper($errorBuilder);
-        $paginationConfig = new \JsonApi\Symfony\Http\Request\PaginationConfig(defaultSize: 10, maxSize: 100);
-        $sortingWhitelist = new \JsonApi\Symfony\Http\Request\SortingWhitelist($this->registry);
-        $filteringWhitelist = new \JsonApi\Symfony\Http\Request\FilteringWhitelist($this->registry, $errorMapper);
-        $filterParser = new \JsonApi\Symfony\Filter\Parser\FilterParser();
+        $errorBuilder = new \AlexFigures\Symfony\Http\Error\ErrorBuilder(true);
+        $errorMapper = new \AlexFigures\Symfony\Http\Error\ErrorMapper($errorBuilder);
+        $paginationConfig = new \AlexFigures\Symfony\Http\Request\PaginationConfig(defaultSize: 10, maxSize: 100);
+        $sortingWhitelist = new \AlexFigures\Symfony\Http\Request\SortingWhitelist($this->registry);
+        $filteringWhitelist = new \AlexFigures\Symfony\Http\Request\FilteringWhitelist($this->registry, $errorMapper);
+        $filterParser = new \AlexFigures\Symfony\Filter\Parser\FilterParser();
 
         $queryParser = new QueryParser(
             $this->registry,
@@ -267,7 +267,7 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
 
         $request = Request::create("/api/tags/{$tagId}/unknown", 'GET');
 
-        $this->expectException(\JsonApi\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessage('Relationship "unknown" not found');
 
         ($this->controller)($request, 'tags', $tagId, 'unknown');

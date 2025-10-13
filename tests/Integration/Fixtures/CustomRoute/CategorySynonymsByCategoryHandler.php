@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Fixtures\CustomRoute;
+namespace AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute;
 
+use AlexFigures\Symfony\CustomRoute\Attribute\NoTransaction;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
 use Doctrine\ORM\EntityManagerInterface;
-use JsonApi\Symfony\CustomRoute\Attribute\NoTransaction;
-use JsonApi\Symfony\CustomRoute\Context\CustomRouteContext;
-use JsonApi\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
-use JsonApi\Symfony\CustomRoute\Result\CustomRouteResult;
 
 /**
  * Test handler for fetching category synonyms by category ID.
@@ -33,7 +33,7 @@ final class CategorySynonymsByCategoryHandler implements CustomRouteHandlerInter
         $categoryId = $context->getParam('categoryId');
 
         // Verify category exists
-        $category = $this->em->getRepository(\JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category::class)
+        $category = $this->em->getRepository(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category::class)
             ->find($categoryId);
 
         if ($category === null) {

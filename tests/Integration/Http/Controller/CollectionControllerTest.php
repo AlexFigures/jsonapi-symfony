@@ -2,42 +2,42 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
-use JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use JsonApi\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use JsonApi\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use JsonApi\Symfony\Filter\Operator\BetweenOperator;
-use JsonApi\Symfony\Filter\Operator\EqualOperator;
-use JsonApi\Symfony\Filter\Operator\GreaterOrEqualOperator;
-use JsonApi\Symfony\Filter\Operator\GreaterThanOperator;
-use JsonApi\Symfony\Filter\Operator\InOperator;
-use JsonApi\Symfony\Filter\Operator\IsNullOperator;
-use JsonApi\Symfony\Filter\Operator\LessOrEqualOperator;
-use JsonApi\Symfony\Filter\Operator\LessThanOperator;
-use JsonApi\Symfony\Filter\Operator\LikeOperator;
-use JsonApi\Symfony\Filter\Operator\NotEqualOperator;
-use JsonApi\Symfony\Filter\Operator\NotInOperator;
-use JsonApi\Symfony\Filter\Operator\Registry;
-use JsonApi\Symfony\Filter\Parser\FilterParser;
-use JsonApi\Symfony\Http\Controller\CollectionController;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Http\Request\FilteringWhitelist;
-use JsonApi\Symfony\Http\Request\PaginationConfig;
-use JsonApi\Symfony\Http\Request\QueryParser;
-use JsonApi\Symfony\Http\Request\SortingWhitelist;
-use JsonApi\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Category;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
-use JsonApi\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use JsonApi\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\Symfony\Filter\Operator\BetweenOperator;
+use AlexFigures\Symfony\Filter\Operator\EqualOperator;
+use AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\GreaterThanOperator;
+use AlexFigures\Symfony\Filter\Operator\InOperator;
+use AlexFigures\Symfony\Filter\Operator\IsNullOperator;
+use AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\LessThanOperator;
+use AlexFigures\Symfony\Filter\Operator\LikeOperator;
+use AlexFigures\Symfony\Filter\Operator\NotEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\NotInOperator;
+use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Filter\Parser\FilterParser;
+use AlexFigures\Symfony\Http\Controller\CollectionController;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
+use AlexFigures\Symfony\Http\Request\PaginationConfig;
+use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Http\Request\SortingWhitelist;
+use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGenerator;
@@ -731,7 +731,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
     {
         $request = $this->createJsonApiGetRequest('GET', '/api/tags?page[number]=0');
 
-        $this->expectException(\JsonApi\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
 
         ($this->controller)($request, 'tags');
     }

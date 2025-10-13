@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\Controller;
+namespace AlexFigures\Symfony\Bridge\Symfony\Controller;
 
-use JsonApi\Symfony\Atomic\Execution\OperationDispatcher;
-use JsonApi\Symfony\Atomic\Parser\AtomicRequestParser;
-use JsonApi\Symfony\Atomic\Validation\AtomicValidator;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\Symfony\Atomic\Execution\OperationDispatcher;
+use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
+use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

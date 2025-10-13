@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Profile;
+namespace AlexFigures\Symfony\Profile;
 
-use JsonApi\Symfony\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
 
 interface ProfileInterface
 {

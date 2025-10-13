@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
-use JsonApi\Symfony\Resource\Attribute\FilterableField;
-use JsonApi\Symfony\Resource\Attribute\FilterableFields;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\SortableFields;
+use AlexFigures\Symfony\Resource\Attribute\FilterableField;
+use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\SortableFields;
 use App\Filter\FullTextSearchFilter;
 use App\Filter\GeospatialDistanceFilter;
 use App\Sort\RelevanceSorter;

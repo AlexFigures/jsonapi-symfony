@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Resource\Relationship;
+namespace AlexFigures\Symfony\Resource\Relationship;
 
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Error\ErrorObject;
+use AlexFigures\Symfony\Http\Error\ErrorSource;
+use AlexFigures\Symfony\Http\Exception\ValidationException;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipSemantics;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata as ORMClassMetadata;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Error\ErrorObject;
-use JsonApi\Symfony\Http\Error\ErrorSource;
-use JsonApi\Symfony\Http\Exception\ValidationException;
-use JsonApi\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\RelationshipSemantics;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 /**

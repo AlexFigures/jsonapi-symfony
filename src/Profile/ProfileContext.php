@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Profile;
+namespace AlexFigures\Symfony\Profile;
 
-use JsonApi\Symfony\Profile\Hook\DocumentHook;
-use JsonApi\Symfony\Profile\Hook\QueryHook;
-use JsonApi\Symfony\Profile\Hook\ReadHook;
-use JsonApi\Symfony\Profile\Hook\RelationshipHook;
-use JsonApi\Symfony\Profile\Hook\WriteHook;
+use AlexFigures\Symfony\Profile\Hook\DocumentHook;
+use AlexFigures\Symfony\Profile\Hook\QueryHook;
+use AlexFigures\Symfony\Profile\Hook\ReadHook;
+use AlexFigures\Symfony\Profile\Hook\RelationshipHook;
+use AlexFigures\Symfony\Profile\Hook\WriteHook;
 use Symfony\Component\HttpFoundation\Request;
 
 final class ProfileContext

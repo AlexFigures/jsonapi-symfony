@@ -9,44 +9,44 @@ declare(strict_types=1);
  * It bootstraps the JSON:API services and handles requests.
  */
 
-use JsonApi\Symfony\Atomic\AtomicConfig;
-use JsonApi\Symfony\Atomic\Execution\AtomicTransaction;
-use JsonApi\Symfony\Atomic\Execution\Handlers\AddHandler;
-use JsonApi\Symfony\Atomic\Execution\Handlers\RelationshipOps;
-use JsonApi\Symfony\Atomic\Execution\Handlers\RemoveHandler;
-use JsonApi\Symfony\Atomic\Execution\Handlers\UpdateHandler;
-use JsonApi\Symfony\Atomic\Execution\OperationDispatcher;
-use JsonApi\Symfony\Atomic\Parser\AtomicRequestParser;
-use JsonApi\Symfony\Atomic\Validation\AtomicValidator;
-use JsonApi\Symfony\Bridge\Symfony\Controller\AtomicController;
-use JsonApi\Symfony\Filter\Parser\FilterParser;
-use JsonApi\Symfony\Http\Controller\CollectionController;
-use JsonApi\Symfony\Http\Controller\CreateResourceController;
-use JsonApi\Symfony\Http\Controller\DeleteResourceController;
-use JsonApi\Symfony\Http\Controller\RelatedController;
-use JsonApi\Symfony\Http\Controller\ResourceController;
-use JsonApi\Symfony\Http\Controller\UpdateResourceController;
-use JsonApi\Symfony\Http\Document\DocumentBuilder;
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Link\LinkGenerator;
-use JsonApi\Symfony\Http\Negotiation\MediaTypeNegotiator;
-use JsonApi\Symfony\Http\Request\PaginationConfig;
-use JsonApi\Symfony\Http\Request\QueryParser;
-use JsonApi\Symfony\Http\Request\SortingWhitelist;
-use JsonApi\Symfony\Http\Validation\ConstraintViolationMapper;
-use JsonApi\Symfony\Http\Write\ChangeSetFactory;
-use JsonApi\Symfony\Http\Write\InputDocumentValidator;
-use JsonApi\Symfony\Http\Write\WriteConfig;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistry;
-use JsonApi\Symfony\StressApp\StressRepositoryFactory;
-use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker;
-use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister;
-use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader;
-use JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager;
-use JsonApi\Symfony\Tests\Fixtures\Model\Article;
-use JsonApi\Symfony\Tests\Fixtures\Model\Author;
-use JsonApi\Symfony\Tests\Fixtures\Model\Tag;
+use AlexFigures\Symfony\Atomic\AtomicConfig;
+use AlexFigures\Symfony\Atomic\Execution\AtomicTransaction;
+use AlexFigures\Symfony\Atomic\Execution\Handlers\AddHandler;
+use AlexFigures\Symfony\Atomic\Execution\Handlers\RelationshipOps;
+use AlexFigures\Symfony\Atomic\Execution\Handlers\RemoveHandler;
+use AlexFigures\Symfony\Atomic\Execution\Handlers\UpdateHandler;
+use AlexFigures\Symfony\Atomic\Execution\OperationDispatcher;
+use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
+use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
+use AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController;
+use AlexFigures\Symfony\Filter\Parser\FilterParser;
+use AlexFigures\Symfony\Http\Controller\CollectionController;
+use AlexFigures\Symfony\Http\Controller\CreateResourceController;
+use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
+use AlexFigures\Symfony\Http\Controller\RelatedController;
+use AlexFigures\Symfony\Http\Controller\ResourceController;
+use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Link\LinkGenerator;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\Symfony\Http\Request\PaginationConfig;
+use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Http\Request\SortingWhitelist;
+use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
+use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
+use AlexFigures\Symfony\Http\Write\WriteConfig;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
+use AlexFigures\Symfony\StressApp\StressRepositoryFactory;
+use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker;
+use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryPersister;
+use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader;
+use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
+use AlexFigures\Symfony\Tests\Fixtures\Model\Tag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -114,11 +114,11 @@ $addHandler = new AddHandler($persister, $changeSetFactory, $registry, $accessor
 $updateHandler = new UpdateHandler($persister, $changeSetFactory, $registry, $accessor, $errorMapper);
 $removeHandler = new RemoveHandler($persister, $errorMapper);
 $relationshipOps = new RelationshipOps(
-    new \JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater($registry, $repository),
+    new \AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater($registry, $repository),
     $registry,
     $errorMapper
 );
-$resultBuilder = new \JsonApi\Symfony\Atomic\Result\ResultBuilder($atomicConfig, $document);
+$resultBuilder = new \AlexFigures\Symfony\Atomic\Result\ResultBuilder($atomicConfig, $document);
 $dispatcher = new OperationDispatcher(
     $atomicTransaction,
     $addHandler,

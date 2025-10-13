@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Docs\OpenApi;
+namespace AlexFigures\Symfony\Tests\Unit\Docs\OpenApi;
 
-use JsonApi\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 
 final class OpenApiSpecGeneratorTest extends TestCase

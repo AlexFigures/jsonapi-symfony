@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Atomic\Execution\Handlers;
+namespace AlexFigures\Symfony\Atomic\Execution\Handlers;
 
-use JsonApi\Symfony\Atomic\Execution\OperationOutcome;
-use JsonApi\Symfony\Atomic\Lid\LidRegistry;
-use JsonApi\Symfony\Atomic\Operation;
-use JsonApi\Symfony\Contract\Data\ResourceProcessor;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Write\ChangeSetFactory;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Atomic\Execution\OperationOutcome;
+use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
+use AlexFigures\Symfony\Atomic\Operation;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 

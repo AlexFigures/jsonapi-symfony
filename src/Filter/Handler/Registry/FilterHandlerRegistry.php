@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Handler\Registry;
+namespace AlexFigures\Symfony\Filter\Handler\Registry;
 
-use JsonApi\Symfony\Filter\Handler\FilterHandlerInterface;
+use AlexFigures\Symfony\Filter\Handler\FilterHandlerInterface;
 
 /**
  * Registry for custom filter handlers.

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
 
-use JsonApi\Symfony\Contract\Data\ExistenceChecker;
+use AlexFigures\Symfony\Contract\Data\ExistenceChecker;
 
 final class InMemoryExistenceChecker implements ExistenceChecker
 {

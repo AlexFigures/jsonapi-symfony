@@ -76,10 +76,10 @@ use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'articles')]
@@ -215,10 +215,10 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'authors')]
@@ -257,9 +257,9 @@ class Author
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'tags')]
@@ -300,10 +300,10 @@ namespace App\JsonApi\Repository;
 use App\Entity\Article;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Sorting;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Sorting;
 
 class DoctrineArticleRepository implements ResourceRepository
 {
@@ -411,10 +411,10 @@ namespace App\JsonApi\Persister;
 
 use App\Entity\Article;
 use Doctrine\ORM\EntityManagerInterface;
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
-use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Contract\Data\ResourcePersister;
+use AlexFigures\Symfony\Http\Exception\ConflictException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use Symfony\Component\Uid\Uuid;
 
 class DoctrineArticlePersister implements ResourcePersister
@@ -506,11 +506,11 @@ namespace App\JsonApi\Relationship;
 
 use App\Entity\Article;
 use Doctrine\ORM\EntityManagerInterface;
-use JsonApi\Symfony\Contract\Data\RelationshipReader;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Contract\Data\SliceIds;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Pagination;
+use AlexFigures\Symfony\Contract\Data\RelationshipReader;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Contract\Data\SliceIds;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Pagination;
 
 class DoctrineRelationshipReader implements RelationshipReader
 {
@@ -603,7 +603,7 @@ Implement `TransactionManager` for atomic operations:
 namespace App\JsonApi\Transaction;
 
 use Doctrine\ORM\EntityManagerInterface;
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 
 class DoctrineTransactionManager implements TransactionManager
 {

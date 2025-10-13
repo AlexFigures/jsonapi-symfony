@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Bridge\Symfony\DependencyInjection\Compiler;
+namespace AlexFigures\Symfony\Tests\Unit\Bridge\Symfony\DependencyInjection\Compiler;
 
-use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;

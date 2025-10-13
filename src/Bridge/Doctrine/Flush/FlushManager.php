@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Doctrine\Flush;
+namespace AlexFigures\Symfony\Bridge\Doctrine\Flush;
 
 use Doctrine\ORM\EntityManagerInterface;
 

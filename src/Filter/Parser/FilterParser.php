@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Parser;
+namespace AlexFigures\Symfony\Filter\Parser;
 
-use JsonApi\Symfony\Filter\Ast\Between;
-use JsonApi\Symfony\Filter\Ast\Comparison;
-use JsonApi\Symfony\Filter\Ast\Conjunction;
-use JsonApi\Symfony\Filter\Ast\Disjunction;
-use JsonApi\Symfony\Filter\Ast\Node;
-use JsonApi\Symfony\Filter\Ast\NullCheck;
+use AlexFigures\Symfony\Filter\Ast\Between;
+use AlexFigures\Symfony\Filter\Ast\Comparison;
+use AlexFigures\Symfony\Filter\Ast\Conjunction;
+use AlexFigures\Symfony\Filter\Ast\Disjunction;
+use AlexFigures\Symfony\Filter\Ast\Node;
+use AlexFigures\Symfony\Filter\Ast\NullCheck;
 
 /**
  * Heuristic filter parser responsible for turning query parameters into an AST.

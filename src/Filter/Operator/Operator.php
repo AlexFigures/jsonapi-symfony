@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Operator;
+namespace AlexFigures\Symfony\Filter\Operator;
 
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
 
 /**
  * Contract implemented by filter operators.

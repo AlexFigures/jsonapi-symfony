@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Safety;
+namespace AlexFigures\Symfony\Http\Safety;
 
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Criteria;
 
 final class RequestComplexityScorer
 {

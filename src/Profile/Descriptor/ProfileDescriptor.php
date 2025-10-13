@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Profile\Descriptor;
+namespace AlexFigures\Symfony\Profile\Descriptor;
 
 final class ProfileDescriptor
 {

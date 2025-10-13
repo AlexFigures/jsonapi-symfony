@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Invalidation;
+namespace AlexFigures\Symfony\Invalidation;
 
 final class NullPurger implements SurrogatePurgerInterface
 {

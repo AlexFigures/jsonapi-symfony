@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Request;
+namespace AlexFigures\Symfony\Http\Request;
 
 final class PaginationConfig
 {

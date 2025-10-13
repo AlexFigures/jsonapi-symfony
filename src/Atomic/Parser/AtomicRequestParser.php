@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Atomic\Parser;
+namespace AlexFigures\Symfony\Atomic\Parser;
 
-use JsonApi\Symfony\Atomic\AtomicConfig;
-use JsonApi\Symfony\Atomic\Operation;
-use JsonApi\Symfony\Atomic\Ref;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Atomic\AtomicConfig;
+use AlexFigures\Symfony\Atomic\Operation;
+use AlexFigures\Symfony\Atomic\Ref;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;

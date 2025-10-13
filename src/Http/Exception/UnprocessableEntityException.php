@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Exception;
+namespace AlexFigures\Symfony\Http\Exception;
 
-use JsonApi\Symfony\Http\Error\ErrorObject;
+use AlexFigures\Symfony\Http\Error\ErrorObject;
 
 final class UnprocessableEntityException extends JsonApiHttpException
 {

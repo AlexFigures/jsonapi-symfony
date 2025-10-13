@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Integration\Fixtures\CustomRoute;
+namespace AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute;
 
-use JsonApi\Symfony\CustomRoute\Context\CustomRouteContext;
-use JsonApi\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
-use JsonApi\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
 
 /**
  * Test handler that returns an error result (instead of throwing exception).

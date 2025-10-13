@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Contract\Tx;
+namespace AlexFigures\Symfony\Contract\Tx;
 
 /**
  * Manages database transactions for write operations.

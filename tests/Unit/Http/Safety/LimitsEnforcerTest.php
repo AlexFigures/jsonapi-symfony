@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Http\Safety;
+namespace AlexFigures\Symfony\Tests\Unit\Http\Safety;
 
-use JsonApi\Symfony\Http\Error\ErrorBuilder;
-use JsonApi\Symfony\Http\Error\ErrorCodes;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Safety\LimitsEnforcer;
-use JsonApi\Symfony\Http\Safety\RequestComplexityScorer;
-use JsonApi\Symfony\Query\Criteria;
-use JsonApi\Symfony\Query\Pagination;
-use JsonApi\Symfony\Query\Sorting;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorCodes;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
+use AlexFigures\Symfony\Http\Safety\RequestComplexityScorer;
+use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\Symfony\Query\Sorting;
 use PHPUnit\Framework\TestCase;
 
 final class LimitsEnforcerTest extends TestCase

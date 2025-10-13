@@ -56,7 +56,7 @@ jsonapi:
 // src/Entity/Product.php
 namespace App\Entity;
 
-use JsonApi\Symfony\Resource\Attribute\{JsonApiResource, Id, Attribute};
+use AlexFigures\Symfony\Resource\Attribute\{JsonApiResource, Id, Attribute};
 
 #[JsonApiResource(type: 'products')]
 class Product
@@ -146,7 +146,7 @@ Doctrine scans configured directories for entities with `#[ORM\Entity]` attribut
 ### JSON:API Symfony Bundle
 
 ```php
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 
 #[JsonApiResource(type: 'products')]
 class Product { /* ... */ }

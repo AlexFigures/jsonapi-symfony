@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Conformance;
+namespace AlexFigures\Symfony\Tests\Conformance;
 
-use JsonApi\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
 use Spatie\Snapshots\MatchesSnapshots;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

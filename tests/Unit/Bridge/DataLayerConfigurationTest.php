@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Bridge;
+namespace AlexFigures\Symfony\Tests\Unit\Bridge;
 
-use JsonApi\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
+use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;

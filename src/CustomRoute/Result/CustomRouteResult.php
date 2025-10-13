@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\CustomRoute\Result;
+namespace AlexFigures\Symfony\CustomRoute\Result;
 
 use Symfony\Component\HttpFoundation\Response;
 

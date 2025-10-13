@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\Routing;
+namespace AlexFigures\Symfony\Bridge\Symfony\Routing;
 
-use JsonApi\Symfony\CustomRoute\Controller\CustomRouteController;
-use JsonApi\Symfony\Http\Controller\OpenApiController;
-use JsonApi\Symfony\Http\Controller\SwaggerUiController;
-use JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController;
+use AlexFigures\Symfony\Http\Controller\OpenApiController;
+use AlexFigures\Symfony\Http\Controller\SwaggerUiController;
+use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\Config\Loader\Loader;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;

@@ -35,13 +35,13 @@ Profiles are identified by URIs and can modify:
 // src/JsonApi/Profile/AuditTrailProfile.php
 namespace App\JsonApi\Profile;
 
-use JsonApi\Symfony\Profile\Descriptor\ProfileDescriptor;
-use JsonApi\Symfony\Profile\Hook\DocumentHook;
-use JsonApi\Symfony\Profile\Hook\WriteHook;
-use JsonApi\Symfony\Profile\ProfileContext;
-use JsonApi\Symfony\Profile\ProfileInterface;
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\Symfony\Profile\Hook\DocumentHook;
+use AlexFigures\Symfony\Profile\Hook\WriteHook;
+use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\Symfony\Profile\ProfileInterface;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Symfony\Component\HttpFoundation\Request;
 
 class AuditTrailProfile implements ProfileInterface
@@ -167,7 +167,7 @@ Hooks allow you to intercept and modify various stages of request processing.
 Modify document structure:
 
 ```php
-use JsonApi\Symfony\Profile\Hook\DocumentHook;
+use AlexFigures\Symfony\Profile\Hook\DocumentHook;
 
 class CustomDocumentHook implements DocumentHook
 {
@@ -199,8 +199,8 @@ class CustomDocumentHook implements DocumentHook
 Modify query parsing:
 
 ```php
-use JsonApi\Symfony\Profile\Hook\QueryHook;
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Profile\Hook\QueryHook;
+use AlexFigures\Symfony\Query\Criteria;
 
 class SoftDeleteQueryHook implements QueryHook
 {
@@ -217,7 +217,7 @@ class SoftDeleteQueryHook implements QueryHook
 Intercept read operations:
 
 ```php
-use JsonApi\Symfony\Profile\Hook\ReadHook;
+use AlexFigures\Symfony\Profile\Hook\ReadHook;
 
 class CacheWarmingReadHook implements ReadHook
 {
@@ -238,7 +238,7 @@ class CacheWarmingReadHook implements ReadHook
 Intercept write operations:
 
 ```php
-use JsonApi\Symfony\Profile\Hook\WriteHook;
+use AlexFigures\Symfony\Profile\Hook\WriteHook;
 
 class ValidationWriteHook implements WriteHook
 {
@@ -264,7 +264,7 @@ class ValidationWriteHook implements WriteHook
 Intercept relationship operations:
 
 ```php
-use JsonApi\Symfony\Profile\Hook\RelationshipHook;
+use AlexFigures\Symfony\Profile\Hook\RelationshipHook;
 
 class RelationshipValidationHook implements RelationshipHook
 {
@@ -292,7 +292,7 @@ The bundle dispatches Symfony events for resource changes.
 Dispatched after resource create/update/delete:
 
 ```php
-use JsonApi\Symfony\Events\ResourceChangedEvent;
+use AlexFigures\Symfony\Events\ResourceChangedEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class ResourceChangeSubscriber implements EventSubscriberInterface
@@ -339,7 +339,7 @@ class ResourceChangeSubscriber implements EventSubscriberInterface
 Dispatched after relationship modifications:
 
 ```php
-use JsonApi\Symfony\Events\RelationshipChangedEvent;
+use AlexFigures\Symfony\Events\RelationshipChangedEvent;
 
 class RelationshipChangeSubscriber implements EventSubscriberInterface
 {
@@ -547,8 +547,8 @@ Extend the filtering system with custom operators.
 namespace App\JsonApi\Filter;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
-use JsonApi\Symfony\Filter\Operator\AbstractOperator;
-use JsonApi\Symfony\Filter\Operator\DoctrineExpression;
+use AlexFigures\Symfony\Filter\Operator\AbstractOperator;
+use AlexFigures\Symfony\Filter\Operator\DoctrineExpression;
 
 class BetweenOperator extends AbstractOperator
 {
@@ -612,7 +612,7 @@ Implement cache invalidation for CDNs and reverse proxies.
 // src/JsonApi/Cache/VarnishPurger.php
 namespace App\JsonApi\Cache;
 
-use JsonApi\Symfony\Invalidation\SurrogatePurgerInterface;
+use AlexFigures\Symfony\Invalidation\SurrogatePurgerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class VarnishPurger implements SurrogatePurgerInterface

@@ -27,7 +27,7 @@ Use the `#[SortableFields]` attribute on your entity class:
 
 namespace App\Entity;
 
-use JsonApi\Symfony\Resource\Attribute\{JsonApiResource, Id, Attribute, SortableFields};
+use AlexFigures\Symfony\Resource\Attribute\{JsonApiResource, Id, Attribute, SortableFields};
 
 #[JsonApiResource(type: 'articles')]
 #[SortableFields(['title', 'createdAt', 'updatedAt', 'viewCount'])]
@@ -65,7 +65,7 @@ class Article
 
 namespace App\Entity;
 
-use JsonApi\Symfony\Resource\Attribute\{JsonApiResource, SortableFields};
+use AlexFigures\Symfony\Resource\Attribute\{JsonApiResource, SortableFields};
 
 #[JsonApiResource(type: 'categories')]
 #[SortableFields(['name', 'slug', 'sortOrder', 'createdAt', 'updatedAt', 'depth'])]

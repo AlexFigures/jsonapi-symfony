@@ -70,9 +70,9 @@ interface ResourceRepository
 
 **Example - Doctrine ORM**:
 ```php
-use JsonApi\Symfony\Contract\Data\ResourceRepository;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Query\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class DoctrineArticleRepository implements ResourceRepository
@@ -139,10 +139,10 @@ interface ResourcePersister
 
 **Example - Doctrine ORM**:
 ```php
-use JsonApi\Symfony\Contract\Data\ResourcePersister;
-use JsonApi\Symfony\Contract\Data\ChangeSet;
-use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Contract\Data\ResourcePersister;
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Http\Exception\ConflictException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -223,9 +223,9 @@ interface RelationshipReader
 
 **Example**:
 ```php
-use JsonApi\Symfony\Contract\Data\RelationshipReader;
-use JsonApi\Symfony\Contract\Data\Slice;
-use JsonApi\Symfony\Contract\Data\SliceIds;
+use AlexFigures\Symfony\Contract\Data\RelationshipReader;
+use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Contract\Data\SliceIds;
 
 final class DoctrineRelationshipReader implements RelationshipReader
 {
@@ -454,7 +454,7 @@ interface TransactionManager
 
 **Example - Doctrine ORM**:
 ```php
-use JsonApi\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class DoctrineTransactionManager implements TransactionManager
@@ -496,7 +496,7 @@ final class JsonApiResource
 
 **Example**:
 ```php
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 
 #[JsonApiResource(
     type: 'articles',
@@ -520,7 +520,7 @@ final class Article
 
 **Example**:
 ```php
-use JsonApi\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\Id;
 
 #[JsonApiResource(type: 'articles')]
 final class Article
@@ -553,7 +553,7 @@ final class Attribute
 
 **Example**:
 ```php
-use JsonApi\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
 
 #[JsonApiResource(type: 'articles')]
 final class Article
@@ -589,7 +589,7 @@ final class Relationship
 
 **Example**:
 ```php
-use JsonApi\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
 
 #[JsonApiResource(type: 'articles')]
 final class Article

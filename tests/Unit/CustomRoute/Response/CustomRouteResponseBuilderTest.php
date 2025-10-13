@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\CustomRoute\Response;
+namespace AlexFigures\Symfony\Tests\Unit\CustomRoute\Response;
 
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \JsonApi\Symfony\CustomRoute\Response\CustomRouteResponseBuilder
+ * @covers \AlexFigures\Symfony\CustomRoute\Response\CustomRouteResponseBuilder
  *
  * Note: CustomRouteResponseBuilder is tested in integration tests
  * because it requires complex setup with DocumentBuilder (which is final).

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\Atomic;
+namespace AlexFigures\Symfony\Tests\Unit\Atomic;
 
-use JsonApi\Symfony\Atomic\AtomicConfig;
+use AlexFigures\Symfony\Atomic\AtomicConfig;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 

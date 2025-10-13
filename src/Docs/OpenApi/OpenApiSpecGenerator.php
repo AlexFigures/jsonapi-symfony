@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Docs\OpenApi;
+namespace AlexFigures\Symfony\Docs\OpenApi;
 
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Resource\Metadata\AttributeMetadata;
-use JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata;
-use JsonApi\Symfony\Resource\Metadata\RelationshipMetadata;
-use JsonApi\Symfony\Resource\Metadata\ResourceMetadata;
-use JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
+use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use LogicException;
 
 /**

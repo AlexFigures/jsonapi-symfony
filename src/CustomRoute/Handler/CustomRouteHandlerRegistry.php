@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\CustomRoute\Handler;
+namespace AlexFigures\Symfony\CustomRoute\Handler;
 
-use JsonApi\Symfony\Resource\Metadata\CustomRouteMetadata;
-use JsonApi\Symfony\Resource\Registry\CustomRouteRegistryInterface;
+use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
+use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 

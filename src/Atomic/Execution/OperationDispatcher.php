@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Atomic\Execution;
+namespace AlexFigures\Symfony\Atomic\Execution;
 
-use JsonApi\Symfony\Atomic\Execution\Handlers\AddHandler;
-use JsonApi\Symfony\Atomic\Execution\Handlers\RelationshipOps;
-use JsonApi\Symfony\Atomic\Execution\Handlers\RemoveHandler;
-use JsonApi\Symfony\Atomic\Execution\Handlers\UpdateHandler;
-use JsonApi\Symfony\Atomic\Lid\LidRegistry;
-use JsonApi\Symfony\Atomic\Operation;
-use JsonApi\Symfony\Atomic\Result\ResultBuilder;
+use AlexFigures\Symfony\Atomic\Execution\Handlers\AddHandler;
+use AlexFigures\Symfony\Atomic\Execution\Handlers\RelationshipOps;
+use AlexFigures\Symfony\Atomic\Execution\Handlers\RemoveHandler;
+use AlexFigures\Symfony\Atomic\Execution\Handlers\UpdateHandler;
+use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
+use AlexFigures\Symfony\Atomic\Operation;
+use AlexFigures\Symfony\Atomic\Result\ResultBuilder;
 
 final class OperationDispatcher
 {

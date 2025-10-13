@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Functional;
+namespace AlexFigures\Symfony\Tests\Functional;
 
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\ForbiddenException;
-use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
-use JsonApi\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Exception\ConflictException;
+use AlexFigures\Symfony\Http\Exception\ForbiddenException;
+use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Query\Criteria;
 use Symfony\Component\HttpFoundation\Request;
 
 final class ResourceWriteTest extends JsonApiTestCase

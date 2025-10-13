@@ -34,7 +34,7 @@ Starting from version 1.0, the `readable` and `writable` parameters in the `#[At
 
 **Before:**
 ```php
-use JsonApi\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
 
 #[Attribute(readable: true, writable: true)]
 private string $title;
@@ -42,8 +42,8 @@ private string $title;
 
 **After:**
 ```php
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\SerializationGroups;
 
 #[Attribute]
 #[SerializationGroups(['read', 'write'])]
@@ -84,9 +84,9 @@ private string $password;
 
 **Before:**
 ```php
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 
 #[JsonApiResource(type: 'users')]
 class User
@@ -111,10 +111,10 @@ class User
 
 **After:**
 ```php
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\SerializationGroups;
 
 #[JsonApiResource(type: 'users')]
 class User

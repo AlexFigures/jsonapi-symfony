@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Unit\CustomRoute\Result;
+namespace AlexFigures\Symfony\Tests\Unit\CustomRoute\Result;
 
-use JsonApi\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * @covers \JsonApi\Symfony\CustomRoute\Result\CustomRouteResult
+ * @covers \AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult
  */
 final class CustomRouteResultTest extends TestCase
 {

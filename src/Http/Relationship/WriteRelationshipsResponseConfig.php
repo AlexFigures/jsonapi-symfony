@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Relationship;
+namespace AlexFigures\Symfony\Http\Relationship;
 
 use InvalidArgumentException;
 

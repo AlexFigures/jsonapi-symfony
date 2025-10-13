@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\StressTest;
+namespace AlexFigures\Symfony\StressTest;
 
 /**
  * Simple HTTP Client for Stress Tests

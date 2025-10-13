@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Compiler\Doctrine;
+namespace AlexFigures\Symfony\Filter\Compiler\Doctrine;
 
 use Doctrine\ORM\QueryBuilder;
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Filter\Parser;
+namespace AlexFigures\Symfony\Filter\Parser;
 
 /**
  * Represents a dotted field path like "author.name".

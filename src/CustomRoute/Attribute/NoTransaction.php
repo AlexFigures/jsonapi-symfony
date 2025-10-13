@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\CustomRoute\Attribute;
+namespace AlexFigures\Symfony\CustomRoute\Attribute;
 
 use Attribute;
 

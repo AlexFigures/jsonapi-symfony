@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Error;
+namespace AlexFigures\Symfony\Http\Error;
 
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Exception\ConflictException;
+use AlexFigures\Symfony\Http\Exception\ForbiddenException;
+use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
+use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
+use AlexFigures\Symfony\Http\Exception\MultiErrorException;
+use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Http\Exception\UnprocessableEntityException;
+use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use DateTimeImmutable;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Http\Exception\ConflictException;
-use JsonApi\Symfony\Http\Exception\ForbiddenException;
-use JsonApi\Symfony\Http\Exception\JsonApiHttpException;
-use JsonApi\Symfony\Http\Exception\MethodNotAllowedException;
-use JsonApi\Symfony\Http\Exception\MultiErrorException;
-use JsonApi\Symfony\Http\Exception\NotAcceptableException;
-use JsonApi\Symfony\Http\Exception\NotFoundException;
-use JsonApi\Symfony\Http\Exception\UnprocessableEntityException;
-use JsonApi\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use JsonApi\Symfony\Http\Negotiation\MediaType;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;

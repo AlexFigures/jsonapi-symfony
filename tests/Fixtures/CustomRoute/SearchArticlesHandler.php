@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Tests\Fixtures\CustomRoute;
+namespace AlexFigures\Symfony\Tests\Fixtures\CustomRoute;
 
-use JsonApi\Symfony\CustomRoute\Attribute\NoTransaction;
-use JsonApi\Symfony\CustomRoute\Context\CustomRouteContext;
-use JsonApi\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
-use JsonApi\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\Symfony\CustomRoute\Attribute\NoTransaction;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
 
 /**
  * Test handler for searching articles (read-only, no transaction).

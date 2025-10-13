@@ -18,8 +18,8 @@ Serialization groups control when attributes are readable and writable.
 ### Standard attribute (read & write)
 
 ```php
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\SerializationGroups;
 
 #[Attribute]
 #[SerializationGroups(['read', 'write'])]
@@ -97,10 +97,10 @@ private string $role;
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use JsonApi\Symfony\Resource\Attribute\Attribute;
-use JsonApi\Symfony\Resource\Attribute\Id;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\SerializationGroups;
 
 #[ORM\Entity]
 #[JsonApiResource(type: 'users')]
@@ -300,7 +300,7 @@ Use both attributes when you need to target Symfony's serializer and the JSON:AP
 
 ```php
 use Symfony\Component\Serializer\Annotation\Groups;
-use JsonApi\Symfony\Resource\Attribute\SerializationGroups;
+use AlexFigures\Symfony\Resource\Attribute\SerializationGroups;
 
 #[Attribute]
 #[SerializationGroups(['read', 'write'])]  // JSON:API access control

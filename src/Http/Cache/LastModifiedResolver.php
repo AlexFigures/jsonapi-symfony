@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Cache;
+namespace AlexFigures\Symfony\Http\Cache;
 
 use DateTimeImmutable;
 use Symfony\Component\HttpFoundation\Request;

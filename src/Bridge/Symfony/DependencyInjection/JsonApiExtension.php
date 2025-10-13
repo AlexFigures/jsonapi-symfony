@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Bridge\Symfony\DependencyInjection;
+namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection;
 
-use JsonApi\Symfony\Profile\ProfileInterface;
-use JsonApi\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Profile\ProfileInterface;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;

@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Request;
+namespace AlexFigures\Symfony\Http\Request;
 
-use JsonApi\Symfony\Filter\Ast\Between;
-use JsonApi\Symfony\Filter\Ast\Comparison;
-use JsonApi\Symfony\Filter\Ast\Conjunction;
-use JsonApi\Symfony\Filter\Ast\Disjunction;
-use JsonApi\Symfony\Filter\Ast\Group;
-use JsonApi\Symfony\Filter\Ast\Node;
-use JsonApi\Symfony\Filter\Ast\NullCheck;
-use JsonApi\Symfony\Http\Error\ErrorMapper;
-use JsonApi\Symfony\Http\Exception\BadRequestException;
-use JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Filter\Ast\Between;
+use AlexFigures\Symfony\Filter\Ast\Comparison;
+use AlexFigures\Symfony\Filter\Ast\Conjunction;
+use AlexFigures\Symfony\Filter\Ast\Disjunction;
+use AlexFigures\Symfony\Filter\Ast\Group;
+use AlexFigures\Symfony\Filter\Ast\Node;
+use AlexFigures\Symfony\Filter\Ast\NullCheck;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 final class FilteringWhitelist
 {
@@ -97,7 +97,7 @@ final class FilteringWhitelist
      * whitelist bypass attacks. Missing node types allow attackers to use
      * disallowed fields/operators through unvalidated node types.
      */
-    private function validateNode(string $type, Node $node, \JsonApi\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateNode(string $type, Node $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
     {
         if ($node instanceof Comparison) {
             $this->validateComparison($type, $node, $filterableFields);
@@ -124,7 +124,7 @@ final class FilteringWhitelist
     /**
      * Validate a comparison node.
      */
-    private function validateComparison(string $type, Comparison $node, \JsonApi\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateComparison(string $type, Comparison $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
     {
         $field = $node->fieldPath;
 
@@ -140,7 +140,7 @@ final class FilteringWhitelist
     /**
      * Validate a conjunction node (AND).
      */
-    private function validateConjunction(string $type, Conjunction $node, \JsonApi\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateConjunction(string $type, Conjunction $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
     {
         foreach ($node->children as $child) {
             $this->validateNode($type, $child, $filterableFields);
@@ -150,7 +150,7 @@ final class FilteringWhitelist
     /**
      * Validate a disjunction node (OR).
      */
-    private function validateDisjunction(string $type, Disjunction $node, \JsonApi\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateDisjunction(string $type, Disjunction $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
     {
         foreach ($node->children as $child) {
             $this->validateNode($type, $child, $filterableFields);
@@ -160,7 +160,7 @@ final class FilteringWhitelist
     /**
      * Validate a null check node (IS NULL / IS NOT NULL).
      */
-    private function validateNullCheck(string $type, NullCheck $node, \JsonApi\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateNullCheck(string $type, NullCheck $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
     {
         $field = $node->fieldPath;
         $operator = $node->isNull ? 'null' : 'nnull';
@@ -177,7 +177,7 @@ final class FilteringWhitelist
     /**
      * Validate a between node (BETWEEN comparison).
      */
-    private function validateBetween(string $type, Between $node, \JsonApi\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateBetween(string $type, Between $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
     {
         $field = $node->fieldPath;
         $operator = 'between';
@@ -194,7 +194,7 @@ final class FilteringWhitelist
     /**
      * Validate a group node (parenthesized expression).
      */
-    private function validateGroup(string $type, Group $node, \JsonApi\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateGroup(string $type, Group $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
     {
         // Groups just wrap another expression, so validate the wrapped expression
         $this->validateNode($type, $node->expression, $filterableFields);

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace JsonApi\Symfony\Http\Write;
+namespace AlexFigures\Symfony\Http\Write;
 
 final class WriteConfig
 {
