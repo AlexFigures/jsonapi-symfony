@@ -24,7 +24,7 @@ final class NullRelationshipReader implements RelationshipReader
     {
         throw new LogicException(
             'No RelationshipReader implementation found. ' .
-            'To use relationship endpoints, implement JsonApi\Symfony\Contract\Data\RelationshipReader ' .
+            'To use relationship endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipReader ' .
             'and register it as a service.'
         );
     }
@@ -33,7 +33,7 @@ final class NullRelationshipReader implements RelationshipReader
     {
         throw new LogicException(
             'No RelationshipReader implementation found. ' .
-            'To use relationship endpoints, implement JsonApi\Symfony\Contract\Data\RelationshipReader ' .
+            'To use relationship endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipReader ' .
             'and register it as a service.'
         );
     }
@@ -42,7 +42,7 @@ final class NullRelationshipReader implements RelationshipReader
     {
         throw new LogicException(
             'No RelationshipReader implementation found. ' .
-            'To use relationship endpoints, implement JsonApi\Symfony\Contract\Data\RelationshipReader ' .
+            'To use relationship endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipReader ' .
             'and register it as a service.'
         );
     }
@@ -51,7 +51,7 @@ final class NullRelationshipReader implements RelationshipReader
     {
         throw new LogicException(
             'No RelationshipReader implementation found. ' .
-            'To use relationship endpoints, implement JsonApi\Symfony\Contract\Data\RelationshipReader ' .
+            'To use relationship endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipReader ' .
             'and register it as a service.'
         );
     }

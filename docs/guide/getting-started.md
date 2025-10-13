@@ -62,7 +62,7 @@ If you're using Symfony Flex, the bundle is registered automatically. Otherwise,
 // config/bundles.php
 return [
     // ... other bundles
-    JsonApi\Symfony\Bridge\Symfony\Bundle\JsonApiBundle::class => ['all' => true],
+    AlexFigures\Symfony\Bridge\Symfony\Bundle\JsonApiBundle::class => ['all' => true],
 ];
 ```
 

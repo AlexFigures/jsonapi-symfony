@@ -51,7 +51,7 @@ final class AttributeAutoconfigurationTest extends TestCase
         self::assertTrue($container->hasAlias(ResourceProcessor::class));
         $alias = $container->getAlias(ResourceProcessor::class);
         self::assertSame(
-            'JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor',
+            'AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor',
             (string) $alias
         );
     }

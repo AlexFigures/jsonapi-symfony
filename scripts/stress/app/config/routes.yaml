@@ -1,13 +1,13 @@
 # JSON:API Collection Endpoint
 jsonapi_collection:
     path: /api/{type}
-    controller: JsonApi\Symfony\Http\Controller\CollectionController
+    controller: AlexFigures\Symfony\Http\Controller\CollectionController
     methods: [GET, HEAD]
 
 # JSON:API Resource Endpoint
 jsonapi_resource:
     path: /api/{type}/{id}
-    controller: JsonApi\Symfony\Http\Controller\ResourceController
+    controller: AlexFigures\Symfony\Http\Controller\ResourceController
     methods: [GET, HEAD]
     requirements:
         id: '[^/]+'
@@ -15,13 +15,13 @@ jsonapi_resource:
 # JSON:API Create Resource
 jsonapi_create:
     path: /api/{type}
-    controller: JsonApi\Symfony\Http\Controller\CreateResourceController
+    controller: AlexFigures\Symfony\Http\Controller\CreateResourceController
     methods: [POST]
 
 # JSON:API Update Resource
 jsonapi_update:
     path: /api/{type}/{id}
-    controller: JsonApi\Symfony\Http\Controller\UpdateResourceController
+    controller: AlexFigures\Symfony\Http\Controller\UpdateResourceController
     methods: [PATCH]
     requirements:
         id: '[^/]+'
@@ -29,7 +29,7 @@ jsonapi_update:
 # JSON:API Delete Resource
 jsonapi_delete:
     path: /api/{type}/{id}
-    controller: JsonApi\Symfony\Http\Controller\DeleteResourceController
+    controller: AlexFigures\Symfony\Http\Controller\DeleteResourceController
     methods: [DELETE]
     requirements:
         id: '[^/]+'
@@ -37,7 +37,7 @@ jsonapi_delete:
 # JSON:API Related Resources
 jsonapi_related:
     path: /api/{type}/{id}/{relationship}
-    controller: JsonApi\Symfony\Http\Controller\RelatedController
+    controller: AlexFigures\Symfony\Http\Controller\RelatedController
     methods: [GET, HEAD]
     requirements:
         id: '[^/]+'
@@ -45,7 +45,7 @@ jsonapi_related:
 # JSON:API Relationships GET
 jsonapi_relationships_get:
     path: /api/{type}/{id}/relationships/{relationship}
-    controller: JsonApi\Symfony\Http\Controller\RelationshipGetController
+    controller: AlexFigures\Symfony\Http\Controller\RelationshipGetController
     methods: [GET, HEAD]
     requirements:
         id: '[^/]+'
@@ -53,7 +53,7 @@ jsonapi_relationships_get:
 # JSON:API Relationships Write
 jsonapi_relationships_write:
     path: /api/{type}/{id}/relationships/{relationship}
-    controller: JsonApi\Symfony\Http\Controller\RelationshipWriteController
+    controller: AlexFigures\Symfony\Http\Controller\RelationshipWriteController
     methods: [POST, PATCH, DELETE]
     requirements:
         id: '[^/]+'
@@ -61,6 +61,6 @@ jsonapi_relationships_write:
 # JSON:API Atomic Operations
 jsonapi_atomic:
     path: /api/operations
-    controller: JsonApi\Symfony\Bridge\Symfony\Controller\AtomicController
+    controller: AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController
     methods: [POST]
 

@@ -80,7 +80,7 @@ final class JsonApiRouteLoader extends Loader
                 new Route(
                     path: "{$prefix}/{$resourceType}",
                     defaults: [
-                        '_controller' => 'JsonApi\Symfony\Http\Controller\CollectionController',
+                        '_controller' => 'AlexFigures\Symfony\Http\Controller\CollectionController',
                         'type' => $resourceType,
                     ],
                     methods: ['GET'],
@@ -92,7 +92,7 @@ final class JsonApiRouteLoader extends Loader
                 new Route(
                     path: "{$prefix}/{$resourceType}",
                     defaults: [
-                        '_controller' => 'JsonApi\Symfony\Http\Controller\CreateResourceController',
+                        '_controller' => 'AlexFigures\Symfony\Http\Controller\CreateResourceController',
                         'type' => $resourceType,
                     ],
                     methods: ['POST'],
@@ -105,7 +105,7 @@ final class JsonApiRouteLoader extends Loader
                 new Route(
                     path: "{$prefix}/{$resourceType}/{id}",
                     defaults: [
-                        '_controller' => 'JsonApi\Symfony\Http\Controller\ResourceController',
+                        '_controller' => 'AlexFigures\Symfony\Http\Controller\ResourceController',
                         'type' => $resourceType,
                     ],
                     requirements: ['id' => '[^/]+'],
@@ -118,7 +118,7 @@ final class JsonApiRouteLoader extends Loader
                 new Route(
                     path: "{$prefix}/{$resourceType}/{id}",
                     defaults: [
-                        '_controller' => 'JsonApi\Symfony\Http\Controller\UpdateResourceController',
+                        '_controller' => 'AlexFigures\Symfony\Http\Controller\UpdateResourceController',
                         'type' => $resourceType,
                     ],
                     requirements: ['id' => '[^/]+'],
@@ -131,7 +131,7 @@ final class JsonApiRouteLoader extends Loader
                 new Route(
                     path: "{$prefix}/{$resourceType}/{id}",
                     defaults: [
-                        '_controller' => 'JsonApi\Symfony\Http\Controller\DeleteResourceController',
+                        '_controller' => 'AlexFigures\Symfony\Http\Controller\DeleteResourceController',
                         'type' => $resourceType,
                     ],
                     requirements: ['id' => '[^/]+'],
@@ -150,7 +150,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipGetController',
+                                '_controller' => 'AlexFigures\Symfony\Http\Controller\RelationshipGetController',
                                 'type' => $resourceType,
                                 'rel' => $relationshipName,
                             ],
@@ -165,7 +165,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipWriteController',
+                                '_controller' => 'AlexFigures\Symfony\Http\Controller\RelationshipWriteController',
                                 'type' => $resourceType,
                                 'rel' => $relationshipName,
                             ],
@@ -181,7 +181,7 @@ final class JsonApiRouteLoader extends Loader
                             new Route(
                                 path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                                 defaults: [
-                                    '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipWriteController',
+                                    '_controller' => 'AlexFigures\Symfony\Http\Controller\RelationshipWriteController',
                                     'type' => $resourceType,
                                     'rel' => $relationshipName,
                                 ],
@@ -196,7 +196,7 @@ final class JsonApiRouteLoader extends Loader
                             new Route(
                                 path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                                 defaults: [
-                                    '_controller' => 'JsonApi\Symfony\Http\Controller\RelationshipWriteController',
+                                    '_controller' => 'AlexFigures\Symfony\Http\Controller\RelationshipWriteController',
                                     'type' => $resourceType,
                                     'rel' => $relationshipName,
                                 ],
@@ -212,7 +212,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'JsonApi\Symfony\Http\Controller\RelatedController',
+                                '_controller' => 'AlexFigures\Symfony\Http\Controller\RelatedController',
                                 'type' => $resourceType,
                                 'rel' => $relationshipName,
                             ],

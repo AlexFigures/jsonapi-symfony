@@ -111,50 +111,50 @@ final class JsonApiExtension extends Extension
         if ($config['provider'] === 'doctrine') {
             // Use Doctrine implementations
             $container->setAlias(
-                'JsonApi\Symfony\Contract\Data\ResourceRepository',
-                'JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository'
+                'AlexFigures\Symfony\Contract\Data\ResourceRepository',
+                'AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository'
             )->setPublic(false);
 
             $container->setAlias(
-                'JsonApi\Symfony\Contract\Data\ResourceProcessor',
-                'JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor'
+                'AlexFigures\Symfony\Contract\Data\ResourceProcessor',
+                'AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor'
             )->setPublic(false);
 
             $container->setAlias(
-                'JsonApi\Symfony\Contract\Data\RelationshipReader',
-                'JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler'
+                'AlexFigures\Symfony\Contract\Data\RelationshipReader',
+                'AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler'
             )->setPublic(false);
 
             $container->setAlias(
-                'JsonApi\Symfony\Contract\Tx\TransactionManager',
-                'JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager'
+                'AlexFigures\Symfony\Contract\Tx\TransactionManager',
+                'AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager'
             )->setPublic(false);
         } elseif ($config['provider'] === 'custom') {
             // Use custom implementations
             if ($config['repository'] !== null) {
                 $container->setAlias(
-                    'JsonApi\Symfony\Contract\Data\ResourceRepository',
+                    'AlexFigures\Symfony\Contract\Data\ResourceRepository',
                     $config['repository']
                 )->setPublic(false);
             }
 
             if ($config['processor'] !== null) {
                 $container->setAlias(
-                    'JsonApi\Symfony\Contract\Data\ResourceProcessor',
+                    'AlexFigures\Symfony\Contract\Data\ResourceProcessor',
                     $config['processor']
                 )->setPublic(false);
             }
 
             if ($config['relationship_reader'] !== null) {
                 $container->setAlias(
-                    'JsonApi\Symfony\Contract\Data\RelationshipReader',
+                    'AlexFigures\Symfony\Contract\Data\RelationshipReader',
                     $config['relationship_reader']
                 )->setPublic(false);
             }
 
             if ($config['transaction_manager'] !== null) {
                 $container->setAlias(
-                    'JsonApi\Symfony\Contract\Tx\TransactionManager',
+                    'AlexFigures\Symfony\Contract\Tx\TransactionManager',
                     $config['transaction_manager']
                 )->setPublic(false);
             }

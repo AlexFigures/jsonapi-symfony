@@ -21,7 +21,7 @@ final class NullRelationshipUpdater implements RelationshipUpdater
     {
         throw new LogicException(
             'No RelationshipUpdater implementation found. ' .
-            'To use relationship write endpoints, implement JsonApi\Symfony\Contract\Data\RelationshipUpdater ' .
+            'To use relationship write endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipUpdater ' .
             'and register it as a service.'
         );
     }
@@ -30,7 +30,7 @@ final class NullRelationshipUpdater implements RelationshipUpdater
     {
         throw new LogicException(
             'No RelationshipUpdater implementation found. ' .
-            'To use relationship write endpoints, implement JsonApi\Symfony\Contract\Data\RelationshipUpdater ' .
+            'To use relationship write endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipUpdater ' .
             'and register it as a service.'
         );
     }
@@ -39,7 +39,7 @@ final class NullRelationshipUpdater implements RelationshipUpdater
     {
         throw new LogicException(
             'No RelationshipUpdater implementation found. ' .
-            'To use relationship write endpoints, implement JsonApi\Symfony\Contract\Data\RelationshipUpdater ' .
+            'To use relationship write endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipUpdater ' .
             'and register it as a service.'
         );
     }
@@ -48,7 +48,7 @@ final class NullRelationshipUpdater implements RelationshipUpdater
     {
         throw new LogicException(
             'No RelationshipUpdater implementation found. ' .
-            'To use relationship write endpoints, implement JsonApi\Symfony\Contract\Data\RelationshipUpdater ' .
+            'To use relationship write endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipUpdater ' .
             'and register it as a service.'
         );
     }

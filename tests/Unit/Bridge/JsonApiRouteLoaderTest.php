@@ -35,7 +35,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $indexRoute = $routes->get('jsonapi.articles.index');
         $this->assertSame('/api/articles', $indexRoute->getPath());
         $this->assertSame(['GET'], $indexRoute->getMethods());
-        $this->assertSame('JsonApi\Symfony\Http\Controller\CollectionController', $indexRoute->getDefault('_controller'));
+        $this->assertSame('AlexFigures\Symfony\Http\Controller\CollectionController', $indexRoute->getDefault('_controller'));
         $this->assertSame('articles', $indexRoute->getDefault('type'));
 
         // Check collection POST route
@@ -43,7 +43,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $createRoute = $routes->get('jsonapi.articles.create');
         $this->assertSame('/api/articles', $createRoute->getPath());
         $this->assertSame(['POST'], $createRoute->getMethods());
-        $this->assertSame('JsonApi\Symfony\Http\Controller\CreateResourceController', $createRoute->getDefault('_controller'));
+        $this->assertSame('AlexFigures\Symfony\Http\Controller\CreateResourceController', $createRoute->getDefault('_controller'));
     }
 
     public function testGeneratesResourceRoutes(): void
@@ -66,7 +66,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $showRoute = $routes->get('jsonapi.articles.show');
         $this->assertSame('/api/articles/{id}', $showRoute->getPath());
         $this->assertSame(['GET'], $showRoute->getMethods());
-        $this->assertSame('JsonApi\Symfony\Http\Controller\ResourceController', $showRoute->getDefault('_controller'));
+        $this->assertSame('AlexFigures\Symfony\Http\Controller\ResourceController', $showRoute->getDefault('_controller'));
         $this->assertSame('[^/]+', $showRoute->getRequirement('id'));
 
         // Check resource PATCH route
@@ -74,7 +74,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $updateRoute = $routes->get('jsonapi.articles.update');
         $this->assertSame('/api/articles/{id}', $updateRoute->getPath());
         $this->assertSame(['PATCH'], $updateRoute->getMethods());
-        $this->assertSame('JsonApi\Symfony\Http\Controller\UpdateResourceController', $updateRoute->getDefault('_controller'));
+        $this->assertSame('AlexFigures\Symfony\Http\Controller\UpdateResourceController', $updateRoute->getDefault('_controller'));
         $this->assertSame('[^/]+', $updateRoute->getRequirement('id'));
 
         // Check resource DELETE route
@@ -82,7 +82,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $deleteRoute = $routes->get('jsonapi.articles.delete');
         $this->assertSame('/api/articles/{id}', $deleteRoute->getPath());
         $this->assertSame(['DELETE'], $deleteRoute->getMethods());
-        $this->assertSame('JsonApi\Symfony\Http\Controller\DeleteResourceController', $deleteRoute->getDefault('_controller'));
+        $this->assertSame('AlexFigures\Symfony\Http\Controller\DeleteResourceController', $deleteRoute->getDefault('_controller'));
         $this->assertSame('[^/]+', $deleteRoute->getRequirement('id'));
     }
 
@@ -119,7 +119,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $showRelRoute = $routes->get('jsonapi.articles.relationships.author.show');
         $this->assertSame('/api/articles/{id}/relationships/author', $showRelRoute->getPath());
         $this->assertSame(['GET'], $showRelRoute->getMethods());
-        $this->assertSame('JsonApi\Symfony\Http\Controller\RelationshipGetController', $showRelRoute->getDefault('_controller'));
+        $this->assertSame('AlexFigures\Symfony\Http\Controller\RelationshipGetController', $showRelRoute->getDefault('_controller'));
         $this->assertSame('[^/]+', $showRelRoute->getRequirement('id'));
 
         // Check relationship PATCH route
@@ -127,7 +127,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $updateRelRoute = $routes->get('jsonapi.articles.relationships.author.update');
         $this->assertSame('/api/articles/{id}/relationships/author', $updateRelRoute->getPath());
         $this->assertSame(['PATCH'], $updateRelRoute->getMethods());
-        $this->assertSame('JsonApi\Symfony\Http\Controller\RelationshipWriteController', $updateRelRoute->getDefault('_controller'));
+        $this->assertSame('AlexFigures\Symfony\Http\Controller\RelationshipWriteController', $updateRelRoute->getDefault('_controller'));
         $this->assertSame('[^/]+', $updateRelRoute->getRequirement('id'));
 
         // Check to-many relationship POST route
@@ -135,7 +135,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $addRelRoute = $routes->get('jsonapi.articles.relationships.tags.add');
         $this->assertSame('/api/articles/{id}/relationships/tags', $addRelRoute->getPath());
         $this->assertSame(['POST'], $addRelRoute->getMethods());
-        $this->assertSame('JsonApi\Symfony\Http\Controller\RelationshipWriteController', $addRelRoute->getDefault('_controller'));
+        $this->assertSame('AlexFigures\Symfony\Http\Controller\RelationshipWriteController', $addRelRoute->getDefault('_controller'));
         $this->assertSame('[^/]+', $addRelRoute->getRequirement('id'));
 
         // Check to-many relationship DELETE route
@@ -143,7 +143,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $removeRelRoute = $routes->get('jsonapi.articles.relationships.tags.remove');
         $this->assertSame('/api/articles/{id}/relationships/tags', $removeRelRoute->getPath());
         $this->assertSame(['DELETE'], $removeRelRoute->getMethods());
-        $this->assertSame('JsonApi\Symfony\Http\Controller\RelationshipWriteController', $removeRelRoute->getDefault('_controller'));
+        $this->assertSame('AlexFigures\Symfony\Http\Controller\RelationshipWriteController', $removeRelRoute->getDefault('_controller'));
         $this->assertSame('[^/]+', $removeRelRoute->getRequirement('id'));
 
         // Check related resource route
@@ -151,7 +151,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $relatedRoute = $routes->get('jsonapi.articles.related.author');
         $this->assertSame('/api/articles/{id}/author', $relatedRoute->getPath());
         $this->assertSame(['GET'], $relatedRoute->getMethods());
-        $this->assertSame('JsonApi\Symfony\Http\Controller\RelatedController', $relatedRoute->getDefault('_controller'));
+        $this->assertSame('AlexFigures\Symfony\Http\Controller\RelatedController', $relatedRoute->getDefault('_controller'));
         $this->assertSame('[^/]+', $relatedRoute->getRequirement('id'));
     }
 
@@ -226,13 +226,13 @@ final class JsonApiRouteLoaderTest extends TestCase
         $openApiRoute = $routes->get('jsonapi.docs.openapi');
         self::assertNotNull($openApiRoute);
         self::assertSame('/_jsonapi/openapi.json', $openApiRoute->getPath());
-        self::assertSame('JsonApi\Symfony\Http\Controller\OpenApiController', $openApiRoute->getDefault('_controller'));
+        self::assertSame('AlexFigures\Symfony\Http\Controller\OpenApiController', $openApiRoute->getDefault('_controller'));
         self::assertSame(['GET'], $openApiRoute->getMethods());
 
         $uiRoute = $routes->get('jsonapi.docs.ui');
         self::assertNotNull($uiRoute);
         self::assertSame('/_jsonapi/docs', $uiRoute->getPath());
-        self::assertSame('JsonApi\Symfony\Http\Controller\SwaggerUiController', $uiRoute->getDefault('_controller'));
+        self::assertSame('AlexFigures\Symfony\Http\Controller\SwaggerUiController', $uiRoute->getDefault('_controller'));
         self::assertSame(['GET'], $uiRoute->getMethods());
     }
 

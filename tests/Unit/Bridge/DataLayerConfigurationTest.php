@@ -22,33 +22,33 @@ final class DataLayerConfigurationTest extends TestCase
 
         // Don't compile - just check that aliases are created
         // Check that Doctrine aliases are created
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Data\ResourceRepository'));
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Data\ResourcePersister'));
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Data\RelationshipReader'));
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Tx\TransactionManager'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager'));
 
         // Check that aliases point to Doctrine implementations
-        $repositoryAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\ResourceRepository');
+        $repositoryAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository');
         $this->assertSame(
-            'JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository',
+            'AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository',
             (string) $repositoryAlias
         );
 
-        $persisterAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\ResourcePersister');
+        $persisterAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister');
         $this->assertSame(
-            'JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister',
+            'AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister',
             (string) $persisterAlias
         );
 
-        $relationshipAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\RelationshipReader');
+        $relationshipAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader');
         $this->assertSame(
-            'JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler',
+            'AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler',
             (string) $relationshipAlias
         );
 
-        $transactionAlias = $container->getAlias('JsonApi\Symfony\Contract\Tx\TransactionManager');
+        $transactionAlias = $container->getAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager');
         $this->assertSame(
-            'JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager',
+            'AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager',
             (string) $transactionAlias
         );
     }
@@ -69,11 +69,11 @@ final class DataLayerConfigurationTest extends TestCase
 
         // Don't compile - just check that aliases are created
         // Check that Doctrine aliases are created
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Data\ResourceRepository'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository'));
 
-        $repositoryAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\ResourceRepository');
+        $repositoryAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository');
         $this->assertSame(
-            'JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository',
+            'AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository',
             (string) $repositoryAlias
         );
     }
@@ -98,22 +98,22 @@ final class DataLayerConfigurationTest extends TestCase
 
         // Don't compile - just check that aliases are created
         // Check that custom aliases are created
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Data\ResourceRepository'));
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Data\ResourcePersister'));
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Data\RelationshipReader'));
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Tx\TransactionManager'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager'));
 
         // Check that aliases point to custom implementations
-        $repositoryAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\ResourceRepository');
+        $repositoryAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository');
         $this->assertSame('App\Custom\Repository', (string) $repositoryAlias);
 
-        $persisterAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\ResourcePersister');
+        $persisterAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister');
         $this->assertSame('App\Custom\Persister', (string) $persisterAlias);
 
-        $relationshipAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\RelationshipReader');
+        $relationshipAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader');
         $this->assertSame('App\Custom\RelationshipReader', (string) $relationshipAlias);
 
-        $transactionAlias = $container->getAlias('JsonApi\Symfony\Contract\Tx\TransactionManager');
+        $transactionAlias = $container->getAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager');
         $this->assertSame('App\Custom\TransactionManager', (string) $transactionAlias);
     }
 
@@ -135,18 +135,18 @@ final class DataLayerConfigurationTest extends TestCase
 
         // Don't compile - just check that aliases are created
         // Check that repository alias is overridden
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Data\ResourceRepository'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository'));
 
-        $repositoryAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\ResourceRepository');
+        $repositoryAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository');
         $this->assertSame('App\Custom\Repository', (string) $repositoryAlias);
 
         // Other aliases should still exist from services.php (Null implementations)
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Data\ResourcePersister'));
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Data\RelationshipReader'));
-        $this->assertTrue($container->hasAlias('JsonApi\Symfony\Contract\Tx\TransactionManager'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager'));
 
         // They should point to Null implementations (not overridden)
-        $persisterAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\ResourcePersister');
+        $persisterAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister');
         $this->assertSame('jsonapi.null_resource_persister', (string) $persisterAlias);
     }
 
@@ -184,16 +184,16 @@ final class DataLayerConfigurationTest extends TestCase
 
         // Don't compile - just check that aliases are not public
         // Check that aliases are not public
-        $repositoryAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\ResourceRepository');
+        $repositoryAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository');
         $this->assertFalse($repositoryAlias->isPublic());
 
-        $persisterAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\ResourcePersister');
+        $persisterAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister');
         $this->assertFalse($persisterAlias->isPublic());
 
-        $relationshipAlias = $container->getAlias('JsonApi\Symfony\Contract\Data\RelationshipReader');
+        $relationshipAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader');
         $this->assertFalse($relationshipAlias->isPublic());
 
-        $transactionAlias = $container->getAlias('JsonApi\Symfony\Contract\Tx\TransactionManager');
+        $transactionAlias = $container->getAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager');
         $this->assertFalse($transactionAlias->isPublic());
     }
 }

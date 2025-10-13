@@ -31,9 +31,9 @@ The **public API** consists of:
 ### ✅ Stable - Backward Compatibility Guaranteed
 
 1. **Contract Interfaces** (`src/Contract/`)
-   - All interfaces in `JsonApi\Symfony\Contract\Data\*`
-   - All interfaces in `JsonApi\Symfony\Contract\Resource\*`
-   - All interfaces in `JsonApi\Symfony\Contract\Tx\*`
+   - All interfaces in `AlexFigures\Symfony\Contract\Data\*`
+   - All interfaces in `AlexFigures\Symfony\Contract\Resource\*`
+   - All interfaces in `AlexFigures\Symfony\Contract\Tx\*`
    - All classes marked with `@api` tag in PHPDoc
 
 2. **Resource Attributes** (`src/Resource/Attribute/`)

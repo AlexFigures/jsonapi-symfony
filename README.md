@@ -24,7 +24,7 @@ composer require jsonapi/symfony-jsonapi-bundle
 
 ```php
 return [
-    JsonApi\Symfony\Bridge\Symfony\Bundle\JsonApiBundle::class => ['all' => true],
+    AlexFigures\Symfony\Bridge\Symfony\Bundle\JsonApiBundle::class => ['all' => true],
 ];
 ```
 

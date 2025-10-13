@@ -99,7 +99,7 @@ If you do not use relationships, disable their generation:
 
 ```php
 // config/services.yaml
-JsonApi\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader:
+AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader:
     arguments:
         $enableRelationshipRoutes: false
 ```
@@ -226,7 +226,7 @@ Restrict the format by redefining the route:
 # UUID only
 article_show_uuid:
     path: /api/articles/{id}
-    controller: JsonApi\Symfony\Http\Controller\ShowController
+    controller: AlexFigures\Symfony\Http\Controller\ShowController
     defaults:
         type: articles
     requirements:
@@ -284,11 +284,11 @@ jsonapi_auto:
 
 ```yaml
 # config/services.yaml
-JsonApi\Symfony\Contract\Data\ResourceRepository:
-    alias: JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository
+AlexFigures\Symfony\Contract\Data\ResourceRepository:
+    alias: AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository
 
-JsonApi\Symfony\Contract\Data\ResourcePersister:
-    alias: JsonApi\Symfony\Bridge\Doctrine\Persister\GenericDoctrinePersister
+AlexFigures\Symfony\Contract\Data\ResourcePersister:
+    alias: AlexFigures\Symfony\Bridge\Doctrine\Persister\GenericDoctrinePersister
 ```
 
 **Done!** All CRUD operations are live:

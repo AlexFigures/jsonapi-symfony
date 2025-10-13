@@ -46,40 +46,40 @@ jsonapi:
 # config/services.yaml
 services:
     # Manual service registration - NO LONGER NEEDED!
-    JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository:
+    AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository:
         arguments:
             $em: '@doctrine.orm.default_entity_manager'
-            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
-            $filterCompiler: '@JsonApi\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler'
+            $registry: '@AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface'
+            $filterCompiler: '@AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler'
 
-    JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister:
+    AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister:
         arguments:
             $em: '@doctrine.orm.default_entity_manager'
-            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
+            $registry: '@AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface'
             $accessor: '@Symfony\Component\PropertyAccess\PropertyAccessorInterface'
             $validator: '@validator'
 
-    JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler:
+    AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler:
         arguments:
             $em: '@doctrine.orm.default_entity_manager'
-            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
+            $registry: '@AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface'
 
-    JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager:
+    AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager:
         arguments:
             $em: '@doctrine.orm.default_entity_manager'
 
     # Manual aliases - NO LONGER NEEDED!
-    JsonApi\Symfony\Contract\Data\ResourceRepository:
-        alias: JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository
+    AlexFigures\Symfony\Contract\Data\ResourceRepository:
+        alias: AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository
 
-    JsonApi\Symfony\Contract\Data\ResourcePersister:
-        alias: JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
+    AlexFigures\Symfony\Contract\Data\ResourcePersister:
+        alias: AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
 
-    JsonApi\Symfony\Contract\Data\RelationshipReader:
-        alias: JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
+    AlexFigures\Symfony\Contract\Data\RelationshipReader:
+        alias: AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
 
-    JsonApi\Symfony\Contract\Tx\TransactionManager:
-        alias: JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager
+    AlexFigures\Symfony\Contract\Tx\TransactionManager:
+        alias: AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager
 ```
 
 ### After (Automatic - ✅ Recommended)
@@ -123,9 +123,9 @@ jsonapi:
     data_layer:
         provider: custom
         repository: App\JsonApi\Repository\CachedRepository
-        persister: JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
-        relationship_reader: JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
-        transaction_manager: JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager
+        persister: AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
+        relationship_reader: AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
+        transaction_manager: AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager
 ```
 
 ### Use Case 3: Completely Custom Implementation
@@ -319,9 +319,9 @@ jsonapi:
         provider: custom
         repository: App\JsonApi\CachedRepository  # Custom
         # Use Doctrine for the rest
-        persister: JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
-        relationship_reader: JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
-        transaction_manager: JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager
+        persister: AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
+        relationship_reader: AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
+        transaction_manager: AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager
 ```
 
 ### 3. Register Custom Services
@@ -334,7 +334,7 @@ services:
     App\JsonApi\Repository\CachedRepository:
         arguments:
             $cache: '@cache.app'
-            $innerRepository: '@JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository'
+            $innerRepository: '@AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository'
 ```
 
 ## Troubleshooting

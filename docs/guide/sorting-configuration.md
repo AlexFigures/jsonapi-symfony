@@ -246,7 +246,7 @@ Don't expose all fields for sorting. Only whitelist what's necessary:
 
 ### SortableFields Attribute
 
-**Namespace:** `JsonApi\Symfony\Resource\Attribute\SortableFields`
+**Namespace:** `AlexFigures\Symfony\Resource\Attribute\SortableFields`
 
 **Target:** Class
 

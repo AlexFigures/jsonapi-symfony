@@ -5,82 +5,82 @@ services:
         public: false
 
     # Register resource models as tagged services (without autowiring)
-    JsonApi\Symfony\Tests\Fixtures\Model\Article:
+    AlexFigures\Symfony\Tests\Fixtures\Model\Article:
         autowire: false
         tags:
             - { name: 'jsonapi.resource', type: 'articles' }
 
-    JsonApi\Symfony\Tests\Fixtures\Model\Author:
+    AlexFigures\Symfony\Tests\Fixtures\Model\Author:
         autowire: false
         tags:
             - { name: 'jsonapi.resource', type: 'authors' }
 
-    JsonApi\Symfony\Tests\Fixtures\Model\Tag:
+    AlexFigures\Symfony\Tests\Fixtures\Model\Tag:
         autowire: false
         tags:
             - { name: 'jsonapi.resource', type: 'tags' }
 
     # Repository with large dataset
-    JsonApi\Symfony\StressApp\StressInMemoryRepository:
+    AlexFigures\Symfony\StressApp\StressInMemoryRepository:
         arguments:
-            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
+            $registry: '@AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface'
         public: true
 
     # Alias for ResourceRepository contract
-    JsonApi\Symfony\Contract\Data\ResourceRepository:
-        alias: JsonApi\Symfony\StressApp\StressInMemoryRepository
+    AlexFigures\Symfony\Contract\Data\ResourceRepository:
+        alias: AlexFigures\Symfony\StressApp\StressInMemoryRepository
         public: true
 
     # Processor (note: InMemoryPersister implements the old ResourcePersister interface,
     # but it's compatible with ResourceProcessor since they have the same method signatures)
-    JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister:
+    AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryPersister:
         arguments:
-            $repository: '@JsonApi\Symfony\StressApp\StressInMemoryRepository'
-            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
-            $transactionManager: '@JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager'
+            $repository: '@AlexFigures\Symfony\StressApp\StressInMemoryRepository'
+            $registry: '@AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface'
+            $transactionManager: '@AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager'
         public: true
 
-    JsonApi\Symfony\Contract\Data\ResourceProcessor:
-        alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryPersister
+    AlexFigures\Symfony\Contract\Data\ResourceProcessor:
+        alias: AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryPersister
         public: true
 
     # Transaction Manager
-    JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager:
+    AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager:
         public: true
 
-    JsonApi\Symfony\Contract\Tx\TransactionManager:
-        alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager
+    AlexFigures\Symfony\Contract\Tx\TransactionManager:
+        alias: AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager
         public: true
 
     # Relationship services
-    JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader:
+    AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader:
         arguments:
-            $repository: '@JsonApi\Symfony\StressApp\StressInMemoryRepository'
-            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
+            $repository: '@AlexFigures\Symfony\StressApp\StressInMemoryRepository'
+            $registry: '@AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface'
         public: true
 
-    JsonApi\Symfony\Contract\Data\RelationshipReader:
-        alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader
+    AlexFigures\Symfony\Contract\Data\RelationshipReader:
+        alias: AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader
         public: true
 
-    JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater:
+    AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater:
         arguments:
-            $repository: '@JsonApi\Symfony\StressApp\StressInMemoryRepository'
-            $registry: '@JsonApi\Symfony\Resource\Registry\ResourceRegistryInterface'
+            $repository: '@AlexFigures\Symfony\StressApp\StressInMemoryRepository'
+            $registry: '@AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface'
         public: true
 
-    JsonApi\Symfony\Contract\Data\RelationshipUpdater:
-        alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater
+    AlexFigures\Symfony\Contract\Data\RelationshipUpdater:
+        alias: AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater
         public: true
 
     # Existence Checker
-    JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker:
+    AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker:
         arguments:
-            $repository: '@JsonApi\Symfony\StressApp\StressInMemoryRepository'
+            $repository: '@AlexFigures\Symfony\StressApp\StressInMemoryRepository'
         public: true
 
-    JsonApi\Symfony\Contract\Data\ExistenceChecker:
-        alias: JsonApi\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker
+    AlexFigures\Symfony\Contract\Data\ExistenceChecker:
+        alias: AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker
         public: true
 
 parameters:

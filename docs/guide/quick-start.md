@@ -137,20 +137,20 @@ class Article
 # config/services.yaml
 services:
     # Generic Doctrine implementations
-    JsonApi\Symfony\Contract\Data\ResourceRepository:
-        alias: JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository
+    AlexFigures\Symfony\Contract\Data\ResourceRepository:
+        alias: AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository
 
-    JsonApi\Symfony\Contract\Data\ResourcePersister:
-        alias: JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
+    AlexFigures\Symfony\Contract\Data\ResourcePersister:
+        alias: AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
 
-    JsonApi\Symfony\Contract\Data\RelationshipReader:
-        alias: JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
+    AlexFigures\Symfony\Contract\Data\RelationshipReader:
+        alias: AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
 
-    JsonApi\Symfony\Contract\Data\RelationshipUpdater:
-        alias: JsonApi\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
+    AlexFigures\Symfony\Contract\Data\RelationshipUpdater:
+        alias: AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
 
-    JsonApi\Symfony\Contract\Tx\TransactionManager:
-        alias: JsonApi\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager
+    AlexFigures\Symfony\Contract\Tx\TransactionManager:
+        alias: AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager
 ```
 
 ## Step 3: Enable Automatic Route Generation
@@ -361,7 +361,7 @@ App\JsonApi\Repository\ArticleRepository:
         - { name: 'jsonapi.repository', priority: 10 }
 
 # Generic repository for every other type
-JsonApi\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository:
+AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository:
     tags:
         - { name: 'jsonapi.repository', priority: 0 }
 ```
@@ -394,8 +394,8 @@ If you are not using Doctrine, the bundle ships NullObject implementations that 
 Ensure you use `ValidatingDoctrinePersister` instead of `GenericDoctrinePersister`:
 
 ```yaml
-JsonApi\Symfony\Contract\Data\ResourcePersister:
-    alias: JsonApi\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
+AlexFigures\Symfony\Contract\Data\ResourcePersister:
+    alias: AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
 ```
 
 ### Routes are not generated

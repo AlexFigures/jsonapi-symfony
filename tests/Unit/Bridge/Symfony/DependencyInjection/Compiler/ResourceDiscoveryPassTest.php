@@ -37,12 +37,12 @@ final class ResourceDiscoveryPassTest extends TestCase
         // Add the ResourceRegistry definition
         $registryDefinition = new Definition();
         $registryDefinition->setArguments([[]]);
-        $container->setDefinition('JsonApi\Symfony\Resource\Registry\ResourceRegistry', $registryDefinition);
+        $container->setDefinition('AlexFigures\Symfony\Resource\Registry\ResourceRegistry', $registryDefinition);
 
         // Add the CustomRouteRegistry definition
         $customRouteRegistryDefinition = new Definition();
         $customRouteRegistryDefinition->setArguments([[]]);
-        $container->setDefinition('JsonApi\Symfony\Resource\Registry\CustomRouteRegistry', $customRouteRegistryDefinition);
+        $container->setDefinition('AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry', $customRouteRegistryDefinition);
 
         $pass = new ResourceDiscoveryPass();
         $pass->process($container);
@@ -84,22 +84,22 @@ final class ResourceDiscoveryPassTest extends TestCase
         // Add the ResourceRegistry definition
         $registryDefinition = new Definition();
         $registryDefinition->setArguments([[]]);
-        $container->setDefinition('JsonApi\Symfony\Resource\Registry\ResourceRegistry', $registryDefinition);
+        $container->setDefinition('AlexFigures\Symfony\Resource\Registry\ResourceRegistry', $registryDefinition);
 
         // Add the CustomRouteRegistry definition
         $customRouteRegistryDefinition = new Definition();
         $customRouteRegistryDefinition->setArguments([[]]);
-        $container->setDefinition('JsonApi\Symfony\Resource\Registry\CustomRouteRegistry', $customRouteRegistryDefinition);
+        $container->setDefinition('AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry', $customRouteRegistryDefinition);
 
         $pass = new ResourceDiscoveryPass();
         $pass->process($container);
 
         // Check that ResourceRegistry definition was updated
-        $updatedRegistryDefinition = $container->getDefinition('JsonApi\Symfony\Resource\Registry\ResourceRegistry');
+        $updatedRegistryDefinition = $container->getDefinition('AlexFigures\Symfony\Resource\Registry\ResourceRegistry');
         $this->assertNotEmpty($updatedRegistryDefinition->getArgument(0));
 
         // Check that CustomRouteRegistry definition was updated
-        $updatedCustomRouteRegistryDefinition = $container->getDefinition('JsonApi\Symfony\Resource\Registry\CustomRouteRegistry');
+        $updatedCustomRouteRegistryDefinition = $container->getDefinition('AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry');
         $this->assertNotEmpty($updatedCustomRouteRegistryDefinition->getArgument(0));
     }
 

@@ -52,7 +52,7 @@ This document defines the **stable public API** of JsonApiBundle. All interfaces
 
 ### ResourceRepository
 
-**Namespace**: `JsonApi\Symfony\Contract\Data\ResourceRepository`  
+**Namespace**: `AlexFigures\Symfony\Contract\Data\ResourceRepository`  
 **Purpose**: Read JSON:API resources and collections from your data layer  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -121,7 +121,7 @@ final class DoctrineArticleRepository implements ResourceRepository
 
 ### ResourcePersister
 
-**Namespace**: `JsonApi\Symfony\Contract\Data\ResourcePersister`  
+**Namespace**: `AlexFigures\Symfony\Contract\Data\ResourcePersister`  
 **Purpose**: Create, update, and delete JSON:API resources  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -204,7 +204,7 @@ final class DoctrineArticlePersister implements ResourcePersister
 
 ### RelationshipReader
 
-**Namespace**: `JsonApi\Symfony\Contract\Data\RelationshipReader`  
+**Namespace**: `AlexFigures\Symfony\Contract\Data\RelationshipReader`  
 **Purpose**: Read relationship data and related resources  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -269,7 +269,7 @@ final class DoctrineRelationshipReader implements RelationshipReader
 
 ### RelationshipUpdater
 
-**Namespace**: `JsonApi\Symfony\Contract\Data\RelationshipUpdater`  
+**Namespace**: `AlexFigures\Symfony\Contract\Data\RelationshipUpdater`  
 **Purpose**: Update relationships between resources  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -290,7 +290,7 @@ interface RelationshipUpdater
 
 ### ExistenceChecker
 
-**Namespace**: `JsonApi\Symfony\Contract\Data\ExistenceChecker`  
+**Namespace**: `AlexFigures\Symfony\Contract\Data\ExistenceChecker`  
 **Purpose**: Check if a resource exists without loading it  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -330,7 +330,7 @@ final class DoctrineExistenceChecker implements ExistenceChecker
 
 ### ChangeSet
 
-**Namespace**: `JsonApi\Symfony\Contract\Data\ChangeSet`  
+**Namespace**: `AlexFigures\Symfony\Contract\Data\ChangeSet`  
 **Purpose**: Represents attribute changes for create/update operations  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -350,7 +350,7 @@ final class ChangeSet
 
 ### ResourceIdentifier
 
-**Namespace**: `JsonApi\Symfony\Contract\Data\ResourceIdentifier`  
+**Namespace**: `AlexFigures\Symfony\Contract\Data\ResourceIdentifier`  
 **Purpose**: Represents a JSON:API resource identifier (`{type, id}`)  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -369,7 +369,7 @@ final class ResourceIdentifier
 
 ### Slice
 
-**Namespace**: `JsonApi\Symfony\Contract\Data\Slice`  
+**Namespace**: `AlexFigures\Symfony\Contract\Data\Slice`  
 **Purpose**: Represents a paginated collection of resources  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -390,7 +390,7 @@ final class Slice
 
 ### SliceIds
 
-**Namespace**: `JsonApi\Symfony\Contract\Data\SliceIds`  
+**Namespace**: `AlexFigures\Symfony\Contract\Data\SliceIds`  
 **Purpose**: Represents a paginated collection of resource IDs  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -413,7 +413,7 @@ final class SliceIds
 
 ### ResourceMetadataInterface
 
-**Namespace**: `JsonApi\Symfony\Contract\Resource\ResourceMetadataInterface`  
+**Namespace**: `AlexFigures\Symfony\Contract\Resource\ResourceMetadataInterface`  
 **Purpose**: Provides metadata about a resource type  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -433,7 +433,7 @@ interface ResourceMetadataInterface
 
 ### TransactionManager
 
-**Namespace**: `JsonApi\Symfony\Contract\Tx\TransactionManager`  
+**Namespace**: `AlexFigures\Symfony\Contract\Tx\TransactionManager`  
 **Purpose**: Manage database transactions for write operations  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -476,7 +476,7 @@ final class DoctrineTransactionManager implements TransactionManager
 
 ### JsonApiResource
 
-**Namespace**: `JsonApi\Symfony\Resource\Attribute\JsonApiResource`  
+**Namespace**: `AlexFigures\Symfony\Resource\Attribute\JsonApiResource`  
 **Purpose**: Mark a PHP class as a JSON:API resource  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -514,7 +514,7 @@ final class Article
 
 ### Id
 
-**Namespace**: `JsonApi\Symfony\Resource\Attribute\Id`  
+**Namespace**: `AlexFigures\Symfony\Resource\Attribute\Id`  
 **Purpose**: Mark a property/method as the resource identifier  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -534,7 +534,7 @@ final class Article
 
 ### Attribute
 
-**Namespace**: `JsonApi\Symfony\Resource\Attribute\Attribute`  
+**Namespace**: `AlexFigures\Symfony\Resource\Attribute\Attribute`  
 **Purpose**: Mark a property/method as a JSON:API attribute  
 **Stability**: `@api` - Stable since 0.1.0
 
@@ -570,7 +570,7 @@ final class Article
 
 ### Relationship
 
-**Namespace**: `JsonApi\Symfony\Resource\Attribute\Relationship`  
+**Namespace**: `AlexFigures\Symfony\Resource\Attribute\Relationship`  
 **Purpose**: Mark a property/method as a JSON:API relationship  
 **Stability**: `@api` - Stable since 0.1.0
 

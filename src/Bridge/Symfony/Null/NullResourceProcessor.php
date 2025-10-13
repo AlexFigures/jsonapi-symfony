@@ -22,7 +22,7 @@ final class NullResourceProcessor implements ResourceProcessor
     {
         throw new LogicException(
             'No ResourceProcessor implementation found. ' .
-            'To use write endpoints (POST, PATCH, DELETE), implement JsonApi\Symfony\Contract\Data\ResourceProcessor ' .
+            'To use write endpoints (POST, PATCH, DELETE), implement AlexFigures\Symfony\Contract\Data\ResourceProcessor ' .
             'and register it as a service.'
         );
     }
@@ -31,7 +31,7 @@ final class NullResourceProcessor implements ResourceProcessor
     {
         throw new LogicException(
             'No ResourceProcessor implementation found. ' .
-            'To use write endpoints (POST, PATCH, DELETE), implement JsonApi\Symfony\Contract\Data\ResourceProcessor ' .
+            'To use write endpoints (POST, PATCH, DELETE), implement AlexFigures\Symfony\Contract\Data\ResourceProcessor ' .
             'and register it as a service.'
         );
     }
@@ -40,7 +40,7 @@ final class NullResourceProcessor implements ResourceProcessor
     {
         throw new LogicException(
             'No ResourceProcessor implementation found. ' .
-            'To use write endpoints (POST, PATCH, DELETE), implement JsonApi\Symfony\Contract\Data\ResourceProcessor ' .
+            'To use write endpoints (POST, PATCH, DELETE), implement AlexFigures\Symfony\Contract\Data\ResourceProcessor ' .
             'and register it as a service.'
         );
     }

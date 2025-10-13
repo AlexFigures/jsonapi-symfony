@@ -90,7 +90,7 @@ Errors               0
 
 ### 2.1 Contract Namespace (Stable API)
 
-The `JsonApi\Symfony\Contract\` namespace defines the **stable public API** that users can depend on.
+The `AlexFigures\Symfony\Contract\` namespace defines the **stable public API** that users can depend on.
 
 #### 2.1.1 Data Contracts
 
@@ -195,10 +195,10 @@ final class VarnishPurger implements SurrogatePurgerInterface
 ### 2.3 Internal API (Unstable)
 
 **Namespaces**:
-- `JsonApi\Symfony\Http\*` - HTTP layer (controllers, parsers, builders)
-- `JsonApi\Symfony\Filter\*` - Filter parsing and compilation
-- `JsonApi\Symfony\Atomic\*` - Atomic operations implementation
-- `JsonApi\Symfony\Bridge\Symfony\*` - Symfony integration
+- `AlexFigures\Symfony\Http\*` - HTTP layer (controllers, parsers, builders)
+- `AlexFigures\Symfony\Filter\*` - Filter parsing and compilation
+- `AlexFigures\Symfony\Atomic\*` - Atomic operations implementation
+- `AlexFigures\Symfony\Bridge\Symfony\*` - Symfony integration
 
 **Warning**: These are **internal implementation details** and may change between minor versions. Do not depend on them directly.
 
@@ -294,7 +294,7 @@ final class CustomDocumentHook implements DocumentHook
 ### 5.1 Current BC Surface
 
 **Stable (Guaranteed BC)**:
-- `JsonApi\Symfony\Contract\*` - All interfaces and value objects
+- `AlexFigures\Symfony\Contract\*` - All interfaces and value objects
 - `ProfileInterface`, `Operator`, `SurrogatePurgerInterface`
 - Built-in profile URIs (`urn:jsonapi:profile:*`)
 
