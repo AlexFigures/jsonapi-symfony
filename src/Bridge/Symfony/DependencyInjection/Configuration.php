@@ -26,9 +26,14 @@ final class Configuration implements ConfigurationInterface
 
         $children->booleanNode('strict_content_negotiation')->defaultTrue()->end();
 
+        $this->addMediaTypesSection($children);
+
         /** @var ScalarNodeDefinition $mediaType */
         $mediaType = $children->scalarNode('media_type');
-        $mediaType->defaultValue(MediaType::JSON_API)->end();
+        $mediaType
+            ->defaultNull()
+            ->setDeprecated('alexfigures/symfony-jsonapi', '0.4.0', 'The "jsonapi.media_type" option is deprecated. Configure "jsonapi.media_types" instead.')
+            ->end();
 
         /** @var ScalarNodeDefinition $routePrefix */
         $routePrefix = $children->scalarNode('route_prefix');
@@ -201,6 +206,52 @@ final class Configuration implements ConfigurationInterface
         $profiles->end();
 
         return $treeBuilder;
+    }
+
+    private function addMediaTypesSection(NodeBuilder $children): void
+    {
+        /** @var ArrayNodeDefinition $mediaTypes */
+        $mediaTypes = $children->arrayNode('media_types')->addDefaultsIfNotSet();
+        $mediaTypesChildren = $mediaTypes->children();
+
+        /** @var ArrayNodeDefinition $default */
+        $default = $mediaTypesChildren->arrayNode('default')->addDefaultsIfNotSet();
+        $this->addMediaPolicySection($default);
+
+        /** @var ArrayNodeDefinition $channels */
+        $channels = $mediaTypesChildren->arrayNode('channels')->useAttributeAsKey('name')->arrayPrototype();
+        $channelChildren = $channels->children();
+
+        $scope = $channelChildren->arrayNode('scope')->addDefaultsIfNotSet();
+        $scopeChildren = $scope->children();
+        $scopeChildren->scalarNode('path_prefix')->defaultNull()->end();
+        $scopeChildren->scalarNode('route_name')->defaultNull()->end();
+        $scopeChildren->scalarNode('attribute')->defaultNull()->end();
+        $scope->end();
+
+        $this->addMediaPolicySection($channels);
+
+        $channels->end();
+        $mediaTypes->end();
+    }
+
+    private function addMediaPolicySection(ArrayNodeDefinition $node): void
+    {
+        $children = $node->children();
+
+        $request = $children->arrayNode('request')->addDefaultsIfNotSet();
+        $request->children()
+            ->arrayNode('allowed')
+            ->scalarPrototype()->end()
+            ->defaultValue([MediaType::JSON_API])
+            ->end();
+        $request->end();
+
+        $response = $children->arrayNode('response')->addDefaultsIfNotSet();
+        $responseChildren = $response->children();
+        $responseChildren->scalarNode('default')->defaultValue(MediaType::JSON_API)->end();
+        $responseChildren->arrayNode('negotiable')->scalarPrototype()->end()->defaultValue([])->end();
+        $response->end();
     }
 
     private function addCacheSection(NodeBuilder $root): void

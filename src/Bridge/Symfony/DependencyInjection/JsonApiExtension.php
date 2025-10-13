@@ -11,6 +11,7 @@ use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
+use function trigger_deprecation;
 
 final class JsonApiExtension extends Extension
 {
@@ -25,7 +26,19 @@ final class JsonApiExtension extends Extension
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('jsonapi.strict_content_negotiation', $config['strict_content_negotiation']);
-        $container->setParameter('jsonapi.media_type', $config['media_type']);
+
+        $mediaTypes = $config['media_types'];
+        if ($config['media_type'] !== null) {
+            trigger_deprecation('alexfigures/symfony-jsonapi', '0.4.0', 'Configuring "jsonapi.media_type" is deprecated. Use the "jsonapi.media_types" section instead.');
+
+            $legacy = $config['media_type'];
+            $mediaTypes['default']['request']['allowed'] = [$legacy];
+            $mediaTypes['default']['response']['default'] = $legacy;
+            $mediaTypes['default']['response']['negotiable'] = [$legacy];
+        }
+
+        $container->setParameter('jsonapi.media_types', $mediaTypes);
+        $container->setParameter('jsonapi.media_type', $mediaTypes['default']['response']['default']);
         $container->setParameter('jsonapi.route_prefix', $config['route_prefix']);
         $container->setParameter('jsonapi.routing', $config['routing']);
         $container->setParameter('jsonapi.routing.naming_convention', $config['routing']['naming_convention']);

@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Functional\Errors;
 
 use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
 use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -40,7 +43,7 @@ final class NegotiationErrorsTest extends JsonApiTestCase
 
     public function testNotAcceptable(): void
     {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
+        $subscriber = $this->createSubscriber();
         $request = Request::create('/api/articles', 'GET', server: ['HTTP_ACCEPT' => 'application/xml']);
         $kernel = $this->createStub(HttpKernelInterface::class);
         $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
@@ -55,5 +58,27 @@ final class NegotiationErrorsTest extends JsonApiTestCase
         $errors = $this->assertErrors($response, 406);
         self::assertSame('not-acceptable', $errors[0]['code']);
         $this->assertErrorHeader($errors[0], 'Accept');
+}
+
+    private function createSubscriber(): ContentNegotiationSubscriber
+    {
+        return new ContentNegotiationSubscriber(true, $this->createPolicyProvider());
+    }
+
+    private function createPolicyProvider(): MediaTypePolicyProviderInterface
+    {
+        return new ConfigMediaTypePolicyProvider(
+            [
+                'default' => [
+                    'request' => ['allowed' => [MediaType::JSON_API]],
+                    'response' => [
+                        'default' => MediaType::JSON_API,
+                        'negotiable' => [],
+                    ],
+                ],
+                'channels' => [],
+            ],
+            new ChannelScopeMatcher()
+        );
     }
 }

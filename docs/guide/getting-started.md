@@ -80,7 +80,13 @@ Add basic configuration:
 # config/packages/jsonapi.yaml
 jsonapi:
     strict_content_negotiation: true
-    media_type: 'application/vnd.api+json'
+    media_types:
+        default:
+            request:
+                allowed:
+                    - 'application/vnd.api+json'
+            response:
+                default: 'application/vnd.api+json'
     route_prefix: '/api'
     pagination:
         default_size: 25

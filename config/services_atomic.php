@@ -19,6 +19,7 @@ use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
 use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -51,6 +52,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->set(MediaTypeNegotiator::class)
         ->args([
             service(AtomicConfig::class),
+            service(MediaTypePolicyProviderInterface::class),
         ])
     ;
 

@@ -35,7 +35,35 @@ Here's a complete configuration example with all available options:
 jsonapi:
     # Content negotiation
     strict_content_negotiation: true
-    media_type: 'application/vnd.api+json'
+    media_types:
+        default:
+            request:
+                allowed:
+                    - 'application/vnd.api+json'
+            response:
+                default: 'application/vnd.api+json'
+        channels:
+            docs:
+                scope:
+                    path_prefix: '^/_jsonapi/docs'
+                request:
+                    allowed: ['*']
+                response:
+                    default: 'text/html'
+                    negotiable:
+                        - 'text/html'
+            sandbox:
+                scope:
+                    path_prefix: '^/sandbox'
+                request:
+                    allowed:
+                        - 'application/json'
+                        - 'multipart/form-data'
+                response:
+                    default: 'application/json'
+                    negotiable:
+                        - 'application/json'
+                        - 'text/html'
     
     # Routing
     route_prefix: '/api'
@@ -147,17 +175,58 @@ jsonapi:
 
 ---
 
-#### `media_type`
+#### `media_types`
 
-**Type:** `string`  
-**Default:** `'application/vnd.api+json'`
+**Type:** `map`
+**Default:** JSON:API only (see below)
 
-The media type used for JSON:API responses. Should not be changed unless you have a specific reason.
+Controls how incoming and outgoing media types are negotiated. The configuration is split into two parts:
+
+- `default` — policy applied when no channel matches the request.
+- `channels` — named overrides matched by `path_prefix`, `route_name`, or controller attributes.
+
+Each policy contains separate rules for request and response headers:
 
 ```yaml
 jsonapi:
-    media_type: 'application/vnd.api+json'
+    media_types:
+        default:
+            request:
+                allowed:
+                    - 'application/vnd.api+json'
+            response:
+                default: 'application/vnd.api+json'
+                negotiable: []  # defaults to the same value as "default"
+        channels:
+            docs:
+                scope:
+                    path_prefix: '^/_jsonapi/docs'
+                request:
+                    allowed: ['*']  # allow any Content-Type (read-only)
+                response:
+                    default: 'text/html'
+                    negotiable:
+                        - 'text/html'
+            sandbox:
+                scope:
+                    path_prefix: '^/sandbox'
+                request:
+                    allowed:
+                        - 'application/json'
+                        - 'multipart/form-data'
+                response:
+                    default: 'application/json'
+                    negotiable:
+                        - 'application/json'
+                        - 'text/html'
 ```
+
+- `request.allowed` — list of normalized media types for the `Content-Type` header. Use `'*'` to disable validation.
+- `response.default` — media type automatically applied to outgoing responses when none is set.
+- `response.negotiable` — optional list of values accepted from the `Accept` header. When omitted, only `response.default` is allowed.
+- `scope` — optional matchers for routing; values are treated as regular expressions.
+
+> **Legacy option:** the scalar `media_type` key is still accepted and automatically populates `media_types.default`. It is deprecated and will be removed in a future release.
 
 ---
 

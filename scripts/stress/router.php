@@ -19,6 +19,8 @@ use AlexFigures\Symfony\Atomic\Execution\OperationDispatcher;
 use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
 use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
 use AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController;
+use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
 use AlexFigures\Symfony\Filter\Parser\FilterParser;
 use AlexFigures\Symfony\Http\Controller\CollectionController;
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
@@ -31,6 +33,7 @@ use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Link\LinkGenerator;
 use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Http\Request\PaginationConfig;
 use AlexFigures\Symfony\Http\Request\QueryParser;
 use AlexFigures\Symfony\Http\Request\SortingWhitelist;
@@ -105,8 +108,22 @@ $validator = new InputDocumentValidator($registry, $writeConfig, $errorMapper);
 $changeSetFactory = new ChangeSetFactory($registry);
 
 // Atomic operations configuration
+$mediaTypePolicyProvider = new ConfigMediaTypePolicyProvider(
+    [
+        'default' => [
+            'request' => ['allowed' => [MediaType::JSON_API]],
+            'response' => [
+                'default' => MediaType::JSON_API,
+                'negotiable' => [],
+            ],
+        ],
+        'channels' => [],
+    ],
+    new ChannelScopeMatcher()
+);
+
 $atomicConfig = new AtomicConfig(true, '/api/operations', false, 100, 'auto', true, true, '/api');
-$mediaNegotiator = new MediaTypeNegotiator($atomicConfig);
+$mediaNegotiator = new MediaTypeNegotiator($atomicConfig, $mediaTypePolicyProvider);
 $atomicParser = new AtomicRequestParser($atomicConfig, $errorMapper);
 $atomicValidator = new AtomicValidator($atomicConfig, $registry, $errorMapper);
 $atomicTransaction = new AtomicTransaction($transactionManager);

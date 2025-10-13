@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Functional;
 
 use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
 use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -22,7 +24,7 @@ final class ContentNegotiationTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
+        $this->subscriber = $this->createSubscriber();
     }
 
     public function testUnsupportedMediaTypeTriggers415(): void
@@ -32,7 +34,7 @@ final class ContentNegotiationTest extends TestCase
 
         $this->expectException(JsonApiHttpException::class);
         $this->expectExceptionCode(0);
-        $this->expectExceptionMessage('JSON:API requires the "application/vnd.api+json" media type.');
+        $this->expectExceptionMessage('The "application/json" media type is not allowed for this endpoint.');
 
         $this->subscriber->onKernelRequest($event);
     }
@@ -43,7 +45,7 @@ final class ContentNegotiationTest extends TestCase
         $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
 
         $this->expectException(JsonApiHttpException::class);
-        $this->expectExceptionMessage('Requested representation is not available in application/vnd.api+json.');
+        $this->expectExceptionMessage('Requested representation is not available. Allowed types: application/vnd.api+json.');
 
         $this->subscriber->onKernelRequest($event);
     }
@@ -182,6 +184,72 @@ final class ContentNegotiationTest extends TestCase
         $this->subscriber->onKernelRequest($event);
     }
 
+    public function testWildcardAcceptHeaderIsAllowed(): void
+    {
+        $request = Request::create('/articles', 'GET', server: ['HTTP_ACCEPT' => 'application/*']);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $this->subscriber->onKernelRequest($event);
+
+        self::assertTrue(true);
+    }
+
+    public function testSandboxChannelAllowsMultipart(): void
+    {
+        $subscriber = $this->createSubscriber([
+            'channels' => [
+                'sandbox' => [
+                    'scope' => ['path_prefix' => '^/sandbox'],
+                    'request' => ['allowed' => ['multipart/form-data']],
+                    'response' => ['default' => 'application/json'],
+                ],
+            ],
+        ]);
+
+        $request = Request::create('/sandbox/upload', 'POST', server: [
+            'CONTENT_TYPE' => 'multipart/form-data; boundary=abc',
+            'HTTP_ACCEPT' => 'application/json',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $subscriber->onKernelRequest($event);
+
+        self::assertTrue(true);
+    }
+
+    public function testDocsChannelSkipsStrictNegotiation(): void
+    {
+        $subscriber = $this->createSubscriber([
+            'channels' => [
+                'docs' => [
+                    'scope' => ['path_prefix' => '^/_jsonapi/docs'],
+                    'request' => ['allowed' => ['*']],
+                    'response' => [
+                        'default' => 'text/html',
+                        'negotiable' => ['text/html'],
+                    ],
+                ],
+            ],
+        ]);
+
+        $request = Request::create('/_jsonapi/docs/index.html', 'GET', server: [
+            'HTTP_ACCEPT' => 'text/html',
+        ]);
+        $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $subscriber->onKernelRequest($event);
+
+        $response = new Response();
+        $subscriber->onKernelResponse(new ResponseEvent(
+            $this->createKernel(),
+            $request,
+            HttpKernelInterface::MAIN_REQUEST,
+            $response
+        ));
+
+        self::assertSame('text/html', $response->headers->get('Content-Type'));
+    }
+
     private function createKernel(): HttpKernelInterface
     {
         return new class () implements HttpKernelInterface {
@@ -190,5 +258,28 @@ final class ContentNegotiationTest extends TestCase
                 return new Response();
             }
         };
+    }
+
+    /**
+     * @param array{default?: array{request?: array{allowed?: list<string>}, response?: array{default?: string, negotiable?: list<string>}}, channels?: array<string, array{scope?: array<string, string>, request?: array{allowed?: list<string>}, response?: array{default?: string, negotiable?: list<string>}}>} $overrides
+     */
+    private function createSubscriber(array $overrides = []): ContentNegotiationSubscriber
+    {
+        $base = [
+            'default' => [
+                'request' => ['allowed' => [MediaType::JSON_API]],
+                'response' => [
+                    'default' => MediaType::JSON_API,
+                    'negotiable' => [],
+                ],
+            ],
+            'channels' => [],
+        ];
+
+        $config = array_replace_recursive($base, $overrides);
+
+        $provider = new ConfigMediaTypePolicyProvider($config, new ChannelScopeMatcher());
+
+        return new ContentNegotiationSubscriber(true, $provider);
     }
 }
