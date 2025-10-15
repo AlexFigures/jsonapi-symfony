@@ -10,6 +10,7 @@ use AlexFigures\Symfony\Resource\Attribute\Id;
 use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use AlexFigures\Symfony\Resource\Attribute\Relationship as RelationshipAttribute;
 use AlexFigures\Symfony\Resource\Attribute\SortableFields;
+use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
 use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
@@ -68,6 +69,10 @@ final class ResourceRegistry implements ResourceRegistryInterface
 
             $this->metadataByType[$metadata->type] = $metadata;
             $this->metadataByClass[$metadata->class] = $metadata;
+            $this->metadataByClass[$metadata->dataClass] = $metadata;
+            if ($metadata->viewClass !== $metadata->class) {
+                $this->metadataByClass[$metadata->viewClass] = $metadata;
+            }
             $this->metadata[] = $metadata;
         }
     }
@@ -114,6 +119,23 @@ final class ResourceRegistry implements ResourceRegistryInterface
         /** @var JsonApiResource $resource */
         $resource = $resourceAttributes[0]->newInstance();
 
+        $dataClass = $resource->dataClass ?? $class;
+        $viewClass = $resource->viewClass ?? $class;
+
+        $versionResolver = null;
+        if ($resource->versionResolver !== null) {
+            if (!is_a($resource->versionResolver, VersionResolverInterface::class, true)) {
+                throw new LogicException(sprintf(
+                    'Version resolver for resource %s must implement %s. Got "%s".',
+                    $class,
+                    VersionResolverInterface::class,
+                    $resource->versionResolver,
+                ));
+            }
+
+            $versionResolver = new ($resource->versionResolver)();
+        }
+
         $attributes = [];
         $relationships = [];
         $idPropertyPath = null;
@@ -159,19 +181,26 @@ final class ResourceRegistry implements ResourceRegistryInterface
         }
 
         return new ResourceMetadata(
-            $resource->type,
-            $class,
-            $attributes,
-            $relationships,
-            $resource->exposeId,
-            $idPropertyPath,
-            $resource->routePrefix,
-            $resource->description,
-            $sortableFields,
-            $filterableFields,
-            null, // operationGroups - deprecated
-            $resource->normalizationContext,
-            $resource->denormalizationContext,
+            type: $resource->type,
+            class: $class,
+            dataClass: $dataClass,
+            viewClass: $viewClass,
+            attributes: $attributes,
+            relationships: $relationships,
+            exposeId: $resource->exposeId,
+            idPropertyPath: $idPropertyPath,
+            routePrefix: $resource->routePrefix,
+            description: $resource->description,
+            sortableFields: $sortableFields,
+            filterableFields: $filterableFields,
+            operationGroups: null,
+            normalizationContext: $resource->normalizationContext,
+            denormalizationContext: $resource->denormalizationContext,
+            readProjection: $resource->readProjection,
+            fieldMap: $resource->fieldMap,
+            relationshipPolicies: $resource->relationshipPolicies,
+            writeRequests: $resource->writeRequests,
+            versionResolver: $versionResolver,
         );
     }
 

@@ -10,7 +10,11 @@ use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
 use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
 use AlexFigures\Symfony\Query\Criteria;
 use AlexFigures\Symfony\Query\Sorting;
+use AlexFigures\Symfony\Resource\Definition\ReadProjection;
+use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
+use AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 
@@ -31,43 +35,59 @@ class GenericDoctrineRepository implements ResourceRepository
         private readonly ResourceRegistryInterface $registry,
         private readonly DoctrineFilterCompiler $filterCompiler,
         private readonly SortHandlerRegistry $sortHandlers,
+        private readonly ReadMapperInterface $readMapper,
     ) {
     }
 
     public function findCollection(string $type, Criteria $criteria): Slice
     {
         $metadata = $this->registry->getByType($type);
-        $entityClass = $metadata->class;
+        $definition = $metadata->getDefinition();
+        $entityClass = $metadata->dataClass;
 
         $qb = $this->em->createQueryBuilder()
-            ->select('e')
             ->from($entityClass, 'e');
 
-        // Apply filters
+        if ($definition->readProjection === ReadProjection::DTO) {
+            $this->applyDtoProjection($qb, $definition);
+        } else {
+            $qb->select('e');
+        }
+
         if ($criteria->filter !== null) {
             $platform = $this->em->getConnection()->getDatabasePlatform();
             $this->filterCompiler->apply($qb, $criteria->filter, $platform);
         }
 
-        // Apply custom conditions (for custom route handlers)
         if ($criteria->customConditions !== []) {
             foreach ($criteria->customConditions as $condition) {
                 $condition($qb);
             }
         }
 
-        // Apply eager loading for includes (prevent N+1 queries)
-        $this->applyEagerLoading($qb, $metadata, $criteria->include);
-
-        // Apply sorting
+        $this->applyEagerLoading($qb, $metadata, $definition, $criteria->include);
         $this->applySorting($qb, $criteria->sort);
 
-        // Apply pagination
         $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
         $qb->setFirstResult($offset)
            ->setMaxResults($criteria->pagination->size);
 
-        $items = $qb->getQuery()->getResult();
+        $query = $qb->getQuery();
+
+        if ($definition->readProjection === ReadProjection::DTO) {
+            $rows = $query->getArrayResult();
+            $items = array_map(
+                fn (array $row): object => $this->readMapper->toView($row, $definition, $criteria),
+                $rows,
+            );
+        } else {
+            $rows = $query->getResult();
+            $items = array_map(
+                fn (object $entity): object => $this->readMapper->toView($entity, $definition, $criteria),
+                $rows,
+            );
+        }
+
         $total = $this->countTotal($qb);
 
         return new Slice(
@@ -81,7 +101,25 @@ class GenericDoctrineRepository implements ResourceRepository
     public function findOne(string $type, string $id, Criteria $criteria): ?object
     {
         $metadata = $this->registry->getByType($type);
-        return $this->em->find($metadata->class, $id);
+        $definition = $metadata->getDefinition();
+
+        if ($definition->readProjection === ReadProjection::DTO) {
+            $qb = $this->em->createQueryBuilder()
+                ->from($metadata->dataClass, 'e')
+                ->where('e.id = :id')
+                ->setParameter('id', $id);
+
+            $this->applyDtoProjection($qb, $definition);
+
+            $result = $qb->getQuery()->getArrayResult();
+            $row = $result[0] ?? null;
+
+            return $row === null ? null : $this->readMapper->toView($row, $definition, $criteria);
+        }
+
+        $entity = $this->em->find($metadata->dataClass, $id);
+
+        return $entity === null ? null : $this->readMapper->toView($entity, $definition, $criteria);
     }
 
     public function findRelated(string $type, string $relationship, array $identifiers): iterable
@@ -103,10 +141,10 @@ class GenericDoctrineRepository implements ResourceRepository
             throw new \InvalidArgumentException(sprintf('Relationship "%s" on resource type "%s" has no target class.', $relationship, $type));
         }
 
-        $classMetadata = $this->em->getClassMetadata($metadata->class);
+        $classMetadata = $this->em->getClassMetadata($metadata->dataClass);
 
         if (!$classMetadata->hasAssociation($relationship)) {
-            throw new \InvalidArgumentException(sprintf('Relationship "%s" is not a Doctrine association on entity "%s".', $relationship, $metadata->class));
+            throw new \InvalidArgumentException(sprintf('Relationship "%s" is not a Doctrine association on entity "%s".', $relationship, $metadata->dataClass));
         }
 
         $associationMapping = $classMetadata->getAssociationMapping($relationship);
@@ -130,7 +168,7 @@ class GenericDoctrineRepository implements ResourceRepository
             } else {
                 // If we can't determine inverse side, fall back to loading all source entities
                 // and extracting related entities (less efficient but works)
-                $sourceEntities = $this->em->getRepository($metadata->class)
+                $sourceEntities = $this->em->getRepository($metadata->dataClass)
                     ->createQueryBuilder('e')
                     ->where('e.id IN (:ids)')
                     ->setParameter('ids', $identifiers)
@@ -151,7 +189,7 @@ class GenericDoctrineRepository implements ResourceRepository
             }
         } else {
             // For *ToOne relationships, get the foreign key values from source entities
-            $sourceEntities = $this->em->getRepository($metadata->class)
+            $sourceEntities = $this->em->getRepository($metadata->dataClass)
                 ->createQueryBuilder('e')
                 ->select('IDENTITY(e.' . $relationship . ') as relatedId')
                 ->where('e.id IN (:ids)')
@@ -241,13 +279,13 @@ class GenericDoctrineRepository implements ResourceRepository
      *
      * @param list<string> $includes
      */
-    private function applyEagerLoading(QueryBuilder $qb, \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata, array $includes): void
+    private function applyEagerLoading(QueryBuilder $qb, ResourceMetadata $metadata, ResourceDefinition $definition, array $includes): void
     {
         if ($includes === []) {
             return;
         }
 
-        $classMetadata = $this->em->getClassMetadata($metadata->class);
+        $classMetadata = $this->em->getClassMetadata($metadata->dataClass);
         $joinedRelationships = [];
 
         foreach ($includes as $includePath) {
@@ -279,7 +317,9 @@ class GenericDoctrineRepository implements ResourceRepository
                 if (!in_array($joinPath, $joinedRelationships, true)) {
                     // Use LEFT JOIN to include entities even if relationship is null
                     $qb->leftJoin($joinPath, $joinAlias);
-                    $qb->addSelect($joinAlias);
+                    if ($definition->readProjection !== ReadProjection::DTO) {
+                        $qb->addSelect($joinAlias);
+                    }
                     $joinedRelationships[] = $joinPath;
                 }
 
@@ -306,6 +346,28 @@ class GenericDoctrineRepository implements ResourceRepository
                     }
                 }
             }
+        }
+    }
+
+    private function applyDtoProjection(QueryBuilder $qb, ResourceDefinition $definition): void
+    {
+        $selects = [];
+
+        foreach ($definition->fieldMap as $field => $expression) {
+            $selects[] = sprintf('%s AS %s', $expression, $field);
+        }
+
+        if ($selects === []) {
+            $qb->select('e');
+
+            return;
+        }
+
+        $first = array_shift($selects);
+        $qb->select($first);
+
+        foreach ($selects as $select) {
+            $qb->addSelect($select);
         }
     }
 }

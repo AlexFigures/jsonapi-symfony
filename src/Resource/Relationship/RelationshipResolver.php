@@ -209,16 +209,16 @@ class RelationshipResolver
                 // For self-referential relationships, the target class should match the source entity class
                 // We can infer this from the targetType if it matches the current resource type
                 if ($meta->targetType !== null && $this->registry->hasType($meta->targetType)) {
-                    $expectedClass = $this->registry->getByType($meta->targetType)->class;
+                    $expectedClass = $this->registry->getByType($meta->targetType)->dataClass;
                 }
             }
 
-            if (!\is_a($reg->class, $expectedClass, true)) {
+            if (!\is_a($reg->dataClass, $expectedClass, true)) {
                 throw new ValidationException([
                     $this->createValidationError(
                         $index === null ? $ptrBase.'/type' : $this->pointerRelationshipsIndex($relName, $index).'/type',
                         sprintf('Type "%s" is not compatible with expected class "%s".', $type, $expectedClass),
-                        ['resolvedClass' => $reg->class]
+                        ['resolvedClass' => $reg->dataClass]
                     )
                 ]);
             }
@@ -234,7 +234,7 @@ class RelationshipResolver
     private function resolveTarget(string $type, string $id, RelationshipMetadata $meta): object
     {
         $reg = $this->registry->getByType($type);
-        $class = $reg->class;
+        $class = $reg->dataClass;
 
         if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
             return $this->em->getReference($class, $id);
@@ -281,7 +281,7 @@ class RelationshipResolver
 
         foreach ($byType as $type => $idsWithIndex) {
             $reg = $this->registry->getByType($type);
-            $class = $reg->class;
+            $class = $reg->dataClass;
             $ids = array_values($idsWithIndex);
 
             if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
@@ -340,7 +340,7 @@ class RelationshipResolver
         ?object $target
     ): void {
         $field = $relMeta->propertyPath ?? $relMeta->name;
-        $cm = $this->em->getClassMetadata($ownerMeta->class);
+        $cm = $this->em->getClassMetadata($ownerMeta->dataClass);
         if (!$cm->hasAssociation($field)) {
             // fall back to accessor set (non-association field?)
             $this->accessor->setValue($owner, $field, $target);
@@ -463,7 +463,7 @@ class RelationshipResolver
 
     private function addLink(object $owner, ResourceMetadata $ownerMeta, string $field, object $target): void
     {
-        $cm = $this->em->getClassMetadata($ownerMeta->class);
+        $cm = $this->em->getClassMetadata($ownerMeta->dataClass);
         if ($cm->hasAssociation($field)) {
             /** @var array{inversedBy?: string, mappedBy?: string, isOwningSide: bool, type: int} $assoc */
             $assoc = $cm->getAssociationMapping($field);
@@ -509,7 +509,7 @@ class RelationshipResolver
 
     private function removeLink(object $owner, ResourceMetadata $ownerMeta, string $field, object $target): void
     {
-        $cm = $this->em->getClassMetadata($ownerMeta->class);
+        $cm = $this->em->getClassMetadata($ownerMeta->dataClass);
         if ($cm->hasAssociation($field)) {
             /** @var array{inversedBy?: string, mappedBy?: string, isOwningSide: bool, type: int} $assoc */
             $assoc = $cm->getAssociationMapping($field);
