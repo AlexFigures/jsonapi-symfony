@@ -15,7 +15,9 @@ use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
 use AlexFigures\Symfony\Atomic\Result\ResultBuilder;
 use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
 use AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController;
-use AlexFigures\Symfony\Contract\Data\ResourcePersister;
+use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
 use AlexFigures\Symfony\Contract\Data\ResourceRepository;
 use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use AlexFigures\Symfony\Http\Controller\CollectionController;
@@ -33,6 +35,8 @@ use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Error\JsonApiExceptionListener;
 use AlexFigures\Symfony\Http\Link\LinkGenerator;
 use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
 use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
 use AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
 use AlexFigures\Symfony\Http\Request\PaginationConfig;
@@ -86,7 +90,7 @@ abstract class JsonApiTestCase extends TestCase
     private ?CreateResourceController $createController = null;
     private ?UpdateResourceController $updateController = null;
     private ?DeleteResourceController $deleteController = null;
-    private ?ResourcePersister $persister = null;
+    private ?ResourceProcessor $persister = null;
     private ?TransactionManager $transactionManager = null;
     private ?RelatedController $relatedController = null;
     private ?RelationshipGetController $relationshipGetController = null;
@@ -99,6 +103,7 @@ abstract class JsonApiTestCase extends TestCase
     private ?ChangeSetFactory $changeSetFactory = null;
     private ?EventDispatcherInterface $eventDispatcher = null;
     private ?RelationshipResolver $relationshipResolver = null;
+    private ?MediaTypePolicyProviderInterface $mediaTypePolicyProvider = null;
 
     protected function collectionController(): CollectionController
     {
@@ -299,11 +304,11 @@ abstract class JsonApiTestCase extends TestCase
         return $this->accessor;
     }
 
-    protected function persister(): ResourcePersister
+    protected function persister(): ResourceProcessor
     {
         $this->boot();
 
-        \assert($this->persister instanceof ResourcePersister);
+        \assert($this->persister instanceof ResourceProcessor);
 
         return $this->persister;
     }
@@ -333,6 +338,15 @@ abstract class JsonApiTestCase extends TestCase
         \assert($this->relationshipResolver instanceof RelationshipResolver);
 
         return $this->relationshipResolver;
+    }
+
+    protected function mediaTypePolicyProvider(): MediaTypePolicyProviderInterface
+    {
+        $this->boot();
+
+        \assert($this->mediaTypePolicyProvider instanceof MediaTypePolicyProviderInterface);
+
+        return $this->mediaTypePolicyProvider;
     }
 
     private function boot(): void
@@ -401,8 +415,24 @@ abstract class JsonApiTestCase extends TestCase
         $relationshipResponseConfig = new WriteRelationshipsResponseConfig('linkage');
         $relationshipValidator = new RelationshipDocumentValidator($registry, $existenceChecker, $errorMapper);
 
+        $mediaTypePolicyProvider = new ConfigMediaTypePolicyProvider(
+            [
+                'default' => [
+                    'request' => ['allowed' => [MediaType::JSON_API]],
+                    'response' => [
+                        'default' => MediaType::JSON_API,
+                        'negotiable' => [],
+                    ],
+                ],
+                'channels' => [],
+            ],
+            new ChannelScopeMatcher()
+        );
+
+        $this->mediaTypePolicyProvider = $mediaTypePolicyProvider;
+
         $atomicConfig = new AtomicConfig(true, '/api/operations', true, 100, 'auto', true, true, '/api');
-        $mediaNegotiator = new MediaTypeNegotiator($atomicConfig);
+        $mediaNegotiator = new MediaTypeNegotiator($atomicConfig, $mediaTypePolicyProvider);
         $atomicParser = new AtomicRequestParser($atomicConfig, $errorMapper);
         $atomicValidator = new AtomicValidator($atomicConfig, $registry, $errorMapper);
         $atomicTransaction = new AtomicTransaction($transactionManager);

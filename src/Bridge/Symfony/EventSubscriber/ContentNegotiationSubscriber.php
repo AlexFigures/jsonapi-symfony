@@ -6,6 +6,8 @@ namespace AlexFigures\Symfony\Bridge\Symfony\EventSubscriber;
 
 use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
 use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicy;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +19,7 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
 {
     public function __construct(
         private readonly bool $strictContentNegotiation,
-        private readonly string $mediaType
+        private readonly MediaTypePolicyProviderInterface $policyProvider
     ) {
     }
 
@@ -44,13 +46,10 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
 
         $request = $event->getRequest();
 
-        // Skip content negotiation for documentation routes
-        if ($this->isDocumentationRoute($request)) {
-            return;
-        }
+        $policy = $this->policyProvider->getPolicy($request);
 
-        $this->assertContentType($request);
-        $this->assertAcceptHeader($request);
+        $this->assertContentType($request, $policy);
+        $this->assertAcceptHeader($request, $policy);
     }
 
     public function onKernelResponse(ResponseEvent $event): void
@@ -60,11 +59,22 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         }
 
         $response = $event->getResponse();
+        $request = $event->getRequest();
+        $policy = $this->policyProvider->getPolicy($request);
+
+        if (!$response->headers->has('Content-Type')) {
+            $response->headers->set('Content-Type', $policy->defaultResponseType);
+        }
+
         self::addVaryAccept($response);
     }
 
-    private function assertContentType(Request $request): void
+    private function assertContentType(Request $request, MediaTypePolicy $policy): void
     {
+        if (!$this->strictContentNegotiation || $policy->allowsAnyRequestType()) {
+            return;
+        }
+
         $contentType = $request->headers->get('Content-Type');
         if ($contentType === null) {
             return;
@@ -72,12 +82,14 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
 
         $normalized = $this->normalizeMediaType($contentType);
 
-        if ($this->mediaType !== $normalized) {
-            throw new UnsupportedMediaTypeException($contentType, 'JSON:API requires the "application/vnd.api+json" media type.');
+        if (!in_array($normalized, $policy->allowedRequestTypes, true)) {
+            throw new UnsupportedMediaTypeException(
+                $contentType,
+                sprintf('The "%s" media type is not allowed for this endpoint.', $normalized)
+            );
         }
 
-        // JSON:API spec: servers MUST respond with 415 if media type parameters other than ext or profile are present
-        if ($this->hasUnsupportedParameters($contentType)) {
+        if ($policy->enforceJsonApiParameters && $this->hasUnsupportedParameters($contentType)) {
             throw new UnsupportedMediaTypeException(
                 $contentType,
                 'JSON:API media type must not have parameters other than "ext" or "profile".'
@@ -85,22 +97,25 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         }
     }
 
-    private function assertAcceptHeader(Request $request): void
+    private function assertAcceptHeader(Request $request, MediaTypePolicy $policy): void
     {
+        if (!$this->strictContentNegotiation || $policy->allowsAnyResponseType()) {
+            return;
+        }
+
         $accept = $request->headers->get('Accept');
         if ($accept === null || $accept === '') {
             return;
         }
 
-        $foundJsonApi = false;
+        $found = false;
         foreach (explode(',', $accept) as $part) {
             $normalized = $this->normalizeMediaType($part);
 
-            if ($this->mediaType === $normalized) {
-                $foundJsonApi = true;
+            if ($this->isAcceptable($normalized, $policy->negotiableResponseTypes)) {
+                $found = true;
 
-                // JSON:API spec: servers MUST respond with 406 if media type parameters other than ext or profile are present
-                if ($this->hasUnsupportedParameters($part)) {
+                if ($policy->enforceJsonApiParameters && $this->hasUnsupportedParameters($part)) {
                     throw new NotAcceptableException(
                         $accept,
                         'JSON:API media type in Accept header must not have parameters other than "ext" or "profile".'
@@ -109,26 +124,12 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
             }
         }
 
-        if (!$foundJsonApi) {
-            throw new NotAcceptableException($accept, 'Requested representation is not available in application/vnd.api+json.');
+        if (!$found) {
+            throw new NotAcceptableException(
+                $accept,
+                sprintf('Requested representation is not available. Allowed types: %s.', implode(', ', $policy->negotiableResponseTypes))
+            );
         }
-    }
-
-    /**
-     * Check if the request is for documentation routes that should not be subject to JSON:API content negotiation.
-     */
-    private function isDocumentationRoute(Request $request): bool
-    {
-        $route = $request->attributes->get('_route');
-
-        // Check by route name
-        if ($route !== null && str_starts_with((string) $route, 'jsonapi.docs.')) {
-            return true;
-        }
-
-        // Fallback: check by path pattern
-        $path = $request->getPathInfo();
-        return str_starts_with($path, '/_jsonapi/docs') || str_starts_with($path, '/_jsonapi/openapi');
     }
 
     private function normalizeMediaType(string $value): string
@@ -141,6 +142,31 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         }
 
         return substr($normalized, 0, $semicolonPosition);
+    }
+
+    /**
+     * @param list<string> $allowed
+     */
+    private function isAcceptable(string $normalized, array $allowed): bool
+    {
+        if (in_array($normalized, $allowed, true)) {
+            return true;
+        }
+
+        if ($normalized === '*/*') {
+            return true;
+        }
+
+        if (str_contains($normalized, '/*')) {
+            $prefix = substr($normalized, 0, strpos($normalized, '/'));
+            foreach ($allowed as $type) {
+                if (str_starts_with($type, $prefix . '/')) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

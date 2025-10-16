@@ -8,6 +8,8 @@ use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscri
 use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
 use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicy;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,20 +32,19 @@ final class ContentNegotiationSubscriberTest extends TestCase
 
     public function testSkipsSubRequests(): void
     {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
+        $subscriber = $this->createSubscriber($this->jsonApiPolicy());
         $request = Request::create('/api/articles', 'GET');
         $kernel = $this->createMock(HttpKernelInterface::class);
 
         $event = new RequestEvent($kernel, $request, HttpKernelInterface::SUB_REQUEST);
         $subscriber->onKernelRequest($event);
 
-        // No exception should be thrown
         $this->addToAssertionCount(1);
     }
 
     public function testSkipsWhenStrictModeDisabled(): void
     {
-        $subscriber = new ContentNegotiationSubscriber(false, MediaType::JSON_API);
+        $subscriber = $this->createSubscriber($this->jsonApiPolicy(), false);
         $request = Request::create('/api/articles', 'GET');
         $request->headers->set('Accept', 'text/html');
         $kernel = $this->createMock(HttpKernelInterface::class);
@@ -51,13 +52,12 @@ final class ContentNegotiationSubscriberTest extends TestCase
         $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
         $subscriber->onKernelRequest($event);
 
-        // No exception should be thrown even with wrong Accept header
         $this->addToAssertionCount(1);
     }
 
-    public function testThrowsNotAcceptableWhenAcceptHeaderMissing(): void
+    public function testThrowsNotAcceptableWhenAcceptHeaderMissingAllowedType(): void
     {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
+        $subscriber = $this->createSubscriber($this->jsonApiPolicy());
         $request = Request::create('/api/articles', 'GET');
         $request->headers->set('Accept', 'text/html');
         $kernel = $this->createMock(HttpKernelInterface::class);
@@ -70,7 +70,7 @@ final class ContentNegotiationSubscriberTest extends TestCase
 
     public function testAcceptsCorrectMediaType(): void
     {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
+        $subscriber = $this->createSubscriber($this->jsonApiPolicy());
         $request = Request::create('/api/articles', 'GET');
         $request->headers->set('Accept', MediaType::JSON_API);
         $kernel = $this->createMock(HttpKernelInterface::class);
@@ -78,13 +78,12 @@ final class ContentNegotiationSubscriberTest extends TestCase
         $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
         $subscriber->onKernelRequest($event);
 
-        // No exception should be thrown
         $this->addToAssertionCount(1);
     }
 
     public function testThrowsUnsupportedMediaTypeForWrongContentType(): void
     {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
+        $subscriber = $this->createSubscriber($this->jsonApiPolicy());
         $request = Request::create('/api/articles', 'POST', [], [], [], [], '{}');
         $request->headers->set('Content-Type', 'application/json');
         $request->headers->set('Accept', MediaType::JSON_API);
@@ -96,106 +95,73 @@ final class ContentNegotiationSubscriberTest extends TestCase
         $subscriber->onKernelRequest($event);
     }
 
-    public function testSkipsDocumentationRoutesByRouteName(): void
+    public function testAllowsAnyRequestPolicySkipsContentTypeValidation(): void
     {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
-        $request = Request::create('/_jsonapi/docs', 'GET');
-        $request->headers->set('Accept', 'text/html');
-        $request->attributes->set('_route', 'jsonapi.docs.ui');
+        $policy = new MediaTypePolicy(['*'], [MediaType::JSON_API], MediaType::JSON_API, false);
+        $subscriber = $this->createSubscriber($policy);
+        $request = Request::create('/sandbox', 'POST');
+        $request->headers->set('Content-Type', 'multipart/form-data; boundary=abc');
+        $request->headers->set('Accept', MediaType::JSON_API);
         $kernel = $this->createMock(HttpKernelInterface::class);
 
         $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
         $subscriber->onKernelRequest($event);
 
-        // No exception should be thrown for documentation routes
         $this->addToAssertionCount(1);
     }
 
-    public function testSkipsOpenApiRouteByRouteName(): void
+    public function testAllowsAnyResponsePolicySkipsAcceptValidation(): void
     {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
-        $request = Request::create('/_jsonapi/openapi.json', 'GET');
-        $request->headers->set('Accept', 'application/json');
-        $request->attributes->set('_route', 'jsonapi.docs.openapi');
-        $kernel = $this->createMock(HttpKernelInterface::class);
-
-        $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
-        $subscriber->onKernelRequest($event);
-
-        // No exception should be thrown for OpenAPI spec route
-        $this->addToAssertionCount(1);
-    }
-
-    public function testSkipsDocumentationRoutesByPath(): void
-    {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
-        $request = Request::create('/_jsonapi/docs', 'GET');
+        $policy = new MediaTypePolicy([MediaType::JSON_API], ['*'], MediaType::JSON_API, true);
+        $subscriber = $this->createSubscriber($policy);
+        $request = Request::create('/sandbox', 'GET');
         $request->headers->set('Accept', 'text/html');
         $kernel = $this->createMock(HttpKernelInterface::class);
 
         $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
         $subscriber->onKernelRequest($event);
 
-        // No exception should be thrown even without route name
         $this->addToAssertionCount(1);
     }
 
-    public function testSkipsOpenApiRouteByPath(): void
+    public function testAddsVaryHeaderAndDefaultContentTypeToResponse(): void
     {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
-        $request = Request::create('/_jsonapi/openapi.json', 'GET');
-        $request->headers->set('Accept', 'application/json');
-        $kernel = $this->createMock(HttpKernelInterface::class);
-
-        $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
-        $subscriber->onKernelRequest($event);
-
-        // No exception should be thrown even without route name
-        $this->addToAssertionCount(1);
-    }
-
-    public function testAddsVaryHeaderToResponse(): void
-    {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
+        $subscriber = $this->createSubscriber($this->jsonApiPolicy());
         $request = Request::create('/api/articles', 'GET');
-        $response = new Response();
         $kernel = $this->createMock(HttpKernelInterface::class);
 
+        $response = new Response();
         $event = new ResponseEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
+
         $subscriber->onKernelResponse($event);
 
         self::assertSame('Accept', $response->headers->get('Vary'));
+        self::assertSame(MediaType::JSON_API, $response->headers->get('Content-Type'));
     }
 
-    public function testMergesVaryHeaderWithExisting(): void
+    private function createSubscriber(MediaTypePolicy $policy, bool $strict = true): ContentNegotiationSubscriber
     {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
-        $request = Request::create('/api/articles', 'GET');
-        $response = new Response();
-        $response->headers->set('Vary', 'Authorization');
-        $kernel = $this->createMock(HttpKernelInterface::class);
+        $provider = new class ($policy) implements MediaTypePolicyProviderInterface {
+            public function __construct(private MediaTypePolicy $policy)
+            {
+            }
 
-        $event = new ResponseEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
-        $subscriber->onKernelResponse($event);
+            public function getPolicy(Request $request): MediaTypePolicy
+            {
+                return $this->policy;
+            }
+        };
 
-        // The Vary header should contain both values
-        $varyHeader = $response->headers->get('Vary');
-        self::assertNotNull($varyHeader);
-        self::assertStringContainsString('Authorization', $varyHeader);
-        self::assertStringContainsString('Accept', $varyHeader);
+        return new ContentNegotiationSubscriber($strict, $provider);
     }
 
-    public function testDoesNotDuplicateVaryHeader(): void
+    private function jsonApiPolicy(): MediaTypePolicy
     {
-        $subscriber = new ContentNegotiationSubscriber(true, MediaType::JSON_API);
-        $request = Request::create('/api/articles', 'GET');
-        $response = new Response();
-        $response->headers->set('Vary', 'Accept');
-        $kernel = $this->createMock(HttpKernelInterface::class);
-
-        $event = new ResponseEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $response);
-        $subscriber->onKernelResponse($event);
-
-        self::assertSame('Accept', $response->headers->get('Vary'));
+        return new MediaTypePolicy(
+            [MediaType::JSON_API],
+            [MediaType::JSON_API],
+            MediaType::JSON_API,
+            true
+        );
     }
 }

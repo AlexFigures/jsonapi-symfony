@@ -6,7 +6,10 @@ use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
 use AlexFigures\Symfony\Bridge\Symfony\EventListener\WriteListener;
 use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
 use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\MediaChannelSubscriber;
 use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
+use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
 use AlexFigures\Symfony\Http\Controller\CollectionController;
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
 use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
@@ -34,6 +37,7 @@ use AlexFigures\Symfony\Http\Link\LinkGenerator;
 use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
 use AlexFigures\Symfony\Http\Safety\RequestComplexityScorer;
 use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
 use AlexFigures\Symfony\Http\Request\PaginationConfig;
 use AlexFigures\Symfony\Http\Request\QueryParser;
 use AlexFigures\Symfony\Http\Request\SortingWhitelist;
@@ -88,12 +92,29 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 return static function (ContainerConfigurator $configurator): void {
     $services = $configurator->services();
 
+    $services->set(ChannelScopeMatcher::class);
+
+    $services
+        ->set(ConfigMediaTypePolicyProvider::class)
+        ->args([
+            '%jsonapi.media_types%',
+            service(ChannelScopeMatcher::class),
+        ])
+    ;
+
+    $services->alias(MediaTypePolicyProviderInterface::class, ConfigMediaTypePolicyProvider::class);
+
     $services
         ->set(ContentNegotiationSubscriber::class)
         ->args([
             '%jsonapi.strict_content_negotiation%',
-            '%jsonapi.media_type%',
+            service(MediaTypePolicyProviderInterface::class),
         ])
+        ->tag('kernel.event_subscriber')
+    ;
+
+    $services
+        ->set(MediaChannelSubscriber::class)
         ->tag('kernel.event_subscriber')
     ;
 

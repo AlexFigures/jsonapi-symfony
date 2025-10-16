@@ -85,6 +85,15 @@ services:
 
 parameters:
     jsonapi.strict_content_negotiation: false
+    jsonapi.media_types:
+        default:
+            request:
+                allowed:
+                    - 'application/vnd.api+json'
+            response:
+                default: 'application/vnd.api+json'
+                negotiable: []
+        channels: []
     jsonapi.media_type: 'application/vnd.api+json'
     jsonapi.limits:
         max_include_depth: 3
