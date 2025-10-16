@@ -24,6 +24,7 @@ use AlexFigures\Symfony\Http\Controller\ResourceController;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
@@ -99,12 +100,14 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
         $filterHandlerRegistry = new FilterHandlerRegistry();
         $filterCompiler = new DoctrineFilterCompiler($operatorRegistry, $filterHandlerRegistry);
         $sortHandlerRegistry = new SortHandlerRegistry();
+        $readMapper = new DefaultReadMapper();
 
         $repository = new GenericDoctrineRepository(
             $this->em,
             $this->registry,
             $filterCompiler,
-            $sortHandlerRegistry
+            $sortHandlerRegistry,
+            $readMapper
         );
 
         $documentBuilder = new DocumentBuilder(
@@ -220,7 +223,7 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
 
         $request = Request::create("/api/tags/{$nonExistentId}", 'GET');
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
 
         ($this->controller)($request, 'tags', $nonExistentId);
     }
@@ -232,7 +235,7 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
     {
         $request = Request::create('/api/unknown-type/some-id', 'GET');
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessage('Resource type "unknown-type" not found');
 
         ($this->controller)($request, 'unknown-type', 'some-id');

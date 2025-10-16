@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Resource\Attribute;
 
+use AlexFigures\Symfony\Resource\Definition\ReadProjection;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use Attribute;
 
 /**
@@ -54,6 +56,13 @@ final class JsonApiResource
      * @param string|null          $description            Optional human-readable description for documentation
      * @param bool                 $exposeId               Whether to expose the ID in the resource document (default: true)
      */
+    /**
+     * @param array<string, mixed>          $normalizationContext
+     * @param array<string, mixed>          $denormalizationContext
+     * @param array<string, string>         $fieldMap
+     * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
+     * @param array<string, class-string>   $writeRequests
+     */
     public function __construct(
         public readonly string $type,
         public readonly array $normalizationContext = [],
@@ -61,6 +70,13 @@ final class JsonApiResource
         public readonly ?string $routePrefix = null,
         public readonly ?string $description = null,
         public readonly bool $exposeId = true,
+        public readonly ?string $dataClass = null,
+        public readonly ?string $viewClass = null,
+        public readonly ReadProjection $readProjection = ReadProjection::ENTITY,
+        public readonly array $fieldMap = [],
+        public readonly array $relationshipPolicies = [],
+        public readonly array $writeRequests = [],
+        public readonly ?string $versionResolver = null,
     ) {
     }
 

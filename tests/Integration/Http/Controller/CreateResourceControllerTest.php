@@ -886,7 +886,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
      * Test 14: Error handling - non-existent relationship resource (to-one).
      *
      * Validates:
-     * - 422 Unprocessable Entity when referenced author doesn't exist
+     * - 404 Not Found when referenced author doesn't exist (per JSON:API spec)
      * - Error contains proper JSON pointer to the relationship
      * - Error message indicates which resource was not found
      *
@@ -919,18 +919,18 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
 
         try {
             ($this->controller)($request, 'articles');
-            self::fail('Expected ValidationException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\ValidationException $e) {
-            // Verify HTTP status code
-            self::assertSame(422, $e->getStatusCode());
+            self::fail('Expected NotFoundException to be thrown');
+        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+            // Verify HTTP status code (404 per JSON:API spec for missing related resources)
+            self::assertSame(404, $e->getStatusCode());
 
             // Verify error details
             $errors = $e->getErrors();
             self::assertNotEmpty($errors, 'Expected at least one error');
 
             $firstError = $errors[0];
-            self::assertSame('422', $firstError->status);
-            self::assertSame('validation_error', $firstError->code);
+            self::assertSame('404', $firstError->status);
+            self::assertStringContainsString('not-found', strtolower($firstError->code ?? ''));
 
             // Verify error message mentions the missing resource
             self::assertStringContainsString('authors', $firstError->detail);
@@ -949,7 +949,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
      * Test 15: Error handling - non-existent relationship resource (to-many).
      *
      * Validates:
-     * - 422 Unprocessable Entity when one or more referenced tags don't exist
+     * - 404 Not Found when one or more referenced tags don't exist (per JSON:API spec)
      * - Error contains proper JSON pointer to the specific array index
      * - Error message indicates which resource was not found
      */
@@ -987,18 +987,18 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
 
         try {
             ($this->controller)($request, 'articles');
-            self::fail('Expected ValidationException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\ValidationException $e) {
-            // Verify HTTP status code
-            self::assertSame(422, $e->getStatusCode());
+            self::fail('Expected NotFoundException to be thrown');
+        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+            // Verify HTTP status code (404 per JSON:API spec for missing related resources)
+            self::assertSame(404, $e->getStatusCode());
 
             // Verify error details
             $errors = $e->getErrors();
             self::assertNotEmpty($errors, 'Expected at least one error');
 
             $firstError = $errors[0];
-            self::assertSame('422', $firstError->status);
-            self::assertSame('validation_error', $firstError->code);
+            self::assertSame('404', $firstError->status);
+            self::assertStringContainsString('not-found', strtolower($firstError->code ?? ''));
 
             // Verify error message mentions the missing resource
             self::assertStringContainsString('tags', $firstError->detail);
@@ -1101,7 +1101,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
      * Test 17: Error - Create resource with OneToMany relationship to non-existent resources.
      *
      * Validates:
-     * - 422 Unprocessable Entity when referenced articles don't exist
+     * - 404 Not Found when referenced articles don't exist (per JSON:API spec)
      * - Error contains proper JSON pointer to the specific array index
      * - Error message indicates which resource was not found
      */
@@ -1141,18 +1141,18 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
 
         try {
             ($this->controller)($request, 'authors');
-            self::fail('Expected ValidationException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\ValidationException $e) {
-            // Verify HTTP status code
-            self::assertSame(422, $e->getStatusCode());
+            self::fail('Expected NotFoundException to be thrown');
+        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+            // Verify HTTP status code (404 per JSON:API spec for missing related resources)
+            self::assertSame(404, $e->getStatusCode());
 
             // Verify error details
             $errors = $e->getErrors();
             self::assertNotEmpty($errors, 'Expected at least one error');
 
             $firstError = $errors[0];
-            self::assertSame('422', $firstError->status);
-            self::assertSame('validation_error', $firstError->code);
+            self::assertSame('404', $firstError->status);
+            self::assertStringContainsString('not-found', strtolower($firstError->code ?? ''));
 
             // Verify error message mentions the missing resource
             self::assertStringContainsString('articles', $firstError->detail);
@@ -1186,5 +1186,61 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
             ['CONTENT_TYPE' => MediaType::JSON_API],
             json_encode($payload, \JSON_THROW_ON_ERROR)
         );
+    }
+
+    /**
+     * D5: 409 Conflict when client-generated ID already exists.
+     *
+     * JSON:API spec requires that servers MUST return 409 Conflict when
+     * processing a POST request to create a resource with a client-generated
+     * ID that already exists.
+     *
+     * Validates:
+     * - 409 status for duplicate client-generated ID
+     * - Error response includes proper error details
+     *
+     * NOTE: This test requires allowClientGeneratedIds=true in WriteConfig.
+     * Currently the test setup uses allowClientGeneratedIds=false, so this
+     * test will need WriteConfig adjustment to run properly.
+     */
+    public function testCreateWithDuplicateClientGeneratedIdReturns409(): void
+    {
+        //TODO: simulate in this test enabling that config
+        self::markTestSkipped(
+            'Test requires allowClientGeneratedIds=true in WriteConfig. ' .
+            'Current setup uses allowClientGeneratedIds=false. ' .
+            'See reports/failures.json ID:D5 for implementation plan.'
+        );
+
+        // First, create an author with client-generated ID
+        $author = new Author();
+        $author->setId('author-client-123');
+        $author->setName('John Doe');
+        $author->setEmail('john@example.com');
+        $this->em->persist($author);
+        $this->em->flush();
+        $this->em->clear();
+
+        // Try to create another author with the same client-generated ID
+        $payload = [
+            'data' => [
+                'type' => 'authors',
+                'id' => 'author-client-123', // Duplicate ID
+                'attributes' => [
+                    'name' => 'Jane Smith',
+                    'email' => 'jane@example.com',
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/authors', $payload);
+
+        try {
+            ($this->controller)($request, 'authors');
+            self::fail('Expected ConflictException (409) for duplicate client-generated ID');
+        } catch (\AlexFigures\Symfony\Http\Exception\ConflictException $e) {
+            self::assertSame(409, $e->getStatusCode());
+            self::assertStringContainsString('already exists', $e->getMessage());
+        }
     }
 }

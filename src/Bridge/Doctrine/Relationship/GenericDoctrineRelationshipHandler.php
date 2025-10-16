@@ -218,7 +218,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
     private function findResource(string $type, string $id): object
     {
         $metadata = $this->registry->getByType($type);
-        $entityClass = $metadata->class;
+        $entityClass = $metadata->dataClass;
 
         $entity = $this->em->find($entityClass, $id);
 
@@ -350,7 +350,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         }
 
         if ($relationship->targetType !== null && $this->registry->hasType($relationship->targetType)) {
-            return $this->registry->getByType($relationship->targetType)->class;
+            return $this->registry->getByType($relationship->targetType)->dataClass;
         }
 
         return $this->resolveTargetEntity($entityMetadata, $propertyPath);

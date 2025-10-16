@@ -14,10 +14,13 @@ use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
 use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
 use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
 use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Http\Error\CorrelationIdProvider;
 use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Error\JsonApiExceptionListener;
 use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
 use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
@@ -36,6 +39,10 @@ use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Validator\Validation;
@@ -106,12 +113,14 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $filterHandlerRegistry = new FilterHandlerRegistry([]);
         $filterCompiler = new DoctrineFilterCompiler($operatorRegistry, $filterHandlerRegistry);
         $sortHandlerRegistry = new SortHandlerRegistry();
+        $readMapper = new DefaultReadMapper();
 
         $this->repository = new GenericDoctrineRepository(
             $this->em,
             $this->registry,
             $filterCompiler,
             $sortHandlerRegistry,
+            $readMapper,
         );
 
         // Create SerializerEntityInstantiator
@@ -324,5 +333,41 @@ abstract class DoctrineIntegrationTestCase extends TestCase
     protected function flush(): void
     {
         $this->flushManager->flush();
+    }
+
+    /**
+     * Helper method to handle exceptions through JsonApiExceptionListener.
+     *
+     * This simulates the production flow where exceptions are converted to JSON:API error responses.
+     */
+    protected function handleException(Request $request, \Throwable $throwable, bool $exposeDebugMeta = false, string $correlationId = '00000000-0000-4000-8000-000000000000'): Response
+    {
+        $errorBuilder = new ErrorBuilder(true);
+        $errorMapper = new ErrorMapper($errorBuilder);
+
+        $listener = new JsonApiExceptionListener(
+            $errorMapper,
+            new class ($correlationId) extends CorrelationIdProvider {
+                public function __construct(private string $id)
+                {
+                }
+
+                public function generate(): string
+                {
+                    return $this->id;
+                }
+            },
+            $exposeDebugMeta,
+            true,
+        );
+
+        $kernel = $this->createStub(HttpKernelInterface::class);
+        $event = new ExceptionEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, $throwable);
+        $listener->onKernelException($event);
+
+        $response = $event->getResponse();
+        \assert($response instanceof Response);
+
+        return $response;
     }
 }

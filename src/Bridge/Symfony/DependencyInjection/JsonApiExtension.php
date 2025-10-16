@@ -142,6 +142,11 @@ final class JsonApiExtension extends Extension
                 'AlexFigures\Symfony\Contract\Tx\TransactionManager',
                 'AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager'
             )->setPublic(false);
+
+            $container->setAlias(
+                'AlexFigures\Symfony\Contract\Data\ExistenceChecker',
+                'AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker'
+            )->setPublic(false);
         } elseif ($config['provider'] === 'custom') {
             // Use custom implementations
             if ($config['repository'] !== null) {

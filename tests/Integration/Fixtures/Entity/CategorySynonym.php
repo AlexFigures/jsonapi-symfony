@@ -36,6 +36,8 @@ use Symfony\Component\Uid\Uuid;
 #[FilterableFields([
     new FilterableField('name', ['eq', 'like']),
     new FilterableField('createdAt', ['gt', 'gte', 'lt', 'lte', 'eq']),
+    new FilterableField('isActive', ['eq']),
+    new FilterableField('isMain', ['eq']),
 ])]
 class CategorySynonym
 {
@@ -57,6 +59,16 @@ class CategorySynonym
     #[Attribute]
     #[Groups(['category_synonym:read'])]
     private \DateTimeImmutable $createdAt;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    #[Attribute]
+    #[Groups(['category_synonym:read', 'category_synonym:write'])]
+    private bool $isActive = true;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[Attribute]
+    #[Groups(['category_synonym:read', 'category_synonym:write'])]
+    private bool $isMain = false;
 
     #[ORM\ManyToOne(targetEntity: Category::class)]
     #[ORM\JoinColumn(name: 'category_id', referencedColumnName: 'id', nullable: true, onDelete: 'CASCADE')]
@@ -93,6 +105,28 @@ class CategorySynonym
     public function setCreatedAt(\DateTimeImmutable $createdAt): self
     {
         $this->createdAt = $createdAt;
+        return $this;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): self
+    {
+        $this->isActive = $isActive;
+        return $this;
+    }
+
+    public function isMain(): bool
+    {
+        return $this->isMain;
+    }
+
+    public function setIsMain(bool $isMain): self
+    {
+        $this->isMain = $isMain;
         return $this;
     }
 

@@ -629,12 +629,23 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
+        ->set(\AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper::class)
+        ->autowire()
+        ->autoconfigure();
+
+    $services->alias(
+        \AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface::class,
+        \AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper::class
+    )->public(false);
+
+    $services
         ->set(\AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
             service(ResourceRegistryInterface::class),
             service(DoctrineFilterCompiler::class),
             service(SortHandlerRegistry::class),
+            service(\AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface::class),
         ])
     ;
 
@@ -710,6 +721,14 @@ return static function (ContainerConfigurator $configurator): void {
         ->set(\AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager::class)
         ->args([
             service('doctrine.orm.default_entity_manager'),
+        ])
+    ;
+
+    $services
+        ->set(\AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker::class)
+        ->args([
+            service('doctrine.orm.default_entity_manager'),
+            service(ResourceRegistryInterface::class),
         ])
     ;
 };

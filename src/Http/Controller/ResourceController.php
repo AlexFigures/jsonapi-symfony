@@ -6,12 +6,12 @@ namespace AlexFigures\Symfony\Http\Controller;
 
 use AlexFigures\Symfony\Contract\Data\ResourceRepository;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use AlexFigures\Symfony\Http\Request\QueryParser;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route(path: '/api/{type}/{id}', name: 'jsonapi.resource', methods: ['GET', 'HEAD'])]
@@ -28,14 +28,14 @@ final class ResourceController
     public function __invoke(Request $request, string $type, string $id): JsonResponse
     {
         if (!$this->registry->hasType($type)) {
-            throw new NotFoundHttpException(sprintf('Resource type "%s" not found.', $type));
+            throw new NotFoundException(sprintf('Resource type "%s" not found.', $type));
         }
 
         $criteria = $this->parser->parse($type, $request);
         $model = $this->repository->findOne($type, $id, $criteria);
 
         if ($model === null) {
-            throw new NotFoundHttpException(sprintf('Resource "%s" with id "%s" was not found.', $type, $id));
+            throw new NotFoundException(sprintf('Resource "%s" with id "%s" was not found.', $type, $id));
         }
 
         $document = $this->document->buildResource($type, $model, $criteria, $request);

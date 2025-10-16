@@ -18,6 +18,9 @@
         <testsuite name="Conformance">
             <directory>tests/Conformance</directory>
         </testsuite>
+        <testsuite name="JsonApiStatus">
+            <directory>tests/JsonApiStatus</directory>
+        </testsuite>
     </testsuites>
 
     <php>

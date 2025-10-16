@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Tests\Integration\Resource;
 
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use AlexFigures\Symfony\Http\Exception\ValidationException;
 use AlexFigures\Symfony\Resource\Attribute\Attribute;
 use AlexFigures\Symfony\Resource\Attribute\Id;
@@ -266,7 +267,7 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
             ],
         ];
 
-        // VERIFY policy should throw ValidationException immediately
+        // VERIFY policy should throw NotFoundException (404) for missing related resources
         try {
             $this->resolver->applyRelationships(
                 $book,
@@ -274,8 +275,8 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
                 $metadata,
                 true
             );
-            self::fail('Expected ValidationException to be thrown');
-        } catch (ValidationException $e) {
+            self::fail('Expected NotFoundException to be thrown');
+        } catch (NotFoundException $e) {
             $errors = $e->getErrors();
             self::assertCount(1, $errors);
 
@@ -310,8 +311,8 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
                 $metadata,
                 true
             );
-            self::fail('Expected ValidationException to be thrown');
-        } catch (ValidationException $e) {
+            self::fail('Expected NotFoundException to be thrown');
+        } catch (NotFoundException $e) {
             $errors = $e->getErrors();
             self::assertCount(1, $errors);
 

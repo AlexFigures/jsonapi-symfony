@@ -40,7 +40,7 @@ final class JsonApiRelationshipDenormalizer implements DenormalizerInterface
         // Get resource metadata for the entity
         $metadata = null;
         foreach ($this->registry->all() as $resourceMetadata) {
-            if ($resourceMetadata->class === get_class($entity)) {
+            if ($resourceMetadata->dataClass === get_class($entity)) {
                 $metadata = $resourceMetadata;
                 break;
             }
@@ -91,7 +91,7 @@ final class JsonApiRelationshipDenormalizer implements DenormalizerInterface
 
         // Check if entity class is registered
         foreach ($this->registry->all() as $resourceMetadata) {
-            if ($resourceMetadata->class === get_class($entity)) {
+            if ($resourceMetadata->dataClass === get_class($entity)) {
                 return true;
             }
         }

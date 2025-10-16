@@ -39,7 +39,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
     public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
     {
         $metadata = $this->registry->getByType($type);
-        $entityClass = $metadata->class;
+        $entityClass = $metadata->dataClass;
 
         // Check for ID conflict
         if ($clientId !== null && $this->em->find($entityClass, $clientId)) {
@@ -86,7 +86,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
     public function processUpdate(string $type, string $id, ChangeSet $changes): object
     {
         $metadata = $this->registry->getByType($type);
-        $entity = $this->em->find($metadata->class, $id);
+        $entity = $this->em->find($metadata->dataClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -106,7 +106,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
     public function processDelete(string $type, string $id): void
     {
         $metadata = $this->registry->getByType($type);
-        $entity = $this->em->find($metadata->class, $id);
+        $entity = $this->em->find($metadata->dataClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(

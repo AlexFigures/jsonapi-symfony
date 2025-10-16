@@ -7,6 +7,7 @@ namespace AlexFigures\Symfony\Resource\Relationship;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Error\ErrorObject;
 use AlexFigures\Symfony\Http\Error\ErrorSource;
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use AlexFigures\Symfony\Http\Exception\ValidationException;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
@@ -209,16 +210,16 @@ class RelationshipResolver
                 // For self-referential relationships, the target class should match the source entity class
                 // We can infer this from the targetType if it matches the current resource type
                 if ($meta->targetType !== null && $this->registry->hasType($meta->targetType)) {
-                    $expectedClass = $this->registry->getByType($meta->targetType)->class;
+                    $expectedClass = $this->registry->getByType($meta->targetType)->dataClass;
                 }
             }
 
-            if (!\is_a($reg->class, $expectedClass, true)) {
+            if (!\is_a($reg->dataClass, $expectedClass, true)) {
                 throw new ValidationException([
                     $this->createValidationError(
                         $index === null ? $ptrBase.'/type' : $this->pointerRelationshipsIndex($relName, $index).'/type',
                         sprintf('Type "%s" is not compatible with expected class "%s".', $type, $expectedClass),
-                        ['resolvedClass' => $reg->class]
+                        ['resolvedClass' => $reg->dataClass]
                     )
                 ]);
             }
@@ -229,12 +230,13 @@ class RelationshipResolver
 
     /**
      * Resolves target entity by policy.
-     * @throws ValidationException
+     * @throws NotFoundException When related resource is not found (404, not 422)
+     * @throws ValidationException For other validation errors
      */
     private function resolveTarget(string $type, string $id, RelationshipMetadata $meta): object
     {
         $reg = $this->registry->getByType($type);
-        $class = $reg->class;
+        $class = $reg->dataClass;
 
         if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
             return $this->em->getReference($class, $id);
@@ -243,14 +245,25 @@ class RelationshipResolver
         // VERIFY policy: early existence check with good error message
         $obj = $this->em->find($class, $id);
         if (!$obj) {
-            throw new ValidationException([
-                $this->createValidationError(
-                    // pointer will be completed by caller (adds /id for element)
-                    '/data/relationships',
-                    sprintf('Related resource of type "%s" with id "%s" was not found.', $type, $id),
-                    ['type' => $type, 'id' => $id]
-                )
-            ]);
+            // JSON:API spec requires 404 for missing related resources, not 422
+            $error = $this->errors?->notFound(
+                sprintf('Related resource of type "%s" with id "%s" was not found.', $type, $id),
+                '/data/relationships'
+            ) ?? new ErrorObject(
+                id: null,
+                aboutLink: null,
+                status: '404',
+                code: 'resource-not-found',
+                title: 'Resource Not Found',
+                detail: sprintf('Related resource of type "%s" with id "%s" was not found.', $type, $id),
+                source: new ErrorSource(pointer: '/data/relationships'),
+                meta: ['type' => $type, 'id' => $id]
+            );
+
+            throw new NotFoundException(
+                sprintf('Related resource of type "%s" with id "%s" was not found.', $type, $id),
+                [$error]
+            );
         }
         return $obj;
     }
@@ -262,7 +275,8 @@ class RelationshipResolver
      * @param  array<int, array{type: string, id: string}> $resourceIdentifiers Array of resource identifiers
      * @param  RelationshipMetadata                        $meta                Relationship metadata
      * @return array<string, object>                       Map of ID => entity
-     * @throws ValidationException                         If any entities are not found (VERIFY policy only)
+     * @throws NotFoundException                           If any entities are not found (VERIFY policy only) - 404, not 422
+     * @throws ValidationException                         For other validation errors
      */
     private function resolveTargetsBatch(array $resourceIdentifiers, RelationshipMetadata $meta): array
     {
@@ -281,7 +295,7 @@ class RelationshipResolver
 
         foreach ($byType as $type => $idsWithIndex) {
             $reg = $this->registry->getByType($type);
-            $class = $reg->class;
+            $class = $reg->dataClass;
             $ids = array_values($idsWithIndex);
 
             if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
@@ -308,26 +322,31 @@ class RelationshipResolver
                     $resolved[$id] = $entity;
                 }
 
-                // Check for missing entities and create precise error pointers
+                // Check for missing entities and throw immediately (404, not 422)
+                // JSON:API spec requires 404 for missing related resources
                 foreach ($idsWithIndex as $idx => $id) {
                     if (!isset($foundById[$id])) {
-                        $errors[] = new ErrorObject(
+                        $error = $this->errors?->notFound(
+                            sprintf('Related resource of type "%s" with id "%s" was not found.', $type, $id),
+                            $this->pointerRelationshipsIndex($meta->name, $idx).'/id'
+                        ) ?? new ErrorObject(
                             id: null,
                             aboutLink: null,
-                            status: '422',
-                            code: 'validation_error',
-                            title: 'Validation Error',
+                            status: '404',
+                            code: 'resource-not-found',
+                            title: 'Resource Not Found',
                             detail: sprintf('Related resource of type "%s" with id "%s" was not found.', $type, $id),
                             source: new ErrorSource(pointer: $this->pointerRelationshipsIndex($meta->name, $idx).'/id'),
                             meta: ['type' => $type, 'id' => $id]
                         );
+
+                        throw new NotFoundException(
+                            sprintf('Related resource of type "%s" with id "%s" was not found.', $type, $id),
+                            [$error]
+                        );
                     }
                 }
             }
-        }
-
-        if ($errors) {
-            throw new ValidationException($errors);
         }
 
         return $resolved;
@@ -340,7 +359,7 @@ class RelationshipResolver
         ?object $target
     ): void {
         $field = $relMeta->propertyPath ?? $relMeta->name;
-        $cm = $this->em->getClassMetadata($ownerMeta->class);
+        $cm = $this->em->getClassMetadata($ownerMeta->dataClass);
         if (!$cm->hasAssociation($field)) {
             // fall back to accessor set (non-association field?)
             $this->accessor->setValue($owner, $field, $target);
@@ -463,7 +482,7 @@ class RelationshipResolver
 
     private function addLink(object $owner, ResourceMetadata $ownerMeta, string $field, object $target): void
     {
-        $cm = $this->em->getClassMetadata($ownerMeta->class);
+        $cm = $this->em->getClassMetadata($ownerMeta->dataClass);
         if ($cm->hasAssociation($field)) {
             /** @var array{inversedBy?: string, mappedBy?: string, isOwningSide: bool, type: int} $assoc */
             $assoc = $cm->getAssociationMapping($field);
@@ -509,7 +528,7 @@ class RelationshipResolver
 
     private function removeLink(object $owner, ResourceMetadata $ownerMeta, string $field, object $target): void
     {
-        $cm = $this->em->getClassMetadata($ownerMeta->class);
+        $cm = $this->em->getClassMetadata($ownerMeta->dataClass);
         if ($cm->hasAssociation($field)) {
             /** @var array{inversedBy?: string, mappedBy?: string, isOwningSide: bool, type: int} $assoc */
             $assoc = $cm->getAssociationMapping($field);
