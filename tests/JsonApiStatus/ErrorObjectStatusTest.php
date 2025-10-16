@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Tests\JsonApiStatus;
 
+use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 final class ErrorObjectStatusTest extends JsonApiTestCase
@@ -16,7 +16,7 @@ final class ErrorObjectStatusTest extends JsonApiTestCase
         $request = Request::create('/api/articles/' . __FUNCTION__, 'GET');
 
         $errors = $this->captureErrors($request, function () use ($request): void {
-            throw new NotFoundHttpException('Resource missing for error audit.');
+            throw new NotFoundException('Resource missing for error audit.');
         }, 404);
 
         self::assertArrayHasKey('status', $errors[0]);

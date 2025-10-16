@@ -8,7 +8,6 @@ use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Uid\Uuid;
 
 final class ResourceStatusTest extends JsonApiTestCase
@@ -17,7 +16,7 @@ final class ResourceStatusTest extends JsonApiTestCase
     {
         $request = Request::create('/api/articles/' . Uuid::v4()->toRfc4122(), 'GET');
 
-        $this->expectException(NotFoundHttpException::class);
+        $this->expectException(NotFoundException::class);
         ($this->resourceController())($request, 'articles', 'non-existent-id');
     }
 

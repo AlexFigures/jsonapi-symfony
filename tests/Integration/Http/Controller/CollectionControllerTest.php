@@ -719,7 +719,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
     {
         $request = $this->createJsonApiGetRequest('GET', '/api/unknown-type');
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessage('Resource type "unknown-type" not found');
 
         ($this->controller)($request, 'unknown-type');

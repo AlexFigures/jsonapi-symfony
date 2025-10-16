@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
+use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
 use AlexFigures\Symfony\Filter\Parser\FilterParser;
 use AlexFigures\Symfony\Http\Controller\CollectionController;
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
@@ -25,6 +26,8 @@ use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Route;
@@ -47,6 +50,7 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
     private CollectionController $collectionController;
     private CreateResourceController $createController;
     private LinkGenerator $linkGenerator;
+    private ContentNegotiationSubscriber $contentNegotiationSubscriber;
 
     protected function getDatabaseUrl(): string
     {
@@ -140,12 +144,46 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
             $this->violationMapper,
             new EventDispatcher()
         );
+
+        // Set up ContentNegotiationSubscriber for strict content negotiation
+        $this->contentNegotiationSubscriber = new ContentNegotiationSubscriber(
+            strictContentNegotiation: true,
+            mediaType: MediaType::JSON_API
+        );
     }
 
     protected function tearDown(): void
     {
         $this->clearDatabase();
         parent::tearDown();
+    }
+
+    /**
+     * Validate content negotiation before calling controller.
+     * This simulates the ContentNegotiationSubscriber behavior.
+     */
+    private function validateContentNegotiation(Request $request): void
+    {
+        $kernel = $this->createStub(HttpKernelInterface::class);
+        $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
+        $this->contentNegotiationSubscriber->onKernelRequest($event);
+    }
+
+    /**
+     * Add Vary: Accept header to response.
+     * This simulates the ContentNegotiationSubscriber::onKernelResponse behavior.
+     */
+    private function addVaryHeader(Response $response): void
+    {
+        $kernel = $this->createStub(HttpKernelInterface::class);
+        $request = Request::create('/');
+        $event = new \Symfony\Component\HttpKernel\Event\ResponseEvent(
+            $kernel,
+            $request,
+            HttpKernelInterface::MAIN_REQUEST,
+            $response
+        );
+        $this->contentNegotiationSubscriber->onKernelResponse($event);
     }
 
     /**
@@ -179,11 +217,12 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         );
 
         try {
+            $this->validateContentNegotiation($request);
             ($this->createController)($request, 'tags');
             self::fail('Expected UnsupportedMediaTypeException (415) for Content-Type with charset parameter');
         } catch (\AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException $e) {
             self::assertSame(415, $e->getStatusCode());
-            self::assertStringContainsString('media type parameter', $e->getMessage());
+            self::assertStringContainsString('parameters other than "ext" or "profile"', $e->getMessage());
         }
     }
 
@@ -255,6 +294,7 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         );
 
         try {
+            $this->validateContentNegotiation($request);
             ($this->collectionController)($request, 'tags');
             self::fail('Expected NotAcceptableException (406) for Accept with charset parameter');
         } catch (\AlexFigures\Symfony\Http\Exception\NotAcceptableException $e) {
@@ -326,7 +366,9 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
             ['HTTP_ACCEPT' => 'application/vnd.api+json; profile="urn:example:unknown"']
         );
 
+        $this->validateContentNegotiation($request);
         $response = ($this->collectionController)($request, 'tags');
+        $this->addVaryHeader($response);
 
         // Should succeed with 200 OK (unknown profile ignored)
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());

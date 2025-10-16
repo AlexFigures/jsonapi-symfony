@@ -223,7 +223,7 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
 
         $request = Request::create("/api/tags/{$nonExistentId}", 'GET');
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
 
         ($this->controller)($request, 'tags', $nonExistentId);
     }
@@ -235,7 +235,7 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
     {
         $request = Request::create('/api/unknown-type/some-id', 'GET');
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessage('Resource type "unknown-type" not found');
 
         ($this->controller)($request, 'unknown-type', 'some-id');

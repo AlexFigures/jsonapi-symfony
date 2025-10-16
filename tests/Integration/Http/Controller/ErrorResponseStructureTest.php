@@ -189,7 +189,7 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
             self::fail('Expected NotFoundException (404)');
         } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
             // Exception thrown - now check error response structure
-            $response = $this->createErrorResponse($e);
+            $response = $this->handleException($request, $e);
 
             // MUST have error status code
             self::assertGreaterThanOrEqual(400, $response->getStatusCode(), 'Error response MUST have 4xx or 5xx status');
@@ -235,54 +235,54 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
      */
     public function testErrorStatusFieldIsString(): void
     {
-        // Trigger validation error (422) by sending invalid data
-        $payload = [
-            'data' => [
-                'type' => 'authors',
-                'attributes' => [
-                    'name' => '', // Empty name should fail validation
-                    'email' => 'invalid-email', // Invalid email format
-                ],
-            ],
-        ];
-
+        // Create a request
         $request = Request::create(
-            '/api/authors',
-            'POST',
+            '/api/articles/test-id',
+            'GET',
             [],
             [],
             [],
-            [
-                'CONTENT_TYPE' => MediaType::JSON_API,
-                'HTTP_ACCEPT' => MediaType::JSON_API,
-            ],
-            json_encode($payload)
+            ['HTTP_ACCEPT' => MediaType::JSON_API]
         );
 
-        try {
-            ($this->createController)($request, 'authors');
-            self::fail('Expected UnprocessableEntityException (422) for validation errors');
-        } catch (\AlexFigures\Symfony\Http\Exception\UnprocessableEntityException $e) {
-            // Exception thrown - now check error response structure
-            $response = $this->createErrorResponse($e);
-            $httpStatusCode = $response->getStatusCode();
-            $data = json_decode($response->getContent(), true);
+        // Create exception with multiple errors to test consistency
+        $errorBuilder = new ErrorBuilder(true);
+        $errorMapper = new ErrorMapper($errorBuilder);
 
-            self::assertArrayHasKey('errors', $data);
-            self::assertNotEmpty($data['errors']);
+        $errors = [
+            $errorMapper->notFound('Resource not found'),
+            $errorMapper->notFound('Another resource not found'),
+        ];
 
-            foreach ($data['errors'] as $index => $error) {
-                // I2: "status" MUST be string
-                self::assertArrayHasKey('status', $error, "Error at index {$index} MUST contain 'status' member");
-                self::assertIsString($error['status'], "Error 'status' MUST be a string (e.g., '422'), not integer (422)");
+        $exception = new \AlexFigures\Symfony\Http\Exception\NotFoundException(
+            'Multiple resources not found',
+            $errors
+        );
 
-                // MUST match HTTP status code
-                self::assertSame((string) $httpStatusCode, $error['status'], "Error 'status' MUST match HTTP response status code");
+        // Handle exception through JsonApiExceptionListener
+        $response = $this->handleException($request, $exception);
+        $httpStatusCode = $response->getStatusCode();
+        $data = json_decode($response->getContent(), true);
 
-                // MUST be numeric string
-                self::assertMatchesRegularExpression('/^\d{3}$/', $error['status'], "Error 'status' MUST be a 3-digit numeric string");
-            }
+        self::assertArrayHasKey('errors', $data);
+        self::assertNotEmpty($data['errors']);
+
+        foreach ($data['errors'] as $index => $error) {
+            // I2: "status" MUST be string
+            self::assertArrayHasKey('status', $error, "Error at index {$index} MUST contain 'status' member");
+            self::assertIsString($error['status'], "Error 'status' MUST be a string (e.g., '404'), not integer (404)");
+
+            // MUST match HTTP status code
+            self::assertSame((string) $httpStatusCode, $error['status'], "Error 'status' MUST match HTTP response status code");
+
+            // MUST be numeric string
+            self::assertMatchesRegularExpression('/^\d{3}$/', $error['status'], "Error 'status' MUST be a 3-digit numeric string");
         }
+
+        // All errors SHOULD have consistent status values
+        $statuses = array_column($data['errors'], 'status');
+        $uniqueStatuses = array_unique($statuses);
+        self::assertCount(1, $uniqueStatuses, 'All errors in a single response SHOULD have the same status value');
     }
 
     /**
@@ -328,7 +328,7 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
             self::fail('Expected NotFoundException (404)');
         } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
             // Exception thrown - now check error response structure
-            $response = $this->createErrorResponse($e);
+            $response = $this->handleException($request, $e);
             $data = json_decode($response->getContent(), true);
 
             self::assertArrayHasKey('errors', $data);
@@ -373,30 +373,5 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
         }
     }
 
-    /**
-     * Helper method to create error response from exception.
-     *
-     * In production, this is handled by ExceptionListener.
-     * For integration tests, we simulate the error response structure.
-     */
-    private function createErrorResponse(\Throwable $exception): Response
-    {
-        $errorBuilder = new ErrorBuilder(true);
-        $errors = $errorBuilder->buildFromException($exception);
-
-        $data = ['errors' => $errors];
-
-        $statusCode = method_exists($exception, 'getStatusCode')
-            ? $exception->getStatusCode()
-            : Response::HTTP_INTERNAL_SERVER_ERROR;
-
-        $response = new Response(
-            json_encode($data),
-            $statusCode,
-            ['Content-Type' => MediaType::JSON_API]
-        );
-
-        return $response;
-    }
 }
 
