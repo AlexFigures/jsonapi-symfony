@@ -139,6 +139,11 @@ final class JsonApiExtension extends Extension
             )->setPublic(false);
 
             $container->setAlias(
+                'AlexFigures\Symfony\Contract\Data\RelationshipUpdater',
+                'AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler'
+            )->setPublic(false);
+
+            $container->setAlias(
                 'AlexFigures\Symfony\Contract\Tx\TransactionManager',
                 'AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager'
             )->setPublic(false);
