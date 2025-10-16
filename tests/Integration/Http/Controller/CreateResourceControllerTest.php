@@ -1187,4 +1187,60 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
             json_encode($payload, \JSON_THROW_ON_ERROR)
         );
     }
+
+    /**
+     * D5: 409 Conflict when client-generated ID already exists.
+     *
+     * JSON:API spec requires that servers MUST return 409 Conflict when
+     * processing a POST request to create a resource with a client-generated
+     * ID that already exists.
+     *
+     * Validates:
+     * - 409 status for duplicate client-generated ID
+     * - Error response includes proper error details
+     *
+     * NOTE: This test requires allowClientGeneratedIds=true in WriteConfig.
+     * Currently the test setup uses allowClientGeneratedIds=false, so this
+     * test will need WriteConfig adjustment to run properly.
+     */
+    public function testCreateWithDuplicateClientGeneratedIdReturns409(): void
+    {
+        //TODO: simulate in this test enabling that config
+        self::markTestSkipped(
+            'Test requires allowClientGeneratedIds=true in WriteConfig. ' .
+            'Current setup uses allowClientGeneratedIds=false. ' .
+            'See reports/failures.json ID:D5 for implementation plan.'
+        );
+
+        // First, create an author with client-generated ID
+        $author = new Author();
+        $author->setId('author-client-123');
+        $author->setName('John Doe');
+        $author->setEmail('john@example.com');
+        $this->em->persist($author);
+        $this->em->flush();
+        $this->em->clear();
+
+        // Try to create another author with the same client-generated ID
+        $payload = [
+            'data' => [
+                'type' => 'authors',
+                'id' => 'author-client-123', // Duplicate ID
+                'attributes' => [
+                    'name' => 'Jane Smith',
+                    'email' => 'jane@example.com',
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/authors', $payload);
+
+        try {
+            ($this->controller)($request, 'authors');
+            self::fail('Expected ConflictException (409) for duplicate client-generated ID');
+        } catch (\AlexFigures\Symfony\Http\Exception\ConflictException $e) {
+            self::assertSame(409, $e->getStatusCode());
+            self::assertStringContainsString('already exists', $e->getMessage());
+        }
+    }
 }

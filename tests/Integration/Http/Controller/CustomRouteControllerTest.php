@@ -15,6 +15,7 @@ use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
 use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
 use AlexFigures\Symfony\Filter\Operator\EqualOperator;
 use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
 use AlexFigures\Symfony\Filter\Parser\FilterParser;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorBuilder;
@@ -225,12 +226,14 @@ final class CustomRouteControllerTest extends DoctrineIntegrationTestCase
         $filterHandlerRegistry = new FilterHandlerRegistry();
         $filterCompiler = new DoctrineFilterCompiler($operatorRegistry, $filterHandlerRegistry);
         $sortHandlerRegistry = new SortHandlerRegistry();
+        $readMapper = new DefaultReadMapper();
 
         $repository = new GenericDoctrineRepository(
             $this->em,
             $this->registry,
             $filterCompiler,
-            $sortHandlerRegistry
+            $sortHandlerRegistry,
+            $readMapper
         );
 
         $errorBuilder = new ErrorBuilder(true);

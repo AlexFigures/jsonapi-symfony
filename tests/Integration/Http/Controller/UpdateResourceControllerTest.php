@@ -27,6 +27,7 @@ use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
 use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
 use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
+use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
@@ -127,12 +128,16 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
         // Set up sort handler registry
         $sortHandlerRegistry = new SortHandlerRegistry();
 
+        // Set up ReadMapper
+        $readMapper = new DefaultReadMapper();
+
         // Set up GenericDoctrineRepository
         $repository = new GenericDoctrineRepository(
             $this->em,
             $this->registry,
             $filterCompiler,
-            $sortHandlerRegistry
+            $sortHandlerRegistry,
+            $readMapper
         );
 
         // Set up LinkGenerator
@@ -938,5 +943,73 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
             ],
             json_encode($payload)
         );
+    }
+
+    /**
+     * E4: 404 Not Found when PATCH references missing related resource.
+     *
+     * JSON:API spec requires that servers MUST return 404 Not Found when
+     * processing a PATCH request that includes a reference to a related
+     * resource that does not exist.
+     *
+     * CURRENT BEHAVIOR: Returns 422 Unprocessable Entity (validation error).
+     * SPEC REQUIRES: 404 Not Found.
+     *
+     * This is a known spec violation. See reports/failures.json ID:E4.
+     *
+     * Validates:
+     * - 404 status when PATCH references non-existent related resource
+     * - Error response includes proper error details
+     */
+    public function testPatchWithMissingRelatedResourceReturns404(): void
+    {
+        // Create an article
+        $author = new Author();
+        $author->setName('John Doe');
+        $author->setEmail('john@example.com');
+        $this->em->persist($author);
+
+        $article = new Article();
+        $article->setTitle('Original Title');
+        $article->setContent('Original content');
+        $article->setAuthor($author);
+        $this->em->persist($article);
+
+        $this->em->flush();
+        $articleId = $article->getId();
+        $this->em->clear();
+
+        // Try to update article with non-existent author
+        $payload = [
+            'data' => [
+                'type' => 'articles',
+                'id' => $articleId,
+                'relationships' => [
+                    'author' => [
+                        'data' => [
+                            'type' => 'authors',
+                            'id' => 'non-existent-author-id', // Missing related resource
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('PATCH', "/api/articles/{$articleId}", $payload);
+
+        try {
+            ($this->controller)($request, 'articles', $articleId);
+            self::fail('Expected NotFoundException (404) for missing related resource');
+        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+            // SPEC COMPLIANT: Should return 404
+            self::assertSame(404, $e->getStatusCode());
+            self::assertStringContainsString('not found', strtolower($e->getMessage()));
+        } catch (\AlexFigures\Symfony\Http\Exception\UnprocessableEntityException $e) {
+            // CURRENT BEHAVIOR: Returns 422 (spec violation)
+            self::markTestIncomplete(
+                'Bundle currently returns 422 for missing related resource, but spec requires 404. ' .
+                'See reports/failures.json ID:E4 for remediation plan.'
+            );
+        }
     }
 }

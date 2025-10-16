@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
+use AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker;
 use AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
 use AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
 use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
@@ -64,24 +65,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
             $paginationConfig
         );
 
-        // Create simple ExistenceChecker
-        $existenceChecker = new class ($this->em, $this->registry) implements \AlexFigures\Symfony\Contract\Data\ExistenceChecker {
-            public function __construct(
-                private readonly \Doctrine\ORM\EntityManagerInterface $em,
-                private readonly \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry
-            ) {
-            }
-
-            public function exists(string $type, string $id): bool
-            {
-                $metadata = $this->registry->getByType($type);
-                if ($metadata === null) {
-                    return false;
-                }
-                $entity = $this->em->find($metadata->class, $id);
-                return $entity !== null;
-            }
-        };
+        $existenceChecker = new DoctrineExistenceChecker($this->em, $this->registry);
 
         $validator = new RelationshipDocumentValidator(
             $this->registry,

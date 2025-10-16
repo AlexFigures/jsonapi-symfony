@@ -31,6 +31,7 @@ use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
 use AlexFigures\Symfony\Http\Request\PaginationConfig;
 use AlexFigures\Symfony\Http\Request\QueryParser;
 use AlexFigures\Symfony\Http\Request\SortingWhitelist;
+use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
@@ -176,12 +177,16 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         // Set up sort handler registry
         $sortHandlerRegistry = new SortHandlerRegistry();
 
+        // Set up ReadMapper
+        $readMapper = new DefaultReadMapper();
+
         // Set up GenericDoctrineRepository
         $repository = new GenericDoctrineRepository(
             $this->em,
             $this->registry,
             $filterCompiler,
-            $sortHandlerRegistry
+            $sortHandlerRegistry,
+            $readMapper
         );
 
         // Create the controller with all dependencies
@@ -1532,16 +1537,20 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         $synonym1 = new CategorySynonym();
         $synonym1->setName('Electronic Devices');
         $synonym1->setCategory($category);
+        $synonym1->setIsMain(true);
+        $synonym1->setIsActive(true);
         $this->em->persist($synonym1);
 
         $synonym2 = new CategorySynonym();
         $synonym2->setName('Electronics & Gadgets');
         $synonym2->setCategory($category);
+        $synonym2->setIsActive(true);
         $this->em->persist($synonym2);
 
         $synonym3 = new CategorySynonym();
         $synonym3->setName('Tech Products');
         $synonym3->setCategory($category);
+        $synonym3->setIsActive(false);
         $this->em->persist($synonym3);
 
         $this->em->flush();

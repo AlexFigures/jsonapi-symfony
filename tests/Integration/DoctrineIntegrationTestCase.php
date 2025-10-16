@@ -18,6 +18,7 @@ use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
 use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
@@ -106,12 +107,14 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $filterHandlerRegistry = new FilterHandlerRegistry([]);
         $filterCompiler = new DoctrineFilterCompiler($operatorRegistry, $filterHandlerRegistry);
         $sortHandlerRegistry = new SortHandlerRegistry();
+        $readMapper = new DefaultReadMapper();
 
         $this->repository = new GenericDoctrineRepository(
             $this->em,
             $this->registry,
             $filterCompiler,
             $sortHandlerRegistry,
+            $readMapper,
         );
 
         // Create SerializerEntityInstantiator

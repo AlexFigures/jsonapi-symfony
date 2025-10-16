@@ -702,4 +702,12 @@ return static function (ContainerConfigurator $configurator): void {
             service('doctrine.orm.default_entity_manager'),
         ])
     ;
+
+    $services
+        ->set(\AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker::class)
+        ->args([
+            service('doctrine.orm.default_entity_manager'),
+            service(ResourceRegistryInterface::class),
+        ])
+    ;
 };
