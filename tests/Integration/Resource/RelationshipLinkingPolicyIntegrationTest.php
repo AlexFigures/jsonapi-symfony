@@ -28,7 +28,6 @@ use Symfony\Component\PropertyAccess\PropertyAccess;
 final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegrationTestCase
 {
     private RelationshipResolver $resolver;
-    private TestManagerRegistry $managerRegistry;
 
     protected function getDatabaseUrl(): string
     {

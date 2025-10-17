@@ -368,11 +368,6 @@ final class QueryParameterValidationTest extends DoctrineIntegrationTestCase
      */
     public function testUnknownQueryParameterReturns400(): void
     {
-        self::markTestSkipped(
-            'Bundle does not yet validate unknown query parameters. ' .
-            'See reports/failures.json ID:H4 for remediation plan.'
-        );
-
         // Create test data
         $tag = new Tag();
         $tag->setName('PHP');

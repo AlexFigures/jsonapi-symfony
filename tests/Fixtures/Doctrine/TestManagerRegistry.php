@@ -29,7 +29,7 @@ final class TestManagerRegistry implements ManagerRegistry
         return 'default';
     }
 
-    public function getConnection($name = null)
+    public function getConnection($name = null): object
     {
         throw new RuntimeException('Connections are not supported in TestManagerRegistry.');
     }
@@ -49,11 +49,15 @@ final class TestManagerRegistry implements ManagerRegistry
         return $this->defaultManagerName;
     }
 
-    public function getManager($name = null)
+    public function getManager($name = null): \Doctrine\Persistence\ObjectManager
     {
         $name ??= $this->defaultManagerName;
 
-        return $this->managers[$name] ?? null;
+        if (!isset($this->managers[$name])) {
+            throw new RuntimeException(sprintf('Unknown manager "%s".', $name));
+        }
+
+        return $this->managers[$name];
     }
 
     public function getManagers(): array
@@ -61,7 +65,7 @@ final class TestManagerRegistry implements ManagerRegistry
         return $this->managers;
     }
 
-    public function resetManager($name = null): void
+    public function resetManager($name = null): \Doctrine\Persistence\ObjectManager
     {
         throw new RuntimeException('resetManager is not supported in TestManagerRegistry.');
     }
@@ -76,7 +80,7 @@ final class TestManagerRegistry implements ManagerRegistry
         return array_keys($this->managers);
     }
 
-    public function getRepository($persistentObject, $persistentManagerName = null)
+    public function getRepository($persistentObject, $persistentManagerName = null): \Doctrine\Persistence\ObjectRepository
     {
         $manager = $this->getManager($persistentManagerName);
 
@@ -87,7 +91,7 @@ final class TestManagerRegistry implements ManagerRegistry
         return $manager->getRepository($persistentObject);
     }
 
-    public function getManagerForClass($class)
+    public function getManagerForClass($class): ?\Doctrine\Persistence\ObjectManager
     {
         $managerName = $this->classMap[$class] ?? $this->defaultManagerName;
 
