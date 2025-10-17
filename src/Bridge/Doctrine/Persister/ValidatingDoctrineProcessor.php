@@ -14,6 +14,8 @@ use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Serializer\Exception\ExtraAttributesException;
 use Symfony\Component\Serializer\Exception\MissingConstructorArgumentsException;
@@ -44,7 +46,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 final class ValidatingDoctrineProcessor implements ResourceProcessor
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
         private readonly ValidatorInterface $validator,
@@ -59,9 +61,10 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     {
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->dataClass;
+        $em = $this->getEntityManagerFor($entityClass);
 
         // Check for ID conflict
-        if ($clientId !== null && $this->em->find($entityClass, $clientId)) {
+        if ($clientId !== null && $em->find($entityClass, $clientId)) {
             throw new ConflictException(
                 sprintf('Resource "%s" with id "%s" already exists.', $type, $clientId)
             );
@@ -97,7 +100,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $remainingChanges = $result['remainingChanges'];
 
         $idPath = $metadata->idPropertyPath ?? 'id';
-        $classMetadata = $this->em->getClassMetadata($entityClass);
+        $classMetadata = $em->getClassMetadata($entityClass);
 
         // Set ID if needed
         if ($clientId !== null) {
@@ -122,8 +125,8 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $this->validateWithGroups($entity, $type, $metadata, true);
 
         // Persist entity and schedule flush
-        $this->em->persist($entity);
-        $this->flushManager->scheduleFlush();
+        $em->persist($entity);
+        $this->flushManager->scheduleFlush($entityClass);
 
         return $entity;
     }
@@ -131,7 +134,8 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     public function processUpdate(string $type, string $id, ChangeSet $changes): object
     {
         $metadata = $this->registry->getByType($type);
-        $entity = $this->em->find($metadata->dataClass, $id);
+        $em = $this->getEntityManagerFor($metadata->dataClass);
+        $entity = $em->find($metadata->dataClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -146,7 +150,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $this->validateWithGroups($entity, $type, $metadata, false);
 
         // Entity is already managed, schedule flush
-        $this->flushManager->scheduleFlush();
+        $this->flushManager->scheduleFlush($metadata->dataClass);
 
         return $entity;
     }
@@ -154,7 +158,8 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     public function processDelete(string $type, string $id): void
     {
         $metadata = $this->registry->getByType($type);
-        $entity = $this->em->find($metadata->dataClass, $id);
+        $em = $this->getEntityManagerFor($metadata->dataClass);
+        $entity = $em->find($metadata->dataClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -163,8 +168,19 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         }
 
         // Mark entity for removal and schedule flush
-        $this->em->remove($entity);
-        $this->flushManager->scheduleFlush();
+        $em->remove($entity);
+        $this->flushManager->scheduleFlush($metadata->dataClass);
+    }
+
+    private function getEntityManagerFor(string $entityClass): EntityManagerInterface
+    {
+        $em = $this->managerRegistry->getManagerForClass($entityClass);
+
+        if (!$em instanceof EntityManagerInterface) {
+            throw new RuntimeException(sprintf('No Doctrine ORM entity manager registered for class "%s".', $entityClass));
+        }
+
+        return $em;
     }
 
     /**

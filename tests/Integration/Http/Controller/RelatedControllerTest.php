@@ -80,7 +80,7 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
         $readMapper = new DefaultReadMapper();
 
         $repository = new GenericDoctrineRepository(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $filterCompiler,
             $sortHandlerRegistry,
@@ -88,7 +88,7 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
         );
 
         $relationshipReader = new GenericDoctrineRelationshipHandler(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $this->accessor
         );

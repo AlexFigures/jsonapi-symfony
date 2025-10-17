@@ -6,6 +6,7 @@ namespace AlexFigures\Symfony\Bridge\Doctrine\Transaction;
 
 use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * Doctrine-backed transaction manager implementation.
@@ -15,12 +16,29 @@ use Doctrine\ORM\EntityManagerInterface;
 class DoctrineTransactionManager implements TransactionManager
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private readonly ManagerRegistry $managerRegistry,
     ) {
     }
 
     public function transactional(callable $callback): mixed
     {
-        return $this->em->wrapInTransaction($callback);
+        $managers = [];
+        foreach ($this->managerRegistry->getManagers() as $manager) {
+            if ($manager instanceof EntityManagerInterface) {
+                $managers[] = $manager;
+            }
+        }
+
+        $wrapped = array_reduce(
+            array_reverse($managers),
+            static function (callable $next, EntityManagerInterface $manager): callable {
+                return static function () use ($manager, $next) {
+                    return $manager->wrapInTransaction($next);
+                };
+            },
+            $callback
+        );
+
+        return $wrapped();
     }
 }

@@ -30,7 +30,7 @@ final class DoctrineExistenceCheckerTest extends DoctrineIntegrationTestCase
     {
         parent::setUp();
 
-        $this->checker = new DoctrineExistenceChecker($this->em, $this->registry);
+        $this->checker = new DoctrineExistenceChecker($this->managerRegistry, $this->registry);
     }
 
     /**

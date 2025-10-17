@@ -133,7 +133,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
 
         // Set up GenericDoctrineRepository
         $repository = new GenericDoctrineRepository(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $filterCompiler,
             $sortHandlerRegistry,

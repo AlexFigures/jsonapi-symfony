@@ -623,7 +623,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(\AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class)
         ->args([
-            service('doctrine.orm.default_entity_manager'),
+            service('doctrine'),
             service(PropertyAccessorInterface::class),
         ])
     ;
@@ -641,7 +641,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(\AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository::class)
         ->args([
-            service('doctrine.orm.default_entity_manager'),
+            service('doctrine'),
             service(ResourceRegistryInterface::class),
             service(DoctrineFilterCompiler::class),
             service(SortHandlerRegistry::class),
@@ -660,7 +660,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(\AlexFigures\Symfony\Resource\Relationship\RelationshipResolver::class)
         ->args([
-            service('doctrine.orm.default_entity_manager'),
+            service('doctrine'),
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
             service(ErrorMapper::class),
@@ -671,7 +671,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(FlushManager::class)
         ->args([
-            service('doctrine.orm.default_entity_manager'),
+            service('doctrine'),
         ])
     ;
 
@@ -688,7 +688,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(\AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor::class)
         ->args([
-            service('doctrine.orm.default_entity_manager'),
+            service('doctrine'),
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
             service('validator'),
@@ -711,7 +711,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(\AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler::class)
         ->args([
-            service('doctrine.orm.default_entity_manager'),
+            service('doctrine'),
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
         ])
@@ -720,14 +720,14 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(\AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager::class)
         ->args([
-            service('doctrine.orm.default_entity_manager'),
+            service('doctrine'),
         ])
     ;
 
     $services
         ->set(\AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker::class)
         ->args([
-            service('doctrine.orm.default_entity_manager'),
+            service('doctrine'),
             service(ResourceRegistryInterface::class),
         ])
     ;

@@ -7,6 +7,8 @@ namespace AlexFigures\Symfony\Bridge\Doctrine\Instantiator;
 use AlexFigures\Symfony\Contract\Data\ChangeSet;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
@@ -45,7 +47,7 @@ final class SerializerEntityInstantiator
     private readonly Serializer $serializer;
 
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private readonly ManagerRegistry $managerRegistry,
         private readonly PropertyAccessorInterface $accessor,
     ) {
         // Create a PropertyInfoExtractor to resolve types
@@ -94,7 +96,7 @@ final class SerializerEntityInstantiator
 
         // Fallback: instantiate without the serializer when there is no constructor
         if ($constructor === null) {
-            $classMetadata = $this->em->getClassMetadata($entityClass);
+            $classMetadata = $this->getEntityManagerFor($entityClass)->getClassMetadata($entityClass);
             $entity = $classMetadata->newInstance();
 
             return [
@@ -248,5 +250,16 @@ final class SerializerEntityInstantiator
         }
 
         return $usedAttributes;
+    }
+
+    private function getEntityManagerFor(string $entityClass): EntityManagerInterface
+    {
+        $em = $this->managerRegistry->getManagerForClass($entityClass);
+
+        if (!$em instanceof EntityManagerInterface) {
+            throw new RuntimeException(sprintf('No Doctrine ORM entity manager registered for class "%s".', $entityClass));
+        }
+
+        return $em;
     }
 }

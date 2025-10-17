@@ -7,6 +7,8 @@ namespace AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker;
 use AlexFigures\Symfony\Contract\Data\ExistenceChecker;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use RuntimeException;
 
 /**
  * Doctrine ORM implementation of ExistenceChecker.
@@ -26,7 +28,7 @@ use Doctrine\ORM\EntityManagerInterface;
 final class DoctrineExistenceChecker implements ExistenceChecker
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
     ) {
     }
@@ -40,11 +42,12 @@ final class DoctrineExistenceChecker implements ExistenceChecker
         $metadata = $this->registry->getByType($type);
         /** @var class-string $entityClass */
         $entityClass = $metadata->dataClass;
-        $classMetadata = $this->em->getClassMetadata($entityClass);
+        $em = $this->getEntityManagerFor($entityClass);
+        $classMetadata = $em->getClassMetadata($entityClass);
         $identifierField = $classMetadata->getSingleIdentifierFieldName();
 
         // Use COUNT query for optimal performance
-        $qb = $this->em->createQueryBuilder();
+        $qb = $em->createQueryBuilder();
         $qb->select('COUNT(e.' . $identifierField . ')')
             ->from($entityClass, 'e')
             ->where('e.' . $identifierField . ' = :id')
@@ -53,6 +56,17 @@ final class DoctrineExistenceChecker implements ExistenceChecker
         $count = (int) $qb->getQuery()->getSingleScalarResult();
 
         return $count > 0;
+    }
+
+    private function getEntityManagerFor(string $entityClass): EntityManagerInterface
+    {
+        $em = $this->managerRegistry->getManagerForClass($entityClass);
+
+        if (!$em instanceof EntityManagerInterface) {
+            throw new RuntimeException(sprintf('No Doctrine ORM entity manager registered for class "%s".', $entityClass));
+        }
+
+        return $em;
     }
 }
 

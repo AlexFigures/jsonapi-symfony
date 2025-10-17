@@ -52,7 +52,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
         $errorMapper = new ErrorMapper($errorBuilder);
 
         $relationshipHandler = new GenericDoctrineRelationshipHandler(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $this->accessor
         );
@@ -65,7 +65,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
             $paginationConfig
         );
 
-        $existenceChecker = new DoctrineExistenceChecker($this->em, $this->registry);
+        $existenceChecker = new DoctrineExistenceChecker($this->managerRegistry, $this->registry);
 
         $validator = new RelationshipDocumentValidator(
             $this->registry,
@@ -73,7 +73,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
             $errorMapper
         );
 
-        $transactionManager = new DoctrineTransactionManager($this->em);
+        $transactionManager = new DoctrineTransactionManager($this->managerRegistry);
         $eventDispatcher = new EventDispatcher();
 
         $responseConfig = new WriteRelationshipsResponseConfig('204');

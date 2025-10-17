@@ -229,7 +229,7 @@ final class CustomRouteControllerTest extends DoctrineIntegrationTestCase
         $readMapper = new DefaultReadMapper();
 
         $repository = new GenericDoctrineRepository(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $filterCompiler,
             $sortHandlerRegistry,
@@ -278,7 +278,7 @@ final class CustomRouteControllerTest extends DoctrineIntegrationTestCase
             $handlerLocator
         );
 
-        $transactionManager = new DoctrineTransactionManager($this->em);
+        $transactionManager = new DoctrineTransactionManager($this->managerRegistry);
         $eventDispatcher = new EventDispatcher();
 
         $this->controller = new CustomRouteController(

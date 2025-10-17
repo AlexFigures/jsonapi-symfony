@@ -16,8 +16,10 @@ use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use RuntimeException;
 use InvalidArgumentException;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
@@ -36,7 +38,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 final class GenericDoctrineRelationshipHandler implements RelationshipReader, RelationshipUpdater
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
     ) {
@@ -135,6 +137,8 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
 
         $normalizedTargetId = $this->normalizeTargetId($relationshipMetadata, $payload);
 
+        $em = $this->getEntityManagerFor($resource::class);
+
         if ($normalizedTargetId === null) {
             $this->accessor->setValue($resource, $propertyPath, null);
         } else {
@@ -142,7 +146,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             $this->accessor->setValue($resource, $propertyPath, $relatedEntity);
         }
 
-        $this->em->flush();
+        $em->flush();
     }
 
     public function replaceToMany(string|object $type, string $idOrRel, mixed $relOrTargets, array $targets = []): void
@@ -158,6 +162,8 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             throw new \RuntimeException(sprintf('Property "%s" is not a Doctrine Collection', $propertyPath));
         }
 
+        $em = $this->getEntityManagerFor($resource::class);
+
         $collection->clear();
 
         foreach ($this->normalizeTargetIds($relationshipMetadata, $targetList) as $targetId) {
@@ -165,7 +171,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             $collection->add($relatedEntity);
         }
 
-        $this->em->flush();
+        $em->flush();
     }
 
     public function addToMany(string|object $type, string $idOrRel, mixed $relOrTargets, array $targets = []): void
@@ -181,6 +187,8 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             throw new \RuntimeException(sprintf('Property "%s" is not a Doctrine Collection', $propertyPath));
         }
 
+        $em = $this->getEntityManagerFor($resource::class);
+
         foreach ($this->normalizeTargetIds($relationshipMetadata, $targetList) as $targetId) {
             $relatedEntity = $this->findRelatedEntity($targetClass, $targetId);
 
@@ -189,7 +197,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             }
         }
 
-        $this->em->flush();
+        $em->flush();
     }
 
     public function removeFromToMany(string|object $type, string $idOrRel, mixed $relOrTargets, array $targets = []): void
@@ -205,12 +213,14 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             throw new \RuntimeException(sprintf('Property "%s" is not a Doctrine Collection', $propertyPath));
         }
 
+        $em = $this->getEntityManagerFor($resource::class);
+
         foreach ($this->normalizeTargetIds($relationshipMetadata, $targetList) as $targetId) {
             $relatedEntity = $this->findRelatedEntity($targetClass, $targetId);
             $collection->removeElement($relatedEntity);
         }
 
-        $this->em->flush();
+        $em->flush();
     }
 
     // ==================== Private helpers ====================
@@ -220,7 +230,8 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->dataClass;
 
-        $entity = $this->em->find($entityClass, $id);
+        $em = $this->getEntityManagerFor($entityClass);
+        $entity = $em->find($entityClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -233,7 +244,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
 
     private function extractId(object $entity): string
     {
-        $metadata = $this->em->getClassMetadata($entity::class);
+        $metadata = $this->getEntityManagerFor($entity::class)->getClassMetadata($entity::class);
         $idFields = $metadata->getIdentifierFieldNames();
 
         if (count($idFields) !== 1) {
@@ -252,12 +263,13 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
 
     private function getClassMetadata(object $entity): ClassMetadata
     {
-        return $this->em->getClassMetadata($entity::class);
+        return $this->getEntityManagerFor($entity::class)->getClassMetadata($entity::class);
     }
 
     private function findRelatedEntity(string $entityClass, string $id): object
     {
-        $entity = $this->em->find($entityClass, $id);
+        $em = $this->getEntityManagerFor($entityClass);
+        $entity = $em->find($entityClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -479,5 +491,16 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         }
 
         return $ids;
+    }
+
+    private function getEntityManagerFor(string $entityClass): EntityManagerInterface
+    {
+        $em = $this->managerRegistry->getManagerForClass($entityClass);
+
+        if (!$em instanceof EntityManagerInterface) {
+            throw new RuntimeException(sprintf('No Doctrine ORM entity manager registered for class "%s".', $entityClass));
+        }
+
+        return $em;
     }
 }
