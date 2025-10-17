@@ -32,6 +32,7 @@ use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Comment;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Product;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\User;
+use AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -60,6 +61,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
     protected ValidatorInterface $validator;
     protected ConstraintViolationMapper $violationMapper;
     protected FlushManager $flushManager;
+    protected TestManagerRegistry $managerRegistry;
 
     /**
      * Returns the DSN used to connect to the database.
@@ -78,6 +80,10 @@ abstract class DoctrineIntegrationTestCase extends TestCase
 
         // Create the EntityManager
         $this->em = $this->createEntityManager();
+
+        $this->managerRegistry = new TestManagerRegistry([
+            'default' => $this->em,
+        ]);
 
         // Create the database schema
         $this->createSchema();
@@ -116,7 +122,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $readMapper = new DefaultReadMapper();
 
         $this->repository = new GenericDoctrineRepository(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $filterCompiler,
             $sortHandlerRegistry,
@@ -125,15 +131,15 @@ abstract class DoctrineIntegrationTestCase extends TestCase
 
         // Create SerializerEntityInstantiator
         $instantiator = new SerializerEntityInstantiator(
-            $this->em,
+            $this->managerRegistry,
             $this->accessor,
         );
 
         // Create FlushManager
-        $this->flushManager = new FlushManager($this->em);
+        $this->flushManager = new FlushManager($this->managerRegistry);
 
         $this->processor = new GenericDoctrineProcessor(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $this->accessor,
             $instantiator,
@@ -164,13 +170,13 @@ abstract class DoctrineIntegrationTestCase extends TestCase
 
         // Create RelationshipResolver
         $relationshipResolver = new RelationshipResolver(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $this->accessor,
         );
 
         $this->validatingProcessor = new ValidatingDoctrineProcessor(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $this->accessor,
             $this->validator,
@@ -180,7 +186,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $this->flushManager,
         );
 
-        $this->transactionManager = new DoctrineTransactionManager($this->em);
+        $this->transactionManager = new DoctrineTransactionManager($this->managerRegistry);
     }
 
     protected function tearDown(): void

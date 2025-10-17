@@ -11,6 +11,7 @@ use AlexFigures\Symfony\Resource\Attribute\Relationship;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Uid\Uuid;
 
@@ -19,9 +20,18 @@ use Symfony\Component\Uid\Uuid;
  *
  * This entity demonstrates parent-child relationships that can cause
  * issues with entity insertion order during flush operations.
+ *
+ * UniqueEntity constraint on [name, parent] demonstrates the problem
+ * where validation queries can return stale data from UnitOfWork cache.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'categories')]
+#[ORM\UniqueConstraint(name: 'unique_name_per_parent', columns: ['name', 'parent_id'])]
+#[UniqueEntity(
+    fields: ['name', 'parent'],
+    message: 'A category with this name already exists under the same parent.',
+    ignoreNull: false
+)]
 #[JsonApiResource(
     type: 'categories',
     normalizationContext: ['groups' => ['category:read']],

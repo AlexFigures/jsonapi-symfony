@@ -14,6 +14,7 @@ use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
 use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -48,6 +49,10 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
         // Create the EntityManager with our test entities
         $this->em = $this->createCustomEntityManager();
 
+        $this->managerRegistry = new TestManagerRegistry([
+            'default' => $this->em,
+        ]);
+
         // Create the database schema
         $this->createCustomSchema();
 
@@ -61,7 +66,7 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
 
         // Create RelationshipResolver
         $this->resolver = new RelationshipResolver(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             PropertyAccess::createPropertyAccessor(),
         );

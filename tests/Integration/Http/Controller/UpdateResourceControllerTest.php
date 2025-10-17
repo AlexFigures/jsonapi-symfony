@@ -31,6 +31,7 @@ use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -133,7 +134,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
 
         // Set up GenericDoctrineRepository
         $repository = new GenericDoctrineRepository(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $filterCompiler,
             $sortHandlerRegistry,
@@ -1011,5 +1012,300 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
                 'See reports/failures.json ID:E4 for remediation plan.'
             );
         }
+    }
+
+    /**
+     * Test: Update Category - clear parent relationship (self-referential to-one).
+     *
+     * Validates:
+     * - Self-referential to-one relationship can be set to null
+     * - Response shows null parent relationship
+     * - Database state reflects the cleared relationship
+     * - Parent category remains unchanged
+     *
+     * This test specifically covers self-referential relationships (Category → parent Category),
+     * which is a common pattern for hierarchical/tree structures.
+     */
+    public function testUpdateCategoryClearParentRelationship(): void
+    {
+        // Create parent category
+        $parentCategory = new Category();
+        $parentCategory->setName('Parent Category');
+        $parentCategory->setSortOrder(1);
+        $this->em->persist($parentCategory);
+
+        // Create child category with parent reference
+        $childCategory = new Category();
+        $childCategory->setName('Child Category');
+        $childCategory->setSortOrder(2);
+        $childCategory->setParent($parentCategory);
+        $this->em->persist($childCategory);
+
+        $this->em->flush();
+        $parentId = $parentCategory->getId();
+        $childId = $childCategory->getId();
+        $this->em->clear();
+
+        // Verify initial state - child has parent
+        $initialChild = $this->em->find(Category::class, $childId);
+        self::assertNotNull($initialChild);
+        self::assertNotNull($initialChild->getParent());
+        self::assertSame($parentId, $initialChild->getParent()->getId());
+        $this->em->clear();
+
+        // Clear parent relationship via PATCH request
+        $payload = [
+            'data' => [
+                'type' => 'categories',
+                'id' => $childId,
+                'relationships' => [
+                    'parent' => [
+                        'data' => null,
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('PATCH', "/api/categories/{$childId}", $payload);
+        $response = ($this->controller)($request, 'categories', $childId);
+
+        // Assert HTTP 200 OK
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        // Assert response document structure
+        $document = $this->decode($response);
+
+        self::assertArrayHasKey('data', $document);
+        self::assertArrayHasKey('relationships', $document['data']);
+        self::assertArrayHasKey('parent', $document['data']['relationships']);
+
+        // Assert parent relationship is null in response
+        self::assertNull(
+            $document['data']['relationships']['parent']['data'],
+            'Parent relationship should be null in response'
+        );
+
+        // Verify database persistence - child's parent is now null
+        $this->em->clear();
+        $updatedChild = $this->em->find(Category::class, $childId);
+        self::assertNotNull($updatedChild, 'Child category should still exist');
+        self::assertNull($updatedChild->getParent(), 'Child category parent should be null after update');
+
+        // Verify parent category was not affected
+        $parentCategory = $this->em->find(Category::class, $parentId);
+        self::assertNotNull($parentCategory, 'Parent category should still exist');
+        self::assertSame('Parent Category', $parentCategory->getName());
+
+        // Verify parent's children collection no longer contains the child
+        // Note: This depends on whether the inverse side is automatically updated by Doctrine
+        // In a properly configured bidirectional relationship, this should be handled
+        $parentChildren = $parentCategory->getChildren();
+        $childIds = array_map(fn (Category $c) => $c->getId(), $parentChildren->toArray());
+        self::assertNotContains(
+            $childId,
+            $childIds,
+            'Parent category should no longer have the child in its children collection'
+        );
+    }
+
+    /**
+     * Test: Update Category - clear parent with UniqueEntity validation.
+     *
+     * This test reproduces the issue where UniqueEntity constraint validation
+     * returns stale data from Doctrine's UnitOfWork cache.
+     *
+     * Scenario:
+     * 1. Create parent1 with child "Electronics"
+     * 2. Create parent2 (different parent)
+     * 3. Clear parent from child (set to null)
+     * 4. UniqueEntity validation on [name, parent] should see the NEW state (parent=null)
+     *    but might see OLD state (parent=parent1) from UnitOfWork cache
+     *
+     * Expected behavior:
+     * - After clearing parent, child should have parent=null
+     * - UniqueEntity validation should work with the updated state
+     * - No false positive "duplicate" errors
+     *
+     * This demonstrates the classic Doctrine validation problem where:
+     * - Entity is modified in memory (parent set to null)
+     * - Validator queries database for uniqueness check
+     * - Doctrine returns cached entity with OLD state (parent still set)
+     * - Validation fails or returns incorrect results
+     */
+    public function testUpdateCategoryClearParentWithUniqueEntityValidation(): void
+    {
+        // Create parent1
+        $parent1 = new Category();
+        $parent1->setName('Parent 1');
+        $parent1->setSortOrder(1);
+        $this->em->persist($parent1);
+
+        // Create child under parent1 with name "Electronics"
+        $child = new Category();
+        $child->setName('Electronics');
+        $child->setSortOrder(2);
+        $child->setParent($parent1);
+        $this->em->persist($child);
+
+        // Create parent2 (different parent)
+        $parent2 = new Category();
+        $parent2->setName('Parent 2');
+        $parent2->setSortOrder(3);
+        $this->em->persist($parent2);
+
+        $this->em->flush();
+        $childId = $child->getId();
+        $parent1Id = $parent1->getId();
+        $parent2Id = $parent2->getId();
+        $this->em->clear();
+
+        // Verify initial state
+        $initialChild = $this->em->find(Category::class, $childId);
+        self::assertNotNull($initialChild);
+        self::assertNotNull($initialChild->getParent());
+        self::assertSame($parent1Id, $initialChild->getParent()->getId());
+        $this->em->clear();
+
+        // Clear parent relationship via PATCH
+        // This is where the problem occurs:
+        // 1. RelationshipResolver sets parent to null
+        // 2. ValidatingDoctrineProcessor validates entity
+        // 3. UniqueEntity validator queries DB
+        // 4. Doctrine returns cached entity with OLD parent (not null)
+        // 5. Validation might fail or see wrong state
+        $payload = [
+            'data' => [
+                'type' => 'categories',
+                'id' => $childId,
+                'relationships' => [
+                    'parent' => [
+                        'data' => null,
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('PATCH', "/api/categories/{$childId}", $payload);
+        $response = ($this->controller)($request, 'categories', $childId);
+
+        // Should succeed with 200 OK
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        self::assertNull(
+            $document['data']['relationships']['parent']['data'],
+            'Parent relationship should be null in response'
+        );
+
+        // Verify database state - parent should be null
+        $this->em->clear();
+        $updatedChild = $this->em->find(Category::class, $childId);
+        self::assertNotNull($updatedChild);
+        self::assertNull($updatedChild->getParent(), 'Child parent should be null after clearing');
+
+        // Now try to create another category with same name under parent2
+        // This should succeed because child now has parent=null, not parent1
+        // Need to re-fetch parent2 from DB to avoid cascade issues
+        $this->em->clear();
+        $parent2Reloaded = $this->em->find(Category::class, $parent2Id);
+        self::assertNotNull($parent2Reloaded);
+
+        $sibling = new Category();
+        $sibling->setName('Electronics'); // Same name as child
+        $sibling->setSortOrder(4);
+        $sibling->setParent($parent2Reloaded); // Different parent
+        $this->em->persist($sibling);
+
+        // This should NOT throw UniqueEntity violation because:
+        // - child: name="Electronics", parent=null
+        // - sibling: name="Electronics", parent=parent2
+        // These are different combinations of [name, parent]
+        $this->em->flush();
+
+        self::assertTrue(true, 'Should be able to create sibling with same name under different parent');
+    }
+
+    /**
+     * Test: Demonstrate UniqueEntity validation with stale UnitOfWork cache.
+     *
+     * This test demonstrates what happens when:
+     * 1. Entity is loaded into UnitOfWork
+     * 2. Entity is modified (parent cleared)
+     * 3. EntityManager is cleared (simulating what might happen in your project)
+     * 4. Validation runs and queries database
+     * 5. Database still has OLD state (parent not null) because flush hasn't happened
+     *
+     * This is a UNIT test that demonstrates the problem at the Doctrine level,
+     * not through the full HTTP stack.
+     */
+    public function testUniqueEntityValidationWithStaleCacheDirectDoctrineTest(): void
+    {
+        // Create parent
+        $parent = new Category();
+        $parent->setName('Parent');
+        $parent->setSortOrder(1);
+        $this->em->persist($parent);
+
+        // Create child with parent
+        $child = new Category();
+        $child->setName('Electronics');
+        $child->setSortOrder(2);
+        $child->setParent($parent);
+        $this->em->persist($child);
+
+        $this->em->flush();
+        $childId = $child->getId();
+        $this->em->clear();
+
+        // Load child into UnitOfWork
+        $loadedChild = $this->em->find(Category::class, $childId);
+        self::assertNotNull($loadedChild);
+        self::assertNotNull($loadedChild->getParent(), 'Child should have parent initially');
+
+        // Modify child - clear parent
+        $loadedChild->setParent(null);
+
+        // At this point:
+        // - In-memory state: parent = null ✅
+        // - Database state: parent = parent_id ❌ (not flushed yet)
+        // - UnitOfWork state: parent = null ✅ (because we modified the managed entity)
+
+        // If we query through Doctrine's repository/QueryBuilder,
+        // it will return the in-memory state from UnitOfWork
+        $qb = $this->em->createQueryBuilder();
+        $qb->select('c')
+            ->from(Category::class, 'c')
+            ->where('c.id = :id')
+            ->setParameter('id', $childId);
+
+        $queriedChild = $qb->getQuery()->getSingleResult();
+
+        // This should return the MODIFIED state (parent = null) from UnitOfWork
+        self::assertNull(
+            $queriedChild->getParent(),
+            'QueryBuilder should return in-memory state from UnitOfWork (parent=null)'
+        );
+
+        // Now clear the EntityManager to simulate what might happen in your project
+        $this->em->clear();
+
+        // Query again - now it will hit the database
+        $qb2 = $this->em->createQueryBuilder();
+        $qb2->select('c')
+            ->from(Category::class, 'c')
+            ->where('c.id = :id')
+            ->setParameter('id', $childId);
+
+        $queriedChildAfterClear = $qb2->getQuery()->getSingleResult();
+
+        // This will return the OLD state from database (parent NOT null)
+        self::assertNotNull(
+            $queriedChildAfterClear->getParent(),
+            'After em->clear(), QueryBuilder returns OLD state from database (parent NOT null)'
+        );
+
+        // This demonstrates the problem:
+        // If validation happens AFTER em->clear() but BEFORE flush,
+        // it will see the old state and might produce incorrect results
     }
 }

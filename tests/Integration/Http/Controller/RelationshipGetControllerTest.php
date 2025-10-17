@@ -62,7 +62,7 @@ final class RelationshipGetControllerTest extends DoctrineIntegrationTestCase
         $linkGenerator = new \AlexFigures\Symfony\Http\Link\LinkGenerator($urlGenerator);
 
         $relationshipHandler = new GenericDoctrineRelationshipHandler(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $this->accessor
         );

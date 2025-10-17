@@ -12,6 +12,8 @@ use AlexFigures\Symfony\Http\Exception\ConflictException;
 use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Uid\Uuid;
 
@@ -28,7 +30,7 @@ use Symfony\Component\Uid\Uuid;
 class GenericDoctrineProcessor implements ResourceProcessor
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
         private readonly SerializerEntityInstantiator $instantiator,
@@ -40,9 +42,10 @@ class GenericDoctrineProcessor implements ResourceProcessor
     {
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->dataClass;
+        $em = $this->getEntityManagerFor($entityClass);
 
         // Check for ID conflict
-        if ($clientId !== null && $this->em->find($entityClass, $clientId)) {
+        if ($clientId !== null && $em->find($entityClass, $clientId)) {
             throw new ConflictException(
                 sprintf('Resource "%s" with id "%s" already exists.', $type, $clientId)
             );
@@ -55,7 +58,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
         $remainingChanges = $result['remainingChanges'];
 
         $idPath = $metadata->idPropertyPath ?? 'id';
-        $classMetadata = $this->em->getClassMetadata($entityClass);
+        $classMetadata = $em->getClassMetadata($entityClass);
 
         // Set ID if needed
         if ($clientId !== null) {
@@ -77,8 +80,8 @@ class GenericDoctrineProcessor implements ResourceProcessor
         $this->applyAttributes($entity, $metadata, $remainingChanges, true);
 
         // Persist entity and schedule flush
-        $this->em->persist($entity);
-        $this->flushManager->scheduleFlush();
+        $em->persist($entity);
+        $this->flushManager->scheduleFlush($entityClass);
 
         return $entity;
     }
@@ -86,7 +89,8 @@ class GenericDoctrineProcessor implements ResourceProcessor
     public function processUpdate(string $type, string $id, ChangeSet $changes): object
     {
         $metadata = $this->registry->getByType($type);
-        $entity = $this->em->find($metadata->dataClass, $id);
+        $em = $this->getEntityManagerFor($metadata->dataClass);
+        $entity = $em->find($metadata->dataClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -98,7 +102,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
         $this->applyAttributes($entity, $metadata, $changes, false);
 
         // Entity is already managed, schedule flush
-        $this->flushManager->scheduleFlush();
+        $this->flushManager->scheduleFlush($metadata->dataClass);
 
         return $entity;
     }
@@ -106,7 +110,8 @@ class GenericDoctrineProcessor implements ResourceProcessor
     public function processDelete(string $type, string $id): void
     {
         $metadata = $this->registry->getByType($type);
-        $entity = $this->em->find($metadata->dataClass, $id);
+        $em = $this->getEntityManagerFor($metadata->dataClass);
+        $entity = $em->find($metadata->dataClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -115,8 +120,8 @@ class GenericDoctrineProcessor implements ResourceProcessor
         }
 
         // Mark entity for removal and schedule flush
-        $this->em->remove($entity);
-        $this->flushManager->scheduleFlush();
+        $em->remove($entity);
+        $this->flushManager->scheduleFlush($metadata->dataClass);
     }
 
     private function applyAttributes(
@@ -132,6 +137,17 @@ class GenericDoctrineProcessor implements ResourceProcessor
 
             $this->accessor->setValue($entity, $path, $value);
         }
+    }
+
+    private function getEntityManagerFor(string $entityClass): EntityManagerInterface
+    {
+        $em = $this->managerRegistry->getManagerForClass($entityClass);
+
+        if (!$em instanceof EntityManagerInterface) {
+            throw new RuntimeException(sprintf('No Doctrine ORM entity manager registered for class "%s".', $entityClass));
+        }
+
+        return $em;
     }
 
 }

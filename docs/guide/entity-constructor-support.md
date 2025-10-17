@@ -378,7 +378,7 @@ Then register it in `config/services.php`:
 ```php
 $services
     ->set(CustomEntityInstantiator::class)
-    ->args([service('doctrine.orm.default_entity_manager')])
+    ->args([service('doctrine')])
 ;
 
 $services

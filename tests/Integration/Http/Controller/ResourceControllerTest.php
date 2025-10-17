@@ -103,7 +103,7 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
         $readMapper = new DefaultReadMapper();
 
         $repository = new GenericDoctrineRepository(
-            $this->em,
+            $this->managerRegistry,
             $this->registry,
             $filterCompiler,
             $sortHandlerRegistry,

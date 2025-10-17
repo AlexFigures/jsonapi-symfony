@@ -48,25 +48,25 @@ services:
     # Manual service registration - NO LONGER NEEDED!
     AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository:
         arguments:
-            $em: '@doctrine.orm.default_entity_manager'
+            $managerRegistry: '@doctrine'
             $registry: '@AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface'
             $filterCompiler: '@AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler'
 
     AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister:
         arguments:
-            $em: '@doctrine.orm.default_entity_manager'
+            $managerRegistry: '@doctrine'
             $registry: '@AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface'
             $accessor: '@Symfony\Component\PropertyAccess\PropertyAccessorInterface'
             $validator: '@validator'
 
     AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler:
         arguments:
-            $em: '@doctrine.orm.default_entity_manager'
+            $managerRegistry: '@doctrine'
             $registry: '@AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface'
 
     AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager:
         arguments:
-            $em: '@doctrine.orm.default_entity_manager'
+            $managerRegistry: '@doctrine'
 
     # Manual aliases - NO LONGER NEEDED!
     AlexFigures\Symfony\Contract\Data\ResourceRepository:

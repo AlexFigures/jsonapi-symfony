@@ -39,7 +39,7 @@ use AlexFigures\Symfony\Http\Exception\NotFoundException;
  *         }
  *
  *         $this->em->persist($article);
- *         $this->flushManager->scheduleFlush(); // Schedule flush, don't execute it
+ *         $this->flushManager->scheduleFlush(Article::class); // Schedule flush, don't execute it
  *
  *         return $article;
  *     }
@@ -58,7 +58,7 @@ interface ResourceProcessor
      * 1. Create and configure the entity
      * 2. Apply attribute changes from ChangeSet
      * 3. Call EntityManager::persist()
-     * 4. Schedule flush via FlushManager::scheduleFlush()
+     * 4. Schedule flush via FlushManager::scheduleFlush() with the entity class
      * 5. Return the created entity
      *
      * Do NOT call EntityManager::flush() - this is handled by WriteListener.
@@ -77,7 +77,7 @@ interface ResourceProcessor
      * This method should:
      * 1. Find the existing entity
      * 2. Apply attribute changes from ChangeSet
-     * 3. Schedule flush via FlushManager::scheduleFlush()
+     * 3. Schedule flush via FlushManager::scheduleFlush() with the entity class
      * 4. Return the updated entity
      *
      * Do NOT call EntityManager::flush() - this is handled by WriteListener.
@@ -96,7 +96,7 @@ interface ResourceProcessor
      * This method should:
      * 1. Find the existing entity
      * 2. Call EntityManager::remove()
-     * 3. Schedule flush via FlushManager::scheduleFlush()
+     * 3. Schedule flush via FlushManager::scheduleFlush() with the entity class
      *
      * Do NOT call EntityManager::flush() - this is handled by WriteListener.
      *

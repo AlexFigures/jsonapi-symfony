@@ -17,6 +17,8 @@ use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ManagerRegistry;
+use RuntimeException;
 
 /**
  * Generic Doctrine repository for JSON:API resources.
@@ -31,7 +33,7 @@ use Doctrine\ORM\QueryBuilder;
 class GenericDoctrineRepository implements ResourceRepository
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
         private readonly DoctrineFilterCompiler $filterCompiler,
         private readonly SortHandlerRegistry $sortHandlers,
@@ -44,8 +46,9 @@ class GenericDoctrineRepository implements ResourceRepository
         $metadata = $this->registry->getByType($type);
         $definition = $metadata->getDefinition();
         $entityClass = $metadata->dataClass;
+        $em = $this->getEntityManagerFor($entityClass);
 
-        $qb = $this->em->createQueryBuilder()
+        $qb = $em->createQueryBuilder()
             ->from($entityClass, 'e');
 
         if ($definition->readProjection === ReadProjection::DTO) {
@@ -55,7 +58,7 @@ class GenericDoctrineRepository implements ResourceRepository
         }
 
         if ($criteria->filter !== null) {
-            $platform = $this->em->getConnection()->getDatabasePlatform();
+            $platform = $em->getConnection()->getDatabasePlatform();
             $this->filterCompiler->apply($qb, $criteria->filter, $platform);
         }
 
@@ -65,7 +68,7 @@ class GenericDoctrineRepository implements ResourceRepository
             }
         }
 
-        $this->applyEagerLoading($qb, $metadata, $definition, $criteria->include);
+        $this->applyEagerLoading($em, $qb, $metadata, $definition, $criteria->include);
         $this->applySorting($qb, $criteria->sort);
 
         $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
@@ -102,9 +105,10 @@ class GenericDoctrineRepository implements ResourceRepository
     {
         $metadata = $this->registry->getByType($type);
         $definition = $metadata->getDefinition();
+        $em = $this->getEntityManagerFor($metadata->dataClass);
 
         if ($definition->readProjection === ReadProjection::DTO) {
-            $qb = $this->em->createQueryBuilder()
+            $qb = $em->createQueryBuilder()
                 ->from($metadata->dataClass, 'e')
                 ->where('e.id = :id')
                 ->setParameter('id', $id);
@@ -117,7 +121,7 @@ class GenericDoctrineRepository implements ResourceRepository
             return $row === null ? null : $this->readMapper->toView($row, $definition, $criteria);
         }
 
-        $entity = $this->em->find($metadata->dataClass, $id);
+        $entity = $em->find($metadata->dataClass, $id);
 
         return $entity === null ? null : $this->readMapper->toView($entity, $definition, $criteria);
     }
@@ -129,6 +133,7 @@ class GenericDoctrineRepository implements ResourceRepository
         }
 
         $metadata = $this->registry->getByType($type);
+        $em = $this->getEntityManagerFor($metadata->dataClass);
 
         if (!isset($metadata->relationships[$relationship])) {
             throw new \InvalidArgumentException(sprintf('Unknown relationship "%s" on resource type "%s".', $relationship, $type));
@@ -141,7 +146,9 @@ class GenericDoctrineRepository implements ResourceRepository
             throw new \InvalidArgumentException(sprintf('Relationship "%s" on resource type "%s" has no target class.', $relationship, $type));
         }
 
-        $classMetadata = $this->em->getClassMetadata($metadata->dataClass);
+        $this->getEntityManagerFor($targetClass, $em);
+
+        $classMetadata = $em->getClassMetadata($metadata->dataClass);
 
         if (!$classMetadata->hasAssociation($relationship)) {
             throw new \InvalidArgumentException(sprintf('Relationship "%s" is not a Doctrine association on entity "%s".', $relationship, $metadata->dataClass));
@@ -151,7 +158,7 @@ class GenericDoctrineRepository implements ResourceRepository
         $isToMany = $classMetadata->isCollectionValuedAssociation($relationship);
 
         // Build query to fetch related entities
-        $qb = $this->em->createQueryBuilder()
+        $qb = $em->createQueryBuilder()
             ->select('related')
             ->from($targetClass, 'related');
 
@@ -168,7 +175,7 @@ class GenericDoctrineRepository implements ResourceRepository
             } else {
                 // If we can't determine inverse side, fall back to loading all source entities
                 // and extracting related entities (less efficient but works)
-                $sourceEntities = $this->em->getRepository($metadata->dataClass)
+                $sourceEntities = $em->getRepository($metadata->dataClass)
                     ->createQueryBuilder('e')
                     ->where('e.id IN (:ids)')
                     ->setParameter('ids', $identifiers)
@@ -189,7 +196,7 @@ class GenericDoctrineRepository implements ResourceRepository
             }
         } else {
             // For *ToOne relationships, get the foreign key values from source entities
-            $sourceEntities = $this->em->getRepository($metadata->dataClass)
+            $sourceEntities = $em->getRepository($metadata->dataClass)
                 ->createQueryBuilder('e')
                 ->select('IDENTITY(e.' . $relationship . ') as relatedId')
                 ->where('e.id IN (:ids)')
@@ -279,13 +286,13 @@ class GenericDoctrineRepository implements ResourceRepository
      *
      * @param list<string> $includes
      */
-    private function applyEagerLoading(QueryBuilder $qb, ResourceMetadata $metadata, ResourceDefinition $definition, array $includes): void
+    private function applyEagerLoading(EntityManagerInterface $em, QueryBuilder $qb, ResourceMetadata $metadata, ResourceDefinition $definition, array $includes): void
     {
         if ($includes === []) {
             return;
         }
 
-        $classMetadata = $this->em->getClassMetadata($metadata->dataClass);
+        $classMetadata = $em->getClassMetadata($metadata->dataClass);
         $joinedRelationships = [];
 
         foreach ($includes as $includePath) {
@@ -334,7 +341,8 @@ class GenericDoctrineRepository implements ResourceRepository
                         continue 2;
                     }
 
-                    $currentMetadata = $this->em->getClassMetadata($targetClass);
+                    $this->getEntityManagerFor($targetClass, $em);
+                    $currentMetadata = $em->getClassMetadata($targetClass);
 
                     // Get target resource metadata
                     $targetType = $relationship->targetType;
@@ -369,5 +377,23 @@ class GenericDoctrineRepository implements ResourceRepository
         foreach ($selects as $select) {
             $qb->addSelect($select);
         }
+    }
+
+    private function getEntityManagerFor(string $entityClass, ?EntityManagerInterface $expected = null): EntityManagerInterface
+    {
+        $em = $this->managerRegistry->getManagerForClass($entityClass);
+
+        if (!$em instanceof EntityManagerInterface) {
+            throw new RuntimeException(sprintf('No Doctrine ORM entity manager registered for class "%s".', $entityClass));
+        }
+
+        if ($expected !== null && $em !== $expected) {
+            throw new RuntimeException(sprintf(
+                'Entity manager mismatch for class "%s". Cross-entity-manager relationships are not supported.',
+                $entityClass
+            ));
+        }
+
+        return $em;
     }
 }

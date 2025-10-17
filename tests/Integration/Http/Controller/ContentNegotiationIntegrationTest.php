@@ -13,6 +13,8 @@ use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Link\LinkGenerator;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicy;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
 use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
 use AlexFigures\Symfony\Http\Request\PaginationConfig;
 use AlexFigures\Symfony\Http\Request\QueryParser;
@@ -146,9 +148,21 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         );
 
         // Set up ContentNegotiationSubscriber for strict content negotiation
+        $policyProvider = new class implements MediaTypePolicyProviderInterface {
+            public function getPolicy(Request $request): MediaTypePolicy
+            {
+                return new MediaTypePolicy(
+                    allowedRequestTypes: [MediaType::JSON_API],
+                    negotiableResponseTypes: [MediaType::JSON_API],
+                    defaultResponseType: MediaType::JSON_API,
+                    enforceJsonApiParameters: true
+                );
+            }
+        };
+
         $this->contentNegotiationSubscriber = new ContentNegotiationSubscriber(
             strictContentNegotiation: true,
-            mediaType: MediaType::JSON_API
+            policyProvider: $policyProvider
         );
     }
 

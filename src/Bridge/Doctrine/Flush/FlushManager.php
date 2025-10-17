@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Bridge\Doctrine\Flush;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
+use RuntimeException;
 
 /**
  * Manages deferred flush operations for Doctrine ORM.
@@ -24,8 +26,11 @@ final class FlushManager
 {
     private bool $flushScheduled = false;
 
+    /** @var array<int, EntityManagerInterface> */
+    private array $managersToFlush = [];
+
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private readonly ManagerRegistry $managerRegistry,
     ) {
     }
 
@@ -33,11 +38,14 @@ final class FlushManager
      * Schedule a flush operation to be executed later.
      *
      * This method is called by ResourceProcessor implementations after
-     * preparing entities for persistence. The actual flush will be
+     * preparing entities for persistence. The entity class determines which
+     * Doctrine entity manager should be flushed. The actual flush will be
      * performed by WriteListener after controller execution.
      */
-    public function scheduleFlush(): void
+    public function scheduleFlush(string $entityClass): void
     {
+        $em = $this->getEntityManagerFor($entityClass);
+        $this->managersToFlush[spl_object_id($em)] = $em;
         $this->flushScheduled = true;
     }
 
@@ -51,10 +59,16 @@ final class FlushManager
      */
     public function flush(): void
     {
-        if ($this->flushScheduled) {
-            $this->em->flush();
-            $this->flushScheduled = false;
+        if (!$this->flushScheduled) {
+            return;
         }
+
+        foreach ($this->managersToFlush as $em) {
+            $em->flush();
+        }
+
+        $this->managersToFlush = [];
+        $this->flushScheduled = false;
     }
 
     /**
@@ -66,6 +80,7 @@ final class FlushManager
     public function clear(): void
     {
         $this->flushScheduled = false;
+        $this->managersToFlush = [];
     }
 
     /**
@@ -76,5 +91,16 @@ final class FlushManager
     public function isFlushScheduled(): bool
     {
         return $this->flushScheduled;
+    }
+
+    private function getEntityManagerFor(string $entityClass): EntityManagerInterface
+    {
+        $em = $this->managerRegistry->getManagerForClass($entityClass);
+
+        if (!$em instanceof EntityManagerInterface) {
+            throw new RuntimeException(sprintf('No Doctrine ORM entity manager registered for class "%s".', $entityClass));
+        }
+
+        return $em;
     }
 }

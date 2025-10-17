@@ -16,8 +16,10 @@ use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata as ORMClassMetadata;
+use RuntimeException;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 /**
@@ -32,7 +34,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 class RelationshipResolver
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
         private readonly ?ErrorMapper $errors = null,
@@ -52,6 +54,8 @@ class RelationshipResolver
         array $context = []
     ): void {
         $errorBucket = [];
+
+        $ownerEm = $this->getEntityManagerForClass($resourceMetadata->dataClass);
 
         foreach ($relationshipsPayload as $relName => $relBody) {
             $relMeta = $resourceMetadata->relationships[$relName] ?? null;
@@ -96,15 +100,15 @@ class RelationshipResolver
                         );
                         continue;
                     }
-                    $this->syncToOne($entity, $resourceMetadata, $relMeta, null);
+                    $this->syncToOne($ownerEm, $entity, $resourceMetadata, $relMeta, null);
                     continue;
                 }
 
                 if (\is_array($data) && isset($data['type'])) {
                     // to-one
                     $ri = $this->validateResourceIdentifier($relName, $data, $relMeta);
-                    $target = $this->resolveTarget($ri['type'], $ri['id'], $relMeta);
-                    $this->syncToOne($entity, $resourceMetadata, $relMeta, $target);
+                    $target = $this->resolveTarget($ownerEm, $resourceMetadata, $ri['type'], $ri['id'], $relMeta);
+                    $this->syncToOne($ownerEm, $entity, $resourceMetadata, $relMeta, $target);
                     continue;
                 }
 
@@ -132,7 +136,7 @@ class RelationshipResolver
                     if (!empty($errorBucket)) {
                         // fall through to throwing below
                     } else {
-                        $this->syncToMany($entity, $resourceMetadata, $relMeta, $list);
+                        $this->syncToMany($ownerEm, $entity, $resourceMetadata, $relMeta, $list);
                     }
                     continue;
                 }
@@ -233,17 +237,26 @@ class RelationshipResolver
      * @throws NotFoundException When related resource is not found (404, not 422)
      * @throws ValidationException For other validation errors
      */
-    private function resolveTarget(string $type, string $id, RelationshipMetadata $meta): object
+    private function resolveTarget(
+        EntityManagerInterface $ownerEm,
+        ResourceMetadata $ownerMeta,
+        string $type,
+        string $id,
+        RelationshipMetadata $meta
+    ): object
     {
         $reg = $this->registry->getByType($type);
         $class = $reg->dataClass;
 
+        $targetEm = $this->getEntityManagerForClass($class);
+        $this->assertCompatibleEntityManagers($ownerEm, $targetEm, $ownerMeta->dataClass, $class);
+
         if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
-            return $this->em->getReference($class, $id);
+            return $targetEm->getReference($class, $id);
         }
 
         // VERIFY policy: early existence check with good error message
-        $obj = $this->em->find($class, $id);
+        $obj = $targetEm->find($class, $id);
         if (!$obj) {
             // JSON:API spec requires 404 for missing related resources, not 422
             $error = $this->errors?->notFound(
@@ -278,7 +291,12 @@ class RelationshipResolver
      * @throws NotFoundException                           If any entities are not found (VERIFY policy only) - 404, not 422
      * @throws ValidationException                         For other validation errors
      */
-    private function resolveTargetsBatch(array $resourceIdentifiers, RelationshipMetadata $meta): array
+    private function resolveTargetsBatch(
+        EntityManagerInterface $ownerEm,
+        ResourceMetadata $ownerMeta,
+        array $resourceIdentifiers,
+        RelationshipMetadata $meta
+    ): array
     {
         if (empty($resourceIdentifiers)) {
             return [];
@@ -296,16 +314,18 @@ class RelationshipResolver
         foreach ($byType as $type => $idsWithIndex) {
             $reg = $this->registry->getByType($type);
             $class = $reg->dataClass;
+            $targetEm = $this->getEntityManagerForClass($class);
+            $this->assertCompatibleEntityManagers($ownerEm, $targetEm, $ownerMeta->dataClass, $class);
             $ids = array_values($idsWithIndex);
 
             if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
                 // REFERENCE policy: create proxies for all IDs (no database query)
                 foreach ($idsWithIndex as $idx => $id) {
-                    $resolved[$id] = $this->em->getReference($class, $id);
+                    $resolved[$id] = $targetEm->getReference($class, $id);
                 }
             } else {
                 // VERIFY policy: batch fetch all entities with single query
-                $qb = $this->em->createQueryBuilder();
+                $qb = $targetEm->createQueryBuilder();
                 $qb->select('e')
                     ->from($class, 'e')
                     ->where($qb->expr()->in('e.id', ':ids'))
@@ -315,7 +335,7 @@ class RelationshipResolver
 
                 // Index by ID
                 $foundById = [];
-                $uow = $this->em->getUnitOfWork();
+                $uow = $targetEm->getUnitOfWork();
                 foreach ($entities as $entity) {
                     $id = (string)$uow->getSingleIdentifierValue($entity);
                     $foundById[$id] = $entity;
@@ -353,13 +373,14 @@ class RelationshipResolver
     }
 
     private function syncToOne(
+        EntityManagerInterface $em,
         object $owner,
         ResourceMetadata $ownerMeta,
         RelationshipMetadata $relMeta,
         ?object $target
     ): void {
         $field = $relMeta->propertyPath ?? $relMeta->name;
-        $cm = $this->em->getClassMetadata($ownerMeta->dataClass);
+        $cm = $em->getClassMetadata($ownerMeta->dataClass);
         if (!$cm->hasAssociation($field)) {
             // fall back to accessor set (non-association field?)
             $this->accessor->setValue($owner, $field, $target);
@@ -410,6 +431,7 @@ class RelationshipResolver
      * @param list<array{type:string,id:string}> $desired
      */
     private function syncToMany(
+        EntityManagerInterface $em,
         object $owner,
         ResourceMetadata $ownerMeta,
         RelationshipMetadata $relMeta,
@@ -421,7 +443,7 @@ class RelationshipResolver
         $collection = $this->getOrInitCollection($owner, $field);
 
         // Build current id set
-        $uow = $this->em->getUnitOfWork();
+        $uow = $em->getUnitOfWork();
         $currentById = [];
         foreach ($collection as $e) {
             $currentById[(string)$uow->getSingleIdentifierValue($e)] = $e;
@@ -429,7 +451,7 @@ class RelationshipResolver
 
         // Build desired set using batch resolution (eliminates N+1 query problem)
         // This resolves all entities in a single query instead of N individual queries
-        $desiredById = $this->resolveTargetsBatch($desired, $relMeta);
+        $desiredById = $this->resolveTargetsBatch($em, $ownerMeta, $desired, $relMeta);
 
         // Determine adds/removes by semantics
         $adds = [];
@@ -449,11 +471,11 @@ class RelationshipResolver
 
         // Apply removes first
         foreach ($removes as $id => $obj) {
-            $this->removeLink($owner, $ownerMeta, $field, $obj);
+            $this->removeLink($em, $owner, $ownerMeta, $field, $obj);
         }
         // Apply adds
         foreach ($adds as $id => $obj) {
-            $this->addLink($owner, $ownerMeta, $field, $obj);
+            $this->addLink($em, $owner, $ownerMeta, $field, $obj);
         }
 
         // Cardinality validation
@@ -480,9 +502,15 @@ class RelationshipResolver
     // Low-level utilities
     // ─────────────────────────────────────────────────────────────────────────────
 
-    private function addLink(object $owner, ResourceMetadata $ownerMeta, string $field, object $target): void
+    private function addLink(
+        EntityManagerInterface $em,
+        object $owner,
+        ResourceMetadata $ownerMeta,
+        string $field,
+        object $target
+    ): void
     {
-        $cm = $this->em->getClassMetadata($ownerMeta->dataClass);
+        $cm = $em->getClassMetadata($ownerMeta->dataClass);
         if ($cm->hasAssociation($field)) {
             /** @var array{inversedBy?: string, mappedBy?: string, isOwningSide: bool, type: int} $assoc */
             $assoc = $cm->getAssociationMapping($field);
@@ -526,9 +554,15 @@ class RelationshipResolver
         }
     }
 
-    private function removeLink(object $owner, ResourceMetadata $ownerMeta, string $field, object $target): void
+    private function removeLink(
+        EntityManagerInterface $em,
+        object $owner,
+        ResourceMetadata $ownerMeta,
+        string $field,
+        object $target
+    ): void
     {
-        $cm = $this->em->getClassMetadata($ownerMeta->dataClass);
+        $cm = $em->getClassMetadata($ownerMeta->dataClass);
         if ($cm->hasAssociation($field)) {
             /** @var array{inversedBy?: string, mappedBy?: string, isOwningSide: bool, type: int} $assoc */
             $assoc = $cm->getAssociationMapping($field);
@@ -706,5 +740,31 @@ class RelationshipResolver
             source: new ErrorSource(pointer: $pointer),
             meta: $meta
         );
+    }
+
+    private function getEntityManagerForClass(string $class): EntityManagerInterface
+    {
+        $em = $this->managerRegistry->getManagerForClass($class);
+
+        if (!$em instanceof EntityManagerInterface) {
+            throw new RuntimeException(sprintf('No Doctrine ORM entity manager registered for class "%s".', $class));
+        }
+
+        return $em;
+    }
+
+    private function assertCompatibleEntityManagers(
+        EntityManagerInterface $ownerEm,
+        EntityManagerInterface $targetEm,
+        string $ownerClass,
+        string $targetClass
+    ): void {
+        if ($ownerEm !== $targetEm) {
+            throw new RuntimeException(sprintf(
+                'Entity managers for "%s" and "%s" differ. Cross-entity-manager relationships are not supported.',
+                $ownerClass,
+                $targetClass
+            ));
+        }
     }
 }
