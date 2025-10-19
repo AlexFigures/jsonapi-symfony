@@ -3,6 +3,15 @@
   "description": "JSON:API 1.1 bundle for Symfony 7 with DX-first design",
   "type": "symfony-bundle",
   "license": "MIT",
+  "homepage": "https://github.com/AlexFigures/jsonapi-symfony",
+  "keywords": [
+    "jsonapi",
+    "symfony",
+    "symfony-bundle",
+    "api",
+    "rest",
+    "specification"
+  ],
   "require": {
     "php": "^8.2",
     "symfony/dependency-injection": "^7.1",
@@ -48,9 +57,22 @@
       "dev-main": "0.1-dev"
     }
   },
+  "support": {
+    "issues": "https://github.com/AlexFigures/jsonapi-symfony/issues",
+    "discussions": "https://github.com/AlexFigures/jsonapi-symfony/discussions",
+    "docs": "https://github.com/AlexFigures/jsonapi-symfony/tree/main/docs",
+    "source": "https://github.com/AlexFigures/jsonapi-symfony"
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/AlexFigures"
+    }
+  ],
   "minimum-stability": "stable",
   "prefer-stable": true,
   "config": {
+    "sort-packages": true,
     "allow-plugins": {
       "infection/extension-installer": true
     },

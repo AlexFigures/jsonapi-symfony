@@ -1,0 +1,69 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
+no-changes-template: '### 📝 Changes
+- No user-facing changes in this release.'
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'type: feature'
+      - 'enhancement'
+  - title: '🐛 Fixes'
+    labels:
+      - 'type: bug'
+      - 'bug'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'dependencies'
+      - 'type: chore'
+      - 'ci'
+      - 'docs'
+  - title: '🛡 Security'
+    labels:
+      - 'security'
+version-resolver:
+  major:
+    labels:
+      - 'semver:major'
+  minor:
+    labels:
+      - 'semver:minor'
+      - 'type: feature'
+      - 'enhancement'
+  patch:
+    labels:
+      - 'semver:patch'
+      - 'type: bug'
+      - 'bug'
+      - 'type: chore'
+      - 'docs'
+      - 'ci'
+      - 'dependencies'
+auto-labeler:
+  - label: 'type: bug'
+    title:
+      - '/fix/i'
+  - label: 'type: feature'
+    title:
+      - '/feat/i'
+  - label: 'type: chore'
+    title:
+      - '/chore/i'
+  - label: 'docs'
+    files:
+      - 'docs/**'
+      - '**/*.md'
+  - label: 'ci'
+    files:
+      - '.github/workflows/**'
+  - label: 'dependencies'
+    files:
+      - 'composer.lock'
+      - 'composer.json'
+      - '.github/dependabot.yml'
+template: |
+  ## Changes
+  $CHANGES
+
+  ## Contributors
+  $CONTRIBUTORS

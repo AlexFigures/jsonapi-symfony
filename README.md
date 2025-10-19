@@ -6,6 +6,8 @@
 [![Spec Conformance](https://img.shields.io/badge/JSON:API-97.8%25-brightgreen.svg)](docs/conformance/spec-coverage.md)
 [![PHP Version](https://img.shields.io/badge/php-%5E8.2-blue.svg)](https://www.php.net/)
 [![Symfony Version](https://img.shields.io/badge/symfony-%5E7.1-blue.svg)](https://symfony.com/)
+[![Packagist](https://img.shields.io/packagist/v/alexfigures/symfony-jsonapi-bundle.svg)](https://packagist.org/packages/alexfigures/symfony-jsonapi-bundle)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/AlexFigures/jsonapi-symfony/badge)](https://api.securityscorecards.dev/projects/github.com/AlexFigures/jsonapi-symfony)
 
 **Production-ready JSON:API 1.1 implementation for Symfony with complete filtering, automatic eager loading, and zero N+1 queries.**
 
@@ -88,6 +90,15 @@ open http://localhost:8000/_jsonapi/docs
 **📖 [Complete Getting Started Guide →](docs/guide/getting-started.md)**
 **🚀 [Production-Ready Features →](docs/PRODUCTION_READY.md)**
 **📊 [Interactive API Docs →](docs/guide/swagger-ui.md)**
+
+## ✅ Compatibility Matrix
+
+| JsonApiBundle | PHP | Symfony |
+|---------------|-----|---------|
+| `main` branch | 8.2 · 8.3 · 8.4 | 7.1 · 7.2 · 7.3 |
+| Latest release | 8.2+ | 7.1+ |
+
+> CI runs the full test suite across PHP 8.2–8.4 with both stable and lowest-dependency sets to guarantee forwards and backwards compatibility inside each supported Symfony minor.
 
 ---
 
@@ -312,3 +323,13 @@ jsonapi:
   }
 }
 ```
+
+---
+
+## 🤝 Community & Governance
+
+- 📮 **Need help?** Read our [Support guide](SUPPORT.md) for documentation links, discussion forums, and escalation paths.
+- 📋 **Contributions welcome!** See the [CONTRIBUTING.md](CONTRIBUTING.md) for coding standards and workflow.
+- ❤️ **Be excellent to each other.** Participation is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
+- 🛡 **Report vulnerabilities privately.** Follow the steps in [SECURITY.md](SECURITY.md).
+- 🧭 **Stay up to date.** Watch [Discussions](https://github.com/AlexFigures/jsonapi-symfony/discussions) and subscribe to release drafts for roadmap updates.
