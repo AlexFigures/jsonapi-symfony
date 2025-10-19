@@ -60,7 +60,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
     {
         $metadata = $this->registry->getByType($type);
-        $entityClass = $metadata->dataClass;
+        $entityClass = $metadata->getDataClass();
         $em = $this->getEntityManagerFor($entityClass);
 
         // Check for ID conflict
@@ -79,7 +79,11 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
 
             foreach ($exception->getMissingConstructorArguments() as $argument) {
                 $attributeMetadata = $this->findAttributeMetadata($metadata, $argument);
-                $propertyPath = $attributeMetadata?->propertyPath ?? $argument;
+                $propertyPath = $argument;
+
+                if ($attributeMetadata !== null && $attributeMetadata->propertyPath !== null) {
+                    $propertyPath = $attributeMetadata->propertyPath;
+                }
 
                 $violations->add(new ConstraintViolation(
                     'This field is required.',
@@ -134,8 +138,9 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     public function processUpdate(string $type, string $id, ChangeSet $changes): object
     {
         $metadata = $this->registry->getByType($type);
-        $em = $this->getEntityManagerFor($metadata->dataClass);
-        $entity = $em->find($metadata->dataClass, $id);
+        $entityClass = $metadata->getDataClass();
+        $em = $this->getEntityManagerFor($entityClass);
+        $entity = $em->find($entityClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -150,7 +155,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $this->validateWithGroups($entity, $type, $metadata, false);
 
         // Entity is already managed, schedule flush
-        $this->flushManager->scheduleFlush($metadata->dataClass);
+        $this->flushManager->scheduleFlush($entityClass);
 
         return $entity;
     }
@@ -158,8 +163,9 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     public function processDelete(string $type, string $id): void
     {
         $metadata = $this->registry->getByType($type);
-        $em = $this->getEntityManagerFor($metadata->dataClass);
-        $entity = $em->find($metadata->dataClass, $id);
+        $entityClass = $metadata->getDataClass();
+        $em = $this->getEntityManagerFor($entityClass);
+        $entity = $em->find($entityClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -169,9 +175,12 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
 
         // Mark entity for removal and schedule flush
         $em->remove($entity);
-        $this->flushManager->scheduleFlush($metadata->dataClass);
+        $this->flushManager->scheduleFlush($entityClass);
     }
 
+    /**
+     * @param class-string $entityClass
+     */
     private function getEntityManagerFor(string $entityClass): EntityManagerInterface
     {
         $em = $this->managerRegistry->getManagerForClass($entityClass);

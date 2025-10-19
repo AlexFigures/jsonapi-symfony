@@ -40,8 +40,7 @@ final class DoctrineExistenceChecker implements ExistenceChecker
         }
 
         $metadata = $this->registry->getByType($type);
-        /** @var class-string $entityClass */
-        $entityClass = $metadata->dataClass;
+        $entityClass = $metadata->getDataClass();
         $em = $this->getEntityManagerFor($entityClass);
         $classMetadata = $em->getClassMetadata($entityClass);
         $identifierField = $classMetadata->getSingleIdentifierFieldName();
@@ -58,6 +57,9 @@ final class DoctrineExistenceChecker implements ExistenceChecker
         return $count > 0;
     }
 
+    /**
+     * @param class-string $entityClass
+     */
     private function getEntityManagerFor(string $entityClass): EntityManagerInterface
     {
         $em = $this->managerRegistry->getManagerForClass($entityClass);

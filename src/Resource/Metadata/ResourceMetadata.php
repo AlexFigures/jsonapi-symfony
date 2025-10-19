@@ -10,6 +10,7 @@ use AlexFigures\Symfony\Resource\Definition\ReadProjection;
 use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
 use AlexFigures\Symfony\Resource\Definition\VersionDefinition;
 use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
+use LogicException;
 
 /**
  * @psalm-type AttributeMap = array<string, AttributeMetadata>
@@ -17,8 +18,14 @@ use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
  */
 final class ResourceMetadata
 {
+    /**
+     * @var class-string
+     */
     public string $dataClass;
 
+    /**
+     * @var class-string
+     */
     public string $viewClass;
 
     public ReadProjection $readProjection;
@@ -41,20 +48,23 @@ final class ResourceMetadata
     public ?VersionResolverInterface $versionResolver;
 
     /**
-     * @param AttributeMap         $attributes
-     * @param RelationshipMap      $relationships
-     * @param class-string         $class
-     * @param list<string>         $sortableFields
-     * @param array<string, mixed> $normalizationContext
-     * @param array<string, mixed> $denormalizationContext
-     * @param class-string|null    $dataClass
-     * @param class-string|null    $viewClass
-     * @param array<string, string> $fieldMap
+     * @param AttributeMap                         $attributes
+     * @param RelationshipMap                      $relationships
+     * @param class-string                         $class
+     * @param list<string>                         $sortableFields
+     * @param array<string, mixed>                 $normalizationContext
+     * @param array<string, mixed>                 $denormalizationContext
+     * @param class-string|null                    $dataClass
+     * @param class-string|null                    $viewClass
+     * @param array<string, string>                $fieldMap
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
-     * @param array<string, class-string> $writeRequests
+     * @param array<string, class-string>          $writeRequests
      */
     public function __construct(
         public string $type,
+        /**
+         * @var class-string
+         */
         public string $class,
         public array $attributes,
         public array $relationships,
@@ -75,8 +85,9 @@ final class ResourceMetadata
         array $writeRequests = [],
         ?VersionResolverInterface $versionResolver = null,
     ) {
-        $this->dataClass = $dataClass ?? $class;
-        $this->viewClass = $viewClass ?? $class;
+        $this->class = self::assertClassString($class, 'class');
+        $this->dataClass = self::assertClassString($dataClass ?? $class, 'dataClass');
+        $this->viewClass = self::assertClassString($viewClass ?? $class, 'viewClass');
         $this->readProjection = $readProjection;
         $this->fieldMap = $fieldMap;
         $this->relationshipPolicies = $relationshipPolicies;
@@ -84,6 +95,17 @@ final class ResourceMetadata
         $this->versionResolver = $versionResolver;
     }
 
+    /**
+     * @return class-string
+     */
+    public function getDataClass(): string
+    {
+        return $this->dataClass;
+    }
+
+    /**
+     * @return class-string
+     */
     public function getViewClass(): string
     {
         return $this->viewClass;
@@ -157,5 +179,24 @@ final class ResourceMetadata
         }
 
         return $this->versionResolver->resolve($context);
+    }
+
+    /**
+     * @param string|null $candidate
+     * @param string      $context
+     *
+     * @return class-string
+     */
+    private static function assertClassString(?string $candidate, string $context): string
+    {
+        if ($candidate === null) {
+            throw new LogicException(sprintf('Expected class-string for %s, null given.', $context));
+        }
+
+        if (class_exists($candidate) || interface_exists($candidate) || enum_exists($candidate)) {
+            return $candidate;
+        }
+
+        throw new LogicException(sprintf('Class "%s" configured for %s does not exist.', $candidate, $context));
     }
 }

@@ -42,6 +42,9 @@ final class FlushManager
      * Doctrine entity manager should be flushed. The actual flush will be
      * performed by WriteListener after controller execution.
      */
+    /**
+     * @param class-string $entityClass
+     */
     public function scheduleFlush(string $entityClass): void
     {
         $em = $this->getEntityManagerFor($entityClass);
@@ -93,6 +96,9 @@ final class FlushManager
         return $this->flushScheduled;
     }
 
+    /**
+     * @param class-string $entityClass
+     */
     private function getEntityManagerFor(string $entityClass): EntityManagerInterface
     {
         $em = $this->managerRegistry->getManagerForClass($entityClass);

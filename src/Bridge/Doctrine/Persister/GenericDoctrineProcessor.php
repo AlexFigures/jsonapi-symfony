@@ -41,7 +41,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
     public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
     {
         $metadata = $this->registry->getByType($type);
-        $entityClass = $metadata->dataClass;
+        $entityClass = $metadata->getDataClass();
         $em = $this->getEntityManagerFor($entityClass);
 
         // Check for ID conflict
@@ -89,8 +89,9 @@ class GenericDoctrineProcessor implements ResourceProcessor
     public function processUpdate(string $type, string $id, ChangeSet $changes): object
     {
         $metadata = $this->registry->getByType($type);
-        $em = $this->getEntityManagerFor($metadata->dataClass);
-        $entity = $em->find($metadata->dataClass, $id);
+        $entityClass = $metadata->getDataClass();
+        $em = $this->getEntityManagerFor($entityClass);
+        $entity = $em->find($entityClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -102,7 +103,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
         $this->applyAttributes($entity, $metadata, $changes, false);
 
         // Entity is already managed, schedule flush
-        $this->flushManager->scheduleFlush($metadata->dataClass);
+        $this->flushManager->scheduleFlush($entityClass);
 
         return $entity;
     }
@@ -110,8 +111,9 @@ class GenericDoctrineProcessor implements ResourceProcessor
     public function processDelete(string $type, string $id): void
     {
         $metadata = $this->registry->getByType($type);
-        $em = $this->getEntityManagerFor($metadata->dataClass);
-        $entity = $em->find($metadata->dataClass, $id);
+        $entityClass = $metadata->getDataClass();
+        $em = $this->getEntityManagerFor($entityClass);
+        $entity = $em->find($entityClass, $id);
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -121,7 +123,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
 
         // Mark entity for removal and schedule flush
         $em->remove($entity);
-        $this->flushManager->scheduleFlush($metadata->dataClass);
+        $this->flushManager->scheduleFlush($entityClass);
     }
 
     private function applyAttributes(
@@ -139,6 +141,9 @@ class GenericDoctrineProcessor implements ResourceProcessor
         }
     }
 
+    /**
+     * @param class-string $entityClass
+     */
     private function getEntityManagerFor(string $entityClass): EntityManagerInterface
     {
         $em = $this->managerRegistry->getManagerForClass($entityClass);
