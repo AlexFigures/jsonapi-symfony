@@ -110,6 +110,22 @@ final class ResourceRegistryTest extends TestCase
         ]);
     }
 
+    public function testThrowsWhenConfiguredDataClassDoesNotExist(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Class "NonExistentDataClass" configured for dataClass for resource');
+
+        new ResourceRegistry([InvalidDataClassFixture::class]);
+    }
+
+    public function testThrowsWhenConfiguredViewClassDoesNotExist(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Class "NonExistentViewClass" configured for viewClass for resource');
+
+        new ResourceRegistry([InvalidViewClassFixture::class]);
+    }
+
     public function testAcceptsResourceInstances(): void
     {
         $registry = new ResourceRegistry([new ArticleFixture()]);
@@ -190,5 +206,15 @@ final class AuthorFixture
 
 #[JsonApiResource(type: 'articles')]
 final class DuplicateArticleFixture
+{
+}
+
+#[JsonApiResource(type: 'invalid-data', dataClass: 'NonExistentDataClass')]
+final class InvalidDataClassFixture
+{
+}
+
+#[JsonApiResource(type: 'invalid-view', viewClass: 'NonExistentViewClass')]
+final class InvalidViewClassFixture
 {
 }

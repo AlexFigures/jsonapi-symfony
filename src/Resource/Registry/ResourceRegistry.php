@@ -119,8 +119,8 @@ final class ResourceRegistry implements ResourceRegistryInterface
         /** @var JsonApiResource $resource */
         $resource = $resourceAttributes[0]->newInstance();
 
-        $dataClass = $resource->dataClass ?? $class;
-        $viewClass = $resource->viewClass ?? $class;
+        $dataClass = $resource->dataClass === null ? $class : $this->assertClassString($resource->dataClass, sprintf('dataClass for resource %s', $class));
+        $viewClass = $resource->viewClass === null ? $class : $this->assertClassString($resource->viewClass, sprintf('viewClass for resource %s', $class));
 
         $versionResolver = null;
         if ($resource->versionResolver !== null) {
@@ -202,6 +202,18 @@ final class ResourceRegistry implements ResourceRegistryInterface
             writeRequests: $resource->writeRequests,
             versionResolver: $versionResolver,
         );
+    }
+
+    /**
+     * @return class-string
+     */
+    private function assertClassString(string $candidate, string $context): string
+    {
+        if (class_exists($candidate) || interface_exists($candidate) || enum_exists($candidate)) {
+            return $candidate;
+        }
+
+        throw new LogicException(sprintf('Class "%s" configured for %s does not exist.', $candidate, $context));
     }
 
     /**
