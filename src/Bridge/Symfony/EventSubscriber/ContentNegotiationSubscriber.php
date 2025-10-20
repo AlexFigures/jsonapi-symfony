@@ -95,6 +95,14 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
                 'JSON:API media type must not have parameters other than "ext" or "profile".'
             );
         }
+
+        // Validate ext parameter values
+        if ($policy->enforceJsonApiParameters && $this->hasUnsupportedExtension($contentType)) {
+            throw new UnsupportedMediaTypeException(
+                $contentType,
+                'JSON:API media type contains unsupported extension URI in "ext" parameter.'
+            );
+        }
     }
 
     private function assertAcceptHeader(Request $request, MediaTypePolicy $policy): void
@@ -119,6 +127,14 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
                     throw new NotAcceptableException(
                         $accept,
                         'JSON:API media type in Accept header must not have parameters other than "ext" or "profile".'
+                    );
+                }
+
+                // Validate ext parameter values
+                if ($policy->enforceJsonApiParameters && $this->hasUnsupportedExtension($part)) {
+                    throw new NotAcceptableException(
+                        $accept,
+                        'JSON:API media type in Accept header contains unsupported extension URI in "ext" parameter.'
                     );
                 }
             }
@@ -208,6 +224,48 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
 
             // Only 'ext' and 'profile' are allowed
             if ($paramName !== 'ext' && $paramName !== 'profile') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if media type has unsupported extension URIs in 'ext' parameter.
+     * Currently, no extensions are supported, so any ext parameter value is unsupported.
+     */
+    private function hasUnsupportedExtension(string $mediaType): bool
+    {
+        $semicolonPosition = strpos($mediaType, ';');
+
+        if ($semicolonPosition === false) {
+            return false;
+        }
+
+        // Extract parameters part
+        $parametersString = substr($mediaType, $semicolonPosition + 1);
+
+        // Parse parameters
+        $parts = array_map('trim', explode(';', $parametersString));
+
+        foreach ($parts as $part) {
+            if ($part === '') {
+                continue;
+            }
+
+            // Extract parameter name (before '=')
+            $equalPosition = strpos($part, '=');
+            if ($equalPosition === false) {
+                continue;
+            }
+
+            $paramName = trim(substr($part, 0, $equalPosition));
+
+            // Check if this is an 'ext' parameter
+            if ($paramName === 'ext') {
+                // Currently, no extensions are supported
+                // Any ext parameter value is considered unsupported
                 return true;
             }
         }

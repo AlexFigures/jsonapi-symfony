@@ -1634,6 +1634,462 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
     }
 
     /**
+     * Test 30: Filter by to-one relationship ID (author.id).
+     *
+     * Validates:
+     * - Filtering by relationship ID works correctly
+     * - Only articles by specific author are returned
+     * - Other articles are excluded
+     */
+    public function testFilterByToOneRelationshipId(): void
+    {
+        // Create authors
+        $author1 = new Author();
+        $author1->setName('Alice Smith');
+        $author1->setEmail('alice@example.com');
+        $this->em->persist($author1);
+
+        $author2 = new Author();
+        $author2->setName('Bob Johnson');
+        $author2->setEmail('bob@example.com');
+        $this->em->persist($author2);
+
+        // Create articles with different authors
+        $article1 = new Article();
+        $article1->setTitle('Article by Alice');
+        $article1->setContent('Content 1');
+        $article1->setAuthor($author1);
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Another Article by Alice');
+        $article2->setContent('Content 2');
+        $article2->setAuthor($author1);
+        $this->em->persist($article2);
+
+        $article3 = new Article();
+        $article3->setTitle('Article by Bob');
+        $article3->setContent('Content 3');
+        $article3->setAuthor($author2);
+        $this->em->persist($article3);
+
+        $this->em->flush();
+        $author1Id = $author1->getId();
+        $this->em->clear();
+
+        // Filter articles by author.id
+        $request = $this->createJsonApiGetRequest('GET', "/api/articles?filter[author.id]={$author1Id}");
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Should return only Alice's articles
+        self::assertCount(2, $document['data']);
+        self::assertSame(2, $document['meta']['total']);
+
+        // Verify all returned articles are by Alice
+        foreach ($document['data'] as $item) {
+            self::assertStringContainsString('Alice', $item['attributes']['title']);
+        }
+    }
+
+    /**
+     * Test 31: Filter by to-many relationship ID (tags.id).
+     *
+     * Validates:
+     * - Filtering by to-many relationship ID works correctly
+     * - Only articles with specific tag are returned
+     * - Articles without the tag are excluded
+     */
+    public function testFilterByToManyRelationshipId(): void
+    {
+        // Create tags
+        $tagPhp = new Tag();
+        $tagPhp->setName('PHP');
+        $this->em->persist($tagPhp);
+
+        $tagSymfony = new Tag();
+        $tagSymfony->setName('Symfony');
+        $this->em->persist($tagSymfony);
+
+        $tagDoctrine = new Tag();
+        $tagDoctrine->setName('Doctrine');
+        $this->em->persist($tagDoctrine);
+
+        // Create author
+        $author = new Author();
+        $author->setName('John Doe');
+        $author->setEmail('john@example.com');
+        $this->em->persist($author);
+
+        // Create articles with different tags
+        $article1 = new Article();
+        $article1->setTitle('PHP Article');
+        $article1->setContent('Content about PHP');
+        $article1->setAuthor($author);
+        $article1->addTag($tagPhp);
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Symfony Article');
+        $article2->setContent('Content about Symfony');
+        $article2->setAuthor($author);
+        $article2->addTag($tagSymfony);
+        $article2->addTag($tagPhp); // This article has both Symfony and PHP tags
+        $this->em->persist($article2);
+
+        $article3 = new Article();
+        $article3->setTitle('Doctrine Article');
+        $article3->setContent('Content about Doctrine');
+        $article3->setAuthor($author);
+        $article3->addTag($tagDoctrine);
+        $this->em->persist($article3);
+
+        $this->em->flush();
+        $tagPhpId = $tagPhp->getId();
+        $this->em->clear();
+
+        // Filter articles by tags.id (should return articles with PHP tag)
+        $request = $this->createJsonApiGetRequest('GET', "/api/articles?filter[tags.id]={$tagPhpId}");
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Should return 2 articles (both have PHP tag)
+        self::assertCount(2, $document['data']);
+        self::assertSame(2, $document['meta']['total']);
+
+        // Verify returned articles
+        $titles = array_column(array_column($document['data'], 'attributes'), 'title');
+        self::assertContains('PHP Article', $titles);
+        self::assertContains('Symfony Article', $titles);
+        self::assertNotContains('Doctrine Article', $titles);
+    }
+
+    /**
+     * Test 32: Filter by to-one relationship ID with no matches.
+     *
+     * Validates:
+     * - Empty result when filtering by non-existent author ID
+     * - Returns 200 OK with empty data array
+     */
+    public function testFilterByToOneRelationshipIdNoMatches(): void
+    {
+        // Create author and article
+        $author = new Author();
+        $author->setName('Alice Smith');
+        $author->setEmail('alice@example.com');
+        $this->em->persist($author);
+
+        $article = new Article();
+        $article->setTitle('Article by Alice');
+        $article->setContent('Content');
+        $article->setAuthor($author);
+        $this->em->persist($article);
+
+        $this->em->flush();
+        $this->em->clear();
+
+        // Filter by non-existent author ID
+        $nonExistentId = Uuid::v4()->toRfc4122();
+        $request = $this->createJsonApiGetRequest('GET', "/api/articles?filter[author.id]={$nonExistentId}");
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Should return empty result
+        self::assertEmpty($document['data']);
+        self::assertSame(0, $document['meta']['total']);
+    }
+
+    /**
+     * Test 33: Filter by multiple relationship IDs simultaneously.
+     *
+     * Validates:
+     * - Filtering by both author.id AND tags.id works correctly
+     * - Only articles matching BOTH conditions are returned
+     * - AND logic is applied correctly
+     */
+    public function testFilterByMultipleRelationshipIds(): void
+    {
+        // Create authors
+        $author1 = new Author();
+        $author1->setName('Alice Smith');
+        $author1->setEmail('alice@example.com');
+        $this->em->persist($author1);
+
+        $author2 = new Author();
+        $author2->setName('Bob Johnson');
+        $author2->setEmail('bob@example.com');
+        $this->em->persist($author2);
+
+        // Create tags
+        $tagPhp = new Tag();
+        $tagPhp->setName('PHP');
+        $this->em->persist($tagPhp);
+
+        $tagSymfony = new Tag();
+        $tagSymfony->setName('Symfony');
+        $this->em->persist($tagSymfony);
+
+        // Create articles with different combinations
+        $article1 = new Article();
+        $article1->setTitle('Alice PHP Article');
+        $article1->setContent('Content 1');
+        $article1->setAuthor($author1);
+        $article1->addTag($tagPhp);
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Alice Symfony Article');
+        $article2->setContent('Content 2');
+        $article2->setAuthor($author1);
+        $article2->addTag($tagSymfony);
+        $this->em->persist($article2);
+
+        $article3 = new Article();
+        $article3->setTitle('Bob PHP Article');
+        $article3->setContent('Content 3');
+        $article3->setAuthor($author2);
+        $article3->addTag($tagPhp);
+        $this->em->persist($article3);
+
+        $this->em->flush();
+        $author1Id = $author1->getId();
+        $tagPhpId = $tagPhp->getId();
+        $this->em->clear();
+
+        // Filter by author.id=Alice AND tags.id=PHP
+        $request = $this->createJsonApiGetRequest('GET', "/api/articles?filter[author.id]={$author1Id}&filter[tags.id]={$tagPhpId}");
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Should return only Alice's PHP article
+        self::assertCount(1, $document['data']);
+        self::assertSame(1, $document['meta']['total']);
+        self::assertSame('Alice PHP Article', $document['data'][0]['attributes']['title']);
+    }
+
+    /**
+     * Test 34: Filter by relationship ID using IN operator.
+     *
+     * Validates:
+     * - IN operator works with relationship IDs
+     * - Articles by multiple authors are returned
+     * - OR logic is applied for IN operator
+     */
+    public function testFilterByRelationshipIdWithInOperator(): void
+    {
+        // Create authors
+        $author1 = new Author();
+        $author1->setName('Alice Smith');
+        $author1->setEmail('alice@example.com');
+        $this->em->persist($author1);
+
+        $author2 = new Author();
+        $author2->setName('Bob Johnson');
+        $author2->setEmail('bob@example.com');
+        $this->em->persist($author2);
+
+        $author3 = new Author();
+        $author3->setName('Charlie Brown');
+        $author3->setEmail('charlie@example.com');
+        $this->em->persist($author3);
+
+        // Create articles
+        $article1 = new Article();
+        $article1->setTitle('Article by Alice');
+        $article1->setContent('Content 1');
+        $article1->setAuthor($author1);
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Article by Bob');
+        $article2->setContent('Content 2');
+        $article2->setAuthor($author2);
+        $this->em->persist($article2);
+
+        $article3 = new Article();
+        $article3->setTitle('Article by Charlie');
+        $article3->setContent('Content 3');
+        $article3->setAuthor($author3);
+        $this->em->persist($article3);
+
+        $this->em->flush();
+        $author1Id = $author1->getId();
+        $author2Id = $author2->getId();
+        $this->em->clear();
+
+        // Filter by author.id IN [Alice, Bob]
+        $request = $this->createJsonApiGetRequest('GET', "/api/articles?filter[author.id][in][]={$author1Id}&filter[author.id][in][]={$author2Id}");
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Should return articles by Alice and Bob (not Charlie)
+        self::assertCount(2, $document['data']);
+        self::assertSame(2, $document['meta']['total']);
+
+        $titles = array_column(array_column($document['data'], 'attributes'), 'title');
+        self::assertContains('Article by Alice', $titles);
+        self::assertContains('Article by Bob', $titles);
+        self::assertNotContains('Article by Charlie', $titles);
+    }
+
+    /**
+     * Test 35: Filter by relationship ID using NIN (NOT IN) operator.
+     *
+     * Validates:
+     * - NIN operator works with to-one relationship IDs
+     * - Articles excluding specified authors are returned
+     * - NULL values (no author) are included in results
+     *
+     * Note: NIN with to-many relationships is complex and requires NOT EXISTS subqueries.
+     * This test uses to-one relationship (author) for simplicity.
+     */
+    public function testFilterByRelationshipIdWithNinOperator(): void
+    {
+        // Create authors
+        $author1 = new Author();
+        $author1->setName('Alice Smith');
+        $author1->setEmail('alice@example.com');
+        $this->em->persist($author1);
+
+        $author2 = new Author();
+        $author2->setName('Bob Johnson');
+        $author2->setEmail('bob@example.com');
+        $this->em->persist($author2);
+
+        $author3 = new Author();
+        $author3->setName('Charlie Brown');
+        $author3->setEmail('charlie@example.com');
+        $this->em->persist($author3);
+
+        // Create articles with different authors
+        $article1 = new Article();
+        $article1->setTitle('Article by Alice');
+        $article1->setContent('Content 1');
+        $article1->setAuthor($author1);
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Article by Bob');
+        $article2->setContent('Content 2');
+        $article2->setAuthor($author2);
+        $this->em->persist($article2);
+
+        $article3 = new Article();
+        $article3->setTitle('Article by Charlie');
+        $article3->setContent('Content 3');
+        $article3->setAuthor($author3);
+        $this->em->persist($article3);
+
+        $article4 = new Article();
+        $article4->setTitle('Article without Author');
+        $article4->setContent('Content 4');
+        // No author set
+        $this->em->persist($article4);
+
+        $this->em->flush();
+        $author1Id = $author1->getId();
+        $author2Id = $author2->getId();
+        $this->em->clear();
+
+        // Filter by author.id NOT IN [Alice, Bob]
+        $request = $this->createJsonApiGetRequest('GET', "/api/articles?filter[author.id][nin][]={$author1Id}&filter[author.id][nin][]={$author2Id}");
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Should return Charlie's article and article without author (not Alice or Bob)
+        self::assertCount(2, $document['data']);
+        self::assertSame(2, $document['meta']['total']);
+
+        $titles = array_column(array_column($document['data'], 'attributes'), 'title');
+        self::assertContains('Article by Charlie', $titles);
+        self::assertContains('Article without Author', $titles);
+        self::assertNotContains('Article by Alice', $titles);
+        self::assertNotContains('Article by Bob', $titles);
+    }
+
+    /**
+     * Test 36: Filter by nested relationship path (self-referential).
+     *
+     * Validates:
+     * - Filtering by parent.id works for self-referential relationships
+     * - JOIN logic handles nested paths correctly
+     * - Child categories can be filtered by parent ID
+     */
+    public function testFilterByNestedRelationshipPath(): void
+    {
+        // Create parent category
+        $parentCategory = new Category();
+        $parentCategory->setName('Parent Category');
+        $this->em->persist($parentCategory);
+
+        // Create child categories
+        $child1 = new Category();
+        $child1->setName('Child 1');
+        $child1->setParent($parentCategory);
+        $this->em->persist($child1);
+
+        $child2 = new Category();
+        $child2->setName('Child 2');
+        $child2->setParent($parentCategory);
+        $this->em->persist($child2);
+
+        // Create another parent with child
+        $otherParent = new Category();
+        $otherParent->setName('Other Parent');
+        $this->em->persist($otherParent);
+
+        $otherChild = new Category();
+        $otherChild->setName('Other Child');
+        $otherChild->setParent($otherParent);
+        $this->em->persist($otherChild);
+
+        // Create root category (no parent)
+        $rootCategory = new Category();
+        $rootCategory->setName('Root Category');
+        $this->em->persist($rootCategory);
+
+        $this->em->flush();
+        $parentId = $parentCategory->getId();
+        $this->em->clear();
+
+        // Filter by parent.id
+        $request = $this->createJsonApiGetRequest('GET', "/api/categories?filter[parent.id]={$parentId}");
+        $response = ($this->controller)($request, 'categories');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Should return only children of the specified parent
+        self::assertCount(2, $document['data']);
+        self::assertSame(2, $document['meta']['total']);
+
+        $names = array_column(array_column($document['data'], 'attributes'), 'name');
+        self::assertContains('Child 1', $names);
+        self::assertContains('Child 2', $names);
+        self::assertNotContains('Other Child', $names);
+        self::assertNotContains('Root Category', $names);
+    }
+
+    /**
      * Helper method to create JSON:API GET request.
      *
      * @param  string               $method HTTP method

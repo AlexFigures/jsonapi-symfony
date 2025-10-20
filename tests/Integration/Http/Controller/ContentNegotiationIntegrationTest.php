@@ -272,10 +272,11 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         );
 
         try {
+            $this->validateContentNegotiation($request);
             ($this->createController)($request, 'tags');
-            self::fail('Expected UnsupportedMediaTypeException (415) for unsupported ext URI');
+            self::fail('Expected UnsupportedMediaTypeException to be thrown');
         } catch (\AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException $e) {
-            self::assertSame(415, $e->getStatusCode());
+            self::assertSame(415, $e->getStatusCode(), 'UnsupportedMediaTypeException should have status code 415');
         }
     }
 
@@ -346,10 +347,11 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         );
 
         try {
+            $this->validateContentNegotiation($request);
             ($this->collectionController)($request, 'tags');
-            self::fail('Expected NotAcceptableException (406) for unsupported ext URI');
+            self::fail('Expected NotAcceptableException to be thrown');
         } catch (\AlexFigures\Symfony\Http\Exception\NotAcceptableException $e) {
-            self::assertSame(406, $e->getStatusCode());
+            self::assertSame(406, $e->getStatusCode(), 'NotAcceptableException should have status code 406');
         }
     }
 

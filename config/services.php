@@ -10,21 +10,29 @@ use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\MediaChannelSubscriber;
 use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
 use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
 use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
-use AlexFigures\Symfony\Http\Controller\CollectionController;
-use AlexFigures\Symfony\Http\Controller\CreateResourceController;
-use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
+use AlexFigures\Symfony\Contract\Data\ExistenceChecker;
+use AlexFigures\Symfony\Contract\Data\RelationshipReader;
+use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
-use AlexFigures\Symfony\Http\Controller\RelatedController;
-use AlexFigures\Symfony\Http\Controller\RelationshipGetController;
-use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
-use AlexFigures\Symfony\Http\Controller\ResourceController;
-use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
-use AlexFigures\Symfony\Http\Controller\OpenApiController;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\CorrelationIdProvider;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Error\JsonApiExceptionListener;
+use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\Symfony\Filter\Operator\BetweenOperator;
+use AlexFigures\Symfony\Filter\Operator\EqualOperator;
+use AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\GreaterThanOperator;
+use AlexFigures\Symfony\Filter\Operator\InOperator;
+use AlexFigures\Symfony\Filter\Operator\IsNullOperator;
+use AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\LessThanOperator;
+use AlexFigures\Symfony\Filter\Operator\LikeOperator;
+use AlexFigures\Symfony\Filter\Operator\NotEqualOperator;
+use AlexFigures\Symfony\Filter\Operator\NotInOperator;
+use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Filter\Parser\FilterParser;
 use AlexFigures\Symfony\Http\Cache\CacheKeyBuilder;
 use AlexFigures\Symfony\Http\Cache\ConditionalRequestEvaluator;
 use AlexFigures\Symfony\Http\Cache\EtagGeneratorInterface;
@@ -33,24 +41,38 @@ use AlexFigures\Symfony\Http\Cache\HeadersApplier;
 use AlexFigures\Symfony\Http\Cache\LastModifiedResolver;
 use AlexFigures\Symfony\Http\Cache\SurrogateKeyBuilder;
 use AlexFigures\Symfony\Http\Cache\VersionEtagGenerator;
+use AlexFigures\Symfony\Http\Controller\CollectionController;
+use AlexFigures\Symfony\Http\Controller\CreateResourceController;
+use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
+use AlexFigures\Symfony\Http\Controller\OpenApiController;
+use AlexFigures\Symfony\Http\Controller\RelatedController;
+use AlexFigures\Symfony\Http\Controller\RelationshipGetController;
+use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
+use AlexFigures\Symfony\Http\Controller\ResourceController;
+use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
+use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\CorrelationIdProvider;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Error\JsonApiExceptionListener;
 use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
-use AlexFigures\Symfony\Http\Safety\RequestComplexityScorer;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
+use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
+use AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
+use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
 use AlexFigures\Symfony\Http\Request\PaginationConfig;
 use AlexFigures\Symfony\Http\Request\QueryParser;
 use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
+use AlexFigures\Symfony\Http\Safety\RequestComplexityScorer;
 use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
-use AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
 use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
 use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
 use AlexFigures\Symfony\Http\Write\RelationshipDocumentValidator;
 use AlexFigures\Symfony\Http\Write\WriteConfig;
+use AlexFigures\Symfony\Invalidation\InvalidationDispatcher;
+use AlexFigures\Symfony\Invalidation\NullPurger;
+use AlexFigures\Symfony\Invalidation\SurrogatePurgerInterface;
 use AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile;
 use AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile;
 use AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile;
@@ -59,35 +81,12 @@ use AlexFigures\Symfony\Profile\ProfileRegistry;
 use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use AlexFigures\Symfony\Invalidation\InvalidationDispatcher;
-use AlexFigures\Symfony\Invalidation\NullPurger;
-use AlexFigures\Symfony\Invalidation\SurrogatePurgerInterface;
-use AlexFigures\Symfony\Contract\Data\ExistenceChecker;
-use AlexFigures\Symfony\Contract\Data\RelationshipReader;
-use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Contract\Data\ResourceRepository;
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
-use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use AlexFigures\Symfony\Filter\Operator\BetweenOperator;
-use AlexFigures\Symfony\Filter\Operator\EqualOperator;
-use AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\GreaterThanOperator;
-use AlexFigures\Symfony\Filter\Operator\InOperator;
-use AlexFigures\Symfony\Filter\Operator\NotInOperator;
-use AlexFigures\Symfony\Filter\Operator\IsNullOperator;
-use AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\LessThanOperator;
-use AlexFigures\Symfony\Filter\Operator\LikeOperator;
-use AlexFigures\Symfony\Filter\Operator\NotEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\Registry;
-use AlexFigures\Symfony\Filter\Parser\FilterParser;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+use function Symfony\Component\DependencyInjection\Loader\Configurator\tagged_iterator;
 
 return static function (ContainerConfigurator $configurator): void {
     $services = $configurator->services();
@@ -521,7 +520,7 @@ return static function (ContainerConfigurator $configurator): void {
     // Registered with low priority so users can override them
 
     $services
-        ->set('jsonapi.null_existence_checker', \AlexFigures\Symfony\Contract\Data\NullExistenceChecker::class)
+        ->set('jsonapi.null_existence_checker', \AlexFigures\Symfony\Bridge\Symfony\Null\NullExistenceChecker::class)
     ;
 
     $services
@@ -553,7 +552,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set('jsonapi.null_resource_repository', \AlexFigures\Symfony\Contract\Data\NullResourceRepository::class)
+        ->set('jsonapi.null_resource_repository', \AlexFigures\Symfony\Bridge\Symfony\Null\NullResourceRepository::class)
     ;
 
     $services

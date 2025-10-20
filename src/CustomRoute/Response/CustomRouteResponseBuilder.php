@@ -235,7 +235,7 @@ final class CustomRouteResponseBuilder
     /**
      * Build an error object from error data.
      *
-     * @param array<string, mixed> $errorData
+     * @param  array<string, mixed>                                                                                $errorData
      * @return array{status: string, code: string, title: string, detail: string, source?: array{pointer: string}}
      */
     private function buildErrorObject(array $errorData, int $status): array

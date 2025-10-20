@@ -71,4 +71,3 @@ final class DoctrineExistenceChecker implements ExistenceChecker
         return $em;
     }
 }
-

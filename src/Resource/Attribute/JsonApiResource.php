@@ -57,11 +57,11 @@ final class JsonApiResource
      * @param bool                 $exposeId               Whether to expose the ID in the resource document (default: true)
      */
     /**
-     * @param array<string, mixed>          $normalizationContext
-     * @param array<string, mixed>          $denormalizationContext
-     * @param array<string, string>         $fieldMap
+     * @param array<string, mixed>                     $normalizationContext
+     * @param array<string, mixed>                     $denormalizationContext
+     * @param array<string, string>                    $fieldMap
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
-     * @param array<string, class-string>   $writeRequests
+     * @param array<string, class-string>              $writeRequests
      */
     public function __construct(
         public readonly string $type,

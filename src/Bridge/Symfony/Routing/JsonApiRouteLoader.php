@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Bridge\Symfony\Routing;
 
 use AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController;
-use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
 use AlexFigures\Symfony\Http\Controller\OpenApiController;
 use AlexFigures\Symfony\Http\Controller\SwaggerUiController;
+use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
 use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\Config\Loader\Loader;

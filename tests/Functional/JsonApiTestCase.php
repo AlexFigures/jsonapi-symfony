@@ -460,7 +460,7 @@ abstract class JsonApiTestCase extends TestCase
         $this->parser = $parser;
         $this->document = $document;
         $this->collectionController = new CollectionController($registry, $repository, $parser, $document);
-        $this->resourceController = new ResourceController($registry, $repository, $parser, $document);
+        $this->resourceController = new ResourceController($registry, $repository, $parser, $document, $errorMapper);
         $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $errorMapper, $violationMapper, $eventDispatcher, $relationshipResolver);
         $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $errorMapper, $violationMapper, $eventDispatcher, $relationshipResolver);
         $this->deleteController = new DeleteResourceController($registry, $persister, $transactionManager, $eventDispatcher);

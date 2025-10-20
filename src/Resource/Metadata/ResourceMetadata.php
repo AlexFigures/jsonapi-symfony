@@ -48,17 +48,17 @@ final class ResourceMetadata
     public ?VersionResolverInterface $versionResolver;
 
     /**
-     * @param AttributeMap                         $attributes
-     * @param RelationshipMap                      $relationships
-     * @param class-string                         $class
-     * @param list<string>                         $sortableFields
-     * @param array<string, mixed>                 $normalizationContext
-     * @param array<string, mixed>                 $denormalizationContext
-     * @param class-string|null                    $dataClass
-     * @param class-string|null                    $viewClass
-     * @param array<string, string>                $fieldMap
+     * @param AttributeMap                             $attributes
+     * @param RelationshipMap                          $relationships
+     * @param class-string                             $class
+     * @param list<string>                             $sortableFields
+     * @param array<string, mixed>                     $normalizationContext
+     * @param array<string, mixed>                     $denormalizationContext
+     * @param class-string|null                        $dataClass
+     * @param class-string|null                        $viewClass
+     * @param array<string, string>                    $fieldMap
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
-     * @param array<string, class-string>          $writeRequests
+     * @param array<string, class-string>              $writeRequests
      */
     public function __construct(
         public string $type,

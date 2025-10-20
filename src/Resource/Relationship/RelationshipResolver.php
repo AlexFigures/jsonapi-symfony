@@ -46,8 +46,8 @@ class RelationshipResolver
     }
 
     /**
-     * @param array<string, mixed> $relationshipsPayload JSON:API relationships member ("relationships": { ... })
-     * @param array<string, mixed> $context
+     * @param  array<string, mixed> $relationshipsPayload JSON:API relationships member ("relationships": { ... })
+     * @param  array<string, mixed> $context
      * @throws ValidationException
      */
     public function applyRelationships(
@@ -167,7 +167,7 @@ class RelationshipResolver
     // ─────────────────────────────────────────────────────────────────────────────
 
     /**
-     * @param array<string, mixed> $ri
+     * @param  array<string, mixed>         $ri
      * @return array{type:string,id:string}
      * @throws ValidationException
      */
@@ -262,7 +262,7 @@ class RelationshipResolver
 
     /**
      * Resolves target entity by policy.
-     * @throws NotFoundException When related resource is not found (404, not 422)
+     * @throws NotFoundException   When related resource is not found (404, not 422)
      * @throws ValidationException For other validation errors
      */
     private function resolveTarget(
@@ -271,8 +271,7 @@ class RelationshipResolver
         string $type,
         string $id,
         RelationshipMetadata $meta
-    ): object
-    {
+    ): object {
         $reg = $this->registry->getByType($type);
         $class = $reg->getDataClass();
 
@@ -317,7 +316,7 @@ class RelationshipResolver
     }
 
     /**
-     * @param list<array{type: string, id: string}> $resourceIdentifiers
+     * @param  list<array{type: string, id: string}> $resourceIdentifiers
      * @return array<string, object>
      */
     private function resolveTargetsBatch(
@@ -545,8 +544,7 @@ class RelationshipResolver
         ResourceMetadata $ownerMeta,
         string $field,
         object $target
-    ): void
-    {
+    ): void {
         $cm = $em->getClassMetadata($ownerMeta->getDataClass());
         if ($cm->hasAssociation($field)) {
             $assoc = $cm->getAssociationMapping($field);
@@ -595,8 +593,7 @@ class RelationshipResolver
         ResourceMetadata $ownerMeta,
         string $field,
         object $target
-    ): void
-    {
+    ): void {
         $cm = $em->getClassMetadata($ownerMeta->getDataClass());
         if ($cm->hasAssociation($field)) {
             $assoc = $cm->getAssociationMapping($field);
@@ -801,7 +798,7 @@ class RelationshipResolver
     }
 
     /**
-     * @param Collection<int, mixed> $collection
+     * @param  Collection<int, mixed>  $collection
      * @return Collection<int, object>
      */
     private function assertObjectCollection(Collection $collection, string $class, string $field): Collection

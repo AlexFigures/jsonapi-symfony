@@ -16,8 +16,8 @@ use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\ManagerRegistry;
 use InvalidArgumentException;
 use RuntimeException;
@@ -377,17 +377,20 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
      */
     private function determineTargetClass(RelationshipMetadata $relationship, ClassMetadata $entityMetadata, string $propertyPath): string
     {
-        if ($relationship->targetClass !== null) {
+        // If targetClass is specified and it's not a Collection interface, use it
+        if ($relationship->targetClass !== null && !is_a($relationship->targetClass, Collection::class, true)) {
             return $this->assertEntityClass(
                 $relationship->targetClass,
                 sprintf('targetClass for relationship "%s"', $relationship->name),
             );
         }
 
+        // Try to resolve from targetType in registry
         if ($relationship->targetType !== null && $this->registry->hasType($relationship->targetType)) {
             return $this->registry->getByType($relationship->targetType)->dataClass;
         }
 
+        // Fall back to Doctrine metadata
         return $this->resolveTargetEntity($entityMetadata, $propertyPath);
     }
 

@@ -15,8 +15,7 @@ final class MediaTypeNegotiator
     public function __construct(
         private readonly AtomicConfig $config,
         private readonly MediaTypePolicyProviderInterface $policyProvider,
-    )
-    {
+    ) {
     }
 
     public function assertAtomicExt(Request $request): void

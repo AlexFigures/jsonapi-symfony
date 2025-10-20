@@ -45,7 +45,7 @@ final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInte
     }
 
     /**
-     * @param array<int, array{scope?: array<string, string|null>, request?: array{allowed?: list<string>}, response?: array{default?: string, negotiable?: list<string>}}> $channels
+     * @param  array<int, array{scope?: array<string, string|null>, request?: array{allowed?: list<string>}, response?: array{default?: string, negotiable?: list<string>}}> $channels
      * @return array<int, array{scope: array<string, string|null>, policy: MediaTypePolicy}>
      */
     private function buildChannels(array $channels): array
@@ -114,7 +114,7 @@ final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInte
     private MediaTypePolicy $defaultPolicy;
 
     /**
-     * @param list<string> $types
+     * @param  list<string> $types
      * @return list<string>
      */
     private function normalizeList(array $types): array

@@ -83,7 +83,7 @@ final class SerializerEntityInstantiator
      * Creates an entity instance via the Symfony Serializer.
      *
      * @param class-string $entityClass
-     * @param bool         $isCreate true for POST (create), false for PATCH (update)
+     * @param bool         $isCreate    true for POST (create), false for PATCH (update)
      *
      * @return array{entity: object, remainingChanges: ChangeSet}
      */

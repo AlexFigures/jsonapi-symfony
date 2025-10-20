@@ -12,8 +12,8 @@ use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 final class VersionDefinition
 {
     /**
-     * @param array<string, class-string> $writeRequests
-     * @param array<string, string> $fieldMap
+     * @param array<string, class-string>              $writeRequests
+     * @param array<string, string>                    $fieldMap
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
      */
     public function __construct(

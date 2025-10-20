@@ -117,7 +117,8 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
             $this->registry,
             $this->repository,
             $queryParser,
-            $documentBuilder
+            $documentBuilder,
+            $errorMapper
         );
 
         // Set up write dependencies
@@ -308,11 +309,6 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
      */
     public function testErrorLinksIncludeAboutOrType(): void
     {
-        self::markTestSkipped(
-            'Bundle does not yet support error links configuration. ' .
-            'See reports/failures.json ID:I3 for remediation plan.'
-        );
-
         // Request non-existent resource to trigger 404
         $request = Request::create(
             '/api/articles/non-existent-id',
