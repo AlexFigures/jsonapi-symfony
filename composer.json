@@ -28,7 +28,7 @@
   },
   "require-dev": {
     "deptrac/deptrac": "^4.2",
-    "doctrine/dbal": "^3.8",
+    "doctrine/dbal": "^4.3",
     "doctrine/orm": "^3.0",
     "friendsofphp/php-cs-fixer": "^3.64",
     "infection/infection": "^0.29",
