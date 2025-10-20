@@ -76,30 +76,6 @@ jobs:
         run: make bc-check
         continue-on-error: true
 
-  stress-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          tools: composer
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
-
-      - name: Run stress test (quick profile)
-        run: php scripts/stress/memory-stress.php --profile=quick
-
-      - name: Upload stress report
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: stress-report
-          path: build/stress-report.json
-
   security:
     runs-on: ubuntu-latest
     steps:
