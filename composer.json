@@ -33,7 +33,7 @@
     "infection/infection": "^0.29",
     "phpstan/phpstan": "^1.11",
     "phpunit/phpunit": "^11.0",
-    "qossmic/deptrac-shim": "^1.0",
+    "qossmic/deptrac": "*",
     "rector/rector": "^1.0",
     "roave/backward-compatibility-check": "^8.14",
     "spatie/phpunit-snapshot-assertions": "^5.2",
