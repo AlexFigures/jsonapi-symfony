@@ -352,4 +352,3 @@ abstract class DoctrineAtomicTestCase extends DoctrineIntegrationTestCase
         return (int) $qb->getQuery()->getSingleScalarResult();
     }
 }
-

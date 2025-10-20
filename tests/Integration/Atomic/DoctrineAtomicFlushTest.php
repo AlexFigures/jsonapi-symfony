@@ -27,7 +27,7 @@ final class DoctrineAtomicFlushTest extends DoctrineAtomicTestCase
     public function testFlushOccursAfterEachOperation(): void
     {
         // Track SQL queries to count COMMIT statements
-        $queryLogger = new class implements SQLLogger {
+        $queryLogger = new class () implements SQLLogger {
             public array $queries = [];
 
             public function startQuery($sql, ?array $params = null, ?array $types = null): void
@@ -88,12 +88,12 @@ final class DoctrineAtomicFlushTest extends DoctrineAtomicTestCase
         self::assertSame(3, $authorCount);
 
         // Count INSERT statements (should be 3, one per operation)
-        $insertCount = count(array_filter($queryLogger->queries, fn($sql) => stripos($sql, 'INSERT INTO') !== false));
+        $insertCount = count(array_filter($queryLogger->queries, fn ($sql) => stripos($sql, 'INSERT INTO') !== false));
         self::assertSame(3, $insertCount, 'Should have 3 INSERT statements');
 
         // Verify only one transaction (START TRANSACTION ... COMMIT)
-        $startTransactionCount = count(array_filter($queryLogger->queries, fn($sql) => stripos($sql, 'START TRANSACTION') !== false));
-        $commitCount = count(array_filter($queryLogger->queries, fn($sql) => stripos($sql, 'COMMIT') !== false));
+        $startTransactionCount = count(array_filter($queryLogger->queries, fn ($sql) => stripos($sql, 'START TRANSACTION') !== false));
+        $commitCount = count(array_filter($queryLogger->queries, fn ($sql) => stripos($sql, 'COMMIT') !== false));
 
         self::assertSame(1, $startTransactionCount, 'Should have exactly 1 START TRANSACTION');
         self::assertSame(1, $commitCount, 'Should have exactly 1 COMMIT');
@@ -360,4 +360,3 @@ final class DoctrineAtomicFlushTest extends DoctrineAtomicTestCase
         self::assertSame(1, $articleCount, 'Should have 1 article');
     }
 }
-

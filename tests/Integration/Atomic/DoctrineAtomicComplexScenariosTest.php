@@ -132,7 +132,7 @@ final class DoctrineAtomicComplexScenariosTest extends DoctrineAtomicTestCase
         self::assertSame($authorId, $article2->getAuthor()->getId());
         self::assertCount(2, $article2->getTags());
 
-        $tagIds = array_map(fn($tag) => $tag->getId(), $article2->getTags()->toArray());
+        $tagIds = array_map(fn ($tag) => $tag->getId(), $article2->getTags()->toArray());
         self::assertContains($tagPhpId, $tagIds);
         self::assertContains($tagSymfonyId, $tagIds);
     }
@@ -208,7 +208,7 @@ final class DoctrineAtomicComplexScenariosTest extends DoctrineAtomicTestCase
         self::assertNotNull($author);
         self::assertCount(2, $author->getArticles(), 'Author should have 2 articles (inverse side)');
 
-        $articleIds = array_map(fn($article) => $article->getId(), $author->getArticles()->toArray());
+        $articleIds = array_map(fn ($article) => $article->getId(), $author->getArticles()->toArray());
         self::assertContains($article1Id, $articleIds);
         self::assertContains($article2Id, $articleIds);
 
@@ -526,4 +526,3 @@ final class DoctrineAtomicComplexScenariosTest extends DoctrineAtomicTestCase
         self::assertSame($article2Id, $updatedAuthor->getArticles()->first()->getId());
     }
 }
-

@@ -83,7 +83,7 @@ final class AddHandler
     /**
      * Extract relationships from operation data and resolve LIDs to actual IDs.
      *
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>              $data
      * @return array<string, array{data: mixed}>
      */
     private function extractRelationships(array $data, LidRegistry $lids): array
@@ -109,7 +109,7 @@ final class AddHandler
     /**
      * Resolve LIDs in relationship data (to-one or to-many).
      *
-     * @param mixed $data
+     * @param  mixed $data
      * @return mixed
      */
     private function resolveLidsInRelationshipData(mixed $data, LidRegistry $lids): mixed
@@ -126,7 +126,7 @@ final class AddHandler
         // To-many relationship: array of resource identifiers
         if (is_array($data) && array_is_list($data)) {
             return array_map(
-                fn($identifier) => $this->resolveLidInIdentifier($identifier, $lids),
+                fn ($identifier) => $this->resolveLidInIdentifier($identifier, $lids),
                 $data
             );
         }
@@ -137,7 +137,7 @@ final class AddHandler
     /**
      * Resolve LID in a single resource identifier.
      *
-     * @param array<string, mixed> $identifier
+     * @param  array<string, mixed> $identifier
      * @return array<string, mixed>
      */
     private function resolveLidInIdentifier(array $identifier, LidRegistry $lids): array

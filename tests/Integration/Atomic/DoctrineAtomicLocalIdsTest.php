@@ -184,7 +184,7 @@ final class DoctrineAtomicLocalIdsTest extends DoctrineAtomicTestCase
         self::assertNotNull($article);
         self::assertCount(2, $article->getTags());
 
-        $tagIds = array_map(fn($tag) => $tag->getId(), $article->getTags()->toArray());
+        $tagIds = array_map(fn ($tag) => $tag->getId(), $article->getTags()->toArray());
         self::assertContains($tag1Id, $tagIds);
         self::assertContains($tag2Id, $tagIds);
     }
@@ -330,7 +330,7 @@ final class DoctrineAtomicLocalIdsTest extends DoctrineAtomicTestCase
 
         // Verify tags relationship
         self::assertCount(2, $article->getTags());
-        $tagIds = array_map(fn($tag) => $tag->getId(), $article->getTags()->toArray());
+        $tagIds = array_map(fn ($tag) => $tag->getId(), $article->getTags()->toArray());
         self::assertContains($tag1Id, $tagIds);
         self::assertContains($tag2Id, $tagIds);
     }
@@ -383,4 +383,3 @@ final class DoctrineAtomicLocalIdsTest extends DoctrineAtomicTestCase
         }
     }
 }
-

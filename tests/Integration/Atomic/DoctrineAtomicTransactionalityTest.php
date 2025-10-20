@@ -251,4 +251,3 @@ final class DoctrineAtomicTransactionalityTest extends DoctrineAtomicTestCase
         $this->assertDatabaseMissingResource('authors', $deleteId);
     }
 }
-

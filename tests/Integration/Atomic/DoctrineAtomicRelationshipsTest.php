@@ -127,7 +127,7 @@ final class DoctrineAtomicRelationshipsTest extends DoctrineAtomicTestCase
         self::assertNotNull($article);
         self::assertCount(2, $article->getTags());
 
-        $tagIds = array_map(fn($tag) => $tag->getId(), $article->getTags()->toArray());
+        $tagIds = array_map(fn ($tag) => $tag->getId(), $article->getTags()->toArray());
         self::assertContains($tag1Id, $tagIds);
         self::assertContains($tag2Id, $tagIds);
     }
@@ -278,7 +278,7 @@ final class DoctrineAtomicRelationshipsTest extends DoctrineAtomicTestCase
         self::assertNotNull($updatedArticle);
         self::assertCount(1, $updatedArticle->getTags());
 
-        $remainingTagIds = array_map(fn($tag) => $tag->getId(), $updatedArticle->getTags()->toArray());
+        $remainingTagIds = array_map(fn ($tag) => $tag->getId(), $updatedArticle->getTags()->toArray());
         self::assertNotContains($tag1Id, $remainingTagIds);
     }
 
@@ -335,4 +335,3 @@ final class DoctrineAtomicRelationshipsTest extends DoctrineAtomicTestCase
         self::assertSame($tag3Id, $updatedArticle->getTags()->first()->getId());
     }
 }
-

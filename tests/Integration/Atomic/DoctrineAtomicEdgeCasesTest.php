@@ -550,4 +550,3 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
         self::assertSame('Updated Name', $author->getName());
     }
 }
-

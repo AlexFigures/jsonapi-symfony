@@ -299,4 +299,3 @@ final class DoctrineAtomicBasicOperationsTest extends DoctrineAtomicTestCase
         self::assertSame('original@example.com', $updatedAuthor->getEmail());
     }
 }
-
