@@ -15,3 +15,11 @@ parameters:
     checkMissingCallableSignature: true
     checkExplicitMixed: true
     checkBenevolentUnionTypes: true
+
+services:
+    errorFormatter.sarif:
+        class: PHPStanSarifErrorFormatter\SarifErrorFormatter
+        arguments:
+            relativePathHelper: @simpleRelativePathHelper
+            currentWorkingDirectory: %currentWorkingDirectory%
+            pretty: true

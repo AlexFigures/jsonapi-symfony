@@ -7,11 +7,11 @@ parameters:
     - name: Contract
       collectors:
         - type: classNameRegex
-          regex: '^AlexFigures\\\\Symfony\\\\Contract\\\\'
+          value: '#^AlexFigures\\Symfony\\Contract\\#'
     - name: Application
       collectors:
         - type: classNameRegex
-          regex: '^AlexFigures\\\\Symfony\\\\(?!Contract).+'
+          value: '#^AlexFigures\\Symfony\\(?!Contract).+#'
   ruleset:
     Contract: []
     Application:
