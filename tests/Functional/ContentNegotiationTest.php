@@ -8,6 +8,8 @@ use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscri
 use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
 use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
 use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
+use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
+use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -91,7 +93,7 @@ final class ContentNegotiationTest extends TestCase
         $this->subscriber->onKernelRequest($event);
     }
 
-    public function testContentTypeWithExtParameterIsAllowed(): void
+    public function testContentTypeWithExtParameterIsRejected(): void
     {
         $request = Request::create('/articles', 'POST', server: [
             'CONTENT_TYPE' => 'application/vnd.api+json; ext="https://jsonapi.org/ext/atomic"',
@@ -99,10 +101,11 @@ final class ContentNegotiationTest extends TestCase
         ]);
         $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
 
-        // Should not throw exception
-        $this->subscriber->onKernelRequest($event);
+        // Extensions are not supported, should throw exception
+        $this->expectException(UnsupportedMediaTypeException::class);
+        $this->expectExceptionMessage('JSON:API media type contains unsupported extension URI in "ext" parameter.');
 
-        self::assertTrue(true); // Assert that no exception was thrown
+        $this->subscriber->onKernelRequest($event);
     }
 
     public function testContentTypeWithProfileParameterIsAllowed(): void
@@ -145,17 +148,18 @@ final class ContentNegotiationTest extends TestCase
         $this->subscriber->onKernelRequest($event);
     }
 
-    public function testAcceptWithExtParameterIsAllowed(): void
+    public function testAcceptWithExtParameterIsRejected(): void
     {
         $request = Request::create('/articles', 'GET', server: [
             'HTTP_ACCEPT' => 'application/vnd.api+json; ext="https://jsonapi.org/ext/atomic"',
         ]);
         $event = new RequestEvent($this->createKernel(), $request, HttpKernelInterface::MAIN_REQUEST);
 
-        // Should not throw exception
-        $this->subscriber->onKernelRequest($event);
+        // Extensions are not supported, should throw exception
+        $this->expectException(NotAcceptableException::class);
+        $this->expectExceptionMessage('JSON:API media type in Accept header contains unsupported extension URI in "ext" parameter.');
 
-        self::assertTrue(true); // Assert that no exception was thrown
+        $this->subscriber->onKernelRequest($event);
     }
 
     public function testAcceptWithProfileParameterIsAllowed(): void

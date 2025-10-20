@@ -21,7 +21,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $registry->method('all')->willReturn([
             new ResourceMetadata(
                 type: 'articles',
-                class: 'App\Entity\Article',
+                class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
                 attributes: [],
                 relationships: [],
             ),
@@ -52,7 +52,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $registry->method('all')->willReturn([
             new ResourceMetadata(
                 type: 'articles',
-                class: 'App\Entity\Article',
+                class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
                 attributes: [],
                 relationships: [],
             ),
@@ -92,7 +92,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $registry->method('all')->willReturn([
             new ResourceMetadata(
                 type: 'articles',
-                class: 'App\Entity\Article',
+                class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
                 attributes: [],
                 relationships: [
                     new RelationshipMetadata(
@@ -161,7 +161,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $registry->method('all')->willReturn([
             new ResourceMetadata(
                 type: 'articles',
-                class: 'App\Entity\Article',
+                class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
                 attributes: [],
                 relationships: [],
             ),
@@ -180,7 +180,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $registry->method('all')->willReturn([
             new ResourceMetadata(
                 type: 'articles',
-                class: 'App\Entity\Article',
+                class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
                 attributes: [],
                 relationships: [
                     new RelationshipMetadata(
@@ -314,7 +314,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $registry->method('all')->willReturn([
             new ResourceMetadata(
                 type: 'blog_posts',
-                class: 'App\Entity\BlogPost',
+                class: \AlexFigures\Symfony\Tests\Fixtures\Model\BlogPost::class,
                 attributes: [],
                 relationships: [
                     new RelationshipMetadata(
@@ -476,7 +476,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $registry->method('all')->willReturn([
             new \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata(
                 type: 'articles',
-                class: 'App\Entity\Article',
+                class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
                 attributes: [],
                 relationships: [],
             ),
@@ -552,7 +552,7 @@ final class JsonApiRouteLoaderTest extends TestCase
         $registry->method('all')->willReturn([
             new ResourceMetadata(
                 type: 'category_synonyms',
-                class: 'App\Entity\CategorySynonym',
+                class: \AlexFigures\Symfony\Tests\Fixtures\Model\CategorySynonym::class,
                 attributes: [],
                 relationships: [
                     new RelationshipMetadata(

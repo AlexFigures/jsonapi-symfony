@@ -69,7 +69,7 @@ final class JsonApiCustomRouteTest extends TestCase
     public function testThrowsExceptionWhenBothControllerAndResourceTypeAreNull(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Either controller or resourceType must be specified for JsonApiCustomRoute');
+        $this->expectExceptionMessage('Either handler, controller, or resourceType must be specified for JsonApiCustomRoute');
 
         new JsonApiCustomRoute(
             name: 'test.route',

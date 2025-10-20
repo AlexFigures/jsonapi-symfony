@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Functional\Errors;
 
 use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Contract\Data\ResourcePersister;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
 use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
 use AlexFigures\Symfony\Http\Write\WriteConfig;
@@ -26,22 +26,22 @@ final class ValidationErrorsTest extends JsonApiTestCase
             new ConstraintViolation('Tag is invalid.', null, [], null, 'tags[0]', null),
         ]);
 
-        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourcePersister {
+        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourceProcessor {
             public function __construct(private ConstraintViolationList $violations)
             {
             }
 
-            public function create(string $type, ChangeSet $changes, ?string $clientId = null): object
+            public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
             {
                 throw new ValidationFailedException('resource', $this->violations);
             }
 
-            public function update(string $type, string $id, ChangeSet $changes): object
+            public function processUpdate(string $type, string $id, ChangeSet $changes): object
             {
                 throw new ValidationFailedException('resource', $this->violations);
             }
 
-            public function delete(string $type, string $id): void
+            public function processDelete(string $type, string $id): void
             {
             }
         });
@@ -79,7 +79,7 @@ final class ValidationErrorsTest extends JsonApiTestCase
         $this->assertErrorPointer($errors[2], '/data/relationships/tags/data/0');
     }
 
-    private function createControllerWithValidator(ResourcePersister $persister): CreateResourceController
+    private function createControllerWithValidator(ResourceProcessor $processor): CreateResourceController
     {
         $baseConfig = $this->writeConfig();
         $writeConfig = new WriteConfig(true, $baseConfig->clientIdAllowed);
@@ -89,7 +89,7 @@ final class ValidationErrorsTest extends JsonApiTestCase
             $this->registry(),
             $validator,
             $this->changeSetFactory(),
-            $persister,
+            $processor,
             $this->transactionManager(),
             $this->documentBuilder(),
             $this->linkGenerator(),

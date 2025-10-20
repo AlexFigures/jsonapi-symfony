@@ -156,6 +156,7 @@ final class CustomRouteContextTest extends TestCase
         $criteria = new Criteria(new Pagination(1, 10));
         $routeParams = ['id' => '123'];
         $body = ['key' => 'value'];
+        $repository = $this->createMock(\AlexFigures\Symfony\Contract\Data\ResourceRepository::class);
 
         $context = new CustomRouteContext(
             request: $request,
@@ -163,7 +164,8 @@ final class CustomRouteContextTest extends TestCase
             resourceType: 'articles',
             routeParams: $routeParams,
             criteria: $criteria,
-            body: $body
+            body: $body,
+            repository: $repository
         );
 
         // Verify all properties are accessible
@@ -184,7 +186,8 @@ final class CustomRouteContextTest extends TestCase
         string $resourceType = 'articles',
         array $routeParams = [],
         ?Criteria $criteria = null,
-        array $body = []
+        array $body = [],
+        ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null
     ): CustomRouteContext {
         return new CustomRouteContext(
             request: $request ?? Request::create('/test'),
@@ -192,7 +195,8 @@ final class CustomRouteContextTest extends TestCase
             resourceType: $resourceType,
             routeParams: $routeParams,
             criteria: $criteria ?? new Criteria(new Pagination(1, 10)),
-            body: $body
+            body: $body,
+            repository: $repository ?? $this->createMock(\AlexFigures\Symfony\Contract\Data\ResourceRepository::class)
         );
     }
 }
