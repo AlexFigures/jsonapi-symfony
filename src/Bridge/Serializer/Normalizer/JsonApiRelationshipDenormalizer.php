@@ -33,14 +33,14 @@ final class JsonApiRelationshipDenormalizer implements DenormalizerInterface
         }
 
         $entity = $context['object_to_populate'] ?? null;
-        if (!$entity) {
+        if (!is_object($entity)) {
             throw new InvalidArgumentException('JsonApiRelationshipDenormalizer requires object_to_populate in context');
         }
 
         // Get resource metadata for the entity
         $metadata = null;
         foreach ($this->registry->all() as $resourceMetadata) {
-            if ($resourceMetadata->dataClass === get_class($entity)) {
+            if ($resourceMetadata->dataClass === $entity::class) {
                 $metadata = $resourceMetadata;
                 break;
             }
@@ -49,17 +49,17 @@ final class JsonApiRelationshipDenormalizer implements DenormalizerInterface
         if (!$metadata) {
             throw new InvalidArgumentException(sprintf(
                 'No resource metadata found for class %s',
-                get_class($entity)
+                $entity::class
             ));
         }
 
         // Determine if this is a create operation
-        $isCreate = $context['is_create'] ?? false;
+        $isCreate = isset($context['is_create']) ? (bool) $context['is_create'] : false;
 
         // Apply relationships using the resolver
         $this->relationshipResolver->applyRelationships(
             $entity,
-            $data['relationships'],
+            is_array($data['relationships']) ? $data['relationships'] : [],
             $metadata,
             $isCreate
         );
@@ -85,13 +85,13 @@ final class JsonApiRelationshipDenormalizer implements DenormalizerInterface
         }
 
         $entity = $context['object_to_populate'] ?? null;
-        if (!$entity) {
+        if (!is_object($entity)) {
             return false;
         }
 
         // Check if entity class is registered
         foreach ($this->registry->all() as $resourceMetadata) {
-            if ($resourceMetadata->dataClass === get_class($entity)) {
+            if ($resourceMetadata->dataClass === $entity::class) {
                 return true;
             }
         }
@@ -104,6 +104,6 @@ final class JsonApiRelationshipDenormalizer implements DenormalizerInterface
      */
     public function getSupportedTypes(?string $format): array
     {
-        return ['*' => false]; // We support any type but with low priority
+        return [];
     }
 }

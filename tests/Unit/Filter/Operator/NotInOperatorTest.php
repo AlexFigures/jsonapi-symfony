@@ -17,7 +17,9 @@ final class NotInOperatorTest extends TestCase
 
         $expression = $operator->compile('e', 'e.status', ['draft', 'archived'], $platform);
 
-        self::assertStringStartsWith('e.status NOT IN (:nin_', $expression->dql);
+        // NotInOperator now includes NULL values: (field NOT IN (...) OR field IS NULL)
+        self::assertStringStartsWith('(e.status NOT IN (:nin_', $expression->dql);
+        self::assertStringContainsString('OR e.status IS NULL)', $expression->dql);
         self::assertCount(1, $expression->parameters);
         self::assertSame(['draft', 'archived'], array_values($expression->parameters)[0]);
     }

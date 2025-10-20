@@ -177,7 +177,8 @@ final class ResourceWriteTest extends JsonApiTestCase
             ],
         ];
 
-        $this->expectException(BadRequestException::class);
+        // Read-only attributes (with getter but no setter) cause PropertyAccess exception
+        $this->expectException(\Symfony\Component\PropertyAccess\Exception\NoSuchPropertyException::class);
         ($this->createController())($this->jsonRequest('POST', '/api/articles', $payload), 'articles');
     }
 

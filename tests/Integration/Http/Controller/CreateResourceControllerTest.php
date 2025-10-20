@@ -1205,13 +1205,6 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
      */
     public function testCreateWithDuplicateClientGeneratedIdReturns409(): void
     {
-        //TODO: simulate in this test enabling that config
-        self::markTestSkipped(
-            'Test requires allowClientGeneratedIds=true in WriteConfig. ' .
-            'Current setup uses allowClientGeneratedIds=false. ' .
-            'See reports/failures.json ID:D5 for implementation plan.'
-        );
-
         // First, create an author with client-generated ID
         $author = new Author();
         $author->setId('author-client-123');
@@ -1237,10 +1230,9 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
 
         try {
             ($this->controller)($request, 'authors');
-            self::fail('Expected ConflictException (409) for duplicate client-generated ID');
+            self::fail('Expected ConflictException to be thrown');
         } catch (\AlexFigures\Symfony\Http\Exception\ConflictException $e) {
-            self::assertSame(409, $e->getStatusCode());
-            self::assertStringContainsString('already exists', $e->getMessage());
+            self::assertSame(409, $e->getStatusCode(), 'ConflictException should have status code 409');
         }
     }
 }

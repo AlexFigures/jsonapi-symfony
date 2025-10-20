@@ -8,6 +8,7 @@ use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
 use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use LogicException;
 use ReflectionClass;
+use ReflectionMethod;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Finder\Finder;
@@ -84,11 +85,7 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
                     continue;
                 }
 
-                try {
-                    $reflection = new ReflectionClass($className);
-                } catch (\ReflectionException) {
-                    continue;
-                }
+                $reflection = new ReflectionClass($className);
 
                 $attributes = $reflection->getAttributes(JsonApiResource::class);
 
@@ -140,7 +137,10 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
         }
         $className = $classMatches[1];
 
-        return $namespace . '\\' . $className;
+        /** @var class-string $fqcn */
+        $fqcn = $namespace . '\\' . $className;
+
+        return $fqcn;
     }
 
     /**
@@ -246,8 +246,10 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
 
     /**
      * Determines if a class is likely a controller class based on its characteristics.
+     *
+     * @param ReflectionClass<object> $reflection
      */
-    private function isControllerClass(\ReflectionClass $reflection): bool
+    private function isControllerClass(ReflectionClass $reflection): bool
     {
         $className = $reflection->getName();
 
@@ -262,7 +264,8 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
         }
 
         // Check if class has public methods that could be controller actions
-        $publicMethods = $reflection->getMethods(\ReflectionMethod::IS_PUBLIC);
+        /** @var list<ReflectionMethod> $publicMethods */
+        $publicMethods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
         foreach ($publicMethods as $method) {
             // Skip magic methods and inherited methods
             if ($method->isStatic() ||
@@ -285,6 +288,12 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
     private function resolvePath(string $path, ContainerBuilder $container): string
     {
         // Use the container's parameter bag to resolve parameters
-        return $container->getParameterBag()->resolveValue($path);
+        $resolved = $container->getParameterBag()->resolveValue($path);
+
+        if (!is_string($resolved)) {
+            throw new LogicException(sprintf('Resource path "%s" must resolve to a string value.', $path));
+        }
+
+        return $resolved;
     }
 }

@@ -6,6 +6,7 @@ namespace AlexFigures\Symfony\CustomRoute\Controller;
 
 use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use AlexFigures\Symfony\CustomRoute\Attribute\NoTransaction;
+use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
 use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContextFactory;
 use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
 use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerRegistry;
@@ -122,7 +123,7 @@ final class CustomRouteController
      */
     private function executeHandler(
         CustomRouteHandlerInterface $handler,
-        $context
+        CustomRouteContext $context
     ): CustomRouteResult {
         // Check if handler should be executed without transaction
         if ($this->shouldSkipTransaction($handler)) {
@@ -174,7 +175,7 @@ final class CustomRouteController
      */
     private function dispatchEventIfNeeded(
         CustomRouteResult $result,
-        $context
+        CustomRouteContext $context
     ): void {
         $status = $result->getStatus();
         $resourceType = $context->getResourceType();
@@ -196,13 +197,17 @@ final class CustomRouteController
         }
 
         if ($operation !== null && $resourceId !== null) {
+            if (!is_scalar($resourceId) && !$resourceId instanceof \Stringable) {
+                return;
+            }
+
             $this->eventDispatcher->dispatch(
                 new ResourceChangedEvent($resourceType, (string) $resourceId, $operation)
             );
 
             $this->logger->debug('Dispatched resource changed event', [
                 'resourceType' => $resourceType,
-                'resourceId' => $resourceId,
+                'resourceId' => (string) $resourceId,
                 'operation' => $operation,
             ]);
         }
@@ -217,14 +222,18 @@ final class CustomRouteController
             return null;
         }
 
-        // Try common ID property names
-        foreach (['id', 'getId'] as $property) {
-            if (property_exists($resource, $property)) {
-                return (string) $resource->$property;
+        if (property_exists($resource, 'id')) {
+            /** @var mixed $rawId */
+            $rawId = $resource->id;
+            if (is_scalar($rawId) || $rawId instanceof \Stringable) {
+                return (string) $rawId;
             }
+        }
 
-            if (method_exists($resource, $property)) {
-                return (string) $resource->$property();
+        if (method_exists($resource, 'getId')) {
+            $rawId = $resource->getId();
+            if (is_scalar($rawId) || $rawId instanceof \Stringable) {
+                return (string) $rawId;
             }
         }
 

@@ -11,6 +11,7 @@ final class RelationshipMetadata
         public bool $toMany = false,
         public ?string $targetType = null,
         public ?string $propertyPath = null,
+        /** @var class-string|'self'|'static'|null */
         public ?string $targetClass = null,
         public bool $nullable = true,
         public RelationshipLinkingPolicy $linkingPolicy = RelationshipLinkingPolicy::REFERENCE,

@@ -58,7 +58,7 @@ mutation: vendor/autoload.php
 	XDEBUG_MODE=coverage vendor/bin/infection --threads=4 --min-msi=70 --min-covered-msi=70
 
 deptrac: vendor/autoload.php
-	vendor/bin/deptrac analyse deptrac.yaml || vendor/bin/deptrac analyse --config-file=deptrac.yaml
+	vendor/bin/deptrac analyse
 
 bc-check: vendor/autoload.php
 	if git describe --tags --abbrev=0 >/dev/null 2>&1; then \

@@ -7,6 +7,7 @@ namespace AlexFigures\Symfony\Bridge\Symfony\Routing;
 use AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController;
 use AlexFigures\Symfony\Http\Controller\OpenApiController;
 use AlexFigures\Symfony\Http\Controller\SwaggerUiController;
+use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
 use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\Config\Loader\Loader;
@@ -361,7 +362,7 @@ final class JsonApiRouteLoader extends Loader
      * For handler-based routes (new in 0.3.0), routes to CustomRouteController.
      * For controller-based routes (legacy), uses the specified controller.
      */
-    private function resolveController($customRoute): string
+    private function resolveController(CustomRouteMetadata $customRoute): string
     {
         if ($customRoute->isHandlerBased()) {
             // Handler-based routes go through CustomRouteController

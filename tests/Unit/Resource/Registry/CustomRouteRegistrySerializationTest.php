@@ -6,6 +6,7 @@ namespace AlexFigures\Symfony\Tests\Unit\Resource\Registry;
 
 use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
 use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry;
+use LogicException;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -20,6 +21,7 @@ final class CustomRouteRegistrySerializationTest extends TestCase
             name: 'articles.publish',
             path: '/articles/{id}/publish',
             methods: ['POST'],
+            handler: null,
             controller: 'App\Controller\PublishController',
             resourceType: 'articles',
             defaults: [],
@@ -72,6 +74,7 @@ final class CustomRouteRegistrySerializationTest extends TestCase
             name: 'articles.publish',
             path: '/articles/{id}/publish',
             methods: ['POST'],
+            handler: null,
             controller: 'App\Controller\PublishController',
             resourceType: 'articles',
             defaults: [],
@@ -125,5 +128,82 @@ final class CustomRouteRegistrySerializationTest extends TestCase
         self::assertSame([], $allRoutes[0]->requirements);
         self::assertNull($allRoutes[0]->description);
         self::assertSame(0, $allRoutes[0]->priority);
+    }
+
+    public function testSerializedRouteCastsPriorityAndFiltersMethods(): void
+    {
+        $serializedRoute = [
+            'name' => 'articles.publish',
+            'path' => '/articles/{id}/publish',
+            'methods' => ['POST', 'POST'],
+            'controller' => 'App\\Controller\\PublishController',
+            'priority' => '10',
+        ];
+
+        $registry = new CustomRouteRegistry([$serializedRoute]);
+
+        $route = $registry->all()[0];
+        self::assertSame(['POST'], $route->methods);
+        self::assertSame(10, $route->priority);
+    }
+
+    public function testSerializedRouteRejectsInvalidMethods(): void
+    {
+        $serializedRoute = [
+            'name' => 'articles.publish',
+            'path' => '/articles/{id}/publish',
+            'methods' => ['POST', 123],
+            'controller' => 'App\\Controller\\PublishController',
+        ];
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Custom route methods must contain only non-empty strings.');
+
+        new CustomRouteRegistry([$serializedRoute]);
+    }
+
+    public function testSerializedRouteRejectsInvalidDefaults(): void
+    {
+        $serializedRoute = [
+            'name' => 'articles.publish',
+            'path' => '/articles/{id}/publish',
+            'methods' => ['POST'],
+            'controller' => 'App\\Controller\\PublishController',
+            'defaults' => [0 => 'value'],
+        ];
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Custom route defaults must have string keys.');
+
+        new CustomRouteRegistry([$serializedRoute]);
+    }
+
+    public function testSerializedRouteRejectsInvalidRequirements(): void
+    {
+        $serializedRoute = [
+            'name' => 'articles.publish',
+            'path' => '/articles/{id}/publish',
+            'methods' => ['POST'],
+            'controller' => 'App\\Controller\\PublishController',
+            'requirements' => ['id' => 123],
+        ];
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Custom route requirements must contain only string values.');
+
+        new CustomRouteRegistry([$serializedRoute]);
+    }
+
+    public function testSerializedRouteRejectsMissingName(): void
+    {
+        $serializedRoute = [
+            'path' => '/articles/{id}/publish',
+            'methods' => ['POST'],
+        ];
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Custom route name must be a non-empty string.');
+
+        new CustomRouteRegistry([$serializedRoute]);
     }
 }

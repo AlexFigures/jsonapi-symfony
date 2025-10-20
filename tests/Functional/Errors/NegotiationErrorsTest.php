@@ -58,7 +58,7 @@ final class NegotiationErrorsTest extends JsonApiTestCase
         $errors = $this->assertErrors($response, 406);
         self::assertSame('not-acceptable', $errors[0]['code']);
         $this->assertErrorHeader($errors[0], 'Accept');
-}
+    }
 
     private function createSubscriber(): ContentNegotiationSubscriber
     {

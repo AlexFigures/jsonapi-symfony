@@ -34,8 +34,8 @@ use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Error\JsonApiExceptionListener;
 use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
 use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
 use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
 use AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
@@ -460,7 +460,7 @@ abstract class JsonApiTestCase extends TestCase
         $this->parser = $parser;
         $this->document = $document;
         $this->collectionController = new CollectionController($registry, $repository, $parser, $document);
-        $this->resourceController = new ResourceController($registry, $repository, $parser, $document);
+        $this->resourceController = new ResourceController($registry, $repository, $parser, $document, $errorMapper);
         $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $errorMapper, $violationMapper, $eventDispatcher, $relationshipResolver);
         $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $errorMapper, $violationMapper, $eventDispatcher, $relationshipResolver);
         $this->deleteController = new DeleteResourceController($registry, $persister, $transactionManager, $eventDispatcher);

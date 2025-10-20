@@ -38,7 +38,7 @@ final class GenericDoctrineRelationshipHandlerTest extends DoctrineIntegrationTe
         parent::setUp();
 
         $this->handler = new GenericDoctrineRelationshipHandler(
-            em: $this->em,
+            managerRegistry: $this->managerRegistry,
             registry: $this->registry,
             accessor: $this->accessor,
         );
@@ -224,4 +224,3 @@ final class GenericDoctrineRelationshipHandlerTest extends DoctrineIntegrationTe
         self::assertNull($authorId, 'Author ID should be null for article without author');
     }
 }
-

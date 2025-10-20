@@ -23,7 +23,12 @@ final class InputDocumentValidator
     /**
      * @param array<int|string, mixed> $payload
      *
-     * @return array{type: string, id: ?string, attributes: array<string, mixed>, relationships: array<string, mixed>}
+     * @return array{
+     *     type: string,
+     *     id: ?string,
+     *     attributes: array<string, mixed>,
+     *     relationships: array<string, array{data: mixed}>
+     * }
      */
     public function validateAndExtract(string $routeType, ?string $routeId, array $payload, string $method): array
     {
@@ -70,17 +75,44 @@ final class InputDocumentValidator
             }
         }
 
+        /** @var array<string, array{data: mixed}> $relationships */
         $relationships = [];
+        $relationshipErrors = [];
         if (array_key_exists('relationships', $data)) {
             if (!is_array($data['relationships']) || array_is_list($data['relationships'])) {
                 throw new BadRequestException('Document is invalid.', [$this->errors->invalidPointer('/data/relationships', 'The "relationships" member must be an object.')]);
             }
 
-            /** @var array<string, mixed> $relationships */
-            $relationships = $data['relationships'];
+            /** @var array<string, mixed> $rawRelationships */
+            $rawRelationships = $data['relationships'];
 
-            if ($relationships !== [] && !$this->config->allowRelationshipWrites) {
+            if ($rawRelationships !== [] && !$this->config->allowRelationshipWrites) {
                 throw new BadRequestException('Document is invalid.', [$this->errors->invalidPointer('/data/relationships', 'Writing relationships is not allowed.')]);
+            }
+
+            foreach ($rawRelationships as $name => $relationship) {
+                if ($name === '') {
+                    $relationshipErrors[] = $this->errors->invalidPointer('/data/relationships', 'Relationship names must be non-empty strings.');
+                    continue;
+                }
+
+                if (!is_array($relationship) || array_is_list($relationship)) {
+                    $relationshipErrors[] = $this->errors->invalidPointer(
+                        sprintf('/data/relationships/%s', $name),
+                        'Relationship must be an object containing a "data" member.'
+                    );
+                    continue;
+                }
+
+                if (!array_key_exists('data', $relationship)) {
+                    $relationshipErrors[] = $this->errors->invalidPointer(
+                        sprintf('/data/relationships/%s', $name),
+                        'Relationship object must contain a "data" member.'
+                    );
+                    continue;
+                }
+
+                $relationships[$name] = ['data' => $relationship['data']];
             }
         }
 
@@ -110,12 +142,14 @@ final class InputDocumentValidator
 
         }
 
-        if ($attributeErrors !== []) {
-            if (count($attributeErrors) === 1) {
-                throw new BadRequestException('Attributes validation failed.', [$attributeErrors[0]]);
+        $allErrors = array_merge($attributeErrors, $relationshipErrors);
+
+        if ($allErrors !== []) {
+            if (count($allErrors) === 1) {
+                throw new BadRequestException('Payload validation failed.', [$allErrors[0]]);
             }
 
-            throw new MultiErrorException(400, $attributeErrors, 'Attributes validation failed.');
+            throw new MultiErrorException(400, $allErrors, 'Payload validation failed.');
         }
 
         return [

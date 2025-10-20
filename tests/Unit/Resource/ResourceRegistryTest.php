@@ -62,7 +62,7 @@ final class ResourceRegistryTest extends TestCase
     {
         $registry = new ResourceRegistry([ArticleFixture::class]);
 
-        $metadata = $registry->getByClass(AuthorFixture::class);
+        $metadata = $registry->getByClass(AuthorFixtureForRegistry::class);
 
         self::assertNull($metadata);
     }
@@ -71,7 +71,7 @@ final class ResourceRegistryTest extends TestCase
     {
         $registry = new ResourceRegistry([
             ArticleFixture::class,
-            AuthorFixture::class,
+            AuthorFixtureForRegistry::class,
         ]);
 
         $all = $registry->all();
@@ -96,7 +96,7 @@ final class ResourceRegistryTest extends TestCase
 
         new ResourceRegistry([
             ArticleFixture::class,
-            DuplicateArticleFixture::class,
+            DuplicateArticleFixtureForRegistry::class,
         ]);
     }
 
@@ -150,7 +150,7 @@ final class ResourceRegistryTest extends TestCase
     {
         $registry = new ResourceRegistry([
             new ArticleFixture(),
-            AuthorFixture::class,
+            AuthorFixtureForRegistry::class,
         ]);
 
         self::assertTrue($registry->hasType('articles'));
@@ -200,12 +200,12 @@ final class ArticleFixture
 }
 
 #[JsonApiResource(type: 'authors')]
-final class AuthorFixture
+final class AuthorFixtureForRegistry
 {
 }
 
 #[JsonApiResource(type: 'articles')]
-final class DuplicateArticleFixture
+final class DuplicateArticleFixtureForRegistry
 {
 }
 

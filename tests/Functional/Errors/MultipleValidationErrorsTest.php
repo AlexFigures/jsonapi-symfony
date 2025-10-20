@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Functional\Errors;
 
 use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Contract\Data\ResourcePersister;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
 use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
 use AlexFigures\Symfony\Http\Write\WriteConfig;
@@ -36,22 +36,22 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             new ConstraintViolation('ID is invalid.', null, [], null, 'id', 'invalid-id'),
         ]);
 
-        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourcePersister {
+        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourceProcessor {
             public function __construct(private ConstraintViolationList $violations)
             {
             }
 
-            public function create(string $type, ChangeSet $changes, ?string $clientId = null): object
+            public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
             {
                 throw new ValidationFailedException('resource', $this->violations);
             }
 
-            public function update(string $type, string $id, ChangeSet $changes): object
+            public function processUpdate(string $type, string $id, ChangeSet $changes): object
             {
                 throw new ValidationFailedException('resource', $this->violations);
             }
 
-            public function delete(string $type, string $id): void
+            public function processDelete(string $type, string $id): void
             {
             }
         });
@@ -103,22 +103,22 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             new ConstraintViolation('At least one tag is required.', null, [], null, 'tags', []),
         ]);
 
-        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourcePersister {
+        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourceProcessor {
             public function __construct(private ConstraintViolationList $violations)
             {
             }
 
-            public function create(string $type, ChangeSet $changes, ?string $clientId = null): object
+            public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
             {
                 throw new ValidationFailedException('resource', $this->violations);
             }
 
-            public function update(string $type, string $id, ChangeSet $changes): object
+            public function processUpdate(string $type, string $id, ChangeSet $changes): object
             {
                 throw new ValidationFailedException('resource', $this->violations);
             }
 
-            public function delete(string $type, string $id): void
+            public function processDelete(string $type, string $id): void
             {
             }
         });
@@ -169,22 +169,22 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             new ConstraintViolation('Tags must not be empty.', null, [], null, 'tags', []),
         ]);
 
-        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourcePersister {
+        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourceProcessor {
             public function __construct(private ConstraintViolationList $violations)
             {
             }
 
-            public function create(string $type, ChangeSet $changes, ?string $clientId = null): object
+            public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
             {
                 throw new ValidationFailedException('resource', $this->violations);
             }
 
-            public function update(string $type, string $id, ChangeSet $changes): object
+            public function processUpdate(string $type, string $id, ChangeSet $changes): object
             {
                 throw new ValidationFailedException('resource', $this->violations);
             }
 
-            public function delete(string $type, string $id): void
+            public function processDelete(string $type, string $id): void
             {
             }
         });
@@ -238,22 +238,22 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             new ConstraintViolation('Author is required.', null, [], null, 'author', null),
         ]);
 
-        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourcePersister {
+        $controller = $this->createControllerWithValidator(new class ($violations) implements ResourceProcessor {
             public function __construct(private ConstraintViolationList $violations)
             {
             }
 
-            public function create(string $type, ChangeSet $changes, ?string $clientId = null): object
+            public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
             {
                 throw new ValidationFailedException('resource', $this->violations);
             }
 
-            public function update(string $type, string $id, ChangeSet $changes): object
+            public function processUpdate(string $type, string $id, ChangeSet $changes): object
             {
                 throw new ValidationFailedException('resource', $this->violations);
             }
 
-            public function delete(string $type, string $id): void
+            public function processDelete(string $type, string $id): void
             {
             }
         });
@@ -298,7 +298,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
         );
     }
 
-    private function createControllerWithValidator(ResourcePersister $persister): CreateResourceController
+    private function createControllerWithValidator(ResourceProcessor $processor): CreateResourceController
     {
         // Allow client-generated IDs for articles type
         $writeConfig = new WriteConfig(true, ['articles' => true]);
@@ -308,7 +308,7 @@ final class MultipleValidationErrorsTest extends JsonApiTestCase
             $this->registry(),
             $validator,
             $this->changeSetFactory(),
-            $persister,
+            $processor,
             $this->transactionManager(),
             $this->documentBuilder(),
             $this->linkGenerator(),

@@ -52,7 +52,7 @@ final class InputDocumentValidatorTest extends TestCase
         ];
 
         $this->expectException(BadRequestException::class);
-        $this->expectExceptionMessage('Attributes validation failed.');
+        $this->expectExceptionMessage('Payload validation failed.');
 
         $validator->validateAndExtract('articles', null, $payload, 'POST');
     }

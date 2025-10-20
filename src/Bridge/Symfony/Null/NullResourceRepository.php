@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\Symfony\Bridge\Symfony\Null;
 
+use AlexFigures\Symfony\Contract\Data\ResourceRepository;
+use AlexFigures\Symfony\Contract\Data\Slice;
 use AlexFigures\Symfony\Http\Exception\NotImplementedException;
 use AlexFigures\Symfony\Query\Criteria;
 

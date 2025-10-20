@@ -103,7 +103,9 @@ final class CustomRouteHandlerRegistry
         foreach ($this->customRouteRegistry->all() as $route) {
             // Only register routes that have a handler
             if ($route->isHandlerBased()) {
-                $this->handlers[$route->name] = $route->handler;
+                if ($route->handler !== null) {
+                    $this->handlers[$route->name] = $route->handler;
+                }
             }
         }
     }

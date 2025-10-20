@@ -33,7 +33,7 @@ final class FilteringWhitelistSimpleTest extends TestCase
         $filterableFields = new FilterableFields(['title', 'status']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -62,7 +62,7 @@ final class FilteringWhitelistSimpleTest extends TestCase
 
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -91,7 +91,7 @@ final class FilteringWhitelistSimpleTest extends TestCase
         $filterableFields = new FilterableFields(['title']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -117,7 +117,7 @@ final class FilteringWhitelistSimpleTest extends TestCase
         $filterableFields = new FilterableFields(['title']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -143,7 +143,7 @@ final class FilteringWhitelistSimpleTest extends TestCase
         $filterableFields = new FilterableFields([$titleField]);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,

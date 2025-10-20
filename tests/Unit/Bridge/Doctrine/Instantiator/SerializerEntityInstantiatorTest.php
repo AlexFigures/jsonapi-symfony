@@ -10,6 +10,7 @@ use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\Persistence\ManagerRegistry;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -18,14 +19,17 @@ use Symfony\Component\Uid\Uuid;
 final class SerializerEntityInstantiatorTest extends TestCase
 {
     private EntityManagerInterface $em;
+    private ManagerRegistry $managerRegistry;
     private PropertyAccessor $accessor;
     private SerializerEntityInstantiator $instantiator;
 
     protected function setUp(): void
     {
         $this->em = $this->createMock(EntityManagerInterface::class);
+        $this->managerRegistry = $this->createMock(ManagerRegistry::class);
+        $this->managerRegistry->method('getManagerForClass')->willReturn($this->em);
         $this->accessor = new PropertyAccessor();
-        $this->instantiator = new SerializerEntityInstantiator($this->em, $this->accessor);
+        $this->instantiator = new SerializerEntityInstantiator($this->managerRegistry, $this->accessor);
     }
 
     public function testInstantiateWithoutConstructor(): void

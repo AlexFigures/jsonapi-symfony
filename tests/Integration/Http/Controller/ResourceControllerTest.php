@@ -146,7 +146,8 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
             $this->registry,
             $repository,
             $queryParser,
-            $documentBuilder
+            $documentBuilder,
+            $errorMapper
         );
     }
 

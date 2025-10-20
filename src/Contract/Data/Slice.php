@@ -30,6 +30,8 @@ use Traversable;
  *
  * @api This class is part of the public API and follows semantic versioning.
  * @since 0.1.0
+ *
+ * @implements IteratorAggregate<int, object>
  */
 final class Slice implements Countable, IteratorAggregate
 {

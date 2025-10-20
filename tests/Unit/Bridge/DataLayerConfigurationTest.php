@@ -23,7 +23,7 @@ final class DataLayerConfigurationTest extends TestCase
         // Don't compile - just check that aliases are created
         // Check that Doctrine aliases are created
         $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository'));
-        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourceProcessor'));
         $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader'));
         $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager'));
 
@@ -34,10 +34,10 @@ final class DataLayerConfigurationTest extends TestCase
             (string) $repositoryAlias
         );
 
-        $persisterAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister');
+        $processorAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceProcessor');
         $this->assertSame(
-            'AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister',
-            (string) $persisterAlias
+            'AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor',
+            (string) $processorAlias
         );
 
         $relationshipAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader');
@@ -89,7 +89,7 @@ final class DataLayerConfigurationTest extends TestCase
                 'data_layer' => [
                     'provider' => 'custom',
                     'repository' => 'App\Custom\Repository',
-                    'persister' => 'App\Custom\Persister',
+                    'processor' => 'App\Custom\Processor',
                     'relationship_reader' => 'App\Custom\RelationshipReader',
                     'transaction_manager' => 'App\Custom\TransactionManager',
                 ],
@@ -99,7 +99,7 @@ final class DataLayerConfigurationTest extends TestCase
         // Don't compile - just check that aliases are created
         // Check that custom aliases are created
         $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository'));
-        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourceProcessor'));
         $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader'));
         $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager'));
 
@@ -107,8 +107,8 @@ final class DataLayerConfigurationTest extends TestCase
         $repositoryAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository');
         $this->assertSame('App\Custom\Repository', (string) $repositoryAlias);
 
-        $persisterAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister');
-        $this->assertSame('App\Custom\Persister', (string) $persisterAlias);
+        $processorAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceProcessor');
+        $this->assertSame('App\Custom\Processor', (string) $processorAlias);
 
         $relationshipAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader');
         $this->assertSame('App\Custom\RelationshipReader', (string) $relationshipAlias);
@@ -141,13 +141,13 @@ final class DataLayerConfigurationTest extends TestCase
         $this->assertSame('App\Custom\Repository', (string) $repositoryAlias);
 
         // Other aliases should still exist from services.php (Null implementations)
-        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister'));
+        $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\ResourceProcessor'));
         $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader'));
         $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager'));
 
         // They should point to Null implementations (not overridden)
-        $persisterAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister');
-        $this->assertSame('jsonapi.null_resource_persister', (string) $persisterAlias);
+        $processorAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceProcessor');
+        $this->assertSame('jsonapi.null_resource_processor', (string) $processorAlias);
     }
 
     public function testDataLayerParameterIsStored(): void
@@ -187,8 +187,8 @@ final class DataLayerConfigurationTest extends TestCase
         $repositoryAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository');
         $this->assertFalse($repositoryAlias->isPublic());
 
-        $persisterAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourcePersister');
-        $this->assertFalse($persisterAlias->isPublic());
+        $processorAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceProcessor');
+        $this->assertFalse($processorAlias->isPublic());
 
         $relationshipAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader');
         $this->assertFalse($relationshipAlias->isPublic());

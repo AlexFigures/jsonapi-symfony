@@ -29,16 +29,12 @@ final class ArticleViewDto
         #[Id]
         #[Attribute]
         public readonly string $id,
-
         #[Attribute]
         public readonly string $title,
-
         #[Attribute]
         public readonly string $content,
-
         #[Attribute(name: 'createdAt')]
         public readonly ?DateTimeImmutable $createdAt = null,
     ) {
     }
 }
-

@@ -25,8 +25,13 @@ final class LikeOperator extends AbstractOperator
 
         $paramName = 'like_' . str_replace('.', '_', uniqid('', true));
 
+        $value = $values[0];
+        if (!is_scalar($value) && !$value instanceof \Stringable) {
+            throw new \InvalidArgumentException('LikeOperator requires string-compatible value.');
+        }
+
         // Add wildcards for partial matching
-        $pattern = '%' . $values[0] . '%';
+        $pattern = '%' . (string) $value . '%';
 
         return new DoctrineExpression(
             sprintf('%s LIKE :%s', $dqlField, $paramName),

@@ -8,7 +8,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Request DTO for creating Article resources.
- * 
+ *
  * This DTO validates incoming JSON:API payloads before
  * mapping them to the Article Entity.
  */
@@ -18,11 +18,9 @@ final class ArticleCreateDto
         #[Assert\NotBlank(message: 'Title is required')]
         #[Assert\Length(min: 3, max: 255)]
         public readonly string $title,
-        
         #[Assert\NotBlank(message: 'Content is required')]
         #[Assert\Length(min: 10)]
         public readonly string $content,
     ) {
     }
 }
-

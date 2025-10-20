@@ -18,6 +18,9 @@ use Doctrine\ORM\QueryBuilder;
  */
 final class DoctrineFilterCompiler
 {
+    /** @var array<string, string> */
+    private array $joinedForFilter = [];
+
     public function __construct(
         private readonly Registry $operators,
         private readonly FilterHandlerRegistry $filterHandlers,
@@ -32,6 +35,13 @@ final class DoctrineFilterCompiler
         }
 
         $rootAlias = $rootAliases[0];
+
+        // Reset joined relationships for this query
+        $this->joinedForFilter = [];
+
+        // Create JOINs for relationship paths in the filter
+        $this->createJoinsForFilter($qb, $ast, $rootAlias);
+
         $expression = $this->compileNode($ast, $rootAlias, $platform);
 
         if ($expression !== null) {
@@ -75,10 +85,6 @@ final class DoctrineFilterCompiler
         }
 
         $operator = $this->operators->get($node->operator);
-
-        if ($operator === null) {
-            throw new \InvalidArgumentException(sprintf('Unknown filter operator: %s', $node->operator));
-        }
 
         // Build DQL field path (e.g., "e.name" or "e.author.name")
         $dqlField = $this->buildDqlFieldPath($rootAlias, $node->fieldPath);
@@ -143,10 +149,85 @@ final class DoctrineFilterCompiler
      *
      * Examples:
      * - "name" -> "e.name"
-     * - "author.name" -> "e.author.name" (will need JOIN in repository)
+     * - "author.id" -> "filter_author.id" (uses JOIN alias)
+     * - "tags.id" -> "filter_tags.id" (uses JOIN alias)
      */
     private function buildDqlFieldPath(string $rootAlias, string $fieldPath): string
     {
+        // Check if this is a relationship field path (e.g., "author.id")
+        if (str_contains($fieldPath, '.')) {
+            $segments = explode('.', $fieldPath);
+            $fieldName = array_pop($segments); // Last segment is the actual field
+
+            // Build the full join path to find the alias
+            $currentAlias = $rootAlias;
+            foreach ($segments as $relationshipName) {
+                $fullJoinPath = $currentAlias . '.' . $relationshipName;
+
+                // Get the alias for this join (should have been created in createJoinsForFilter)
+                if (isset($this->joinedForFilter[$fullJoinPath])) {
+                    $currentAlias = $this->joinedForFilter[$fullJoinPath];
+                } else {
+                    // Fallback: use the relationship name as alias
+                    $currentAlias = 'filter_' . $relationshipName;
+                }
+            }
+
+            return $currentAlias . '.' . $fieldName;
+        }
+
+        // Direct field on the root entity
         return $rootAlias . '.' . $fieldPath;
+    }
+
+    /**
+     * Create JOINs for all relationship paths in the filter AST.
+     */
+    private function createJoinsForFilter(QueryBuilder $qb, Node $ast, string $rootAlias): void
+    {
+        $this->collectRelationshipPaths($ast, $qb, $rootAlias);
+    }
+
+    /**
+     * Recursively collect relationship paths from the AST and create JOINs.
+     */
+    private function collectRelationshipPaths(Node $node, QueryBuilder $qb, string $rootAlias): void
+    {
+        if ($node instanceof Comparison) {
+            $this->createJoinForFieldPath($qb, $rootAlias, $node->fieldPath);
+        } elseif ($node instanceof Conjunction || $node instanceof Disjunction) {
+            foreach ($node->children as $child) {
+                $this->collectRelationshipPaths($child, $qb, $rootAlias);
+            }
+        }
+    }
+
+    /**
+     * Create JOIN for a field path if it contains relationships.
+     */
+    private function createJoinForFieldPath(QueryBuilder $qb, string $rootAlias, string $fieldPath): void
+    {
+        // Check if this is a relationship field path (e.g., "author.id")
+        if (!str_contains($fieldPath, '.')) {
+            return; // Direct field, no JOIN needed
+        }
+
+        $segments = explode('.', $fieldPath);
+        array_pop($segments); // Remove the field name, keep only relationship path
+
+        // Build JOINs for each segment
+        $currentAlias = $rootAlias;
+        foreach ($segments as $index => $relationshipName) {
+            $fullJoinPath = $currentAlias . '.' . $relationshipName;
+            $joinAlias = 'filter_' . str_replace('.', '_', implode('_', array_slice($segments, 0, $index + 1)));
+
+            // Create JOIN if not already created
+            if (!isset($this->joinedForFilter[$fullJoinPath])) {
+                $qb->leftJoin($fullJoinPath, $joinAlias);
+                $this->joinedForFilter[$fullJoinPath] = $joinAlias;
+            }
+
+            $currentAlias = $joinAlias;
+        }
     }
 }
