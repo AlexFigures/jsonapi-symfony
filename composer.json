@@ -34,7 +34,7 @@
     "infection/infection": "^0.29",
     "jbelien/phpstan-sarif-formatter": "^1.2",
     "phpstan/phpstan": "^1.11",
-    "phpunit/phpunit": "^11.0",
+    "phpunit/phpunit": "^12.4",
     "rector/rector": "^1.0",
     "roave/backward-compatibility-check": "^8.14",
     "spatie/phpunit-snapshot-assertions": "^5.2",
