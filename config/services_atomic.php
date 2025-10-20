@@ -12,6 +12,7 @@ use AlexFigures\Symfony\Atomic\Execution\OperationDispatcher;
 use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
 use AlexFigures\Symfony\Atomic\Result\ResultBuilder;
 use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
+use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
 use AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController;
 use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
 use AlexFigures\Symfony\Contract\Data\ResourcePersister;
@@ -135,6 +136,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(RemoveHandler::class),
             service(RelationshipOps::class),
             service(ResultBuilder::class),
+            service(FlushManager::class),
         ])
     ;
 

@@ -11,6 +11,7 @@ use AlexFigures\Symfony\Atomic\Execution\Handlers\UpdateHandler;
 use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
 use AlexFigures\Symfony\Atomic\Operation;
 use AlexFigures\Symfony\Atomic\Result\ResultBuilder;
+use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
 
 final class OperationDispatcher
 {
@@ -21,6 +22,7 @@ final class OperationDispatcher
         private readonly RemoveHandler $remove,
         private readonly RelationshipOps $relationships,
         private readonly ResultBuilder $results,
+        private readonly FlushManager $flushManager,
     ) {
     }
 
@@ -37,15 +39,19 @@ final class OperationDispatcher
             foreach ($operations as $operation) {
                 if ($operation->isRelationshipOperation()) {
                     $outcomes[] = $this->relationships->handle($operation, $lids);
-                    continue;
+                } else {
+                    $outcomes[] = match ($operation->op) {
+                        'add' => $this->add->handle($operation, $lids),
+                        'update' => $this->update->handle($operation, $lids),
+                        'remove' => $this->remove->handle($operation, $lids),
+                        default => OperationOutcome::empty(),
+                    };
                 }
 
-                $outcomes[] = match ($operation->op) {
-                    'add' => $this->add->handle($operation, $lids),
-                    'update' => $this->update->handle($operation, $lids),
-                    'remove' => $this->remove->handle($operation, $lids),
-                    default => OperationOutcome::empty(),
-                };
+                // Flush after each operation to make entities available for subsequent operations
+                // This is critical for LID resolution: entities created in operation N must be
+                // available in the database for operation N+1 to reference them
+                $this->flushManager->flush();
             }
 
             return $this->results->build($operations, $outcomes);
