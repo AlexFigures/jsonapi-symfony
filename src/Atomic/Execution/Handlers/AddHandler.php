@@ -50,7 +50,11 @@ final class AddHandler
         }
 
         /** @var array<string, mixed> $attributes */
-        $changes = $this->changeSet->fromAttributes($type, $attributes);
+
+        // Extract and resolve relationships
+        $relationships = $this->extractRelationships($data, $lids);
+
+        $changes = $this->changeSet->fromInput($type, $attributes, $relationships);
 
         $clientId = null;
         if (isset($data['id']) && is_string($data['id']) && $data['id'] !== '') {
@@ -74,5 +78,84 @@ final class AddHandler
         }
 
         return OperationOutcome::forResource($type, $id, $model);
+    }
+
+    /**
+     * Extract relationships from operation data and resolve LIDs to actual IDs.
+     *
+     * @param  array<string, mixed>              $data
+     * @return array<string, array{data: mixed}>
+     */
+    private function extractRelationships(array $data, LidRegistry $lids): array
+    {
+        if (!isset($data['relationships']) || !is_array($data['relationships'])) {
+            return [];
+        }
+
+        $relationships = [];
+        foreach ($data['relationships'] as $relName => $relData) {
+            if (!is_array($relData) || !array_key_exists('data', $relData)) {
+                continue;
+            }
+
+            $relationships[$relName] = [
+                'data' => $this->resolveLidsInRelationshipData($relData['data'], $lids),
+            ];
+        }
+
+        return $relationships;
+    }
+
+    /**
+     * Resolve LIDs in relationship data (to-one or to-many).
+     *
+     * @param  mixed $data
+     * @return mixed
+     */
+    private function resolveLidsInRelationshipData(mixed $data, LidRegistry $lids): mixed
+    {
+        if ($data === null) {
+            return null;
+        }
+
+        // To-one relationship: single resource identifier
+        if (is_array($data) && isset($data['type'])) {
+            return $this->resolveLidInIdentifier($data, $lids);
+        }
+
+        // To-many relationship: array of resource identifiers
+        if (is_array($data) && array_is_list($data)) {
+            return array_map(
+                fn ($identifier) => $this->resolveLidInIdentifier($identifier, $lids),
+                $data
+            );
+        }
+
+        return $data;
+    }
+
+    /**
+     * Resolve LID in a single resource identifier.
+     *
+     * @param  array<string, mixed> $identifier
+     * @return array<string, mixed>
+     */
+    private function resolveLidInIdentifier(array $identifier, LidRegistry $lids): array
+    {
+        // If identifier has 'lid' instead of 'id', resolve it
+        if (isset($identifier['lid']) && is_string($identifier['lid'])) {
+            $resolvedId = $lids->resolveId($identifier['lid']);
+            if ($resolvedId === null) {
+                throw new BadRequestException(
+                    sprintf('Unknown local identifier "%s" in relationship.', $identifier['lid'])
+                );
+            }
+
+            // Replace lid with resolved id
+            $identifier['id'] = $resolvedId;
+            unset($identifier['lid']);
+        }
+
+        return $identifier;
     }
 }
