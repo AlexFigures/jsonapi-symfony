@@ -27,9 +27,9 @@ final class JsonApiBundle extends Bundle
         $container->addCompilerPass(new CustomRouteHandlerPass());
     }
 
-    public function getContainerExtension(): ?ExtensionInterface
+    public function getContainerExtension(): ExtensionInterface
     {
-        if (null === $this->extension) {
+        if (!$this->extension instanceof ExtensionInterface) {
             $this->extension = new JsonApiExtension();
         }
 

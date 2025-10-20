@@ -158,7 +158,12 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         }
 
         if (str_contains($normalized, '/*')) {
-            $prefix = substr($normalized, 0, strpos($normalized, '/'));
+            $slashPos = strpos($normalized, '/');
+            if ($slashPos === false) {
+                return false;
+            }
+
+            $prefix = substr($normalized, 0, $slashPos);
             foreach ($allowed as $type) {
                 if (str_starts_with($type, $prefix . '/')) {
                     return true;

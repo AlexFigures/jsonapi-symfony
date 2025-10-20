@@ -67,6 +67,9 @@ final class ResourceMetadata
          */
         public string $class,
         public array $attributes,
+        /**
+         * @var array<string, RelationshipMetadata>
+         */
         public array $relationships,
         public bool $exposeId = true,
         public ?string $idPropertyPath = null,
@@ -128,7 +131,7 @@ final class ResourceMetadata
      */
     public function getNormalizationGroups(): array
     {
-        return $this->normalizationContext['groups'] ?? [];
+        return $this->normalizeGroups($this->normalizationContext);
     }
 
     /**
@@ -139,7 +142,7 @@ final class ResourceMetadata
      */
     public function getDenormalizationGroups(): array
     {
-        $groups = $this->denormalizationContext['groups'] ?? [];
+        $groups = $this->normalizeGroups($this->denormalizationContext);
 
         // Always add Default group for Symfony validation compatibility
         if (!in_array('Default', $groups, true)) {
@@ -198,5 +201,30 @@ final class ResourceMetadata
         }
 
         throw new LogicException(sprintf('Class "%s" configured for %s does not exist.', $candidate, $context));
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     *
+     * @return list<string>
+     */
+    private function normalizeGroups(array $context): array
+    {
+        $groups = $context['groups'] ?? [];
+
+        if (!is_array($groups)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($groups as $group) {
+            if (!is_string($group) || $group === '') {
+                continue;
+            }
+
+            $normalized[] = $group;
+        }
+
+        return array_values(array_unique($normalized));
     }
 }

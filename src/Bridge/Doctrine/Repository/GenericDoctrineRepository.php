@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Bridge\Doctrine\Repository;
 
+use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
 use AlexFigures\Symfony\Contract\Data\ResourceRepository;
 use AlexFigures\Symfony\Contract\Data\Slice;
 use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
@@ -45,6 +46,7 @@ class GenericDoctrineRepository implements ResourceRepository
     {
         $metadata = $this->registry->getByType($type);
         $definition = $metadata->getDefinition();
+        /** @var class-string $entityClass */
         $entityClass = $metadata->dataClass;
         $em = $this->getEntityManagerFor($entityClass);
 
@@ -78,17 +80,19 @@ class GenericDoctrineRepository implements ResourceRepository
         $query = $qb->getQuery();
 
         if ($definition->readProjection === ReadProjection::DTO) {
+            /** @var list<array<string, mixed>> $rows */
             $rows = $query->getArrayResult();
-            $items = array_map(
-                fn (array $row): object => $this->readMapper->toView($row, $definition, $criteria),
-                $rows,
-            );
+            $items = [];
+            foreach ($rows as $row) {
+                $items[] = $this->readMapper->toView($row, $definition, $criteria);
+            }
         } else {
+            /** @var list<object> $rows */
             $rows = $query->getResult();
-            $items = array_map(
-                fn (object $entity): object => $this->readMapper->toView($entity, $definition, $criteria),
-                $rows,
-            );
+            $items = [];
+            foreach ($rows as $entity) {
+                $items[] = $this->readMapper->toView($entity, $definition, $criteria);
+            }
         }
 
         $total = $this->countTotal($qb);
@@ -105,11 +109,13 @@ class GenericDoctrineRepository implements ResourceRepository
     {
         $metadata = $this->registry->getByType($type);
         $definition = $metadata->getDefinition();
-        $em = $this->getEntityManagerFor($metadata->dataClass);
+        /** @var class-string $entityClass */
+        $entityClass = $metadata->dataClass;
+        $em = $this->getEntityManagerFor($entityClass);
 
         if ($definition->readProjection === ReadProjection::DTO) {
             $qb = $em->createQueryBuilder()
-                ->from($metadata->dataClass, 'e')
+                ->from($entityClass, 'e')
                 ->where('e.id = :id')
                 ->setParameter('id', $id);
 
@@ -121,11 +127,16 @@ class GenericDoctrineRepository implements ResourceRepository
             return $row === null ? null : $this->readMapper->toView($row, $definition, $criteria);
         }
 
-        $entity = $em->find($metadata->dataClass, $id);
+        $entity = $em->find($entityClass, $id);
 
         return $entity === null ? null : $this->readMapper->toView($entity, $definition, $criteria);
     }
 
+    /**
+     * @param list<ResourceIdentifier> $identifiers
+     *
+     * @return list<object>
+     */
     public function findRelated(string $type, string $relationship, array $identifiers): iterable
     {
         if ($identifiers === []) {
@@ -133,88 +144,43 @@ class GenericDoctrineRepository implements ResourceRepository
         }
 
         $metadata = $this->registry->getByType($type);
-        $em = $this->getEntityManagerFor($metadata->dataClass);
+        /** @var class-string $entityClass */
+        $entityClass = $metadata->dataClass;
+        $em = $this->getEntityManagerFor($entityClass);
 
         if (!isset($metadata->relationships[$relationship])) {
             throw new \InvalidArgumentException(sprintf('Unknown relationship "%s" on resource type "%s".', $relationship, $type));
         }
 
-        $relationshipMetadata = $metadata->relationships[$relationship];
-        $targetClass = $relationshipMetadata->targetClass;
+        $normalizedIds = [];
+        foreach ($identifiers as $identifier) {
+            if ($identifier->type !== $type) {
+                throw new \InvalidArgumentException(sprintf('Identifier of type "%s" cannot be used to load "%s" resources.', $identifier->type, $type));
+            }
 
-        if ($targetClass === null) {
-            throw new \InvalidArgumentException(sprintf('Relationship "%s" on resource type "%s" has no target class.', $relationship, $type));
+            $normalizedIds[] = $identifier->id;
         }
 
-        $this->getEntityManagerFor($targetClass, $em);
-
-        $classMetadata = $em->getClassMetadata($metadata->dataClass);
+        $classMetadata = $em->getClassMetadata($entityClass);
 
         if (!$classMetadata->hasAssociation($relationship)) {
-            throw new \InvalidArgumentException(sprintf('Relationship "%s" is not a Doctrine association on entity "%s".', $relationship, $metadata->dataClass));
+            throw new \InvalidArgumentException(sprintf('Relationship "%s" is not a Doctrine association on entity "%s".', $relationship, $entityClass));
         }
 
-        $associationMapping = $classMetadata->getAssociationMapping($relationship);
-        $isToMany = $classMetadata->isCollectionValuedAssociation($relationship);
+        $identifierField = $classMetadata->getSingleIdentifierFieldName();
 
-        // Build query to fetch related entities
         $qb = $em->createQueryBuilder()
             ->select('related')
-            ->from($targetClass, 'related');
+            ->from($entityClass, 'source')
+            ->innerJoin('source.' . $relationship, 'related');
 
-        if ($isToMany) {
-            // For *ToMany relationships, we need to join back to the source entity
-            // and filter by source IDs
-            $sourceAlias = 'source';
-            $inverseSide = $associationMapping['mappedBy'] ?? $associationMapping['inversedBy'] ?? null;
+        $qb->where($qb->expr()->in('source.' . $identifierField, ':sourceIds'))
+            ->setParameter('sourceIds', $normalizedIds);
 
-            if ($inverseSide !== null) {
-                $qb->innerJoin('related.' . $inverseSide, $sourceAlias)
-                   ->where($qb->expr()->in($sourceAlias . '.id', ':sourceIds'))
-                   ->setParameter('sourceIds', $identifiers);
-            } else {
-                // If we can't determine inverse side, fall back to loading all source entities
-                // and extracting related entities (less efficient but works)
-                $sourceEntities = $em->getRepository($metadata->dataClass)
-                    ->createQueryBuilder('e')
-                    ->where('e.id IN (:ids)')
-                    ->setParameter('ids', $identifiers)
-                    ->getQuery()
-                    ->getResult();
+        /** @var list<object> $results */
+        $results = $qb->getQuery()->getResult();
 
-                $relatedEntities = [];
-                foreach ($sourceEntities as $sourceEntity) {
-                    $related = $classMetadata->getFieldValue($sourceEntity, $relationship);
-                    if ($related !== null) {
-                        foreach ($related as $relatedEntity) {
-                            $relatedEntities[] = $relatedEntity;
-                        }
-                    }
-                }
-
-                return array_unique($relatedEntities, \SORT_REGULAR);
-            }
-        } else {
-            // For *ToOne relationships, get the foreign key values from source entities
-            $sourceEntities = $em->getRepository($metadata->dataClass)
-                ->createQueryBuilder('e')
-                ->select('IDENTITY(e.' . $relationship . ') as relatedId')
-                ->where('e.id IN (:ids)')
-                ->setParameter('ids', $identifiers)
-                ->getQuery()
-                ->getResult();
-
-            $relatedIds = array_filter(array_column($sourceEntities, 'relatedId'));
-
-            if ($relatedIds === []) {
-                return [];
-            }
-
-            $qb->where($qb->expr()->in('related.id', ':relatedIds'))
-               ->setParameter('relatedIds', $relatedIds);
-        }
-
-        return $qb->getQuery()->getResult();
+        return $this->ensureObjectList($results, sprintf('related entities for relationship "%s" on resource "%s"', $relationship, $type));
     }
 
     /**
@@ -335,23 +301,30 @@ class GenericDoctrineRepository implements ResourceRepository
                     $currentAlias = $joinAlias;
 
                     // Get target entity class
-                    $targetClass = $relationship->targetClass;
-                    if ($targetClass === null) {
-                        // Can't continue without target class
+                    $targetResourceMetadata = null;
+                    if ($relationship->targetType !== null && $this->registry->hasType($relationship->targetType)) {
+                        $targetResourceMetadata = $this->registry->getByType($relationship->targetType);
+                        $targetClass = $targetResourceMetadata->dataClass;
+                    } elseif ($relationship->targetClass !== null) {
+                        $targetClass = $relationship->targetClass;
+                        $targetResourceMetadata = $this->registry->getByClass($targetClass);
+                    } else {
                         continue 2;
                     }
 
+                    if (!class_exists($targetClass) && !interface_exists($targetClass)) {
+                        continue 2;
+                    }
+
+                    /** @var class-string $targetClass */
                     $this->getEntityManagerFor($targetClass, $em);
                     $currentMetadata = $em->getClassMetadata($targetClass);
 
-                    // Get target resource metadata
-                    $targetType = $relationship->targetType;
-                    if ($targetType !== null && $this->registry->hasType($targetType)) {
-                        $currentResourceMetadata = $this->registry->getByType($targetType);
-                    } else {
-                        // Can't continue without resource metadata
+                    if ($targetResourceMetadata === null) {
                         continue 2;
                     }
+
+                    $currentResourceMetadata = $targetResourceMetadata;
                 }
             }
         }
@@ -379,6 +352,9 @@ class GenericDoctrineRepository implements ResourceRepository
         }
     }
 
+    /**
+     * @param class-string $entityClass
+     */
     private function getEntityManagerFor(string $entityClass, ?EntityManagerInterface $expected = null): EntityManagerInterface
     {
         $em = $this->managerRegistry->getManagerForClass($entityClass);
@@ -395,5 +371,24 @@ class GenericDoctrineRepository implements ResourceRepository
         }
 
         return $em;
+    }
+
+    /**
+     * @param array<int|string, mixed> $results
+     *
+     * @return list<object>
+     */
+    private function ensureObjectList(array $results, string $context): array
+    {
+        $objects = [];
+        foreach ($results as $result) {
+            if (!is_object($result)) {
+                throw new RuntimeException(sprintf('Expected list of objects for %s, got %s.', $context, get_debug_type($result)));
+            }
+
+            $objects[] = $result;
+        }
+
+        return $objects;
     }
 }

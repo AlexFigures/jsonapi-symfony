@@ -76,10 +76,6 @@ final class DoctrineFilterCompiler
 
         $operator = $this->operators->get($node->operator);
 
-        if ($operator === null) {
-            throw new \InvalidArgumentException(sprintf('Unknown filter operator: %s', $node->operator));
-        }
-
         // Build DQL field path (e.g., "e.name" or "e.author.name")
         $dqlField = $this->buildDqlFieldPath($rootAlias, $node->fieldPath);
 

@@ -19,8 +19,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
-use RuntimeException;
 use InvalidArgumentException;
+use RuntimeException;
+use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 /**
@@ -57,6 +58,10 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             return null;
         }
 
+        if (!is_object($related)) {
+            throw new RuntimeException(sprintf('Relationship "%s" on resource "%s" must resolve to an object or null.', $relationship, $metadata->type));
+        }
+
         return $this->extractId($related);
     }
 
@@ -78,7 +83,13 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             return new SliceIds([], 1, $pagination->size, 0);
         }
 
-        $ids = array_map(fn (object $item): string => $this->extractId($item), $related);
+        $objects = $this->ensureObjectList($related, 'to-many relationship items');
+
+        $ids = [];
+        foreach ($objects as $item) {
+            $ids[] = $this->extractId($item);
+        }
+
         $total = count($ids);
 
         // Apply pagination
@@ -93,7 +104,17 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         [$resource, $metadata, $relationship] = $this->resolveResourceContext($type, $idOrRel, $rel);
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
 
-        return $this->accessor->getValue($resource, $propertyPath);
+        $value = $this->accessor->getValue($resource, $propertyPath);
+
+        if ($value === null) {
+            return null;
+        }
+
+        if (!is_object($value)) {
+            throw new RuntimeException(sprintf('Relationship "%s" on resource "%s" must resolve to an object or null.', $relationship, $metadata->type));
+        }
+
+        return $value;
     }
 
     public function getRelatedCollection(string|object $type, string $idOrRel, ?string $rel = null, ?Criteria $criteria = null): Slice
@@ -115,11 +136,12 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             $items = $related;
         }
 
-        $total = count($items);
+        $objects = $this->ensureObjectList($items, 'related collection items');
+        $total = count($objects);
 
         // Apply pagination
         $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
-        $paginatedItems = array_slice($items, $offset, $criteria->pagination->size);
+        $paginatedItems = array_slice($objects, $offset, $criteria->pagination->size);
 
         // Note: Filtering and sorting on in-memory collections is not optimal
         // For production use, consider using QueryBuilder for relationship queries
@@ -149,8 +171,12 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $em->flush();
     }
 
+    /**
+     * @param list<ResourceIdentifier|string> $targets
+     */
     public function replaceToMany(string|object $type, string $idOrRel, mixed $relOrTargets, array $targets = []): void
     {
+        /** @var list<ResourceIdentifier|string> $targetList */
         [$resource, $metadata, $relationship, $targetList] = $this->resolveToManyUpdateArguments($type, $idOrRel, $relOrTargets, $targets);
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
         $relationshipMetadata = $this->requireRelationshipMetadata($metadata, $relationship);
@@ -174,8 +200,12 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $em->flush();
     }
 
+    /**
+     * @param list<ResourceIdentifier|string> $targets
+     */
     public function addToMany(string|object $type, string $idOrRel, mixed $relOrTargets, array $targets = []): void
     {
+        /** @var list<ResourceIdentifier|string> $targetList */
         [$resource, $metadata, $relationship, $targetList] = $this->resolveToManyUpdateArguments($type, $idOrRel, $relOrTargets, $targets);
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
         $relationshipMetadata = $this->requireRelationshipMetadata($metadata, $relationship);
@@ -200,8 +230,12 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $em->flush();
     }
 
+    /**
+     * @param list<ResourceIdentifier|string> $targets
+     */
     public function removeFromToMany(string|object $type, string $idOrRel, mixed $relOrTargets, array $targets = []): void
     {
+        /** @var list<ResourceIdentifier|string> $targetList */
         [$resource, $metadata, $relationship, $targetList] = $this->resolveToManyUpdateArguments($type, $idOrRel, $relOrTargets, $targets);
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
         $relationshipMetadata = $this->requireRelationshipMetadata($metadata, $relationship);
@@ -258,14 +292,24 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $idField = $idFields[0];
         $id = $this->accessor->getValue($entity, $idField);
 
+        if (!is_scalar($id) && !$id instanceof Stringable) {
+            throw new RuntimeException(sprintf('Identifier for entity "%s" must be scalar or stringable.', $entity::class));
+        }
+
         return (string) $id;
     }
 
+    /**
+     * @return ClassMetadata<object>
+     */
     private function getClassMetadata(object $entity): ClassMetadata
     {
         return $this->getEntityManagerFor($entity::class)->getClassMetadata($entity::class);
     }
 
+    /**
+     * @param class-string $entityClass
+     */
     private function findRelatedEntity(string $entityClass, string $id): object
     {
         $em = $this->getEntityManagerFor($entityClass);
@@ -305,6 +349,11 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         return [$resource, $metadata, $relationship];
     }
 
+    /**
+     * @param ClassMetadata<object> $metadata
+     *
+     * @return class-string
+     */
     private function resolveTargetEntity(ClassMetadata $metadata, string $relationship): string
     {
         if (!$metadata->hasAssociation($relationship)) {
@@ -315,50 +364,24 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             ));
         }
 
-        $mapping = $metadata->getAssociationMapping($relationship);
-
-        if (is_array($mapping)) {
-            if (!isset($mapping['targetEntity'])) {
-                throw new \RuntimeException(sprintf(
-                    'Association metadata for "%s" on "%s" does not contain targetEntity information.',
-                    $relationship,
-                    $metadata->getName()
-                ));
-            }
-
-            /** @var string $target */
-            $target = $mapping['targetEntity'];
-
-            return $target;
-        }
-
-        if (is_object($mapping)) {
-            if (method_exists($mapping, 'getTargetEntity')) {
-                /** @var string $target */
-                $target = $mapping->getTargetEntity();
-
-                return $target;
-            }
-
-            if (property_exists($mapping, 'targetEntity')) {
-                /** @var string $target */
-                $target = $mapping->targetEntity;
-
-                return $target;
-            }
-        }
-
-        throw new \RuntimeException(sprintf(
-            'Unable to determine target entity for association "%s" on "%s".',
-            $relationship,
-            $metadata->getName()
-        ));
+        return $this->assertEntityClass(
+            $metadata->getAssociationTargetClass($relationship),
+            sprintf('association "%s" on "%s"', $relationship, $metadata->getName()),
+        );
     }
 
+    /**
+     * @param ClassMetadata<object> $entityMetadata
+     *
+     * @return class-string
+     */
     private function determineTargetClass(RelationshipMetadata $relationship, ClassMetadata $entityMetadata, string $propertyPath): string
     {
-        if ($relationship->targetClass !== null && class_exists($relationship->targetClass)) {
-            return $relationship->targetClass;
+        if ($relationship->targetClass !== null) {
+            return $this->assertEntityClass(
+                $relationship->targetClass,
+                sprintf('targetClass for relationship "%s"', $relationship->name),
+            );
         }
 
         if ($relationship->targetType !== null && $this->registry->hasType($relationship->targetType)) {
@@ -421,7 +444,9 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
     }
 
     /**
-     * @return array{object, ResourceMetadata, string, array<int, ResourceIdentifier|string>}
+     * @param list<ResourceIdentifier|string> $targets
+     *
+     * @return array{object, ResourceMetadata, string, list<ResourceIdentifier|string>}
      */
     private function resolveToManyUpdateArguments(string|object $typeOrResource, string $idOrRel, mixed $relOrTargets, array $targets): array
     {
@@ -432,7 +457,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
 
             $metadata = $this->requireMetadataForObject($typeOrResource);
 
-            return [$typeOrResource, $metadata, $idOrRel, $relOrTargets];
+            return [$typeOrResource, $metadata, $idOrRel, $this->normalizeTargetPayload($relOrTargets)];
         }
 
         if (!is_string($relOrTargets)) {
@@ -442,7 +467,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $resource = $this->findResource($typeOrResource, $idOrRel);
         $metadata = $this->registry->getByType($typeOrResource);
 
-        return [$resource, $metadata, $relOrTargets, $targets];
+        return [$resource, $metadata, $relOrTargets, $this->normalizeTargetPayload($targets)];
     }
 
     /**
@@ -493,6 +518,9 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         return $ids;
     }
 
+    /**
+     * @param class-string $entityClass
+     */
     private function getEntityManagerFor(string $entityClass): EntityManagerInterface
     {
         $em = $this->managerRegistry->getManagerForClass($entityClass);
@@ -502,5 +530,55 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         }
 
         return $em;
+    }
+
+    /**
+     * @param array<int|string, mixed> $items
+     *
+     * @return list<object>
+     */
+    private function ensureObjectList(array $items, string $context): array
+    {
+        $objects = [];
+        foreach ($items as $item) {
+            if (!is_object($item)) {
+                throw new RuntimeException(sprintf('Expected list of objects for %s, got %s.', $context, get_debug_type($item)));
+            }
+
+            $objects[] = $item;
+        }
+
+        return $objects;
+    }
+
+    /**
+     * @param array<int|string, mixed> $targets
+     *
+     * @return list<ResourceIdentifier|string>
+     */
+    private function normalizeTargetPayload(array $targets): array
+    {
+        $normalized = [];
+        foreach ($targets as $target) {
+            if (!$target instanceof ResourceIdentifier && !is_string($target)) {
+                throw new InvalidArgumentException(sprintf('Targets must be strings or ResourceIdentifier instances, %s given.', get_debug_type($target)));
+            }
+
+            $normalized[] = $target;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @return class-string
+     */
+    private function assertEntityClass(string $candidate, string $context): string
+    {
+        if (class_exists($candidate) || interface_exists($candidate)) {
+            return $candidate;
+        }
+
+        throw new RuntimeException(sprintf('Configured entity class "%s" for %s does not exist.', $candidate, $context));
     }
 }

@@ -135,11 +135,14 @@ final class WriteListener implements EventSubscriberInterface
 
         // Try to get type from request body
         $content = $request->getContent();
-        if ($content !== '' && $content !== false) {
+        if ($content !== '') {
             try {
                 $data = json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
-                if (isset($data['data']['type']) && is_string($data['data']['type'])) {
-                    return $data['data']['type'];
+                if (is_array($data) && isset($data['data']) && is_array($data['data'])) {
+                    $typeValue = $data['data']['type'] ?? null;
+                    if (is_string($typeValue) && $typeValue !== '') {
+                        return $typeValue;
+                    }
                 }
             } catch (\JsonException) {
                 // Ignore JSON parsing errors

@@ -94,7 +94,9 @@ final class ConstraintViolationMapper
         $metadata = $this->registry->getByType($resourceType);
         $errors = [];
 
-        foreach ($exception->getErrors() as $path => $nestedExceptions) {
+        /** @var array<int|string, list<\Throwable>> $rawErrors */
+        $rawErrors = $exception->getErrors();
+        foreach ($rawErrors as $path => $nestedExceptions) {
             $pathString = (string) $path;
             foreach ($nestedExceptions as $nestedException) {
                 if ($nestedException instanceof NotNormalizableValueException) {
@@ -133,7 +135,7 @@ final class ConstraintViolationMapper
         NotNormalizableValueException $exception,
         ?string $overridePath = null
     ): ErrorObject {
-        $path = $overridePath ?? $exception->getPath();
+        $path = $overridePath ?? $exception->getPath() ?? '';
         [$pointer, $meta] = $this->pointerFor($metadata, $path);
 
         $message = $exception->getMessage();

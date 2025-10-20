@@ -13,7 +13,7 @@ final class ResourceMetadataGroupsTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: ArticleStub::class,
             attributes: [],
             relationships: [],
             normalizationContext: ['groups' => ['article:read', 'common']],
@@ -26,7 +26,7 @@ final class ResourceMetadataGroupsTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: ArticleStub::class,
             attributes: [],
             relationships: [],
         );
@@ -38,7 +38,7 @@ final class ResourceMetadataGroupsTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: ArticleStub::class,
             attributes: [],
             relationships: [],
             denormalizationContext: ['groups' => ['article:write']],
@@ -52,7 +52,7 @@ final class ResourceMetadataGroupsTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: ArticleStub::class,
             attributes: [],
             relationships: [],
             denormalizationContext: ['groups' => ['article:write', 'Default']],
@@ -66,7 +66,7 @@ final class ResourceMetadataGroupsTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: ArticleStub::class,
             attributes: [],
             relationships: [],
         );
@@ -79,7 +79,7 @@ final class ResourceMetadataGroupsTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: ArticleStub::class,
             attributes: [],
             relationships: [],
             normalizationContext: ['groups' => ['article:read']],
@@ -89,4 +89,49 @@ final class ResourceMetadataGroupsTest extends TestCase
         $this->assertSame(['article:read'], $metadata->getNormalizationGroups());
         $this->assertSame(['article:write', 'Default'], $metadata->getDenormalizationGroups());
     }
+
+    public function testNormalizationGroupsFiltersInvalidValues(): void
+    {
+        $metadata = new ResourceMetadata(
+            type: 'articles',
+            class: ArticleStub::class,
+            attributes: [],
+            relationships: [],
+            normalizationContext: ['groups' => ['article:read', 123, '', null]],
+        );
+
+        $this->assertSame(['article:read'], $metadata->getNormalizationGroups());
+    }
+
+    public function testDenormalizationGroupsFiltersInvalidValuesAndAddsDefault(): void
+    {
+        $metadata = new ResourceMetadata(
+            type: 'articles',
+            class: ArticleStub::class,
+            attributes: [],
+            relationships: [],
+            denormalizationContext: ['groups' => ['article:write', 'article:write', 123]],
+        );
+
+        $this->assertSame(['article:write', 'Default'], $metadata->getDenormalizationGroups());
+    }
+
+    public function testNonArrayGroupsAreIgnored(): void
+    {
+        $metadata = new ResourceMetadata(
+            type: 'articles',
+            class: ArticleStub::class,
+            attributes: [],
+            relationships: [],
+            normalizationContext: ['groups' => 'article:read'],
+            denormalizationContext: ['groups' => 'article:write'],
+        );
+
+        $this->assertSame([], $metadata->getNormalizationGroups());
+        $this->assertSame(['Default'], $metadata->getDenormalizationGroups());
+    }
+}
+
+final class ArticleStub
+{
 }
