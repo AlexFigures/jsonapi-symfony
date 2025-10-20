@@ -6,12 +6,12 @@ parameters:
   layers:
     - name: Contract
       collectors:
-        - type: className
-          regex: '^JsonApi\\\\Symfony\\\\Contract\\\\'
+        - type: classNameRegex
+          regex: '^AlexFigures\\\\Symfony\\\\Contract\\\\'
     - name: Application
       collectors:
-        - type: className
-          regex: '^JsonApi\\\\Symfony\\\\(?!Contract).+'
+        - type: classNameRegex
+          regex: '^AlexFigures\\\\Symfony\\\\(?!Contract).+'
   ruleset:
     Contract: []
     Application:
