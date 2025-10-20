@@ -62,7 +62,7 @@ final class ResourceRegistryTest extends TestCase
     {
         $registry = new ResourceRegistry([ArticleFixture::class]);
 
-        $metadata = $registry->getByClass(AuthorFixture::class);
+        $metadata = $registry->getByClass(AuthorFixtureForRegistry::class);
 
         self::assertNull($metadata);
     }
@@ -71,7 +71,7 @@ final class ResourceRegistryTest extends TestCase
     {
         $registry = new ResourceRegistry([
             ArticleFixture::class,
-            AuthorFixture::class,
+            AuthorFixtureForRegistry::class,
         ]);
 
         $all = $registry->all();
@@ -96,7 +96,7 @@ final class ResourceRegistryTest extends TestCase
 
         new ResourceRegistry([
             ArticleFixture::class,
-            DuplicateArticleFixture::class,
+            DuplicateArticleFixtureForRegistry::class,
         ]);
     }
 
@@ -108,6 +108,22 @@ final class ResourceRegistryTest extends TestCase
         new ResourceRegistry([
             'wrong-type' => ArticleFixture::class,
         ]);
+    }
+
+    public function testThrowsWhenConfiguredDataClassDoesNotExist(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Class "NonExistentDataClass" configured for dataClass for resource');
+
+        new ResourceRegistry([InvalidDataClassFixture::class]);
+    }
+
+    public function testThrowsWhenConfiguredViewClassDoesNotExist(): void
+    {
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('Class "NonExistentViewClass" configured for viewClass for resource');
+
+        new ResourceRegistry([InvalidViewClassFixture::class]);
     }
 
     public function testAcceptsResourceInstances(): void
@@ -134,7 +150,7 @@ final class ResourceRegistryTest extends TestCase
     {
         $registry = new ResourceRegistry([
             new ArticleFixture(),
-            AuthorFixture::class,
+            AuthorFixtureForRegistry::class,
         ]);
 
         self::assertTrue($registry->hasType('articles'));
@@ -184,11 +200,21 @@ final class ArticleFixture
 }
 
 #[JsonApiResource(type: 'authors')]
-final class AuthorFixture
+final class AuthorFixtureForRegistry
 {
 }
 
 #[JsonApiResource(type: 'articles')]
-final class DuplicateArticleFixture
+final class DuplicateArticleFixtureForRegistry
+{
+}
+
+#[JsonApiResource(type: 'invalid-data', dataClass: 'NonExistentDataClass')]
+final class InvalidDataClassFixture
+{
+}
+
+#[JsonApiResource(type: 'invalid-view', viewClass: 'NonExistentViewClass')]
+final class InvalidViewClassFixture
 {
 }

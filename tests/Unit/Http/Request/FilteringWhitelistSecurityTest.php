@@ -12,8 +12,11 @@ use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Exception\BadRequestException;
 use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
 use AlexFigures\Symfony\Resource\Attribute\FilterableField;
 use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
@@ -33,7 +36,7 @@ final class FilteringWhitelistSecurityTest extends TestCase
 
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\\Entity\\Article',
+            class: ArticleFixture::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields
@@ -63,7 +66,7 @@ final class FilteringWhitelistSecurityTest extends TestCase
 
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\\Entity\\Article',
+            class: ArticleFixture::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields
@@ -92,7 +95,7 @@ final class FilteringWhitelistSecurityTest extends TestCase
 
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\\Entity\\Article',
+            class: ArticleFixture::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields
@@ -122,7 +125,7 @@ final class FilteringWhitelistSecurityTest extends TestCase
 
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\\Entity\\Article',
+            class: ArticleFixture::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields
@@ -150,7 +153,7 @@ final class FilteringWhitelistSecurityTest extends TestCase
 
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\\Entity\\Article',
+            class: ArticleFixture::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields
@@ -166,4 +169,18 @@ final class FilteringWhitelistSecurityTest extends TestCase
         $whitelist->validate('articles', $legitimateNode);
         $this->assertTrue(true); // Test passes if no exception is thrown
     }
+}
+
+#[JsonApiResource(type: 'articles')]
+final class ArticleFixture
+{
+    #[Id]
+    #[Attribute]
+    public string $id;
+
+    #[Attribute]
+    public string $title;
+
+    #[Attribute]
+    public ?string $status = null;
 }

@@ -92,54 +92,54 @@ final class RelationshipLinkingPolicyTest extends TestCase
 final class ArticleWithDefaultPolicy
 {
     #[Relationship(toMany: false, targetType: 'authors')]
-    public ?AuthorFixture $author = null;
+    public ?AuthorFixtureForLinkingPolicy $author = null;
 }
 
 #[JsonApiResource(type: 'articles')]
 final class ArticleWithVerifyPolicyEnum
 {
     #[Relationship(toMany: false, targetType: 'authors', linkingPolicy: RelationshipLinkingPolicy::VERIFY)]
-    public ?AuthorFixture $author = null;
+    public ?AuthorFixtureForLinkingPolicy $author = null;
 }
 
 #[JsonApiResource(type: 'articles')]
 final class ArticleWithVerifyPolicyString
 {
     #[Relationship(toMany: false, targetType: 'authors', linkingPolicy: 'verify')]
-    public ?AuthorFixture $author = null;
+    public ?AuthorFixtureForLinkingPolicy $author = null;
 }
 
 #[JsonApiResource(type: 'articles')]
 final class ArticleWithReferencePolicyEnum
 {
     #[Relationship(toMany: false, targetType: 'authors', linkingPolicy: RelationshipLinkingPolicy::REFERENCE)]
-    public ?AuthorFixture $author = null;
+    public ?AuthorFixtureForLinkingPolicy $author = null;
 }
 
 #[JsonApiResource(type: 'articles')]
 final class ArticleWithReferencePolicyString
 {
     #[Relationship(toMany: false, targetType: 'authors', linkingPolicy: 'reference')]
-    public ?AuthorFixture $author = null;
+    public ?AuthorFixtureForLinkingPolicy $author = null;
 }
 
 #[JsonApiResource(type: 'articles')]
 final class ArticleWithMixedPolicies
 {
     #[Relationship(toMany: false, targetType: 'authors', linkingPolicy: RelationshipLinkingPolicy::VERIFY)]
-    public ?AuthorFixture $author = null;
+    public ?AuthorFixtureForLinkingPolicy $author = null;
 
-    /** @var list<TagFixture> */
+    /** @var list<TagFixtureForLinkingPolicy> */
     #[Relationship(toMany: true, targetType: 'tags', linkingPolicy: RelationshipLinkingPolicy::REFERENCE)]
     public array $tags = [];
 }
 
 #[JsonApiResource(type: 'authors')]
-final class AuthorFixture
+final class AuthorFixtureForLinkingPolicy
 {
 }
 
 #[JsonApiResource(type: 'tags')]
-final class TagFixture
+final class TagFixtureForLinkingPolicy
 {
 }

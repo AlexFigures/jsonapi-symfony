@@ -12,9 +12,9 @@ use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 final class ResourceDefinition
 {
     /**
-     * @param array<string, string> $fieldMap
+     * @param array<string, string>                    $fieldMap
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
-     * @param array<string, class-string> $writeRequests
+     * @param array<string, class-string>              $writeRequests
      */
     public function __construct(
         public readonly string $type,

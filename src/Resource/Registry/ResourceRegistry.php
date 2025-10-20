@@ -119,8 +119,8 @@ final class ResourceRegistry implements ResourceRegistryInterface
         /** @var JsonApiResource $resource */
         $resource = $resourceAttributes[0]->newInstance();
 
-        $dataClass = $resource->dataClass ?? $class;
-        $viewClass = $resource->viewClass ?? $class;
+        $dataClass = $resource->dataClass === null ? $class : $this->assertClassString($resource->dataClass, sprintf('dataClass for resource %s', $class));
+        $viewClass = $resource->viewClass === null ? $class : $this->assertClassString($resource->viewClass, sprintf('viewClass for resource %s', $class));
 
         $versionResolver = null;
         if ($resource->versionResolver !== null) {
@@ -176,7 +176,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
         $filterableFields = null;
         $filterableFieldsAttributes = $reflection->getAttributes(FilterableFields::class, ReflectionAttribute::IS_INSTANCEOF);
         if ($filterableFieldsAttributes !== []) {
-            /** @var FilterableFields $filterableFieldsAttr */
+            /** @var FilterableFields $filterableFields */
             $filterableFields = $filterableFieldsAttributes[0]->newInstance();
         }
 
@@ -202,6 +202,18 @@ final class ResourceRegistry implements ResourceRegistryInterface
             writeRequests: $resource->writeRequests,
             versionResolver: $versionResolver,
         );
+    }
+
+    /**
+     * @return class-string
+     */
+    private function assertClassString(string $candidate, string $context): string
+    {
+        if (class_exists($candidate) || interface_exists($candidate) || enum_exists($candidate)) {
+            return $candidate;
+        }
+
+        throw new LogicException(sprintf('Class "%s" configured for %s does not exist.', $candidate, $context));
     }
 
     /**
@@ -367,6 +379,9 @@ final class ResourceRegistry implements ResourceRegistryInterface
         return $member->getAttributes($attribute, ReflectionAttribute::IS_INSTANCEOF) !== [];
     }
 
+    /**
+     * @return class-string|null
+     */
     private function guessTargetClass(ReflectionProperty|ReflectionMethod $member): ?string
     {
         $type = $member instanceof ReflectionProperty ? $member->getType() : $member->getReturnType();
@@ -380,62 +395,57 @@ final class ResourceRegistry implements ResourceRegistryInterface
                 return null;
             }
 
-            $className = $type->getName();
+            $resolved = $this->normalizeTypeName($type->getName(), $member);
 
-            // Resolve "self", "static", and "parent" to actual class names
-            if ($className === 'self' || $className === 'static') {
-                return $member->getDeclaringClass()->getName();
+            if ($resolved === null) {
+                return null;
             }
 
-            if ($className === 'parent') {
-                $parentClass = $member->getDeclaringClass()->getParentClass();
-                return $parentClass ? $parentClass->getName() : null;
-            }
-
-            return $className;
+            return $this->assertClassString(
+                $resolved,
+                sprintf('relationship target on %s::%s', $member->getDeclaringClass()->getName(), $member->getName())
+            );
         }
 
-        if ($type instanceof ReflectionUnionType) {
+        if ($type instanceof ReflectionUnionType || $type instanceof ReflectionIntersectionType) {
             foreach ($type->getTypes() as $inner) {
-                if ($inner instanceof ReflectionNamedType && !$inner->isBuiltin()) {
-                    $className = $inner->getName();
-
-                    // Resolve "self", "static", and "parent" to actual class names
-                    if ($className === 'self' || $className === 'static') {
-                        return $member->getDeclaringClass()->getName();
-                    }
-
-                    if ($className === 'parent') {
-                        $parentClass = $member->getDeclaringClass()->getParentClass();
-                        return $parentClass ? $parentClass->getName() : null;
-                    }
-
-                    return $className;
+                if (!$inner instanceof ReflectionNamedType || $inner->isBuiltin()) {
+                    continue;
                 }
-            }
-        }
 
-        if ($type instanceof ReflectionIntersectionType) {
-            foreach ($type->getTypes() as $inner) {
-                if ($inner instanceof ReflectionNamedType && !$inner->isBuiltin()) {
-                    $className = $inner->getName();
+                $resolved = $this->normalizeTypeName($inner->getName(), $member);
 
-                    // Resolve "self", "static", and "parent" to actual class names
-                    if ($className === 'self' || $className === 'static') {
-                        return $member->getDeclaringClass()->getName();
-                    }
-
-                    if ($className === 'parent') {
-                        $parentClass = $member->getDeclaringClass()->getParentClass();
-                        return $parentClass ? $parentClass->getName() : null;
-                    }
-
-                    return $className;
+                if ($resolved === null) {
+                    continue;
                 }
+
+                return $this->assertClassString(
+                    $resolved,
+                    sprintf('relationship target on %s::%s', $member->getDeclaringClass()->getName(), $member->getName())
+                );
             }
         }
 
         return null;
+    }
+
+    private function normalizeTypeName(string $className, ReflectionProperty|ReflectionMethod $member): ?string
+    {
+        if ($className === 'self' || $className === 'static') {
+            return $member->getDeclaringClass()->getName();
+        }
+
+        if ($className === 'parent') {
+            $parentClass = $member->getDeclaringClass()->getParentClass();
+
+            if ($parentClass === false) {
+                return null;
+            }
+
+            return $parentClass->getName();
+        }
+
+        return $className;
     }
 
     private function guessTargetType(?string $targetClass): ?string

@@ -49,9 +49,9 @@ final class FilterableField
     public readonly array $operators;
 
     /**
-     * @param string       $field         Field name that can be filtered
-     * @param list<string> $operators     List of allowed operators for this field (default: all operators)
-     * @param string|null  $customHandler Optional service ID for custom filter handler
+     * @param string             $field         Field name that can be filtered
+     * @param array<int, string> $operators     List of allowed operators for this field (default: all operators)
+     * @param string|null        $customHandler Optional service ID for custom filter handler
      */
     public function __construct(
         public readonly string $field,

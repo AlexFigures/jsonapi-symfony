@@ -45,4 +45,3 @@ final class ArticleReadMapper implements ReadMapperInterface
         throw new \RuntimeException(sprintf('Cannot map %s to ArticleViewDto', get_debug_type($row)));
     }
 }
-

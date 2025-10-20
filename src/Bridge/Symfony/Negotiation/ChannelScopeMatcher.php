@@ -27,15 +27,23 @@ final class ChannelScopeMatcher
         }
 
         if (($scope['route_name'] ?? null) !== null) {
-            $route = (string) $request->attributes->get('_route', '');
-            if ($route === '' || !$this->matchPattern($scope['route_name'], $route)) {
+            $rawRoute = $request->attributes->get('_route');
+            if (!is_string($rawRoute) || $rawRoute === '') {
+                return false;
+            }
+
+            if (!$this->matchPattern($scope['route_name'], $rawRoute)) {
                 return false;
             }
         }
 
         if (($scope['attribute'] ?? null) !== null) {
             $channel = $request->attributes->get(MediaChannel::REQUEST_ATTRIBUTE);
-            if ($channel === null || !$this->matchPattern($scope['attribute'], (string) $channel)) {
+            if (!is_string($channel) || $channel === '') {
+                return false;
+            }
+
+            if (!$this->matchPattern($scope['attribute'], $channel)) {
                 return false;
             }
         }

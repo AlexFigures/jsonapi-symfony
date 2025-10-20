@@ -21,6 +21,7 @@ final class DefaultReadMapper implements ReadMapperInterface
             throw new RuntimeException(sprintf('Cannot map row of type %s to view object.', get_debug_type($row)));
         }
 
+        /** @var class-string $viewClass */
         $viewClass = $definition->getEffectiveViewClass();
         $reflection = new ReflectionClass($viewClass);
 
@@ -32,6 +33,10 @@ final class DefaultReadMapper implements ReadMapperInterface
         if ($constructor === null) {
             $instance = $reflection->newInstance();
             foreach ($row as $field => $value) {
+                if (!is_string($field)) {
+                    continue;
+                }
+
                 if ($reflection->hasProperty($field)) {
                     $property = $reflection->getProperty($field);
                     if ($property->isPublic()) {

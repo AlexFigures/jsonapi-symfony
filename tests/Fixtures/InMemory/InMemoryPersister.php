@@ -39,6 +39,7 @@ final class InMemoryPersister implements ResourceProcessor
         $model = $this->repository->createPrototype($type);
         $this->assignId($metadata, $model, $id);
         $this->applyAttributes($model, $changes);
+        $this->applyRelationships($model, $changes);
 
         $this->repository->save($type, $model);
 
@@ -61,6 +62,7 @@ final class InMemoryPersister implements ResourceProcessor
         $originalModel = clone $model;
 
         $this->applyAttributes($model, $changes);
+        $this->applyRelationships($model, $changes);
         $this->repository->save($type, $model);
 
         // Register rollback callback
@@ -94,6 +96,40 @@ final class InMemoryPersister implements ResourceProcessor
     {
         foreach ($changes->attributes as $path => $value) {
             $this->accessor->setValue($model, $path, $value);
+        }
+    }
+
+    private function applyRelationships(object $model, ChangeSet $changes): void
+    {
+        foreach ($changes->relationships as $name => $relationshipData) {
+            $data = $relationshipData['data'] ?? null;
+
+            if ($data === null) {
+                // Null relationship - set to null
+                $this->accessor->setValue($model, $name, null);
+                continue;
+            }
+
+            // Check if it's a to-many relationship (array of resource identifiers)
+            if (isset($data[0]) && is_array($data[0])) {
+                // To-many relationship
+                $relatedObjects = [];
+                foreach ($data as $identifier) {
+                    $relatedType = $identifier['type'];
+                    $relatedId = $identifier['id'];
+                    $relatedObject = $this->repository->get($relatedType, $relatedId);
+                    if ($relatedObject !== null) {
+                        $relatedObjects[] = $relatedObject;
+                    }
+                }
+                $this->accessor->setValue($model, $name, $relatedObjects);
+            } else {
+                // To-one relationship
+                $relatedType = $data['type'];
+                $relatedId = $data['id'];
+                $relatedObject = $this->repository->get($relatedType, $relatedId);
+                $this->accessor->setValue($model, $name, $relatedObject);
+            }
         }
     }
 

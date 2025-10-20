@@ -84,6 +84,9 @@ final class RouteNameGenerator
     {
         // Handle camelCase and PascalCase by inserting hyphens before uppercase letters
         $result = preg_replace('/([a-z])([A-Z])/', '$1-$2', $input);
+        if ($result === null) {
+            throw new \RuntimeException('Failed to normalize resource type for route generation.');
+        }
 
         // Replace underscores with hyphens
         $result = str_replace('_', '-', $result);

@@ -39,13 +39,15 @@ final class MediaChannelSubscriber implements EventSubscriberInterface
         $request->attributes->set(MediaChannel::REQUEST_ATTRIBUTE, $attribute->name);
     }
 
-    /**
-     * @param callable|array{object, string} $controller
-     */
-    private function extractAttribute(callable|array $controller): ?MediaChannel
+    private function extractAttribute(mixed $controller): ?MediaChannel
     {
         if (is_array($controller)) {
-            return $this->extractFromMethod($controller[0], $controller[1]);
+            [$instance, $method] = $controller;
+            if (is_object($instance) && is_string($method)) {
+                return $this->extractFromMethod($instance, $method);
+            }
+
+            return null;
         }
 
         if (is_object($controller)) {

@@ -13,8 +13,8 @@ use AlexFigures\Symfony\Resource\Attribute\Relationship;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
 use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry;
+use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 

@@ -19,8 +19,14 @@ final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInte
      */
     private array $channels;
 
+    /**
+     * @param array{
+     *     default: array{request?: array{allowed?: list<string>}, response: array{default: string, negotiable?: list<string>}},
+     *     channels?: array<int, array{scope?: array<string, string|null>, request?: array{allowed?: list<string>}, response?: array{default?: string, negotiable?: list<string>}}>
+     * } $config
+     */
     public function __construct(
-        private readonly array $config,
+        array $config,
         private readonly ChannelScopeMatcher $matcher,
     ) {
         $this->channels = $this->buildChannels($config['channels'] ?? []);
@@ -39,7 +45,7 @@ final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInte
     }
 
     /**
-     * @param array<string, array{scope?: array<string, string|null>, request: array{allowed: list<string>}, response: array{default: string, negotiable: list<string>}}> $channels
+     * @param  array<int, array{scope?: array<string, string|null>, request?: array{allowed?: list<string>}, response?: array{default?: string, negotiable?: list<string>}}> $channels
      * @return array<int, array{scope: array<string, string|null>, policy: MediaTypePolicy}>
      */
     private function buildChannels(array $channels): array
@@ -47,13 +53,18 @@ final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInte
         $result = [];
         foreach ($channels as $channelConfig) {
             $scope = $channelConfig['scope'] ?? [];
+            $policyConfig = [
+                'request' => $channelConfig['request'] ?? ['allowed' => ['*']],
+                'response' => ($channelConfig['response'] ?? []) + ['default' => MediaType::JSON_API],
+            ];
+
             $result[] = [
                 'scope' => [
                     'path_prefix' => $scope['path_prefix'] ?? null,
                     'route_name' => $scope['route_name'] ?? null,
                     'attribute' => $scope['attribute'] ?? null,
                 ],
-                'policy' => $this->buildPolicy($channelConfig),
+                'policy' => $this->buildPolicy($policyConfig),
             ];
         }
 
@@ -61,7 +72,7 @@ final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInte
     }
 
     /**
-     * @param array{request: array{allowed: list<string>}, response: array{default: string, negotiable: list<string>}} $config
+     * @param array{request?: array{allowed?: list<string>}, response: array{default: string, negotiable?: list<string>}} $config
      */
     private function buildPolicy(array $config): MediaTypePolicy
     {
@@ -103,7 +114,7 @@ final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInte
     private MediaTypePolicy $defaultPolicy;
 
     /**
-     * @param list<string> $types
+     * @param  list<string> $types
      * @return list<string>
      */
     private function normalizeList(array $types): array

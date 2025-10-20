@@ -29,7 +29,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [
                 'title' => new AttributeMetadata(name: 'title'),
                 'body' => new AttributeMetadata(name: 'body'),
@@ -64,7 +64,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [
                 'title' => new AttributeMetadata(name: 'title', propertyPath: 'articleTitle'),
                 'body' => new AttributeMetadata(name: 'body'),
@@ -94,7 +94,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [
                 'title' => new AttributeMetadata(name: 'title'),
             ],
@@ -115,7 +115,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [
                 'title' => new AttributeMetadata(name: 'title'),
             ],
@@ -136,7 +136,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [
                 'title' => new AttributeMetadata(name: 'title'),
             ],
@@ -163,7 +163,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [
                 'title' => new AttributeMetadata(name: 'title'),
             ],
@@ -196,7 +196,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: []
         );

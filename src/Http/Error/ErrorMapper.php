@@ -196,13 +196,13 @@ final class ErrorMapper
         return $this->builder->create('409', ErrorCodes::CONFLICT, null, $detail);
     }
 
-    public function notFound(string $detail, ?string $pointer = null): ErrorObject
+    public function notFound(string $detail, ?string $pointer = null, ?string $aboutLink = '/errors/not-found'): ErrorObject
     {
         if ($pointer !== null) {
-            return $this->builder->fromPointer('404', ErrorCodes::RESOURCE_NOT_FOUND, null, $detail, $pointer);
+            return $this->builder->fromPointer('404', ErrorCodes::RESOURCE_NOT_FOUND, null, $detail, $pointer, aboutLink: $aboutLink);
         }
 
-        return $this->builder->create('404', ErrorCodes::RESOURCE_NOT_FOUND, null, $detail);
+        return $this->builder->create('404', ErrorCodes::RESOURCE_NOT_FOUND, null, $detail, aboutLink: $aboutLink);
     }
 
     public function forbidden(string $detail): ErrorObject

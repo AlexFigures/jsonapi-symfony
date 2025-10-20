@@ -57,11 +57,11 @@ final class JsonApiResource
      * @param bool                 $exposeId               Whether to expose the ID in the resource document (default: true)
      */
     /**
-     * @param array<string, mixed>          $normalizationContext
-     * @param array<string, mixed>          $denormalizationContext
-     * @param array<string, string>         $fieldMap
+     * @param array<string, mixed>                     $normalizationContext
+     * @param array<string, mixed>                     $denormalizationContext
+     * @param array<string, string>                    $fieldMap
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
-     * @param array<string, class-string>   $writeRequests
+     * @param array<string, class-string>              $writeRequests
      */
     public function __construct(
         public readonly string $type,
@@ -87,7 +87,7 @@ final class JsonApiResource
      */
     public function getNormalizationGroups(): array
     {
-        return $this->normalizationContext['groups'] ?? [];
+        return $this->normalizeGroups($this->normalizationContext);
     }
 
     /**
@@ -97,6 +97,31 @@ final class JsonApiResource
      */
     public function getDenormalizationGroups(): array
     {
-        return $this->denormalizationContext['groups'] ?? [];
+        return $this->normalizeGroups($this->denormalizationContext);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     *
+     * @return list<string>
+     */
+    private function normalizeGroups(array $context): array
+    {
+        $groups = $context['groups'] ?? [];
+
+        if (!is_array($groups)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($groups as $group) {
+            if (!is_string($group) || $group === '') {
+                continue;
+            }
+
+            $normalized[] = $group;
+        }
+
+        return array_values(array_unique($normalized));
     }
 }

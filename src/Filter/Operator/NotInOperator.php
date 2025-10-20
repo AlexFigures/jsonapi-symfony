@@ -25,8 +25,11 @@ final class NotInOperator extends AbstractOperator
 
         $paramName = 'nin_' . str_replace('.', '_', uniqid('', true));
 
+        // Include NULL values in NOT IN logic
+        // This ensures that records without the relationship are also returned
+        // Example: "tags.id NOT IN [1,2]" should return articles without tags
         return new DoctrineExpression(
-            sprintf('%s NOT IN (:%s)', $dqlField, $paramName),
+            sprintf('(%s NOT IN (:%s) OR %s IS NULL)', $dqlField, $paramName, $dqlField),
             [$paramName => $values],
         );
     }

@@ -9,6 +9,10 @@ use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Exception\ConflictException;
 use AlexFigures\Symfony\Http\Exception\ValidationException;
 use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Resource\Attribute\Relationship;
 use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
@@ -35,7 +39,7 @@ final class DatabaseErrorMapperTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'users',
-            class: 'User',
+            class: UserFixture::class,
             attributes: [
                 'email' => new AttributeMetadata('email', 'string'),
             ],
@@ -63,10 +67,10 @@ final class DatabaseErrorMapperTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'Article',
+            class: ArticleFixture::class,
             attributes: [],
             relationships: [
-                'author' => new RelationshipMetadata('author', false, 'User'),
+                'author' => new RelationshipMetadata('author', false, UserFixture::class),
             ]
         );
 
@@ -105,4 +109,26 @@ final class DatabaseErrorMapperTest extends TestCase
 
         $this->assertSame($exception, $result);
     }
+}
+
+#[JsonApiResource(type: 'users')]
+final class UserFixture
+{
+    #[Id]
+    #[Attribute]
+    public string $id;
+
+    #[Attribute]
+    public string $email;
+}
+
+#[JsonApiResource(type: 'articles')]
+final class ArticleFixture
+{
+    #[Id]
+    #[Attribute]
+    public string $id;
+
+    #[Relationship(targetType: 'users')]
+    public ?UserFixture $author = null;
 }

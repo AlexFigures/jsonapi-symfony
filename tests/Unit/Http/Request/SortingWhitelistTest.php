@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Unit\Http\Request;
 
 use AlexFigures\Symfony\Http\Request\SortingWhitelist;
+use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\Id;
+use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
@@ -25,7 +28,7 @@ final class SortingWhitelistTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             sortableFields: ['title', 'createdAt', 'updatedAt', 'viewCount'],
@@ -47,7 +50,7 @@ final class SortingWhitelistTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             sortableFields: [], // Empty attribute
@@ -66,7 +69,7 @@ final class SortingWhitelistTest extends TestCase
     {
         $articlesMetadata = new ResourceMetadata(
             type: 'articles',
-            class: 'App\Entity\Article',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             sortableFields: ['title', 'createdAt'],
@@ -74,7 +77,7 @@ final class SortingWhitelistTest extends TestCase
 
         $authorsMetadata = new ResourceMetadata(
             type: 'authors',
-            class: 'App\Entity\Author',
+            class: AuthorFixture::class,
             attributes: [],
             relationships: [],
             sortableFields: ['name', 'email'],
@@ -97,4 +100,18 @@ final class SortingWhitelistTest extends TestCase
         self::assertSame(['name', 'email'], $whitelist->allowedFor('authors'));
         self::assertSame([], $whitelist->allowedFor('unknown'));
     }
+}
+
+#[JsonApiResource(type: 'authors')]
+final class AuthorFixture
+{
+    #[Id]
+    #[Attribute]
+    public string $id;
+
+    #[Attribute]
+    public string $name;
+
+    #[Attribute]
+    public string $email;
 }

@@ -147,12 +147,14 @@ final class CustomRouteResponseBuilder
 
         // Merge custom meta from result
         if ($result->getMeta() !== []) {
-            $document['meta'] = array_merge($document['meta'] ?? [], $result->getMeta());
+            $document['meta'] = isset($document['meta'])
+                ? array_merge($document['meta'], $result->getMeta())
+                : $result->getMeta();
         }
 
         // Merge custom links from result
         if ($result->getLinks() !== []) {
-            $document['links'] = array_merge($document['links'] ?? [], $result->getLinks());
+            $document['links'] = array_merge($document['links'], $result->getLinks());
         }
 
         $headers = array_merge(
@@ -162,13 +164,11 @@ final class CustomRouteResponseBuilder
 
         // Add Location header for 201 Created responses
         if ($result->getStatus() === Response::HTTP_CREATED) {
-            $resourceId = $document['data']['id'] ?? null;
-            if ($resourceId !== null) {
-                $headers['Location'] = $this->linkGenerator->resourceSelf(
-                    $context->getResourceType(),
-                    (string) $resourceId
-                );
-            }
+            $resourceId = $document['data']['id'];
+            $headers['Location'] = $this->linkGenerator->resourceSelf(
+                $context->getResourceType(),
+                (string) $resourceId
+            );
         }
 
         return new JsonResponse($document, $result->getStatus(), $headers);
@@ -181,16 +181,25 @@ final class CustomRouteResponseBuilder
     {
         $resources = $result->getData();
 
-        if (!is_array($resources)) {
+        if (!is_array($resources) || !array_is_list($resources)) {
             return $this->buildInternalErrorResponse('Collection result must contain an array');
         }
 
-        $totalItems = $result->getTotalItems() ?? count($resources);
+        foreach ($resources as $resource) {
+            if (!is_object($resource)) {
+                return $this->buildInternalErrorResponse('Collection result must contain only objects');
+            }
+        }
+
+        /** @var list<object> $resourceList */
+        $resourceList = $resources;
+
+        $totalItems = $result->getTotalItems() ?? count($resourceList);
         $criteria = $context->getCriteria();
 
         // Create a Slice for pagination
         $slice = new Slice(
-            items: $resources,
+            items: $resourceList,
             totalItems: $totalItems,
             pageNumber: $criteria->pagination->number,
             pageSize: $criteria->pagination->size,
@@ -199,7 +208,7 @@ final class CustomRouteResponseBuilder
         // Build JSON:API document using DocumentBuilder
         $document = $this->documentBuilder->buildCollection(
             $context->getResourceType(),
-            $resources,
+            $resourceList,
             $criteria,
             $slice,
             $context->getRequest()
@@ -207,12 +216,12 @@ final class CustomRouteResponseBuilder
 
         // Merge custom meta from result
         if ($result->getMeta() !== []) {
-            $document['meta'] = array_merge($document['meta'] ?? [], $result->getMeta());
+            $document['meta'] = array_merge($document['meta'], $result->getMeta());
         }
 
         // Merge custom links from result
         if ($result->getLinks() !== []) {
-            $document['links'] = array_merge($document['links'] ?? [], $result->getLinks());
+            $document['links'] = array_merge($document['links'], $result->getLinks());
         }
 
         $headers = array_merge(
@@ -226,22 +235,31 @@ final class CustomRouteResponseBuilder
     /**
      * Build an error object from error data.
      *
-     * @param array<string, mixed> $errorData
+     * @param  array<string, mixed>                                                                                $errorData
+     * @return array{status: string, code: string, title: string, detail: string, source?: array{pointer: string}}
      */
     private function buildErrorObject(array $errorData, int $status): array
     {
         $statusStr = (string) $status;
-        $detail = $errorData['detail'] ?? 'An error occurred';
+        $rawStatus = $errorData['status'] ?? null;
+        $statusValue = (is_scalar($rawStatus) || $rawStatus instanceof \Stringable)
+            ? (string) $rawStatus
+            : $statusStr;
+
+        $rawDetail = $errorData['detail'] ?? null;
+        $detailValue = (is_scalar($rawDetail) || $rawDetail instanceof \Stringable)
+            ? (string) $rawDetail
+            : 'An error occurred';
         $pointer = $errorData['pointer'] ?? null;
 
         $error = [
-            'status' => $errorData['status'] ?? $statusStr,
+            'status' => $statusValue,
             'code' => $this->resolveErrorCode($status),
             'title' => $this->resolveErrorTitle($status),
-            'detail' => $detail,
+            'detail' => $detailValue,
         ];
 
-        if ($pointer !== null) {
+        if (is_string($pointer) && $pointer !== '') {
             $error['source'] = ['pointer' => $pointer];
         }
 

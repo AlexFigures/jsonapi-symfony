@@ -166,14 +166,18 @@ final class Configuration implements ConfigurationInterface
 
         /** @var ArrayNodeDefinition $enabledByDefault */
         $enabledByDefault = $profilesChildren->arrayNode('enabled_by_default');
-        $enabledByDefault->scalarPrototype()->end();
         $enabledByDefault->defaultValue([]);
+        $enabledByDefault->scalarPrototype()->end();
         $enabledByDefault->end();
 
+        /** @var ArrayNodeDefinition $perTypeRoot */
+        $perTypeRoot = $profilesChildren->arrayNode('per_type');
+        $perTypeRoot->useAttributeAsKey('type');
         /** @var ArrayNodeDefinition $perType */
-        $perType = $profilesChildren->arrayNode('per_type')->useAttributeAsKey('type')->arrayPrototype();
+        $perType = $perTypeRoot->arrayPrototype();
         $perType->scalarPrototype()->end();
         $perType->end();
+        $perTypeRoot->end();
 
         $softDelete = $profilesChildren->arrayNode('soft_delete')->addDefaultsIfNotSet();
         $softDeleteChildren = $softDelete->children();
@@ -240,17 +244,22 @@ final class Configuration implements ConfigurationInterface
         $children = $node->children();
 
         $request = $children->arrayNode('request')->addDefaultsIfNotSet();
-        $request->children()
-            ->arrayNode('allowed')
-            ->scalarPrototype()->end()
-            ->defaultValue([MediaType::JSON_API])
-            ->end();
+        $requestChildren = $request->children();
+        /** @var ArrayNodeDefinition $allowedNode */
+        $allowedNode = $requestChildren->arrayNode('allowed');
+        $allowedNode->defaultValue([MediaType::JSON_API]);
+        $allowedNode->scalarPrototype()->end();
+        $allowedNode->end();
         $request->end();
 
         $response = $children->arrayNode('response')->addDefaultsIfNotSet();
         $responseChildren = $response->children();
         $responseChildren->scalarNode('default')->defaultValue(MediaType::JSON_API)->end();
-        $responseChildren->arrayNode('negotiable')->scalarPrototype()->end()->defaultValue([])->end();
+        /** @var ArrayNodeDefinition $negotiable */
+        $negotiable = $responseChildren->arrayNode('negotiable');
+        $negotiable->defaultValue([]);
+        $negotiable->scalarPrototype()->end();
+        $negotiable->end();
         $response->end();
     }
 
@@ -272,7 +281,8 @@ final class Configuration implements ConfigurationInterface
         $lastModifiedChildren = $lastModified->children();
         $lastModifiedChildren->scalarNode('resource_field')->defaultValue('updatedAt')->end();
         /** @var ArrayNodeDefinition $perTypeOverrides */
-        $perTypeOverrides = $lastModifiedChildren->arrayNode('per_type')->useAttributeAsKey('type');
+        $perTypeOverrides = $lastModifiedChildren->arrayNode('per_type');
+        $perTypeOverrides->useAttributeAsKey('type');
         $perTypeOverrides->scalarPrototype()->end();
         $perTypeOverrides->defaultValue([]);
         $perTypeOverrides->end();

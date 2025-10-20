@@ -16,7 +16,7 @@ use AlexFigures\Symfony\Http\Error\ErrorObject;
 final class ValidationException extends JsonApiHttpException
 {
     /**
-     * @param array<ErrorObject>    $errors
+     * @param list<ErrorObject>     $errors
      * @param array<string, string> $headers
      */
     public function __construct(array $errors, string $message = 'Validation failed', array $headers = [], ?\Throwable $previous = null)

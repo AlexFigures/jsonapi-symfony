@@ -34,6 +34,9 @@ final class QueryParser
 
     public function parse(string $type, Request $request): Criteria
     {
+        // Validate that only known query parameters are present
+        $this->validateQueryParameters($request);
+
         $pagination = $this->parsePagination($request);
         $criteria = new Criteria($pagination);
 
@@ -303,6 +306,29 @@ final class QueryParser
         }
 
         return (int) $value;
+    }
+
+    /**
+     * Validate that only known JSON:API query parameters are present.
+     *
+     * @throws BadRequestException
+     */
+    private function validateQueryParameters(Request $request): void
+    {
+        $allowed = ['filter', 'sort', 'page', 'fields', 'include'];
+        $actual = array_keys($request->query->all());
+
+        foreach ($actual as $param) {
+            if (!in_array($param, $allowed, true)) {
+                $paramName = (string) $param; // Cast to string for PHPStan
+                $this->throwBadRequest(
+                    $this->errors->invalidParameter(
+                        $paramName,
+                        sprintf('Unknown query parameter "%s". Allowed parameters: %s.', $paramName, implode(', ', $allowed))
+                    )
+                );
+            }
+        }
     }
 
     /**

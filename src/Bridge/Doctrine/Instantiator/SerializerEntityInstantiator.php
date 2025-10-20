@@ -82,7 +82,9 @@ final class SerializerEntityInstantiator
     /**
      * Creates an entity instance via the Symfony Serializer.
      *
-     * @param  bool                                               $isCreate true for POST (create), false for PATCH (update)
+     * @param class-string $entityClass
+     * @param bool         $isCreate    true for POST (create), false for PATCH (update)
+     *
      * @return array{entity: object, remainingChanges: ChangeSet}
      */
     public function instantiate(
@@ -91,6 +93,13 @@ final class SerializerEntityInstantiator
         ChangeSet $changes,
         bool $isCreate = true,
     ): array {
+        if (!class_exists($entityClass)) {
+            throw new RuntimeException(sprintf('Cannot instantiate unknown entity class "%s".', $entityClass));
+        }
+
+        /** @var class-string $entityClass */
+        $entityClass = $entityClass;
+
         $reflection = new \ReflectionClass($entityClass);
         $constructor = $reflection->getConstructor();
 
@@ -139,6 +148,13 @@ final class SerializerEntityInstantiator
             ]
         );
 
+        if (!is_object($entity)) {
+            throw new RuntimeException(sprintf('Serializer failed to create an instance of "%s".', $entityClass));
+        }
+
+        /** @var object $entity */
+        $entity = $entity;
+
         // Determine which attributes were consumed by the constructor
         $usedAttributes = $this->getConstructorParameters($constructor, $changes, $metadata);
 
@@ -173,7 +189,12 @@ final class SerializerEntityInstantiator
         foreach ($changes->attributes as $path => $value) {
             // Look up attribute metadata by property path (same logic as filterBySerializationGroups)
             $attributeMetadata = $this->findAttributeMetadata($metadata, $path);
-            $propertyPath = $attributeMetadata?->propertyPath ?? $path;
+
+            if ($attributeMetadata !== null) {
+                $propertyPath = $attributeMetadata->propertyPath ?? $attributeMetadata->name;
+            } else {
+                $propertyPath = $path;
+            }
 
             $data[$propertyPath] = $value;
         }
@@ -252,6 +273,9 @@ final class SerializerEntityInstantiator
         return $usedAttributes;
     }
 
+    /**
+     * @param class-string $entityClass
+     */
     private function getEntityManagerFor(string $entityClass): EntityManagerInterface
     {
         $em = $this->managerRegistry->getManagerForClass($entityClass);

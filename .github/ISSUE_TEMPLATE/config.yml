@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Ask the community
+    url: https://github.com/AlexFigures/jsonapi-symfony/discussions/new?category=questions
+    about: For usage questions or architecture advice, please start a GitHub Discussion.
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/AlexFigures/jsonapi-symfony/security/advisories/new
+    about: Please use private advisories so we can coordinate a fix.
+  - name: 📚 Documentation
+    url: https://github.com/AlexFigures/jsonapi-symfony/tree/main/docs
+    about: Browse guides, FAQs, and the JSON:API compliance matrix.

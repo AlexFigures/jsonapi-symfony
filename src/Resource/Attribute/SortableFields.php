@@ -62,7 +62,7 @@ final class SortableFields
     public readonly array $fields;
 
     /**
-     * @param list<string> $fields List of field names that can be used for sorting
+     * @param array<int, string> $fields List of field names that can be used for sorting
      */
     public function __construct(array $fields)
     {
