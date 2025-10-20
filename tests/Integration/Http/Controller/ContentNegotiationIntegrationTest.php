@@ -148,7 +148,7 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         );
 
         // Set up ContentNegotiationSubscriber for strict content negotiation
-        $policyProvider = new class implements MediaTypePolicyProviderInterface {
+        $policyProvider = new class () implements MediaTypePolicyProviderInterface {
             public function getPolicy(Request $request): MediaTypePolicy
             {
                 return new MediaTypePolicy(
@@ -395,4 +395,3 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         self::assertStringContainsString('Accept', $varyHeader);
     }
 }
-

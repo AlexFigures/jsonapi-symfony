@@ -370,4 +370,3 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
     }
 
 }
-

@@ -147,4 +147,3 @@ final class DoctrineExistenceCheckerTest extends DoctrineIntegrationTestCase
         self::assertFalse($isLoaded, 'Entity should not be loaded into memory by exists() check');
     }
 }
-

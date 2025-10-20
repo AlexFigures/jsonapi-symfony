@@ -419,4 +419,3 @@ final class QueryParameterValidationTest extends DoctrineIntegrationTestCase
         }
     }
 }
-

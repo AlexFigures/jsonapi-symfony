@@ -24,4 +24,3 @@ final class BlogPost
         $this->title = $title;
     }
 }
-

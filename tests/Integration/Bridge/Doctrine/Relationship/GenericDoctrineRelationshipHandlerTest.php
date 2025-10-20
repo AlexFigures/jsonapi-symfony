@@ -224,4 +224,3 @@ final class GenericDoctrineRelationshipHandlerTest extends DoctrineIntegrationTe
         self::assertNull($authorId, 'Author ID should be null for article without author');
     }
 }
-

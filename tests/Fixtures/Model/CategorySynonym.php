@@ -24,4 +24,3 @@ final class CategorySynonym
         $this->name = $name;
     }
 }
-

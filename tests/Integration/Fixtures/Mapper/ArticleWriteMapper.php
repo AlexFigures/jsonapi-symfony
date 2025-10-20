@@ -49,4 +49,3 @@ final class ArticleWriteMapper implements WriteMapperInterface
         }
     }
 }
-
