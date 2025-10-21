@@ -81,13 +81,13 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
                 $attributeMetadata = $this->findAttributeMetadata($metadata, $argument);
                 $propertyPath = $argument;
 
-                if ($attributeMetadata !== null && $attributeMetadata->propertyPath !== null) {
-                    $propertyPath = $attributeMetadata->propertyPath;
+                if ($attributeMetadata !== null) {
+                    $propertyPath = $attributeMetadata->propertyPath ?? $attributeMetadata->name;
                 }
 
                 $violations->add(new ConstraintViolation(
-                    'This field is required.',
-                    'This field is required.',
+                    'This value is required.',
+                    'This value is required.',
                     [],
                     null,
                     $propertyPath,
@@ -125,8 +125,8 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         // Apply remaining attributes and relationships through strict Serializer denormalization
         $this->denormalizeInto($entity, $remainingChanges, $metadata, true);
 
-        // Validate before persist with create groups
-        $this->validateWithGroups($entity, $type, $metadata, true);
+        // Validate before persist
+        $this->validateWithGroups($entity, $type, $metadata);
 
         // Persist entity and schedule flush
         $em->persist($entity);
@@ -151,8 +151,8 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         // Apply attributes and relationships through strict Serializer denormalization
         $this->denormalizeInto($entity, $changes, $metadata, false);
 
-        // Validate before flush with update groups
-        $this->validateWithGroups($entity, $type, $metadata, false);
+        // Validate before flush
+        $this->validateWithGroups($entity, $type, $metadata);
 
         // Re-apply to-one relationships to restore null values that may have been
         // overwritten by Doctrine's eager loading during validation
@@ -271,19 +271,17 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     }
 
     /**
-     * Validates entity with operation-specific groups and throws exception on errors.
+     * Validates entity with denormalization groups and throws exception on errors.
      *
      * @throws \AlexFigures\Symfony\Http\Exception\ValidationException
      */
     private function validateWithGroups(
         object $entity,
         string $type,
-        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
-        bool $isCreate
+        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata
     ): void {
-        // Use validation groups from metadata or defaults
-        $operationGroups = $metadata->getOperationGroups();
-        $groups = $operationGroups->getValidationGroups($isCreate);
+        // Use denormalization groups from metadata (includes 'Default' automatically)
+        $groups = $metadata->getDenormalizationGroups();
 
         $violations = $this->validator->validate($entity, null, $groups);
 

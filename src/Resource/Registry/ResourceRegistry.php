@@ -193,7 +193,6 @@ final class ResourceRegistry implements ResourceRegistryInterface
             description: $resource->description,
             sortableFields: $sortableFields,
             filterableFields: $filterableFields,
-            operationGroups: null,
             normalizationContext: $resource->normalizationContext,
             denormalizationContext: $resource->denormalizationContext,
             readProjection: $resource->readProjection,
