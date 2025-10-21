@@ -4,11 +4,30 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Profile\Builtin;
 
+use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteDocumentHook;
+use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteQueryHook;
+use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteWriteHook;
 use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
 use AlexFigures\Symfony\Profile\ProfileInterface;
 
 /**
- * @phpstan-type SoftDeleteConfig array{documentation?: string}
+ * Soft Delete Profile.
+ *
+ * Provides soft delete semantics for resources:
+ * - Filters out soft-deleted items by default
+ * - Supports ?filter[withTrashed]=true to include deleted items
+ * - Supports ?filter[onlyTrashed]=true to show only deleted items
+ * - Intercepts delete operations (hook is informational)
+ * - Adds soft delete metadata to documents
+ *
+ * @phpstan-type SoftDeleteConfig array{
+ *     documentation?: string,
+ *     deletedAtField?: string,
+ *     deletedByField?: string,
+ *     withTrashedParam?: string,
+ *     onlyTrashedParam?: string,
+ *     userProvider?: callable(): ?string
+ * }
  */
 final class SoftDeleteProfile implements ProfileInterface
 {
@@ -40,6 +59,8 @@ final class SoftDeleteProfile implements ProfileInterface
 
     public function hooks(): iterable
     {
-        return [];
+        yield new SoftDeleteQueryHook($this->config);
+        yield new SoftDeleteWriteHook($this->config);
+        yield new SoftDeleteDocumentHook();
     }
 }

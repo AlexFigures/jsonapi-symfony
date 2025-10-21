@@ -4,11 +4,29 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Profile\Builtin;
 
+use AlexFigures\Symfony\Profile\Builtin\Hook\AuditTrailDocumentHook;
+use AlexFigures\Symfony\Profile\Builtin\Hook\AuditTrailWriteHook;
 use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
 use AlexFigures\Symfony\Profile\ProfileInterface;
 
 /**
- * @phpstan-type AuditTrailConfig array{documentation?: string}
+ * Audit Trail Profile.
+ *
+ * Automatically tracks creation and update metadata for resources:
+ * - Sets createdAt and createdBy on resource creation
+ * - Sets updatedAt and updatedBy on resource update
+ * - Adds audit metadata to resource documents
+ *
+ * Requires entities to have the configured fields (default: createdAt, createdBy, updatedAt, updatedBy).
+ *
+ * @phpstan-type AuditTrailConfig array{
+ *     documentation?: string,
+ *     createdAtField?: string,
+ *     createdByField?: string,
+ *     updatedAtField?: string,
+ *     updatedByField?: string,
+ *     userProvider?: callable(): ?string
+ * }
  */
 final class AuditTrailProfile implements ProfileInterface
 {
@@ -40,6 +58,7 @@ final class AuditTrailProfile implements ProfileInterface
 
     public function hooks(): iterable
     {
-        return [];
+        yield new AuditTrailWriteHook($this->config);
+        yield new AuditTrailDocumentHook();
     }
 }

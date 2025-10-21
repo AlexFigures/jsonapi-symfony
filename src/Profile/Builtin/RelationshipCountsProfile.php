@@ -4,11 +4,36 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Profile\Builtin;
 
+use AlexFigures\Symfony\Profile\Builtin\Hook\RelationshipCountsDocumentHook;
 use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
 use AlexFigures\Symfony\Profile\ProfileInterface;
 
 /**
- * @phpstan-type RelationshipCountsConfig array{documentation?: string}
+ * Relationship Counts Profile.
+ *
+ * Adds count metadata to to-many relationships in JSON:API documents.
+ *
+ * Example output:
+ * {
+ *   "data": {
+ *     "type": "articles",
+ *     "id": "1",
+ *     "relationships": {
+ *       "comments": {
+ *         "data": [...],
+ *         "meta": {"count": 42}
+ *       }
+ *     }
+ *   }
+ * }
+ *
+ * Works efficiently with Doctrine collections (counts without loading all items).
+ *
+ * @phpstan-type RelationshipCountsConfig array{
+ *     documentation?: string,
+ *     includeRelationships?: list<string>,
+ *     excludeRelationships?: list<string>
+ * }
  */
 final class RelationshipCountsProfile implements ProfileInterface
 {
@@ -40,6 +65,6 @@ final class RelationshipCountsProfile implements ProfileInterface
 
     public function hooks(): iterable
     {
-        return [];
+        yield new RelationshipCountsDocumentHook($this->config);
     }
 }
