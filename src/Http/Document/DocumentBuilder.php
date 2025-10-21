@@ -49,7 +49,7 @@ final class DocumentBuilder
         $context = ProfileContext::fromRequest($request);
 
         foreach ($models as $model) {
-            $data[] = $this->buildResourceObject($type, $model, $criteria, $context);
+            $data[] = $this->buildResourceObject($type, $model, $criteria, $context, $includeTree);
             if ($includeTree !== []) {
                 $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context);
             }
@@ -138,7 +138,7 @@ final class DocumentBuilder
         $document = [
             'jsonapi' => ['version' => '1.1'],
             'links' => $links,
-            'data' => $this->buildResourceObject($type, $model, $criteria, $context),
+            'data' => $this->buildResourceObject($type, $model, $criteria, $context, $includeTree),
         ];
 
         if ($included !== []) {
@@ -154,6 +154,8 @@ final class DocumentBuilder
     }
 
     /**
+     * @param array<string, mixed> $activeIncludeTree Local include tree for this resource (used for nested includes)
+     *
      * @return array{
      *     type: string,
      *     id: string,
@@ -162,7 +164,7 @@ final class DocumentBuilder
      *     relationships?: array<string, array<string, mixed>>
      * }
      */
-    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null): array
+    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null, array $activeIncludeTree = []): array
     {
         $metadata = $this->registry->getByType($type);
         $fields = $criteria->fields[$type] ?? null;
@@ -179,7 +181,7 @@ final class DocumentBuilder
 
         $resource['attributes'] = $attributes === [] ? new stdClass() : $attributes;
 
-        $relationships = $this->buildRelationships($metadata, $model, $criteria, $id, $context);
+        $relationships = $this->buildRelationships($metadata, $model, $criteria, $id, $context, $activeIncludeTree);
         if ($relationships !== []) {
             $resource['relationships'] = $relationships;
         }
@@ -254,9 +256,11 @@ final class DocumentBuilder
     }
 
     /**
+     * @param array<string, mixed> $activeIncludeTree Local include tree for this resource
+     *
      * @return array<string, array<string, mixed>>
      */
-    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id, ?ProfileContext $context): array
+    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id, ?ProfileContext $context, array $activeIncludeTree = []): array
     {
         $relationships = [];
         $fields = $criteria->fields[$metadata->type] ?? null;
@@ -274,7 +278,7 @@ final class DocumentBuilder
                 ],
             ];
 
-            if ($this->shouldIncludeRelationshipData($criteria, $metadata->type, $name)) {
+            if ($this->shouldIncludeRelationshipData($criteria, $metadata->type, $name, $activeIncludeTree)) {
                 $linkage = $this->resolveRelationshipLinkage($relationship, $model);
                 $data['data'] = $linkage;
             }
@@ -291,17 +295,28 @@ final class DocumentBuilder
         return $relationships;
     }
 
-    private function shouldIncludeRelationshipData(Criteria $criteria, string $type, string $relationship): bool
+    /**
+     * @param array<string, mixed> $activeIncludeTree Local include tree for this resource
+     */
+    private function shouldIncludeRelationshipData(Criteria $criteria, string $type, string $relationship, array $activeIncludeTree = []): bool
     {
         return match ($this->relationshipLinkageMode) {
             'always' => true,
             'never' => false,
-            default => $this->isRelationshipRequested($criteria, $type, $relationship),
+            default => $this->isRelationshipRequested($criteria, $type, $relationship, $activeIncludeTree),
         };
     }
 
-    private function isRelationshipRequested(Criteria $criteria, string $type, string $relationship): bool
+    /**
+     * @param array<string, mixed> $activeIncludeTree Local include tree for this resource
+     */
+    private function isRelationshipRequested(Criteria $criteria, string $type, string $relationship, array $activeIncludeTree = []): bool
     {
+        // First check if this relationship is in the local include tree (for nested includes)
+        if (isset($activeIncludeTree[$relationship])) {
+            return true;
+        }
+
         $fields = $criteria->fields[$type] ?? null;
         if ($fields !== null && in_array($relationship, $fields, true)) {
             return true;
@@ -422,7 +437,7 @@ final class DocumentBuilder
                     $relatedType = $metadataForClass->type;
                 }
 
-                $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria, $context);
+                $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria, $context, $children);
                 $typeValue = $resource['type'];
                 $idValue = $resource['id'];
 
