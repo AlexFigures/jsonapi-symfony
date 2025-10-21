@@ -126,7 +126,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $this->denormalizeInto($entity, $remainingChanges, $metadata, true);
 
         // Validate before persist
-        $this->validateWithGroups($entity, $type, $metadata);
+        $this->validateWithGroups($entity, $type, $metadata, true);
 
         // Persist entity and schedule flush
         $em->persist($entity);
@@ -152,7 +152,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $this->denormalizeInto($entity, $changes, $metadata, false);
 
         // Validate before flush
-        $this->validateWithGroups($entity, $type, $metadata);
+        $this->validateWithGroups($entity, $type, $metadata, false);
 
         // Re-apply to-one relationships to restore null values that may have been
         // overwritten by Doctrine's eager loading during validation
@@ -278,10 +278,18 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     private function validateWithGroups(
         object $entity,
         string $type,
-        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata
+        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        bool $isCreate
     ): void {
         // Use denormalization groups from metadata (includes 'Default' automatically)
         $groups = $metadata->getDenormalizationGroups();
+
+        // Ensure operation specific validation groups are always included
+        $operationGroup = $isCreate ? 'create' : 'update';
+
+        if (!in_array($operationGroup, $groups, true)) {
+            $groups[] = $operationGroup;
+        }
 
         $violations = $this->validator->validate($entity, null, $groups);
 
