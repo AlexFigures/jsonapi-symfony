@@ -81,13 +81,13 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
                 $attributeMetadata = $this->findAttributeMetadata($metadata, $argument);
                 $propertyPath = $argument;
 
-                if ($attributeMetadata !== null && $attributeMetadata->propertyPath !== null) {
-                    $propertyPath = $attributeMetadata->propertyPath;
+                if ($attributeMetadata !== null) {
+                    $propertyPath = $attributeMetadata->propertyPath ?? $attributeMetadata->name;
                 }
 
                 $violations->add(new ConstraintViolation(
-                    'This field is required.',
-                    'This field is required.',
+                    'This value is required.',
+                    'This value is required.',
                     [],
                     null,
                     $propertyPath,
@@ -125,7 +125,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         // Apply remaining attributes and relationships through strict Serializer denormalization
         $this->denormalizeInto($entity, $remainingChanges, $metadata, true);
 
-        // Validate before persist with create groups
+        // Validate before persist
         $this->validateWithGroups($entity, $type, $metadata, true);
 
         // Persist entity and schedule flush
@@ -151,7 +151,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         // Apply attributes and relationships through strict Serializer denormalization
         $this->denormalizeInto($entity, $changes, $metadata, false);
 
-        // Validate before flush with update groups
+        // Validate before flush
         $this->validateWithGroups($entity, $type, $metadata, false);
 
         // Re-apply to-one relationships to restore null values that may have been
@@ -271,7 +271,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     }
 
     /**
-     * Validates entity with operation-specific groups and throws exception on errors.
+     * Validates entity with denormalization groups and throws exception on errors.
      *
      * @throws \AlexFigures\Symfony\Http\Exception\ValidationException
      */
@@ -281,9 +281,15 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
         bool $isCreate
     ): void {
-        // Use validation groups from metadata or defaults
-        $operationGroups = $metadata->getOperationGroups();
-        $groups = $operationGroups->getValidationGroups($isCreate);
+        // Use denormalization groups from metadata (includes 'Default' automatically)
+        $groups = $metadata->getDenormalizationGroups();
+
+        // Ensure operation specific validation groups are always included
+        $operationGroup = $isCreate ? 'create' : 'update';
+
+        if (!in_array($operationGroup, $groups, true)) {
+            $groups[] = $operationGroup;
+        }
 
         $violations = $this->validator->validate($entity, null, $groups);
 

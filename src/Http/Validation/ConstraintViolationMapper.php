@@ -94,22 +94,23 @@ final class ConstraintViolationMapper
         $metadata = $this->registry->getByType($resourceType);
         $errors = [];
 
-        /** @var array<int|string, list<\Throwable>> $rawErrors */
+        /** @var array<int|string, \Throwable> $rawErrors */
         $rawErrors = $exception->getErrors();
-        foreach ($rawErrors as $path => $nestedExceptions) {
-            $pathString = (string) $path;
-            foreach ($nestedExceptions as $nestedException) {
-                if ($nestedException instanceof NotNormalizableValueException) {
-                    $errors[] = $this->mapSingleNotNormalizableValueError($metadata, $nestedException, $pathString);
-                } else {
-                    // Handle other nested exceptions
-                    [$pointer, $meta] = $this->pointerFor($metadata, $pathString);
-                    $errors[] = $this->errors->validationError(
-                        $pointer,
-                        $nestedException->getMessage(),
-                        array_merge($meta, ['exception' => get_class($nestedException)])
-                    );
-                }
+        foreach ($rawErrors as $path => $nestedException) {
+            if ($nestedException instanceof NotNormalizableValueException) {
+                // Prefer the exception's own path over the array key
+                // The exception's path is usually more accurate (e.g., "publishedAt" vs "0")
+                $exceptionPath = $nestedException->getPath();
+                $pathToUse = ($exceptionPath !== null && $exceptionPath !== '') ? $exceptionPath : (string) $path;
+                $errors[] = $this->mapSingleNotNormalizableValueError($metadata, $nestedException, $pathToUse);
+            } else {
+                // Handle other nested exceptions
+                [$pointer, $meta] = $this->pointerFor($metadata, (string) $path);
+                $errors[] = $this->errors->validationError(
+                    $pointer,
+                    $nestedException->getMessage(),
+                    array_merge($meta, ['exception' => get_class($nestedException)])
+                );
             }
         }
 
@@ -136,12 +137,30 @@ final class ConstraintViolationMapper
         ?string $overridePath = null
     ): ErrorObject {
         $path = $overridePath ?? $exception->getPath() ?? '';
+
+        // If path is empty or numeric, try to extract property name from exception message
+        // Message format: 'Failed to denormalize attribute "propertyName" value for class...'
+        // or 'Failed to create object because the class misses the "propertyName" property.'
+        if ($path === '' || is_numeric($path)) {
+            $message = $exception->getMessage();
+            if (preg_match('/attribute "([^"]+)"/', $message, $matches)) {
+                $path = $matches[1];
+            } elseif (preg_match('/property path "([^"]+)"/', $message, $matches)) {
+                $path = $matches[1];
+            } elseif (preg_match('/misses the "([^"]+)" property/', $message, $matches)) {
+                $path = $matches[1];
+            }
+        }
+
         [$pointer, $meta] = $this->pointerFor($metadata, $path);
 
         $message = $exception->getMessage();
         $expectedTypes = $exception->getExpectedTypes();
 
-        if (!empty($expectedTypes)) {
+        // Detect missing required field error and customize message
+        if (str_contains($message, 'misses the') && str_contains($message, 'property')) {
+            $message = 'This value is required.';
+        } elseif (!empty($expectedTypes)) {
             $message = sprintf(
                 'Invalid value. Expected type: %s. %s',
                 implode('|', $expectedTypes),
@@ -170,11 +189,19 @@ final class ConstraintViolationMapper
         $errors = [];
 
         foreach ($exception->getExtraAttributes() as $attribute) {
-            [$pointer, $meta] = $this->pointerFor($metadata, $attribute);
+            // Skip numeric attributes - these are Symfony Serializer bug artifacts
+            // when COLLECT_DENORMALIZATION_ERRORS is used with ALLOW_EXTRA_ATTRIBUTES = false
+            if (is_int($attribute)) {
+                continue;
+            }
+
+            // Cast to string to handle both string and integer keys
+            $attributeString = (string) $attribute;
+            [$pointer, $meta] = $this->pointerFor($metadata, $attributeString);
             $errors[] = $this->errors->validationError(
                 $pointer,
-                sprintf('Unknown attribute "%s" is not allowed.', $attribute),
-                array_merge($meta, ['extraAttribute' => $attribute])
+                sprintf('Unknown attribute "%s" is not allowed.', $attributeString),
+                array_merge($meta, ['extraAttribute' => $attributeString])
             );
         }
 
@@ -186,7 +213,7 @@ final class ConstraintViolationMapper
      */
     private function pointerFor(ResourceMetadata $metadata, string $propertyPath): array
     {
-        $normalized = trim($propertyPath);
+        $normalized = $this->normalizePropertyPath(trim($propertyPath));
         if ($normalized === '') {
             return ['/data', []];
         }
@@ -196,7 +223,13 @@ final class ConstraintViolationMapper
         $remainder = substr($normalized, strlen($firstSegment));
 
         if (isset($attributeMap[$firstSegment])) {
-            return [$attributeMap[$firstSegment], []];
+            $pointer = $attributeMap[$firstSegment];
+            // Handle nested property paths for embeddables (e.g., "contactInfo.email")
+            if ($remainder !== '' && str_starts_with($remainder, '.')) {
+                $nestedPath = substr($remainder, 1); // Remove leading dot
+                $pointer .= '.' . $nestedPath;
+            }
+            return [$pointer, []];
         }
 
         if (isset($relationshipMap[$firstSegment])) {
@@ -227,7 +260,33 @@ final class ConstraintViolationMapper
             }
         }
 
-        return ['/data/attributes', $meta];
+        // For unknown attributes, generate a precise pointer using the property path
+        // This is especially important for extra attributes validation
+        return [sprintf('/data/attributes/%s', $normalized), $meta];
+    }
+
+    /**
+     * Normalizes property paths from denormalization exceptions.
+     *
+     * Converts paths like "[propertyName]", "data[propertyName]", "[0]", or "0"
+     * to just "propertyName".
+     *
+     * Denormalization exceptions often use array indices (like "[0]") for the first
+     * property in the data array. We need to map these back to actual property names.
+     */
+    private function normalizePropertyPath(string $path): string
+    {
+        // Strip array bracket notation: [propertyName] -> propertyName
+        $normalized = preg_replace('/^\[([^\]]+)\]$/', '$1', $path) ?? $path;
+
+        // Strip data prefix: data[propertyName] -> propertyName
+        $normalized = preg_replace('/^data\[([^\]]+)\]/', '$1', $normalized) ?? $normalized;
+
+        // If the path is just a numeric index (like "0"), we can't determine the property name
+        // from the path alone. The caller should use the exception's context to determine
+        // the actual property name. For now, return the numeric index as-is.
+
+        return $normalized;
     }
 
     /**

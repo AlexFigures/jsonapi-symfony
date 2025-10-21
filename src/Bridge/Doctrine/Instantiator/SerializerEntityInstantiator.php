@@ -8,13 +8,17 @@ use AlexFigures\Symfony\Contract\Data\ChangeSet;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use ReflectionClass;
+use ReflectionProperty;
 use RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
@@ -75,8 +79,9 @@ final class SerializerEntityInstantiator
             null, // ObjectClassResolver (not required)
         );
 
-        // Create the Serializer with the ObjectNormalizer
-        $this->serializer = new Serializer([$normalizer]);
+        // Create the Serializer with DateTimeNormalizer and ObjectNormalizer
+        // DateTimeNormalizer must come before ObjectNormalizer to handle DateTime objects
+        $this->serializer = new Serializer([new DateTimeNormalizer(), $normalizer]);
     }
 
     /**

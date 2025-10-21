@@ -14,6 +14,7 @@ use AlexFigures\Symfony\Atomic\Execution\OperationDispatcher;
 use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
 use AlexFigures\Symfony\Atomic\Result\ResultBuilder;
 use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
+use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
 use AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController;
 use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
 use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
@@ -51,6 +52,7 @@ use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
+use AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry;
 use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker;
 use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryPersister;
 use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader;
@@ -441,7 +443,9 @@ abstract class JsonApiTestCase extends TestCase
         $removeHandler = new RemoveHandler($persister, $errorMapper);
         $relationshipOps = new RelationshipOps($relationshipUpdater, $registry, $errorMapper);
         $resultBuilder = new ResultBuilder($atomicConfig, $document);
-        $dispatcher = new OperationDispatcher($atomicTransaction, $addHandler, $updateHandler, $removeHandler, $relationshipOps, $resultBuilder);
+        $managerRegistry = new TestManagerRegistry([]);
+        $flushManager = new FlushManager($managerRegistry);
+        $dispatcher = new OperationDispatcher($atomicTransaction, $addHandler, $updateHandler, $removeHandler, $relationshipOps, $resultBuilder, $flushManager);
         $atomicController = new AtomicController($atomicParser, $atomicValidator, $dispatcher, $mediaNegotiator);
 
         // Create event dispatcher for testing
@@ -461,8 +465,8 @@ abstract class JsonApiTestCase extends TestCase
         $this->document = $document;
         $this->collectionController = new CollectionController($registry, $repository, $parser, $document);
         $this->resourceController = new ResourceController($registry, $repository, $parser, $document, $errorMapper);
-        $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $errorMapper, $violationMapper, $eventDispatcher, $relationshipResolver);
-        $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $errorMapper, $violationMapper, $eventDispatcher, $relationshipResolver);
+        $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $errorMapper, $violationMapper, $eventDispatcher);
+        $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $errorMapper, $violationMapper, $eventDispatcher);
         $this->deleteController = new DeleteResourceController($registry, $persister, $transactionManager, $eventDispatcher);
         $this->accessor = $accessor;
         $this->relationshipResolver = $relationshipResolver;

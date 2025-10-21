@@ -77,7 +77,6 @@ final class ResourceMetadata
         public ?string $description = null,
         public array $sortableFields = [],
         public ?FilterableFields $filterableFields = null,
-        public ?OperationGroups $operationGroups = null,
         public array $normalizationContext = [],
         public array $denormalizationContext = [],
         ?string $dataClass = null,
@@ -114,15 +113,7 @@ final class ResourceMetadata
         return $this->viewClass;
     }
 
-    /**
-     * Returns operation groups for this resource.
-     *
-     * @deprecated Use normalizationContext and denormalizationContext instead
-     */
-    public function getOperationGroups(): OperationGroups
-    {
-        return $this->operationGroups ?? OperationGroups::default();
-    }
+
 
     /**
      * Get serialization groups for reading.
