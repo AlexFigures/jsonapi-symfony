@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
 
 use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\FilterableField;
 use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
 use AlexFigures\Symfony\Resource\Attribute\Id;
 use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
@@ -38,7 +39,11 @@ use Symfony\Component\Uid\Uuid;
     normalizationContext: ['groups' => ['category:read']],
     denormalizationContext: ['groups' => ['category:write']],
 )]
-#[FilterableFields(['name', 'parent.id'])]
+#[FilterableFields([
+    'id',
+    'name',
+    new FilterableField('parent', inherit: true),  // Inherits 'id' and 'name' from parent Category
+])]
 class Category
 {
     #[ORM\Id]

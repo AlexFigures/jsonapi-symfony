@@ -20,6 +20,32 @@ namespace AlexFigures\Symfony\Resource\Attribute;
  * )
  * ```
  *
+ * **Filter Inheritance**:
+ * When a relationship field is marked with `inherit: true`, all filters from
+ * the related resource are automatically inherited:
+ * ```php
+ * // Author resource
+ * #[FilterableFields([
+ *     new FilterableField('name', operators: ['eq', 'like']),
+ *     new FilterableField('email', operators: ['eq']),
+ * ])]
+ * class Author { }
+ *
+ * // Article resource
+ * #[FilterableFields([
+ *     'title',
+ *     new FilterableField('author', inherit: true), // Inherits name, email
+ * ])]
+ * class Article { }
+ *
+ * // Allows: filter[author.name][like]=John, filter[author.email][eq]=john@example.com
+ * ```
+ *
+ * You can exclude specific fields from inheritance:
+ * ```php
+ * new FilterableField('author', inherit: true, except: ['email'])
+ * ```
+ *
  * **Supported Operators**:
  * - `eq`: Equals (=)
  * - `ne`: Not equals (!=)
@@ -49,9 +75,16 @@ final class FilterableField
     public readonly array $operators;
 
     /**
+     * @var list<string>
+     */
+    public readonly array $except;
+
+    /**
      * @param string             $field         Field name that can be filtered
      * @param array<int, string> $operators     List of allowed operators for this field (default: all operators)
      * @param string|null        $customHandler Optional service ID for custom filter handler
+     * @param bool               $inherit       Whether to inherit filters from related resource (for relationship fields)
+     * @param array<int, string> $except        List of fields to exclude from inheritance
      */
     public function __construct(
         public readonly string $field,
@@ -60,8 +93,11 @@ final class FilterableField
             'like', 'in', 'nin', 'null', 'nnull'
         ],
         public readonly ?string $customHandler = null,
+        public readonly bool $inherit = false,
+        array $except = [],
     ) {
         $this->operators = array_values($operators);
+        $this->except = array_values($except);
     }
 
     /**
@@ -78,5 +114,21 @@ final class FilterableField
     public function hasCustomHandler(): bool
     {
         return $this->customHandler !== null;
+    }
+
+    /**
+     * Check if this field should inherit filters from related resource.
+     */
+    public function shouldInherit(): bool
+    {
+        return $this->inherit;
+    }
+
+    /**
+     * Check if a specific field is excluded from inheritance.
+     */
+    public function isExcluded(string $field): bool
+    {
+        return in_array($field, $this->except, true);
     }
 }

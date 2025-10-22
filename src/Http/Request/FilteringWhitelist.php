@@ -65,7 +65,7 @@ final class FilteringWhitelist
     }
 
     /**
-     * Check if a field is allowed for filtering.
+     * Check if a field is allowed for filtering (including inherited fields).
      */
     public function isFieldAllowed(string $type, string $field): bool
     {
@@ -74,11 +74,11 @@ final class FilteringWhitelist
         }
 
         $metadata = $this->registry->getByType($type);
-        return $metadata->filterableFields?->isAllowed($field) ?? false;
+        return $metadata->filterableFields?->isAllowed($field, $this->registry, $type) ?? false;
     }
 
     /**
-     * Check if an operator is allowed for a specific field.
+     * Check if an operator is allowed for a specific field (including inherited fields).
      */
     public function isOperatorAllowed(string $type, string $field, string $operator): bool
     {
@@ -87,7 +87,7 @@ final class FilteringWhitelist
         }
 
         $metadata = $this->registry->getByType($type);
-        return $metadata->filterableFields?->isOperatorAllowed($field, $operator) ?? false;
+        return $metadata->filterableFields?->isOperatorAllowed($field, $operator, $this->registry, $type) ?? false;
     }
 
     /**
@@ -128,11 +128,13 @@ final class FilteringWhitelist
     {
         $field = $node->fieldPath;
 
-        if (!$filterableFields->isAllowed($field)) {
+        // Check if field is allowed (including inherited fields)
+        if (!$filterableFields->isAllowed($field, $this->registry, $type)) {
             $this->throwFieldNotAllowed($type, $field);
         }
 
-        if (!$filterableFields->isOperatorAllowed($field, $node->operator)) {
+        // Check if operator is allowed (including inherited fields)
+        if (!$filterableFields->isOperatorAllowed($field, $node->operator, $this->registry, $type)) {
             $this->throwOperatorNotAllowed($type, $field, $node->operator);
         }
     }
@@ -165,11 +167,13 @@ final class FilteringWhitelist
         $field = $node->fieldPath;
         $operator = $node->isNull ? 'null' : 'nnull';
 
-        if (!$filterableFields->isAllowed($field)) {
+        // Check if field is allowed (including inherited fields)
+        if (!$filterableFields->isAllowed($field, $this->registry, $type)) {
             $this->throwFieldNotAllowed($type, $field);
         }
 
-        if (!$filterableFields->isOperatorAllowed($field, $operator)) {
+        // Check if operator is allowed (including inherited fields)
+        if (!$filterableFields->isOperatorAllowed($field, $operator, $this->registry, $type)) {
             $this->throwOperatorNotAllowed($type, $field, $operator);
         }
     }
@@ -182,11 +186,13 @@ final class FilteringWhitelist
         $field = $node->fieldPath;
         $operator = 'between';
 
-        if (!$filterableFields->isAllowed($field)) {
+        // Check if field is allowed (including inherited fields)
+        if (!$filterableFields->isAllowed($field, $this->registry, $type)) {
             $this->throwFieldNotAllowed($type, $field);
         }
 
-        if (!$filterableFields->isOperatorAllowed($field, $operator)) {
+        // Check if operator is allowed (including inherited fields)
+        if (!$filterableFields->isOperatorAllowed($field, $operator, $this->registry, $type)) {
             $this->throwOperatorNotAllowed($type, $field, $operator);
         }
     }
