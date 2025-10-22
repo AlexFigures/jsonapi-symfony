@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Bridge\Doctrine\Relationship;
 
+use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
 use AlexFigures\Symfony\Contract\Data\RelationshipReader;
 use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
 use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
@@ -42,6 +43,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
+        private readonly FlushManager $flushManager,
     ) {
     }
 
@@ -159,8 +161,6 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
 
         $normalizedTargetId = $this->normalizeTargetId($relationshipMetadata, $payload);
 
-        $em = $this->getEntityManagerFor($resource::class);
-
         if ($normalizedTargetId === null) {
             $this->accessor->setValue($resource, $propertyPath, null);
         } else {
@@ -168,7 +168,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             $this->accessor->setValue($resource, $propertyPath, $relatedEntity);
         }
 
-        $em->flush();
+        $this->flushManager->scheduleFlush($resource::class);
     }
 
     /**
@@ -188,8 +188,6 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             throw new \RuntimeException(sprintf('Property "%s" is not a Doctrine Collection', $propertyPath));
         }
 
-        $em = $this->getEntityManagerFor($resource::class);
-
         $collection->clear();
 
         foreach ($this->normalizeTargetIds($relationshipMetadata, $targetList) as $targetId) {
@@ -197,7 +195,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             $collection->add($relatedEntity);
         }
 
-        $em->flush();
+        $this->flushManager->scheduleFlush($resource::class);
     }
 
     /**
@@ -217,8 +215,6 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             throw new \RuntimeException(sprintf('Property "%s" is not a Doctrine Collection', $propertyPath));
         }
 
-        $em = $this->getEntityManagerFor($resource::class);
-
         foreach ($this->normalizeTargetIds($relationshipMetadata, $targetList) as $targetId) {
             $relatedEntity = $this->findRelatedEntity($targetClass, $targetId);
 
@@ -227,7 +223,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             }
         }
 
-        $em->flush();
+        $this->flushManager->scheduleFlush($resource::class);
     }
 
     /**
@@ -247,14 +243,12 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             throw new \RuntimeException(sprintf('Property "%s" is not a Doctrine Collection', $propertyPath));
         }
 
-        $em = $this->getEntityManagerFor($resource::class);
-
         foreach ($this->normalizeTargetIds($relationshipMetadata, $targetList) as $targetId) {
             $relatedEntity = $this->findRelatedEntity($targetClass, $targetId);
             $collection->removeElement($relatedEntity);
         }
 
-        $em->flush();
+        $this->flushManager->scheduleFlush($resource::class);
     }
 
     // ==================== Private helpers ====================

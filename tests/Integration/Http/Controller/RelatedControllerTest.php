@@ -90,7 +90,8 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
         $relationshipReader = new GenericDoctrineRelationshipHandler(
             $this->managerRegistry,
             $this->registry,
-            $this->accessor
+            $this->accessor,
+            $this->flushManager
         );
 
         $documentBuilder = new DocumentBuilder(

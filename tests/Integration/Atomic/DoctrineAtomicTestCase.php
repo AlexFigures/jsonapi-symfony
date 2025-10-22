@@ -106,7 +106,8 @@ abstract class DoctrineAtomicTestCase extends DoctrineIntegrationTestCase
         $relationshipHandler = new GenericDoctrineRelationshipHandler(
             $this->managerRegistry,
             $this->registry,
-            $this->accessor
+            $this->accessor,
+            $this->flushManager
         );
 
         // Create MediaTypePolicyProvider

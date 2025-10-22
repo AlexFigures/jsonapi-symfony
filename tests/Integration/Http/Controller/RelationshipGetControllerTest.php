@@ -64,7 +64,8 @@ final class RelationshipGetControllerTest extends DoctrineIntegrationTestCase
         $relationshipHandler = new GenericDoctrineRelationshipHandler(
             $this->managerRegistry,
             $this->registry,
-            $this->accessor
+            $this->accessor,
+            $this->flushManager
         );
 
         $paginationConfig = new \AlexFigures\Symfony\Http\Request\PaginationConfig(defaultSize: 10, maxSize: 100);
