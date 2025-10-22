@@ -50,6 +50,15 @@ class GenericDoctrineRepository implements ResourceRepository
         $entityClass = $metadata->dataClass;
         $em = $this->getEntityManagerFor($entityClass);
 
+        // Check if we have to-many includes that would cause cartesian product
+        $hasToManyIncludes = $this->hasToManyIncludes($em, $metadata, $criteria->include);
+
+        if ($hasToManyIncludes && $criteria->include !== []) {
+            // Use two-step approach to avoid cartesian product pagination issues
+            return $this->findCollectionWithTwoStepLoading($em, $entityClass, $metadata, $definition, $criteria);
+        }
+
+        // Standard single-query approach (safe for to-one relationships only)
         $qb = $em->createQueryBuilder()
             ->from($entityClass, 'e');
 
@@ -393,5 +402,180 @@ class GenericDoctrineRepository implements ResourceRepository
         }
 
         return $objects;
+    }
+
+    /**
+     * Check if any of the includes are to-many relationships.
+     *
+     * @param list<string> $includes
+     */
+    private function hasToManyIncludes(EntityManagerInterface $em, ResourceMetadata $metadata, array $includes): bool
+    {
+        if ($includes === []) {
+            return false;
+        }
+
+        $classMetadata = $em->getClassMetadata($metadata->dataClass);
+
+        foreach ($includes as $includePath) {
+            $segments = explode('.', $includePath);
+            $currentMetadata = $classMetadata;
+            $currentResourceMetadata = $metadata;
+
+            foreach ($segments as $relationshipName) {
+                // Check if relationship exists in JSON:API metadata
+                if (!isset($currentResourceMetadata->relationships[$relationshipName])) {
+                    continue 2;
+                }
+
+                // Check if relationship exists in Doctrine metadata
+                if (!$currentMetadata->hasAssociation($relationshipName)) {
+                    continue 2;
+                }
+
+                // Check if it's a to-many relationship
+                if ($currentMetadata->isCollectionValuedAssociation($relationshipName)) {
+                    return true;
+                }
+
+                // Prepare for next segment (nested includes)
+                $relationship = $currentResourceMetadata->relationships[$relationshipName];
+                $targetResourceMetadata = null;
+                if ($relationship->targetType !== null && $this->registry->hasType($relationship->targetType)) {
+                    $targetResourceMetadata = $this->registry->getByType($relationship->targetType);
+                    $targetClass = $targetResourceMetadata->dataClass;
+                } elseif ($relationship->targetClass !== null) {
+                    $targetClass = $relationship->targetClass;
+                    $targetResourceMetadata = $this->registry->getByClass($targetClass);
+                } else {
+                    continue 2;
+                }
+
+                if (!class_exists($targetClass) && !interface_exists($targetClass)) {
+                    continue 2;
+                }
+
+                $currentMetadata = $em->getClassMetadata($targetClass);
+                $currentResourceMetadata = $targetResourceMetadata;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Two-step loading to avoid cartesian product pagination issues.
+     *
+     * Step 1: Fetch IDs of root entities with pagination applied
+     * Step 2: Fetch full entities by IDs with eager loading
+     *
+     * @param class-string $entityClass
+     */
+    private function findCollectionWithTwoStepLoading(
+        EntityManagerInterface $em,
+        string $entityClass,
+        ResourceMetadata $metadata,
+        ResourceDefinition $definition,
+        Criteria $criteria
+    ): Slice {
+        // Step 1: Get IDs with pagination (no joins, no cartesian product)
+        $idQb = $em->createQueryBuilder()
+            ->select('e')
+            ->from($entityClass, 'e');
+
+        if ($criteria->filter !== null) {
+            $platform = $em->getConnection()->getDatabasePlatform();
+            $this->filterCompiler->apply($idQb, $criteria->filter, $platform);
+        }
+
+        if ($criteria->customConditions !== []) {
+            foreach ($criteria->customConditions as $condition) {
+                $condition($idQb);
+            }
+        }
+
+        $this->applySorting($idQb, $criteria->sort);
+
+        $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
+        $idQb->setFirstResult($offset)
+             ->setMaxResults($criteria->pagination->size);
+
+        // Get total count before applying pagination
+        $total = $this->countTotal($idQb);
+
+        // Fetch entities (we need full entities to get their IDs)
+        /** @var list<object> $paginatedEntities */
+        $paginatedEntities = $idQb->getQuery()->getResult();
+
+        if ($paginatedEntities === []) {
+            return new Slice([], $criteria->pagination->number, $criteria->pagination->size, $total);
+        }
+
+        // Extract IDs
+        $classMetadata = $em->getClassMetadata($entityClass);
+        $idField = $classMetadata->getSingleIdentifierFieldName();
+        $ids = [];
+        foreach ($paginatedEntities as $entity) {
+            $ids[] = $classMetadata->getFieldValue($entity, $idField);
+        }
+
+        // Step 2: Fetch full entities with eager loading by IDs
+        $qb = $em->createQueryBuilder()
+            ->from($entityClass, 'e')
+            ->where('e.' . $idField . ' IN (:ids)')
+            ->setParameter('ids', $ids);
+
+        if ($definition->readProjection === ReadProjection::DTO) {
+            $this->applyDtoProjection($qb, $definition);
+        } else {
+            $qb->select('e');
+        }
+
+        // Apply eager loading for includes
+        $this->applyEagerLoading($em, $qb, $metadata, $definition, $criteria->include);
+
+        $query = $qb->getQuery();
+
+        if ($definition->readProjection === ReadProjection::DTO) {
+            /** @var list<array<string, mixed>> $rows */
+            $rows = $query->getArrayResult();
+
+            // Preserve order from step 1 by creating a map and reordering
+            $rowsById = [];
+            foreach ($rows as $row) {
+                $rowsById[$row[$idField]] = $row;
+            }
+
+            $items = [];
+            foreach ($ids as $id) {
+                if (isset($rowsById[$id])) {
+                    $items[] = $this->readMapper->toView($rowsById[$id], $definition, $criteria);
+                }
+            }
+        } else {
+            /** @var list<object> $rows */
+            $rows = $query->getResult();
+
+            // Preserve order from step 1 by creating a map and reordering
+            $entitiesById = [];
+            foreach ($rows as $entity) {
+                $entityId = $classMetadata->getFieldValue($entity, $idField);
+                $entitiesById[$entityId] = $entity;
+            }
+
+            $items = [];
+            foreach ($ids as $id) {
+                if (isset($entitiesById[$id])) {
+                    $items[] = $this->readMapper->toView($entitiesById[$id], $definition, $criteria);
+                }
+            }
+        }
+
+        return new Slice(
+            $items,
+            $criteria->pagination->number,
+            $criteria->pagination->size,
+            $total
+        );
     }
 }
