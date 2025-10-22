@@ -84,10 +84,10 @@ final class FilterableFields
      * This method checks both directly declared fields and inherited fields
      * from related resources (when inherit=true is set on a relationship field).
      *
-     * @param string                                                      $field    Field path (e.g., 'title' or 'author.name')
+     * @param string                                                                $field    Field path (e.g., 'title' or 'author.name')
      * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface|null $registry Optional registry for inheritance resolution
-     * @param string|null                                                 $type     Resource type for inheritance resolution
-     * @param int                                                         $depth    Current inheritance depth (for cycle prevention)
+     * @param string|null                                                           $type     Resource type for inheritance resolution
+     * @param int                                                                   $depth    Current inheritance depth (for cycle prevention)
      */
     public function isAllowed(
         string $field,
@@ -132,11 +132,11 @@ final class FilterableFields
      * This method checks both directly declared fields and inherited fields
      * from related resources (when inherit=true is set on a relationship field).
      *
-     * @param string                                                      $field    Field path (e.g., 'title' or 'author.name')
-     * @param string                                                      $operator Operator to check
+     * @param string                                                                $field    Field path (e.g., 'title' or 'author.name')
+     * @param string                                                                $operator Operator to check
      * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface|null $registry Optional registry for inheritance resolution
-     * @param string|null                                                 $type     Resource type for inheritance resolution
-     * @param int                                                         $depth    Current inheritance depth (for cycle prevention)
+     * @param string|null                                                           $type     Resource type for inheritance resolution
+     * @param int                                                                   $depth    Current inheritance depth (for cycle prevention)
      */
     public function isOperatorAllowed(
         string $field,
@@ -172,11 +172,11 @@ final class FilterableFields
     /**
      * Check if an operator is allowed for an inherited field.
      *
-     * @param string                                                   $field    Field path (e.g., 'author.name')
-     * @param string                                                   $operator Operator to check
+     * @param string                                                           $field    Field path (e.g., 'author.name')
+     * @param string                                                           $operator Operator to check
      * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry Resource registry
-     * @param string                                                   $type     Current resource type
-     * @param int                                                      $depth    Current inheritance depth
+     * @param string                                                           $type     Current resource type
+     * @param int                                                              $depth    Current inheritance depth
      */
     private function isOperatorAllowedForInheritedField(
         string $field,
@@ -248,10 +248,10 @@ final class FilterableFields
     /**
      * Check if a field is allowed through inheritance from a related resource.
      *
-     * @param string                                                   $field    Field path (e.g., 'author.name')
+     * @param string                                                           $field    Field path (e.g., 'author.name')
      * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry Resource registry
-     * @param string                                                   $type     Current resource type
-     * @param int                                                      $depth    Current inheritance depth
+     * @param string                                                           $type     Current resource type
+     * @param int                                                              $depth    Current inheritance depth
      */
     private function isInheritedFieldAllowed(
         string $field,
