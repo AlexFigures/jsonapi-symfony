@@ -25,9 +25,9 @@ final class UuidType extends Type
     /**
      * Converts a database value to a PHP Uuid object.
      *
-     * @param mixed $value The database value (UUID string)
-     * @param AbstractPlatform $platform The database platform
-     * @return Uuid|null The Uuid object or null
+     * @param  mixed            $value    The database value (UUID string)
+     * @param  AbstractPlatform $platform The database platform
+     * @return Uuid|null        The Uuid object or null
      */
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?Uuid
     {
@@ -45,9 +45,9 @@ final class UuidType extends Type
     /**
      * Converts a PHP Uuid object to a database value.
      *
-     * @param mixed $value The PHP value (Uuid object)
-     * @param AbstractPlatform $platform The database platform
-     * @return string|null The UUID string or null
+     * @param  mixed            $value    The PHP value (Uuid object)
+     * @param  AbstractPlatform $platform The database platform
+     * @return string|null      The UUID string or null
      */
     public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?string
     {
@@ -72,4 +72,3 @@ final class UuidType extends Type
         return true;
     }
 }
-

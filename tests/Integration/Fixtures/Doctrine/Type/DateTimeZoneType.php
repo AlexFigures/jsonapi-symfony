@@ -25,8 +25,8 @@ final class DateTimeZoneType extends Type
     /**
      * Converts a database value to a PHP DateTimeZone object.
      *
-     * @param mixed $value The database value (timezone name string)
-     * @param AbstractPlatform $platform The database platform
+     * @param  mixed             $value    The database value (timezone name string)
+     * @param  AbstractPlatform  $platform The database platform
      * @return DateTimeZone|null The DateTimeZone object or null
      */
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?DateTimeZone
@@ -45,9 +45,9 @@ final class DateTimeZoneType extends Type
     /**
      * Converts a PHP DateTimeZone object to a database value.
      *
-     * @param mixed $value The PHP value (DateTimeZone object)
-     * @param AbstractPlatform $platform The database platform
-     * @return string|null The timezone name string or null
+     * @param  mixed            $value    The PHP value (DateTimeZone object)
+     * @param  AbstractPlatform $platform The database platform
+     * @return string|null      The timezone name string or null
      */
     public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?string
     {
@@ -72,4 +72,3 @@ final class DateTimeZoneType extends Type
         return true;
     }
 }
-

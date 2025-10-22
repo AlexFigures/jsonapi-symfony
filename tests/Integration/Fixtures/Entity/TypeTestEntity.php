@@ -88,6 +88,14 @@ class TypeTestEntity
     #[Groups(['type_test:read', 'type_test:write'])]
     private ?DateInterval $duration = null;
 
+    /**
+     * Test float type for type coercion (int -> float).
+     */
+    #[ORM\Column(type: 'float', nullable: true)]
+    #[Attribute]
+    #[Groups(['type_test:read', 'type_test:write'])]
+    private ?float $rating = null;
+
     public function __construct()
     {
         $this->id = Uuid::v4()->toRfc4122();
@@ -169,5 +177,15 @@ class TypeTestEntity
         $this->duration = $duration;
         return $this;
     }
-}
 
+    public function getRating(): ?float
+    {
+        return $this->rating;
+    }
+
+    public function setRating(?float $rating): self
+    {
+        $this->rating = $rating;
+        return $this;
+    }
+}

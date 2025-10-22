@@ -25,8 +25,8 @@ final class DateIntervalType extends Type
     /**
      * Converts a database value to a PHP DateInterval object.
      *
-     * @param mixed $value The database value (ISO 8601 duration string)
-     * @param AbstractPlatform $platform The database platform
+     * @param  mixed             $value    The database value (ISO 8601 duration string)
+     * @param  AbstractPlatform  $platform The database platform
      * @return DateInterval|null The DateInterval object or null
      */
     public function convertToPHPValue(mixed $value, AbstractPlatform $platform): ?DateInterval
@@ -45,9 +45,9 @@ final class DateIntervalType extends Type
     /**
      * Converts a PHP DateInterval object to a database value.
      *
-     * @param mixed $value The PHP value (DateInterval object)
-     * @param AbstractPlatform $platform The database platform
-     * @return string|null The ISO 8601 duration string or null
+     * @param  mixed            $value    The PHP value (DateInterval object)
+     * @param  AbstractPlatform $platform The database platform
+     * @return string|null      The ISO 8601 duration string or null
      */
     public function convertToDatabaseValue(mixed $value, AbstractPlatform $platform): ?string
     {
@@ -76,8 +76,8 @@ final class DateIntervalType extends Type
     /**
      * Formats a DateInterval as an ISO 8601 duration string.
      *
-     * @param DateInterval $interval The DateInterval to format
-     * @return string The ISO 8601 duration string
+     * @param  DateInterval $interval The DateInterval to format
+     * @return string       The ISO 8601 duration string
      */
     private function formatDateInterval(DateInterval $interval): string
     {
@@ -117,4 +117,3 @@ final class DateIntervalType extends Type
         return $format;
     }
 }
-
