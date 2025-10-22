@@ -63,6 +63,7 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
         $routes->add('jsonapi.resource', new Route('/api/{type}/{id}'));
         $routes->add('jsonapi.create', new Route('/api/{type}', methods: ['POST']));
         $routes->add('jsonapi.type-test-entities.show', new Route('/api/type-test-entities/{id}'));
+        $routes->add('jsonapi.products.show', new Route('/api/products/{id}'));
 
         $context = new RequestContext();
         $context->setScheme('http');
@@ -288,6 +289,100 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
         self::assertSame(6, $entity->getDuration()->s);
     }
 
+    /**
+     * Test: Type coercion - int to float (safe conversion).
+     *
+     * Validates that integers are automatically coerced to floats
+     * when the property expects a float type.
+     */
+    public function testTypeCoercionIntToFloat(): void
+    {
+        // Create a TypeTestEntity with rating as float, but send int
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'attributes' => [
+                    'name' => 'Test Entity',
+                    'rating' => 5, // int instead of float
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/type-test-entities', $payload);
+
+        // This should NOT fail - int should be coerced to float
+        $response = ($this->controller)($request, 'type-test-entities');
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+
+        $responseData = json_decode($response->getContent(), true);
+        self::assertSame('type-test-entities', $responseData['data']['type']);
+
+        // Verify the entity was created with the correct type
+        $entityId = $responseData['data']['id'];
+        $entity = $this->em->find(TypeTestEntity::class, $entityId);
+
+        self::assertNotNull($entity);
+        self::assertSame(5.0, $entity->getRating());
+        self::assertIsFloat($entity->getRating());
+    }
+
+    /**
+     * Test: Type coercion - int to string (safe conversion).
+     *
+     * Validates that integers are automatically coerced to strings
+     * when the property expects a string type.
+     */
+    public function testTypeCoercionIntToString(): void
+    {
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'attributes' => [
+                    'name' => 12345, // int instead of string
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/type-test-entities', $payload);
+        $response = ($this->controller)($request, 'type-test-entities');
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Verify the int was coerced to string
+        self::assertSame('12345', $document['data']['attributes']['name']);
+    }
+
+    /**
+     * Test: Type coercion - float to string (safe conversion).
+     *
+     * Validates that floats are automatically coerced to strings
+     * when the property expects a string type.
+     */
+    public function testTypeCoercionFloatToString(): void
+    {
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'attributes' => [
+                    'name' => 123.45, // float instead of string
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/type-test-entities', $payload);
+        $response = ($this->controller)($request, 'type-test-entities');
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Verify the float was coerced to string
+        self::assertSame('123.45', $document['data']['attributes']['name']);
+    }
+
     private function createJsonApiRequest(string $method, string $uri, array $payload): Request
     {
         return Request::create(
@@ -301,4 +396,3 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
         );
     }
 }
-

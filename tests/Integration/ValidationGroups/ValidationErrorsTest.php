@@ -69,6 +69,7 @@ final class ValidationErrorsTest extends ValidationGroupsIntegrationTestCase
         $changes = new ChangeSet(
             attributes: [
                 'title' => 'AB', // Too short (min: 3)
+                'content' => 'Valid content that is long enough', // Valid content
                 'priority' => 15, // Out of range (max: 10)
             ]
         );

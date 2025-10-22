@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Bridge\Doctrine\Instantiator;
 
+use AlexFigures\Symfony\Bridge\Symfony\Serializer\TypeCoercingDenormalizer;
 use AlexFigures\Symfony\Contract\Data\ChangeSet;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Doctrine\ORM\EntityManagerInterface;
@@ -86,8 +87,10 @@ final class SerializerEntityInstantiator
 
         // Create the Serializer with all standard normalizers
         // Order matters: specific normalizers must come before generic ones
+        // TypeCoercingDenormalizer wraps all denormalizers to perform safe type coercion
         // This ensures comprehensive support for all Symfony/PHP types that clients might use
         $this->serializer = new Serializer([
+            new TypeCoercingDenormalizer(),       // Type coercion wrapper (must be first)
             new UidNormalizer(),                  // Symfony UID (Uuid, Ulid)
             new BackedEnumNormalizer(),           // PHP 8.1+ backed enums
             new DateTimeNormalizer(),             // DateTime, DateTimeImmutable
