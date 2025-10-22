@@ -211,12 +211,12 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         self::assertInstanceOf(ProfileContext::class, $context);
 
         $articleProfiles = $context->profilesForType('articles');
-        $articleUris = array_map(fn($p) => $p->uri(), $articleProfiles);
+        $articleUris = array_map(fn ($p) => $p->uri(), $articleProfiles);
         self::assertContains(SoftDeleteProfile::URI, $articleUris);
         self::assertNotContains(RelationshipCountsProfile::URI, $articleUris);
 
         $authorProfiles = $context->profilesForType('authors');
-        $authorUris = array_map(fn($p) => $p->uri(), $authorProfiles);
+        $authorUris = array_map(fn ($p) => $p->uri(), $authorProfiles);
         self::assertContains(RelationshipCountsProfile::URI, $authorUris);
         self::assertNotContains(SoftDeleteProfile::URI, $authorUris);
 
@@ -295,7 +295,7 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         self::assertInstanceOf(ProfileContext::class, $context);
 
         $articleProfiles = $context->profilesForType('articles');
-        $articleUris = array_map(fn($p) => $p->uri(), $articleProfiles);
+        $articleUris = array_map(fn ($p) => $p->uri(), $articleProfiles);
 
         // All three profiles should be active for articles
         self::assertContains(SoftDeleteProfile::URI, $articleUris);
@@ -380,4 +380,3 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         };
     }
 }
-

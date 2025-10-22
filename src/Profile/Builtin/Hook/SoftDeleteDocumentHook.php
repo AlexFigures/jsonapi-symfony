@@ -45,4 +45,3 @@ final readonly class SoftDeleteDocumentHook implements DocumentHook
         // e.g., $meta['soft_delete_enabled'] = true;
     }
 }
-

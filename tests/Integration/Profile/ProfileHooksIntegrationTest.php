@@ -225,4 +225,3 @@ final class ProfileHooksIntegrationTest extends DoctrineIntegrationTestCase
         self::assertNotNull($article);
     }
 }
-

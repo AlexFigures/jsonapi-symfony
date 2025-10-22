@@ -66,4 +66,3 @@ final readonly class SoftDeleteQueryHook implements QueryHook
         };
     }
 }
-
