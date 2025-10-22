@@ -238,7 +238,7 @@ final class ProfileNegotiationIntegrationTest extends DoctrineIntegrationTestCas
 
         // Verify per-type profiles
         $articleProfiles = $context->profilesForType('articles');
-        $articleUris = array_map(fn($p) => $p->uri(), $articleProfiles);
+        $articleUris = array_map(fn ($p) => $p->uri(), $articleProfiles);
         self::assertContains(SoftDeleteProfile::URI, $articleUris);
         self::assertContains(AuditTrailProfile::URI, $articleUris);
         self::assertContains(RelationshipCountsProfile::URI, $articleUris);
@@ -259,4 +259,3 @@ final class ProfileNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         };
     }
 }
-

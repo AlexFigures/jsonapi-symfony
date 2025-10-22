@@ -45,4 +45,3 @@ final readonly class AuditTrailDocumentHook implements DocumentHook
         // e.g., $meta['audit_trail_enabled'] = true;
     }
 }
-

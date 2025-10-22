@@ -113,4 +113,3 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook
         // No top-level meta modifications needed
     }
 }
-

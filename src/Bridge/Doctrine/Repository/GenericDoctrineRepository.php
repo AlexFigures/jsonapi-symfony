@@ -239,10 +239,13 @@ class GenericDoctrineRepository implements ResourceRepository
     private function countTotal(QueryBuilder $qb): int
     {
         $countQb = clone $qb;
-        $countQb->select('COUNT(e)')
-                ->setFirstResult(0)
-                ->setMaxResults(null)
-                ->resetDQLPart('orderBy'); // Remove ORDER BY for count query
+        $rootAliases = $countQb->getRootAliases();
+        $rootAlias = $rootAliases[0] ?? 'e';
+
+        $countQb->select(sprintf('COUNT(DISTINCT %s)', $rootAlias))
+            ->setFirstResult(0)
+            ->setMaxResults(null)
+            ->resetDQLPart('orderBy'); // Remove ORDER BY for count query
 
         return (int) $countQb->getQuery()->getSingleScalarResult();
     }

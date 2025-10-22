@@ -215,7 +215,7 @@ final class BuiltinProfilesIntegrationTest extends DoctrineIntegrationTestCase
         self::assertInstanceOf(ProfileContext::class, $context);
 
         $articleProfiles = $context->profilesForType('articles');
-        $articleUris = array_map(fn($p) => $p->uri(), $articleProfiles);
+        $articleUris = array_map(fn ($p) => $p->uri(), $articleProfiles);
         self::assertContains(AuditTrailProfile::URI, $articleUris);
 
         // Verify database operations work
@@ -318,14 +318,14 @@ final class BuiltinProfilesIntegrationTest extends DoctrineIntegrationTestCase
         $context = ProfileContext::fromRequest($request);
         self::assertNotNull($context);
         $articleProfiles = $context->profilesForType('articles');
-        $articleUris = array_map(fn($p) => $p->uri(), $articleProfiles);
+        $articleUris = array_map(fn ($p) => $p->uri(), $articleProfiles);
         self::assertContains(SoftDeleteProfile::URI, $articleUris);
         self::assertContains(RelationshipCountsProfile::URI, $articleUris);
         self::assertNotContains(AuditTrailProfile::URI, $articleUris);
 
         // Verify profiles for authors
         $authorProfiles = $context->profilesForType('authors');
-        $authorUris = array_map(fn($p) => $p->uri(), $authorProfiles);
+        $authorUris = array_map(fn ($p) => $p->uri(), $authorProfiles);
         self::assertContains(AuditTrailProfile::URI, $authorUris);
         self::assertNotContains(SoftDeleteProfile::URI, $authorUris);
 
@@ -348,4 +348,3 @@ final class BuiltinProfilesIntegrationTest extends DoctrineIntegrationTestCase
         };
     }
 }
-

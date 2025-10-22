@@ -61,4 +61,3 @@ final readonly class SoftDeleteWriteHook implements WriteHook
         // this profile and set deletedAt instead of calling remove().
     }
 }
-

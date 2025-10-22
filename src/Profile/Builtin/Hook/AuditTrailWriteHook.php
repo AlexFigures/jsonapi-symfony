@@ -78,4 +78,3 @@ final readonly class AuditTrailWriteHook implements WriteHook
         // (unless you want to track deletedAt/deletedBy, which is SoftDelete's job)
     }
 }
-
