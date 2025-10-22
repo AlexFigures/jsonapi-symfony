@@ -32,8 +32,13 @@ use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Comment;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Product;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\User;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Doctrine\Type\DateIntervalType;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Doctrine\Type\DateTimeZoneType;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Doctrine\Type\UuidType;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
@@ -78,6 +83,9 @@ abstract class DoctrineIntegrationTestCase extends TestCase
     {
         parent::setUp();
 
+        // Register custom Doctrine types
+        $this->registerCustomTypes();
+
         // Create the EntityManager
         $this->em = $this->createEntityManager();
 
@@ -97,6 +105,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             Comment::class,
             Tag::class,
             Product::class,
+            TypeTestEntity::class,
             User::class,
         ]);
 
@@ -198,6 +207,27 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         }
 
         parent::tearDown();
+    }
+
+    /**
+     * Registers custom Doctrine types for testing.
+     */
+    private function registerCustomTypes(): void
+    {
+        // Register Uuid type
+        if (!Type::hasType(UuidType::NAME)) {
+            Type::addType(UuidType::NAME, UuidType::class);
+        }
+
+        // Register DateTimeZone type
+        if (!Type::hasType(DateTimeZoneType::NAME)) {
+            Type::addType(DateTimeZoneType::NAME, DateTimeZoneType::class);
+        }
+
+        // Register DateInterval type
+        if (!Type::hasType(DateIntervalType::NAME)) {
+            Type::addType(DateIntervalType::NAME, DateIntervalType::class);
+        }
     }
 
     private function createEntityManager(): EntityManagerInterface
@@ -304,7 +334,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $platform = $connection->getDatabasePlatform()->getName();
 
         if ($platform === 'postgresql') {
-            $connection->executeStatement('TRUNCATE TABLE articles, authors, tags, article_tags, categories, comments, products, users RESTART IDENTITY CASCADE');
+            $connection->executeStatement('TRUNCATE TABLE articles, authors, tags, article_tags, categories, comments, products, type_test_entities, users RESTART IDENTITY CASCADE');
         } elseif ($platform === 'mysql') {
             $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 0');
             $connection->executeStatement('TRUNCATE TABLE articles');
@@ -314,6 +344,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $connection->executeStatement('TRUNCATE TABLE categories');
             $connection->executeStatement('TRUNCATE TABLE comments');
             $connection->executeStatement('TRUNCATE TABLE products');
+            $connection->executeStatement('TRUNCATE TABLE type_test_entities');
             $connection->executeStatement('TRUNCATE TABLE users');
             $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 1');
         } elseif ($platform === 'sqlite') {
@@ -324,6 +355,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $connection->executeStatement('DELETE FROM categories');
             $connection->executeStatement('DELETE FROM comments');
             $connection->executeStatement('DELETE FROM products');
+            $connection->executeStatement('DELETE FROM type_test_entities');
             $connection->executeStatement('DELETE FROM users');
         }
 
