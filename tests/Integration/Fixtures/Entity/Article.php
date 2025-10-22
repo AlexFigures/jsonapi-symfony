@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
 
 use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\Symfony\Resource\Attribute\FilterableField;
 use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
 use AlexFigures\Symfony\Resource\Attribute\Id;
 use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
@@ -26,7 +27,11 @@ use Symfony\Component\Uid\Uuid;
     normalizationContext: ['groups' => ['article:read']],
     denormalizationContext: ['groups' => ['article:write']],
 )]
-#[FilterableFields(['title', 'author.id', 'tags.id'])]
+#[FilterableFields([
+    'title',
+    new FilterableField('author', inherit: true),  // Inherits 'name' and 'email' from Author
+    'tags.id',  // Keep explicit for now (tags don't have FilterableFields yet)
+])]
 #[SortableFields(['title', 'createdAt', 'updatedAt', 'viewCount', 'author.name'])]
 class Article
 {

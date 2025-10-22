@@ -2169,6 +2169,159 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
     }
 
     /**
+     * Test 37: Filter by inherited field from relationship (author.name).
+     *
+     * Validates:
+     * - Filter inheritance works when relationship is marked with inherit=true
+     * - Filters defined on Author resource are automatically available through Article.author
+     * - No need to explicitly declare 'author.name' in Article's FilterableFields
+     */
+    public function testFilterByInheritedFieldFromRelationship(): void
+    {
+        // Create authors
+        $author1 = new Author();
+        $author1->setName('Alice Smith');
+        $author1->setEmail('alice@example.com');
+        $this->em->persist($author1);
+
+        $author2 = new Author();
+        $author2->setName('Bob Johnson');
+        $author2->setEmail('bob@example.com');
+        $this->em->persist($author2);
+
+        // Create articles
+        $article1 = new Article();
+        $article1->setTitle('Article by Alice');
+        $article1->setContent('Content 1');
+        $article1->setAuthor($author1);
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Another Article by Alice');
+        $article2->setContent('Content 2');
+        $article2->setAuthor($author1);
+        $this->em->persist($article2);
+
+        $article3 = new Article();
+        $article3->setTitle('Article by Bob');
+        $article3->setContent('Content 3');
+        $article3->setAuthor($author2);
+        $this->em->persist($article3);
+
+        $this->em->flush();
+        $this->em->clear();
+
+        // Filter by author.name (inherited from Author's FilterableFields)
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?filter[author.name][eq]=Alice Smith');
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Should return only articles by Alice
+        self::assertCount(2, $document['data']);
+        self::assertSame(2, $document['meta']['total']);
+
+        $titles = array_column(array_column($document['data'], 'attributes'), 'title');
+        self::assertContains('Article by Alice', $titles);
+        self::assertContains('Another Article by Alice', $titles);
+        self::assertNotContains('Article by Bob', $titles);
+    }
+
+    /**
+     * Test 38: Filter by inherited field with LIKE operator (author.email).
+     *
+     * Validates:
+     * - Inherited filters support all operators defined in the related resource
+     * - LIKE operator works correctly with inherited fields
+     */
+    public function testFilterByInheritedFieldWithLikeOperator(): void
+    {
+        // Create authors
+        $author1 = new Author();
+        $author1->setName('Alice');
+        $author1->setEmail('alice@example.com');
+        $this->em->persist($author1);
+
+        $author2 = new Author();
+        $author2->setName('Bob');
+        $author2->setEmail('bob@test.com');
+        $this->em->persist($author2);
+
+        // Create articles
+        $article1 = new Article();
+        $article1->setTitle('Article 1');
+        $article1->setContent('Content 1');
+        $article1->setAuthor($author1);
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Article 2');
+        $article2->setContent('Content 2');
+        $article2->setAuthor($author2);
+        $this->em->persist($article2);
+
+        $this->em->flush();
+        $this->em->clear();
+
+        // Filter by author.email with LIKE operator (inherited from Author)
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?filter[author.email][like]=%example.com');
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Should return only articles by authors with @example.com email
+        self::assertCount(1, $document['data']);
+        self::assertSame(1, $document['meta']['total']);
+
+        $titles = array_column(array_column($document['data'], 'attributes'), 'title');
+        self::assertContains('Article 1', $titles);
+        self::assertNotContains('Article 2', $titles);
+    }
+
+    /**
+     * Test 39: Verify that non-inherited fields are rejected.
+     *
+     * Validates:
+     * - Fields not marked for inheritance are properly rejected
+     * - Error message is clear and helpful
+     */
+    public function testFilterByNonInheritedFieldIsRejected(): void
+    {
+        // Try to filter by a field that doesn't exist in Author's FilterableFields
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?filter[author.nonExistentField][eq]=value');
+
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectExceptionMessage('Filter field not allowed');
+
+        ($this->controller)($request, 'articles');
+    }
+
+    /**
+     * Test 40: Verify depth limit prevents infinite recursion.
+     *
+     * Validates:
+     * - Deep nesting (>2 levels) is rejected to prevent circular relationship issues
+     * - System doesn't crash with circular references
+     */
+    public function testFilterInheritanceDepthLimit(): void
+    {
+        // Categories have self-referential relationship (parent)
+        // Try to filter by parent.parent.parent.name (depth 3, should be rejected)
+        $request = $this->createJsonApiGetRequest('GET', '/api/categories?filter[parent.parent.parent.name][eq]=test');
+
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectExceptionMessage('Filter field not allowed');
+
+        ($this->controller)($request, 'categories');
+    }
+
+
+
+    /**
      * Helper method to create JSON:API GET request.
      *
      * @param  string               $method HTTP method

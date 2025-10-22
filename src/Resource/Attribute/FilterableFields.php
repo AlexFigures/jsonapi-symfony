@@ -80,10 +80,32 @@ final class FilterableFields
 
     /**
      * Check if a field is allowed for filtering.
+     *
+     * This method checks both directly declared fields and inherited fields
+     * from related resources (when inherit=true is set on a relationship field).
+     *
+     * @param string                                                      $field    Field path (e.g., 'title' or 'author.name')
+     * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface|null $registry Optional registry for inheritance resolution
+     * @param string|null                                                 $type     Resource type for inheritance resolution
+     * @param int                                                         $depth    Current inheritance depth (for cycle prevention)
      */
-    public function isAllowed(string $field): bool
-    {
-        return isset($this->fields[$field]);
+    public function isAllowed(
+        string $field,
+        ?\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry = null,
+        ?string $type = null,
+        int $depth = 0
+    ): bool {
+        // Check direct fields first (priority)
+        if (isset($this->fields[$field])) {
+            return true;
+        }
+
+        // Check inherited fields if registry and type are provided
+        if ($registry !== null && $type !== null) {
+            return $this->isInheritedFieldAllowed($field, $registry, $type, $depth);
+        }
+
+        return false;
     }
 
     /**
@@ -106,11 +128,35 @@ final class FilterableFields
 
     /**
      * Check if a specific operator is allowed for a field.
+     *
+     * This method checks both directly declared fields and inherited fields
+     * from related resources (when inherit=true is set on a relationship field).
+     *
+     * @param string                                                      $field    Field path (e.g., 'title' or 'author.name')
+     * @param string                                                      $operator Operator to check
+     * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface|null $registry Optional registry for inheritance resolution
+     * @param string|null                                                 $type     Resource type for inheritance resolution
+     * @param int                                                         $depth    Current inheritance depth (for cycle prevention)
      */
-    public function isOperatorAllowed(string $field, string $operator): bool
-    {
+    public function isOperatorAllowed(
+        string $field,
+        string $operator,
+        ?\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry = null,
+        ?string $type = null,
+        int $depth = 0
+    ): bool {
+        // Check direct field configuration first
         $config = $this->getFieldConfig($field);
-        return $config?->isOperatorAllowed($operator) ?? false;
+        if ($config !== null) {
+            return $config->isOperatorAllowed($operator);
+        }
+
+        // Check inherited fields if registry and type are provided
+        if ($registry !== null && $type !== null) {
+            return $this->isOperatorAllowedForInheritedField($field, $operator, $registry, $type, $depth);
+        }
+
+        return false;
     }
 
     /**
@@ -121,6 +167,155 @@ final class FilterableFields
     public function getFields(): array
     {
         return $this->fields;
+    }
+
+    /**
+     * Check if an operator is allowed for an inherited field.
+     *
+     * @param string                                                   $field    Field path (e.g., 'author.name')
+     * @param string                                                   $operator Operator to check
+     * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry Resource registry
+     * @param string                                                   $type     Current resource type
+     * @param int                                                      $depth    Current inheritance depth
+     */
+    private function isOperatorAllowedForInheritedField(
+        string $field,
+        string $operator,
+        \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry,
+        string $type,
+        int $depth
+    ): bool {
+        // Prevent infinite recursion in circular relationships
+        if ($depth >= 2) {
+            return false;
+        }
+
+        // Only check inheritance for dotted paths (e.g., 'author.name')
+        if (!str_contains($field, '.')) {
+            return false;
+        }
+
+        // Split the field path into relationship and remaining path
+        $segments = explode('.', $field, 2);
+        $relationshipName = $segments[0];
+        $relatedField = $segments[1];
+
+        // Check if the relationship field is configured for inheritance
+        $relationshipConfig = $this->getFieldConfig($relationshipName);
+        if ($relationshipConfig === null || !$relationshipConfig->shouldInherit()) {
+            return false;
+        }
+
+        // Check if the field is excluded from inheritance
+        if ($relationshipConfig->isExcluded($relatedField)) {
+            return false;
+        }
+
+        // Get metadata for the current resource
+        if (!$registry->hasType($type)) {
+            return false;
+        }
+
+        $metadata = $registry->getByType($type);
+        $relationship = $metadata->relationships[$relationshipName] ?? null;
+
+        if ($relationship === null || $relationship->targetType === null) {
+            return false;
+        }
+
+        // Get metadata for the related resource
+        if (!$registry->hasType($relationship->targetType)) {
+            return false;
+        }
+
+        $relatedMetadata = $registry->getByType($relationship->targetType);
+        $relatedFilterableFields = $relatedMetadata->filterableFields;
+
+        if ($relatedFilterableFields === null) {
+            return false;
+        }
+
+        // Recursively check if the operator is allowed in the related resource
+        return $relatedFilterableFields->isOperatorAllowed(
+            $relatedField,
+            $operator,
+            $registry,
+            $relationship->targetType,
+            $depth + 1
+        );
+    }
+
+    /**
+     * Check if a field is allowed through inheritance from a related resource.
+     *
+     * @param string                                                   $field    Field path (e.g., 'author.name')
+     * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry Resource registry
+     * @param string                                                   $type     Current resource type
+     * @param int                                                      $depth    Current inheritance depth
+     */
+    private function isInheritedFieldAllowed(
+        string $field,
+        \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry,
+        string $type,
+        int $depth
+    ): bool {
+        // Prevent infinite recursion in circular relationships
+        if ($depth >= 2) {
+            return false;
+        }
+
+        // Only check inheritance for dotted paths (e.g., 'author.name')
+        if (!str_contains($field, '.')) {
+            return false;
+        }
+
+        // Split the field path into relationship and remaining path
+        $segments = explode('.', $field, 2);
+        $relationshipName = $segments[0];
+        $relatedField = $segments[1];
+
+        // Check if the relationship field is configured for inheritance
+        $relationshipConfig = $this->getFieldConfig($relationshipName);
+        if ($relationshipConfig === null || !$relationshipConfig->shouldInherit()) {
+            return false;
+        }
+
+        // Check if the field is excluded from inheritance
+        if ($relationshipConfig->isExcluded($relatedField)) {
+            return false;
+        }
+
+        // Get metadata for the current resource
+        if (!$registry->hasType($type)) {
+            return false;
+        }
+
+        $metadata = $registry->getByType($type);
+        $relationship = $metadata->relationships[$relationshipName] ?? null;
+
+        if ($relationship === null || $relationship->targetType === null) {
+            return false;
+        }
+
+        // Get metadata for the related resource
+        if (!$registry->hasType($relationship->targetType)) {
+            return false;
+        }
+
+        $relatedMetadata = $registry->getByType($relationship->targetType);
+        $relatedFilterableFields = $relatedMetadata->filterableFields;
+
+        if ($relatedFilterableFields === null) {
+            return false;
+        }
+
+        // Recursively check if the field is allowed in the related resource
+        return $relatedFilterableFields->isAllowed(
+            $relatedField,
+            $registry,
+            $relationship->targetType,
+            $depth + 1
+        );
     }
 
     /**

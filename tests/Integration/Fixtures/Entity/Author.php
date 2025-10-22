@@ -24,7 +24,7 @@ use Symfony\Component\Uid\Uuid;
     normalizationContext: ['groups' => ['author:read']],
     denormalizationContext: ['groups' => ['author:write']],
 )]
-#[FilterableFields(['name', 'email'])]
+#[FilterableFields(['id', 'name', 'email'])]
 #[SortableFields(['name', 'email'])]
 class Author
 {
