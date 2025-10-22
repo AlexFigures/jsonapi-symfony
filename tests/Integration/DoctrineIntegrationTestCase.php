@@ -195,7 +195,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $this->flushManager,
         );
 
-        $this->transactionManager = new DoctrineTransactionManager($this->managerRegistry);
+        $this->transactionManager = new DoctrineTransactionManager($this->managerRegistry, $this->flushManager);
     }
 
     protected function tearDown(): void
