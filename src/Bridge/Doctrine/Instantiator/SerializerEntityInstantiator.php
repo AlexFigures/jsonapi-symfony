@@ -18,9 +18,14 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
+use Symfony\Component\Serializer\Normalizer\DateIntervalNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
+use Symfony\Component\Serializer\Normalizer\DateTimeZoneNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\JsonSerializableNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\UidNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -79,9 +84,18 @@ final class SerializerEntityInstantiator
             null, // ObjectClassResolver (not required)
         );
 
-        // Create the Serializer with DateTimeNormalizer and ObjectNormalizer
-        // DateTimeNormalizer must come before ObjectNormalizer to handle DateTime objects
-        $this->serializer = new Serializer([new DateTimeNormalizer(), $normalizer]);
+        // Create the Serializer with all standard normalizers
+        // Order matters: specific normalizers must come before generic ones
+        // This ensures comprehensive support for all Symfony/PHP types that clients might use
+        $this->serializer = new Serializer([
+            new UidNormalizer(),                  // Symfony UID (Uuid, Ulid)
+            new BackedEnumNormalizer(),           // PHP 8.1+ backed enums
+            new DateTimeNormalizer(),             // DateTime, DateTimeImmutable
+            new DateTimeZoneNormalizer(),         // DateTimeZone
+            new DateIntervalNormalizer(),         // DateInterval
+            new JsonSerializableNormalizer(),     // Objects implementing JsonSerializable
+            $normalizer,                          // ObjectNormalizer (must be last)
+        ]);
     }
 
     /**

@@ -16,6 +16,7 @@ use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
 use AlexFigures\Symfony\Http\Write\WriteConfig;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleStatus;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
@@ -293,6 +294,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
                 'attributes' => [
                     'title' => 'PHP and Symfony Guide',
                     'content' => 'A comprehensive guide',
+                    'status' => ArticleStatus::DRAFT->value,
                 ],
                 'relationships' => [
                     'tags' => [

@@ -30,6 +30,7 @@ use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
 use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleStatus;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
@@ -269,6 +270,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
                 'id' => $articleId,
                 'attributes' => [
                     'title' => 'Updated Title',
+                    'status' => ArticleStatus::DRAFT->value,
                 ],
                 'relationships' => [
                     'author' => [
