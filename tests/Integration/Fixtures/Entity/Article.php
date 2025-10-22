@@ -47,6 +47,11 @@ class Article
     #[Groups(['article:read', 'article:write'])]
     private string $content;
 
+    #[ORM\Column(enumType: ArticleStatus::class)]
+    #[Attribute]
+    #[Groups(['article:read', 'article:write'])]
+    private ArticleStatus $status = ArticleStatus::DRAFT;
+
     #[ORM\Column(type: 'datetime_immutable')]
     #[Attribute]
     #[Groups(['article:read'])]
@@ -122,6 +127,17 @@ class Article
     public function setContent(string $content): self
     {
         $this->content = $content;
+        return $this;
+    }
+
+    public function getStatus(): ArticleStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(ArticleStatus $status): self
+    {
+        $this->status = $status;
         return $this;
     }
 

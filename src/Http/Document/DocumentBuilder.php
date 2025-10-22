@@ -539,6 +539,14 @@ final class DocumentBuilder
             return $value->format(\DATE_ATOM);
         }
 
+        if ($value instanceof \UnitEnum) {
+            if ($value instanceof \BackedEnum) {
+                return $value->value;
+            }
+
+            return $value->name;
+        }
+
         if ($value instanceof Stringable) {
             return (string) $value;
         }

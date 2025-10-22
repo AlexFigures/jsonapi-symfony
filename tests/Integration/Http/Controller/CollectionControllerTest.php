@@ -34,6 +34,7 @@ use AlexFigures\Symfony\Http\Request\SortingWhitelist;
 use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleStatus;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
@@ -1261,6 +1262,30 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
     }
 
     /**
+     * Test 25b: Enum attributes are normalized to scalar values.
+     */
+    public function testEnumAttributeSerialization(): void
+    {
+        $article = new Article();
+        $article->setTitle('Article with enum');
+        $article->setContent('Enum content');
+        $article->setStatus(ArticleStatus::PUBLISHED);
+        $this->em->persist($article);
+
+        $this->em->flush();
+        $this->em->clear();
+
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles');
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        self::assertSame('published', $document['data'][0]['attributes']['status']);
+    }
+
+    /**
      * Test 26: Include with empty relationships (null and empty arrays).
      */
     public function testIncludeWithEmptyRelationships(): void
@@ -1314,6 +1339,60 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
             self::assertContains('authors', $includedTypes);
             self::assertNotContains('tags', $includedTypes); // No tags to include
         }
+    }
+
+    /**
+     * Test 26b: Total meta remains accurate with nested and multiple includes.
+     */
+    public function testTotalCountWithNestedAndMultipleIncludes(): void
+    {
+        $author = new Author();
+        $author->setName('Jane Doe');
+        $author->setEmail('jane@example.com');
+        $this->em->persist($author);
+
+        $tagApi = new Tag();
+        $tagApi->setName('API');
+        $this->em->persist($tagApi);
+
+        $tagPhp = new Tag();
+        $tagPhp->setName('PHP');
+        $this->em->persist($tagPhp);
+
+        $tagSymfony = new Tag();
+        $tagSymfony->setName('Symfony');
+        $this->em->persist($tagSymfony);
+
+        $article1 = new Article();
+        $article1->setTitle('Deep Includes 1');
+        $article1->setContent('Content 1');
+        $article1->setAuthor($author);
+        $article1->setStatus(ArticleStatus::PUBLISHED);
+        $article1->addTag($tagApi);
+        $article1->addTag($tagPhp);
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Deep Includes 2');
+        $article2->setContent('Content 2');
+        $article2->setAuthor($author);
+        $article2->setStatus(ArticleStatus::DRAFT);
+        $article2->addTag($tagPhp);
+        $article2->addTag($tagSymfony);
+        $this->em->persist($article2);
+
+        $this->em->flush();
+        $this->em->clear();
+
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?include=author,author.articles,tags,author.articles.tags');
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        self::assertCount(2, $document['data']);
+        self::assertSame(2, $document['meta']['total']);
     }
 
     /**
