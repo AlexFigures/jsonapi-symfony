@@ -713,6 +713,7 @@ return static function (ContainerConfigurator $configurator): void {
             service('doctrine'),
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
+            service(FlushManager::class),
         ])
     ;
 
@@ -720,6 +721,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->set(\AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager::class)
         ->args([
             service('doctrine'),
+            service(FlushManager::class),
         ])
     ;
 

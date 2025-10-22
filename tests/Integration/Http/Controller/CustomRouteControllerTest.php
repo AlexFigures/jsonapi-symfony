@@ -278,7 +278,7 @@ final class CustomRouteControllerTest extends DoctrineIntegrationTestCase
             $handlerLocator
         );
 
-        $transactionManager = new DoctrineTransactionManager($this->managerRegistry);
+        $transactionManager = new DoctrineTransactionManager($this->managerRegistry, $this->flushManager);
         $eventDispatcher = new EventDispatcher();
 
         $this->controller = new CustomRouteController(

@@ -74,7 +74,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
             $errorMapper
         );
 
-        $transactionManager = new DoctrineTransactionManager($this->managerRegistry);
+        $transactionManager = new DoctrineTransactionManager($this->managerRegistry, $this->flushManager);
         $eventDispatcher = new EventDispatcher();
 
         $responseConfig = new WriteRelationshipsResponseConfig('204');
