@@ -313,4 +313,3 @@ final class CartesianPaginationTest extends DoctrineIntegrationTestCase
         self::assertSame(10, $document['meta']['total']);
     }
 }
-

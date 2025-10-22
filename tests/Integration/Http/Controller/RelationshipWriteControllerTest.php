@@ -54,7 +54,8 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
         $relationshipHandler = new GenericDoctrineRelationshipHandler(
             $this->managerRegistry,
             $this->registry,
-            $this->accessor
+            $this->accessor,
+            $this->flushManager
         );
 
         $paginationConfig = new \AlexFigures\Symfony\Http\Request\PaginationConfig(defaultSize: 10, maxSize: 100);
@@ -133,6 +134,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
         );
 
         $response = ($this->controller)($request, 'articles', $articleId, 'author');
+        $this->flush();
 
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
 
@@ -176,6 +178,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
         );
 
         $response = ($this->controller)($request, 'articles', $articleId, 'author');
+        $this->flush();
 
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
 
@@ -239,6 +242,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
         );
 
         $response = ($this->controller)($request, 'articles', $articleId, 'tags');
+        $this->flush();
 
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
 
@@ -296,6 +300,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
         );
 
         $response = ($this->controller)($request, 'articles', $articleId, 'tags');
+        $this->flush();
 
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
 
@@ -354,6 +359,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
         );
 
         $response = ($this->controller)($request, 'articles', $articleId, 'tags');
+        $this->flush();
 
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
 

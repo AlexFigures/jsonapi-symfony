@@ -41,6 +41,7 @@ final class GenericDoctrineRelationshipHandlerTest extends DoctrineIntegrationTe
             managerRegistry: $this->managerRegistry,
             registry: $this->registry,
             accessor: $this->accessor,
+            flushManager: $this->flushManager,
         );
     }
 
@@ -78,6 +79,7 @@ final class GenericDoctrineRelationshipHandlerTest extends DoctrineIntegrationTe
         // Use RelationshipUpdater to set author
         $target = new ResourceIdentifier(type: 'authors', id: $authorId);
         $this->handler->replaceToOne(type: 'articles', idOrRel: $articleId, relOrTarget: 'author', target: $target);
+        $this->flush();
 
         // Verify in database
         $this->em->clear();
@@ -119,6 +121,7 @@ final class GenericDoctrineRelationshipHandlerTest extends DoctrineIntegrationTe
 
         // Use RelationshipUpdater to CLEAR author (set to null)
         $this->handler->replaceToOne(type: 'articles', idOrRel: $articleId, relOrTarget: 'author', target: null);
+        $this->flush();
 
         // Verify in database - author should be null
         $this->em->clear();
@@ -161,6 +164,7 @@ final class GenericDoctrineRelationshipHandlerTest extends DoctrineIntegrationTe
 
         // Use RelationshipUpdater to CLEAR parent (set to null)
         $this->handler->replaceToOne(type: 'categories', idOrRel: $childId, relOrTarget: 'parent', target: null);
+        $this->flush();
 
         // Verify in database - parent should be null
         $this->em->clear();
