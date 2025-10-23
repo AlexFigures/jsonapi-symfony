@@ -155,6 +155,66 @@ final class OpenApiSpecGenerator
                 'type' => 'object',
                 'additionalProperties' => true,
             ],
+            'ErrorObject' => [
+                'type' => 'object',
+                'properties' => [
+                    'id' => [
+                        'type' => 'string',
+                        'description' => 'A unique identifier for this particular occurrence of the problem',
+                    ],
+                    'status' => [
+                        'type' => 'string',
+                        'description' => 'The HTTP status code applicable to this problem',
+                    ],
+                    'code' => [
+                        'type' => 'string',
+                        'description' => 'An application-specific error code',
+                    ],
+                    'title' => [
+                        'type' => 'string',
+                        'description' => 'A short, human-readable summary of the problem',
+                    ],
+                    'detail' => [
+                        'type' => 'string',
+                        'description' => 'A human-readable explanation specific to this occurrence of the problem',
+                    ],
+                    'source' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'pointer' => [
+                                'type' => 'string',
+                                'description' => 'A JSON Pointer to the associated entity in the request document',
+                            ],
+                            'parameter' => [
+                                'type' => 'string',
+                                'description' => 'A string indicating which URI query parameter caused the error',
+                            ],
+                            'header' => [
+                                'type' => 'string',
+                                'description' => 'A string indicating the name of a single request header which caused the error',
+                            ],
+                        ],
+                        'additionalProperties' => false,
+                    ],
+                    'meta' => ['$ref' => '#/components/schemas/JsonApiMeta'],
+                ],
+                'additionalProperties' => false,
+            ],
+            'ErrorDocument' => [
+                'type' => 'object',
+                'required' => ['errors'],
+                'properties' => [
+                    'errors' => [
+                        'type' => 'array',
+                        'items' => ['$ref' => '#/components/schemas/ErrorObject'],
+                        'minItems' => 1,
+                        'description' => 'An array of error objects',
+                    ],
+                    'jsonapi' => ['$ref' => '#/components/schemas/JsonApiVersion'],
+                    'meta' => ['$ref' => '#/components/schemas/JsonApiMeta'],
+                ],
+                'additionalProperties' => false,
+            ],
         ];
     }
 
