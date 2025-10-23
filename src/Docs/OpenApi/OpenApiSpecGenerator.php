@@ -1121,7 +1121,7 @@ final class OpenApiSpecGenerator
                         'type' => 'array',
                         'items' => ['$ref' => '#/components/schemas/AtomicOperation'],
                         'minItems' => 1,
-                        'maxItems' => $this->atomicConfig?->maxOperations ?? 100,
+                        'maxItems' => $this->atomicConfig !== null ? $this->atomicConfig->maxOperations : 100,
                         'description' => 'Array of operations to execute atomically',
                     ],
                 ],

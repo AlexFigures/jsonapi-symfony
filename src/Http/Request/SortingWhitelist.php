@@ -32,11 +32,6 @@ final class SortingWhitelist
 
         $metadata = $this->registry->getByType($type);
 
-        // Handle both old array format and new SortableFields object
-        if (is_array($metadata->sortableFields)) {
-            return $metadata->sortableFields;
-        }
-
         return $metadata->sortableFields?->getAllowedFields() ?? [];
     }
 
@@ -57,12 +52,6 @@ final class SortingWhitelist
 
         $metadata = $this->registry->getByType($type);
 
-        // Handle old array format (backward compatibility)
-        if (is_array($metadata->sortableFields)) {
-            return in_array($field, $metadata->sortableFields, true);
-        }
-
-        // Use new SortableFields object with inheritance support
         return $metadata->sortableFields?->isAllowed($field, $this->registry, $type) ?? false;
     }
 }
