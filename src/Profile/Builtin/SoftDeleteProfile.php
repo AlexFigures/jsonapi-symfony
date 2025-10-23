@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Profile\Builtin;
 
+use AlexFigures\Symfony\Profile\Attribute\SoftDeletable;
 use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteDocumentHook;
 use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteQueryHook;
 use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteWriteHook;
 use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
 use AlexFigures\Symfony\Profile\ProfileInterface;
+use AlexFigures\Symfony\Profile\Validation\FieldRequirement;
+use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
 
 /**
  * Soft Delete Profile.
@@ -60,7 +63,29 @@ final class SoftDeleteProfile implements ProfileInterface
     public function hooks(): iterable
     {
         yield new SoftDeleteQueryHook($this->config);
-        yield new SoftDeleteWriteHook($this->config);
+        yield new SoftDeleteWriteHook();
         yield new SoftDeleteDocumentHook();
+    }
+
+    public function requirements(): ProfileRequirements
+    {
+        return new ProfileRequirements(
+            attribute: SoftDeletable::class,
+            fields: [
+                'deletedAt' => new FieldRequirement(
+                    type: \DateTimeImmutable::class,
+                    nullable: true,
+                    optional: false,
+                    description: 'Timestamp when entity was soft-deleted'
+                ),
+                'deletedBy' => new FieldRequirement(
+                    type: 'string',
+                    nullable: true,
+                    optional: true,
+                    description: 'User who deleted the entity (optional)'
+                ),
+            ],
+            description: 'Enables soft-delete semantics for resources'
+        );
     }
 }

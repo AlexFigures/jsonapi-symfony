@@ -4,6 +4,9 @@
             "status": "404",
             "code": "resource-not-found",
             "id": "<ID>",
+            "links": {
+                "about": "/errors/not-found"
+            },
             "title": "Resource not found",
             "detail": "Resource \"articles\" with id \"999999\" was not found."
         }

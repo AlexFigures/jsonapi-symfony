@@ -10,6 +10,7 @@ use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
 use AlexFigures\Symfony\Resource\Attribute\Id;
 use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use AlexFigures\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Attribute\SortableField;
 use AlexFigures\Symfony\Resource\Attribute\SortableFields;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use DateTimeImmutable;
@@ -32,7 +33,13 @@ use Symfony\Component\Uid\Uuid;
     new FilterableField('author', inherit: true),  // Inherits 'name' and 'email' from Author
     'tags.id',  // Keep explicit for now (tags don't have FilterableFields yet)
 ])]
-#[SortableFields(['title', 'createdAt', 'updatedAt', 'viewCount', 'author.name'])]
+#[SortableFields([
+    'title',
+    'createdAt',
+    'updatedAt',
+    'viewCount',
+    new SortableField('author', inherit: true),  // Inherits 'name' and 'email' from Author
+])]
 class Article
 {
     #[ORM\Id]

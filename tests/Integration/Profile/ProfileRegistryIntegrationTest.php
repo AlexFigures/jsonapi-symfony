@@ -13,6 +13,7 @@ use AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator;
 use AlexFigures\Symfony\Profile\ProfileContext;
 use AlexFigures\Symfony\Profile\ProfileInterface;
 use AlexFigures\Symfony\Profile\ProfileRegistry;
+use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
@@ -90,6 +91,11 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
             public function hooks(): iterable
             {
                 return [];
+            }
+
+            public function requirements(): ?ProfileRequirements
+            {
+                return null;
             }
         };
 

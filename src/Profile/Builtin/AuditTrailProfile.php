@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Profile\Builtin;
 
+use AlexFigures\Symfony\Profile\Attribute\Auditable;
 use AlexFigures\Symfony\Profile\Builtin\Hook\AuditTrailDocumentHook;
 use AlexFigures\Symfony\Profile\Builtin\Hook\AuditTrailWriteHook;
 use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
 use AlexFigures\Symfony\Profile\ProfileInterface;
+use AlexFigures\Symfony\Profile\Validation\FieldRequirement;
+use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
 
 /**
  * Audit Trail Profile.
@@ -60,5 +63,39 @@ final class AuditTrailProfile implements ProfileInterface
     {
         yield new AuditTrailWriteHook($this->config);
         yield new AuditTrailDocumentHook();
+    }
+
+    public function requirements(): ProfileRequirements
+    {
+        return new ProfileRequirements(
+            attribute: Auditable::class,
+            fields: [
+                'createdAt' => new FieldRequirement(
+                    type: \DateTimeImmutable::class,
+                    nullable: false,
+                    optional: false,
+                    description: 'Timestamp when entity was created'
+                ),
+                'updatedAt' => new FieldRequirement(
+                    type: \DateTimeImmutable::class,
+                    nullable: false,
+                    optional: false,
+                    description: 'Timestamp when entity was last updated'
+                ),
+                'createdBy' => new FieldRequirement(
+                    type: 'string',
+                    nullable: true,
+                    optional: true,
+                    description: 'User who created the entity (optional)'
+                ),
+                'updatedBy' => new FieldRequirement(
+                    type: 'string',
+                    nullable: true,
+                    optional: true,
+                    description: 'User who last updated the entity (optional)'
+                ),
+            ],
+            description: 'Tracks creation and update metadata for resources'
+        );
     }
 }

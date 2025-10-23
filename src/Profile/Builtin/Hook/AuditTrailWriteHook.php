@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Profile\Builtin\Hook;
 
 use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Profile\Attribute\Auditable;
 use AlexFigures\Symfony\Profile\Hook\WriteHook;
 use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 /**
  * Write hook for audit trail profile.
@@ -32,14 +34,15 @@ final readonly class AuditTrailWriteHook implements WriteHook
      * @param AuditTrailWriteConfig $config
      */
     public function __construct(
-        private array $config = []
+        private array $config = [],
+        private ?ResourceRegistryInterface $registry = null,
     ) {
     }
 
     public function onBeforeCreate(ProfileContext $context, string $type, ChangeSet $changeSet): void
     {
-        $createdAtField = $this->config['createdAtField'] ?? 'createdAt';
-        $createdByField = $this->config['createdByField'] ?? 'createdBy';
+        // Get field names from attribute or config
+        [$createdAtField, $createdByField] = $this->getFieldNames($context, $type, 'create');
 
         // Set createdAt if not already set
         if (!isset($changeSet->attributes[$createdAtField])) {
@@ -57,8 +60,8 @@ final readonly class AuditTrailWriteHook implements WriteHook
 
     public function onBeforeUpdate(ProfileContext $context, string $type, string $id, ChangeSet $changeSet): void
     {
-        $updatedAtField = $this->config['updatedAtField'] ?? 'updatedAt';
-        $updatedByField = $this->config['updatedByField'] ?? 'updatedBy';
+        // Get field names from attribute or config
+        [$updatedAtField, $updatedByField] = $this->getFieldNames($context, $type, 'update');
 
         // Always set updatedAt on update
         $changeSet->attributes[$updatedAtField] = new \DateTimeImmutable();
@@ -76,5 +79,40 @@ final readonly class AuditTrailWriteHook implements WriteHook
     {
         // No action needed on delete
         // (unless you want to track deletedAt/deletedBy, which is SoftDelete's job)
+    }
+
+    /**
+     * Get field names from attribute or config.
+     *
+     * @return array{string, string} [timestampField, userField]
+     */
+    private function getFieldNames(ProfileContext $context, string $type, string $operation): array
+    {
+        // Try to get entity class from registry
+        if ($this->registry !== null && $this->registry->hasType($type)) {
+            $entityClass = $this->registry->getByType($type)->class;
+
+            // Try to read from attribute
+            $attribute = $context->attributeReader()->getAttribute($entityClass, Auditable::class);
+            if ($attribute instanceof Auditable) {
+                if ($operation === 'create') {
+                    return [$attribute->createdAtField, $attribute->createdByField ?? 'createdBy'];
+                }
+                return [$attribute->updatedAtField, $attribute->updatedByField ?? 'updatedBy'];
+            }
+        }
+
+        // Fallback to config
+        if ($operation === 'create') {
+            return [
+                $this->config['createdAtField'] ?? 'createdAt',
+                $this->config['createdByField'] ?? 'createdBy',
+            ];
+        }
+
+        return [
+            $this->config['updatedAtField'] ?? 'updatedAt',
+            $this->config['updatedByField'] ?? 'updatedBy',
+        ];
     }
 }

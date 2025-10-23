@@ -6,6 +6,7 @@ namespace AlexFigures\Symfony\Bridge\Symfony\Bundle;
 
 use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\CustomRouteHandlerPass;
 use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
+use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ValidateProfilesPass;
 use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
@@ -25,6 +26,9 @@ final class JsonApiBundle extends Bundle
 
         // Register compiler pass for automatic handler registration (new in 0.3.0)
         $container->addCompilerPass(new CustomRouteHandlerPass());
+
+        // Register compiler pass for profile validation (runs after resource discovery)
+        $container->addCompilerPass(new ValidateProfilesPass());
     }
 
     public function getContainerExtension(): ExtensionInterface

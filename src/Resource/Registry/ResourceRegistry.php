@@ -164,12 +164,11 @@ final class ResourceRegistry implements ResourceRegistryInterface
         }
 
         // Extract sortable fields from SortableFields attribute
-        $sortableFields = [];
+        $sortableFields = null;
         $sortableFieldsAttributes = $reflection->getAttributes(SortableFields::class, ReflectionAttribute::IS_INSTANCEOF);
         if ($sortableFieldsAttributes !== []) {
-            /** @var SortableFields $sortableFieldsAttr */
-            $sortableFieldsAttr = $sortableFieldsAttributes[0]->newInstance();
-            $sortableFields = $sortableFieldsAttr->fields;
+            /** @var SortableFields $sortableFields */
+            $sortableFields = $sortableFieldsAttributes[0]->newInstance();
         }
 
         // Extract filterable fields from FilterableFields attribute

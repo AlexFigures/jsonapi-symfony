@@ -352,6 +352,21 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
+    // AtomicConfig for OpenAPI (always available, even when atomic is disabled)
+    $services
+        ->set('jsonapi.atomic_config_for_openapi', \AlexFigures\Symfony\Atomic\AtomicConfig::class)
+        ->args([
+            '%jsonapi.atomic.enabled%',
+            '%jsonapi.atomic.endpoint%',
+            '%jsonapi.atomic.require_ext_header%',
+            '%jsonapi.atomic.max_operations%',
+            '%jsonapi.atomic.return_policy%',
+            '%jsonapi.atomic.allow_href%',
+            '%jsonapi.atomic.lid.accept_in_resource_and_identifier%',
+            '%jsonapi.route_prefix%',
+        ])
+    ;
+
     $services
         ->set(OpenApiSpecGenerator::class)
         ->args([
@@ -360,6 +375,7 @@ return static function (ContainerConfigurator $configurator): void {
             '%jsonapi.docs.generator.openapi%',
             '%jsonapi.route_prefix%',
             '%jsonapi.relationships.write_response%',
+            service('jsonapi.atomic_config_for_openapi'),
         ])
     ;
 

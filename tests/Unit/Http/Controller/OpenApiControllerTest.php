@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Tests\Unit\Http\Controller;
 
+use AlexFigures\Symfony\Atomic\AtomicConfig;
 use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
 use AlexFigures\Symfony\Http\Controller\OpenApiController;
 use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
@@ -107,7 +108,64 @@ final class OpenApiControllerTest extends TestCase
         self::assertArrayHasKey('/api/articles', $content['paths']);
     }
 
-    private function createGenerator(): OpenApiSpecGenerator
+    public function testIncludesAtomicOperationsWhenEnabled(): void
+    {
+        $atomicConfig = new AtomicConfig(
+            enabled: true,
+            endpoint: '/api/operations',
+            maxOperations: 50,
+        );
+
+        $generator = $this->createGenerator($atomicConfig);
+
+        $controller = new OpenApiController(
+            $generator,
+            ['enabled' => true],
+        );
+
+        $response = ($controller)();
+        $content = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+
+        // Verify atomic operations endpoint is present
+        self::assertArrayHasKey('/api/operations', $content['paths']);
+        self::assertArrayHasKey('post', $content['paths']['/api/operations']);
+
+        // Verify atomic operations tag
+        $tags = array_column($content['tags'], 'name');
+        self::assertContains('Atomic Operations', $tags);
+
+        // Verify atomic schemas
+        self::assertArrayHasKey('AtomicOperation', $content['components']['schemas']);
+        self::assertArrayHasKey('AtomicOperationsRequest', $content['components']['schemas']);
+        self::assertArrayHasKey('AtomicOperationsResponse', $content['components']['schemas']);
+    }
+
+    public function testExcludesAtomicOperationsWhenDisabled(): void
+    {
+        $atomicConfig = new AtomicConfig(enabled: false);
+
+        $generator = $this->createGenerator($atomicConfig);
+
+        $controller = new OpenApiController(
+            $generator,
+            ['enabled' => true],
+        );
+
+        $response = ($controller)();
+        $content = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+
+        // Verify atomic operations endpoint is NOT present
+        self::assertArrayNotHasKey('/api/operations', $content['paths']);
+
+        // Verify atomic operations tag is NOT present
+        $tags = array_column($content['tags'], 'name');
+        self::assertNotContains('Atomic Operations', $tags);
+
+        // Verify atomic schemas are NOT present
+        self::assertArrayNotHasKey('AtomicOperation', $content['components']['schemas'] ?? []);
+    }
+
+    private function createGenerator(?AtomicConfig $atomicConfig = null): OpenApiSpecGenerator
     {
         $articleMetadata = new ResourceMetadata(
             'articles',
@@ -162,6 +220,7 @@ final class OpenApiControllerTest extends TestCase
             ],
             '/api',
             'linkage',
+            $atomicConfig,
         );
     }
 }

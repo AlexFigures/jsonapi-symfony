@@ -26,12 +26,13 @@ final class SortingWhitelistTest extends TestCase
 
     public function testAllowedForReturnsFieldsFromAttribute(): void
     {
+        $sortableFields = new \AlexFigures\Symfony\Resource\Attribute\SortableFields(['title', 'createdAt', 'updatedAt', 'viewCount']);
         $metadata = new ResourceMetadata(
             type: 'articles',
             class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
-            sortableFields: ['title', 'createdAt', 'updatedAt', 'viewCount'],
+            sortableFields: $sortableFields,
         );
 
         $registry = $this->createMock(ResourceRegistryInterface::class);
@@ -48,12 +49,13 @@ final class SortingWhitelistTest extends TestCase
 
     public function testAllowedForReturnsEmptyWhenAttributeIsEmpty(): void
     {
+        $sortableFields = new \AlexFigures\Symfony\Resource\Attribute\SortableFields([]);
         $metadata = new ResourceMetadata(
             type: 'articles',
             class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
-            sortableFields: [], // Empty attribute
+            sortableFields: $sortableFields,
         );
 
         $registry = $this->createMock(ResourceRegistryInterface::class);
@@ -72,7 +74,7 @@ final class SortingWhitelistTest extends TestCase
             class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
-            sortableFields: ['title', 'createdAt'],
+            sortableFields: new \AlexFigures\Symfony\Resource\Attribute\SortableFields(['title', 'createdAt']),
         );
 
         $authorsMetadata = new ResourceMetadata(
@@ -80,7 +82,7 @@ final class SortingWhitelistTest extends TestCase
             class: AuthorFixture::class,
             attributes: [],
             relationships: [],
-            sortableFields: ['name', 'email'],
+            sortableFields: new \AlexFigures\Symfony\Resource\Attribute\SortableFields(['name', 'email']),
         );
 
         $registry = $this->createMock(ResourceRegistryInterface::class);
@@ -99,6 +101,57 @@ final class SortingWhitelistTest extends TestCase
         self::assertSame(['title', 'createdAt'], $whitelist->allowedFor('articles'));
         self::assertSame(['name', 'email'], $whitelist->allowedFor('authors'));
         self::assertSame([], $whitelist->allowedFor('unknown'));
+    }
+
+    public function testIsFieldAllowedForDirectField(): void
+    {
+        $sortableFields = new \AlexFigures\Symfony\Resource\Attribute\SortableFields(['title', 'createdAt']);
+        $metadata = new ResourceMetadata(
+            type: 'articles',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            attributes: [],
+            relationships: [],
+            sortableFields: $sortableFields,
+        );
+
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('hasType')->with('articles')->willReturn(true);
+        $registry->method('getByType')->with('articles')->willReturn($metadata);
+
+        $whitelist = new SortingWhitelist($registry);
+
+        self::assertTrue($whitelist->isFieldAllowed('articles', 'title'));
+        self::assertTrue($whitelist->isFieldAllowed('articles', 'createdAt'));
+        self::assertFalse($whitelist->isFieldAllowed('articles', 'unknown'));
+    }
+
+    public function testIsFieldAllowedReturnsFalseForUnknownType(): void
+    {
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('hasType')->with('unknown')->willReturn(false);
+
+        $whitelist = new SortingWhitelist($registry);
+
+        self::assertFalse($whitelist->isFieldAllowed('unknown', 'anyField'));
+    }
+
+    public function testIsFieldAllowedReturnsFalseWhenNoSortableFields(): void
+    {
+        $metadata = new ResourceMetadata(
+            type: 'articles',
+            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            attributes: [],
+            relationships: [],
+            sortableFields: null,
+        );
+
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('hasType')->with('articles')->willReturn(true);
+        $registry->method('getByType')->with('articles')->willReturn($metadata);
+
+        $whitelist = new SortingWhitelist($registry);
+
+        self::assertFalse($whitelist->isFieldAllowed('articles', 'title'));
     }
 }
 
