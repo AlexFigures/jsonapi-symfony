@@ -51,7 +51,6 @@ final class ResourceMetadata
      * @param AttributeMap                             $attributes
      * @param RelationshipMap                          $relationships
      * @param class-string                             $class
-     * @param list<string>                             $sortableFields
      * @param array<string, mixed>                     $normalizationContext
      * @param array<string, mixed>                     $denormalizationContext
      * @param class-string|null                        $dataClass
@@ -75,7 +74,7 @@ final class ResourceMetadata
         public ?string $idPropertyPath = null,
         public ?string $routePrefix = null,
         public ?string $description = null,
-        public array $sortableFields = [],
+        public ?\AlexFigures\Symfony\Resource\Attribute\SortableFields $sortableFields = null,
         public ?FilterableFields $filterableFields = null,
         public array $normalizationContext = [],
         public array $denormalizationContext = [],

@@ -224,12 +224,12 @@ final class SnapshotTest extends JsonApiTestCase
         $normalized = [];
         foreach ($links as $key => $link) {
             if (is_string($link)) {
+                // Replace UUIDs first (before numeric IDs) to handle all UUID patterns
+                // This handles UUIDs in URLs like /articles/550e8400-e29b-41d4-a716-446655440000
+                // and partial UUIDs like <ID>550e8400-e29b-41d4-a716-446655440000
+                $normalized[$key] = preg_replace('/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/', '<ID>', $link);
                 // Replace numeric IDs in URLs with placeholder
-                $normalized[$key] = preg_replace('/\/\d+/', '/<ID>', $link);
-                // Replace UUIDs in URLs with placeholder
-                $normalized[$key] = preg_replace('/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/', '/<UUID>', $normalized[$key]);
-                // Replace any remaining UUID-like strings
-                $normalized[$key] = preg_replace('/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/', '<UUID>', $normalized[$key]);
+                $normalized[$key] = preg_replace('/\/\d+/', '/<ID>', $normalized[$key]);
                 // Replace page numbers with placeholder
                 $normalized[$key] = preg_replace('/page%5Bnumber%5D=\d+/', 'page%5Bnumber%5D=<PAGE>', $normalized[$key]);
             } elseif (is_array($link)) {

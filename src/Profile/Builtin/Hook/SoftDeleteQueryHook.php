@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Profile\Builtin\Hook;
 
+use AlexFigures\Symfony\Profile\Attribute\SoftDeletable;
+use AlexFigures\Symfony\Profile\AttributeReader;
 use AlexFigures\Symfony\Profile\Hook\QueryHook;
 use AlexFigures\Symfony\Profile\ProfileContext;
 use AlexFigures\Symfony\Query\Criteria;
@@ -38,7 +40,6 @@ final readonly class SoftDeleteQueryHook implements QueryHook
 
     public function onParseQuery(ProfileContext $context, Request $request, Criteria $criteria): void
     {
-        $deletedAtField = $this->config['deletedAtField'] ?? 'deletedAt';
         $withTrashedParam = $this->config['withTrashedParam'] ?? 'withTrashed';
         $onlyTrashedParam = $this->config['onlyTrashedParam'] ?? 'onlyTrashed';
 
@@ -52,17 +53,42 @@ final readonly class SoftDeleteQueryHook implements QueryHook
             return;
         }
 
+        // Capture context and config for use in closure
+        $attributeReader = $context->attributeReader();
+        $configDeletedAtField = $this->config['deletedAtField'] ?? 'deletedAt';
+
         // If onlyTrashed is true, show only deleted items
         if ($onlyTrashed === 'true' || $onlyTrashed === '1' || $onlyTrashed === true) {
-            $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $qb) use ($deletedAtField): void {
+            $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $qb) use ($attributeReader, $configDeletedAtField): void {
+                $entityClass = $qb->getRootEntities()[0];
+                $deletedAtField = self::resolveDeletedAtField($attributeReader, $entityClass, $configDeletedAtField);
                 $qb->andWhere($qb->expr()->isNotNull('e.' . $deletedAtField));
             };
             return;
         }
 
         // Default: exclude soft-deleted items
-        $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $qb) use ($deletedAtField): void {
+        $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $qb) use ($attributeReader, $configDeletedAtField): void {
+            $entityClass = $qb->getRootEntities()[0];
+            $deletedAtField = self::resolveDeletedAtField($attributeReader, $entityClass, $configDeletedAtField);
             $qb->andWhere($qb->expr()->isNull('e.' . $deletedAtField));
         };
+    }
+
+    /**
+     * Resolve the deletedAt field name from attribute or config.
+     *
+     * @param class-string $entityClass
+     */
+    private static function resolveDeletedAtField(AttributeReader $attributeReader, string $entityClass, string $configField): string
+    {
+        // Try to read from attribute first
+        $attribute = $attributeReader->getAttribute($entityClass, SoftDeletable::class);
+        if ($attribute instanceof SoftDeletable) {
+            return $attribute->deletedAtField;
+        }
+
+        // Fallback to config
+        return $configField;
     }
 }

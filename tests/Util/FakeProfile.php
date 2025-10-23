@@ -6,6 +6,7 @@ namespace AlexFigures\Symfony\Tests\Util;
 
 use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
 use AlexFigures\Symfony\Profile\ProfileInterface;
+use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
 
 final class FakeProfile implements ProfileInterface
 {
@@ -18,6 +19,7 @@ final class FakeProfile implements ProfileInterface
         private readonly ?ProfileDescriptor $descriptor = null,
         private readonly string $name = 'Fake Profile',
         private readonly string $version = '1.0.0',
+        private readonly ?ProfileRequirements $requirements = null,
     ) {
     }
 
@@ -34,5 +36,10 @@ final class FakeProfile implements ProfileInterface
     public function hooks(): iterable
     {
         return $this->hooks;
+    }
+
+    public function requirements(): ?ProfileRequirements
+    {
+        return $this->requirements;
     }
 }

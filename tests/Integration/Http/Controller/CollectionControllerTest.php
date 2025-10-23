@@ -2319,6 +2319,179 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         ($this->controller)($request, 'categories');
     }
 
+    /**
+     * Test 41: Sort by inherited field from relationship (author.name).
+     *
+     * Validates:
+     * - Sort inheritance works when relationship is marked with inherit=true
+     * - Sortable fields defined on Author resource are automatically available through Article.author
+     * - No need to explicitly declare 'author.name' in Article's SortableFields
+     */
+    public function testSortByInheritedFieldFromRelationship(): void
+    {
+        // Create authors
+        $author1 = new Author();
+        $author1->setName('Charlie Brown');
+        $author1->setEmail('charlie@example.com');
+        $this->em->persist($author1);
+
+        $author2 = new Author();
+        $author2->setName('Alice Smith');
+        $author2->setEmail('alice@example.com');
+        $this->em->persist($author2);
+
+        $author3 = new Author();
+        $author3->setName('Bob Johnson');
+        $author3->setEmail('bob@example.com');
+        $this->em->persist($author3);
+
+        // Create articles
+        $article1 = new Article();
+        $article1->setTitle('Article by Charlie');
+        $article1->setContent('Content 1');
+        $article1->setAuthor($author1);
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Article by Alice');
+        $article2->setContent('Content 2');
+        $article2->setAuthor($author2);
+        $this->em->persist($article2);
+
+        $article3 = new Article();
+        $article3->setTitle('Article by Bob');
+        $article3->setContent('Content 3');
+        $article3->setAuthor($author3);
+        $this->em->persist($article3);
+
+        $this->em->flush();
+        $this->em->clear();
+
+        // Sort by author.name (inherited field)
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?sort=author.name');
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        $data = json_decode($response->getContent(), true);
+
+        // Verify articles are sorted by author name: Alice, Bob, Charlie
+        self::assertCount(3, $data['data']);
+        self::assertSame('Article by Alice', $data['data'][0]['attributes']['title']);
+        self::assertSame('Article by Bob', $data['data'][1]['attributes']['title']);
+        self::assertSame('Article by Charlie', $data['data'][2]['attributes']['title']);
+    }
+
+    /**
+     * Test 42: Sort by inherited field with descending order (author.email).
+     *
+     * Validates:
+     * - Inherited sort fields support descending order with minus prefix
+     * - Multiple inherited fields work correctly
+     */
+    public function testSortByInheritedFieldDescending(): void
+    {
+        // Create authors
+        $author1 = new Author();
+        $author1->setName('Alice');
+        $author1->setEmail('alice@example.com');
+        $this->em->persist($author1);
+
+        $author2 = new Author();
+        $author2->setName('Bob');
+        $author2->setEmail('bob@example.com');
+        $this->em->persist($author2);
+
+        $author3 = new Author();
+        $author3->setName('Charlie');
+        $author3->setEmail('charlie@example.com');
+        $this->em->persist($author3);
+
+        // Create articles
+        $article1 = new Article();
+        $article1->setTitle('Article 1');
+        $article1->setContent('Content 1');
+        $article1->setAuthor($author1);
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('Article 2');
+        $article2->setContent('Content 2');
+        $article2->setAuthor($author2);
+        $this->em->persist($article2);
+
+        $article3 = new Article();
+        $article3->setTitle('Article 3');
+        $article3->setContent('Content 3');
+        $article3->setAuthor($author3);
+        $this->em->persist($article3);
+
+        $this->em->flush();
+        $this->em->clear();
+
+        // Sort by author.email descending
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?sort=-author.email');
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+        $data = json_decode($response->getContent(), true);
+
+        // Verify articles are sorted by author email descending: charlie, bob, alice
+        self::assertCount(3, $data['data']);
+        self::assertSame('Article 3', $data['data'][0]['attributes']['title']);
+        self::assertSame('Article 2', $data['data'][1]['attributes']['title']);
+        self::assertSame('Article 1', $data['data'][2]['attributes']['title']);
+    }
+
+    /**
+     * Test 43: Verify that non-inherited fields are rejected.
+     *
+     * Validates:
+     * - Fields not marked for inheritance are properly rejected
+     * - Error message is clear and helpful
+     */
+    public function testSortByNonInheritedFieldIsRejected(): void
+    {
+        // Try to sort by a field that exists in Author but is not in SortableFields
+        // Author has 'name' and 'email' in SortableFields, but not 'id'
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?sort=author.id');
+
+        try {
+            ($this->controller)($request, 'articles');
+            self::fail('Expected BadRequestException to be thrown');
+        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
+            self::assertSame(400, $e->getStatusCode());
+            $errors = $e->getErrors();
+            self::assertNotEmpty($errors);
+            $firstError = $errors[0];
+            self::assertStringContainsString('Sorting by "author.id" is not allowed', $firstError->detail ?? '');
+        }
+    }
+
+    /**
+     * Test 44: Verify depth limit prevents infinite recursion in sorting.
+     *
+     * Validates:
+     * - Deep nesting (>2 levels) is rejected to prevent circular relationship issues
+     * - System doesn't crash with circular references
+     */
+    public function testSortInheritanceDepthLimit(): void
+    {
+        // Categories have self-referential relationship (parent)
+        // Try to sort by parent.parent.parent.name (depth 3, should be rejected)
+        $request = $this->createJsonApiGetRequest('GET', '/api/categories?sort=parent.parent.parent.name');
+
+        try {
+            ($this->controller)($request, 'categories');
+            self::fail('Expected BadRequestException to be thrown');
+        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
+            self::assertSame(400, $e->getStatusCode());
+            $errors = $e->getErrors();
+            self::assertNotEmpty($errors);
+            $firstError = $errors[0];
+            self::assertStringContainsString('Sorting by "parent.parent.parent.name" is not allowed', $firstError->detail ?? '');
+        }
+    }
+
 
 
     /**

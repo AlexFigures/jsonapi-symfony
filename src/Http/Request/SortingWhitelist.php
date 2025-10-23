@@ -19,6 +19,9 @@ final class SortingWhitelist
      * The sortable fields are defined using the #[SortableFields] attribute
      * on the entity class.
      *
+     * This method returns only directly declared fields, not inherited ones.
+     * Use isFieldAllowed() to check if a field is allowed (including inherited fields).
+     *
      * @return list<string>
      */
     public function allowedFor(string $type): array
@@ -28,6 +31,27 @@ final class SortingWhitelist
         }
 
         $metadata = $this->registry->getByType($type);
-        return $metadata->sortableFields;
+
+        return $metadata->sortableFields?->getAllowedFields() ?? [];
+    }
+
+    /**
+     * Check if a field is allowed for sorting (including inherited fields).
+     *
+     * This method supports field inheritance from related resources when
+     * a relationship is marked with inherit=true.
+     *
+     * @param string $type  Resource type
+     * @param string $field Field name or path (e.g., 'title' or 'author.name')
+     */
+    public function isFieldAllowed(string $type, string $field): bool
+    {
+        if (!$this->registry->hasType($type)) {
+            return false;
+        }
+
+        $metadata = $this->registry->getByType($type);
+
+        return $metadata->sortableFields?->isAllowed($field, $this->registry, $type) ?? false;
     }
 }

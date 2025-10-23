@@ -24,6 +24,8 @@ final class ProfileContext
     /** @var array<string, list<string>> */
     private array $sources;
 
+    private readonly AttributeReader $attributeReader;
+
     /** @var list<DocumentHook>|null */
     private ?array $documentHooks = null;
 
@@ -44,11 +46,16 @@ final class ProfileContext
      * @param array<string, list<ProfileInterface>> $profilesPerType
      * @param array<string, list<string>>           $sources
      */
-    public function __construct(array $activeProfiles, array $profilesPerType = [], array $sources = [])
-    {
+    public function __construct(
+        array $activeProfiles,
+        array $profilesPerType = [],
+        array $sources = [],
+        ?AttributeReader $attributeReader = null
+    ) {
         $this->activeProfiles = $activeProfiles;
         $this->profilesPerType = $profilesPerType;
         $this->sources = $sources;
+        $this->attributeReader = $attributeReader ?? new AttributeReader();
     }
 
     public static function fromRequest(Request $request): ?self
@@ -112,6 +119,14 @@ final class ProfileContext
     public function sources(): array
     {
         return $this->sources;
+    }
+
+    /**
+     * Get the attribute reader for reading PHP 8 attributes from entity classes.
+     */
+    public function attributeReader(): AttributeReader
+    {
+        return $this->attributeReader;
     }
 
     /**

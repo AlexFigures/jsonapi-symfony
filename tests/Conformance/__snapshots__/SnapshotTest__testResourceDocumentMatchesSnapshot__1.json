@@ -21,13 +21,27 @@
                 "links": {
                     "self": "http://localhost/api/articles/<ID>/relationships/author",
                     "related": "http://localhost/api/articles/<ID>/author"
+                },
+                "data": {
+                    "type": "authors",
+                    "id": "<ID>"
                 }
             },
             "tags": {
                 "links": {
                     "self": "http://localhost/api/articles/<ID>/relationships/tags",
                     "related": "http://localhost/api/articles/<ID>/tags"
-                }
+                },
+                "data": [
+                    {
+                        "type": "tags",
+                        "id": "<ID>"
+                    },
+                    {
+                        "type": "tags",
+                        "id": "<ID>"
+                    }
+                ]
             }
         }
     }

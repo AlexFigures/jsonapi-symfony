@@ -195,7 +195,6 @@ final class QueryParser
             $this->throwBadRequest($this->errors->invalidParameter('sort', 'sort parameter must be a string.'));
         }
 
-        $allowed = $this->sortingWhitelist->allowedFor($type);
         $result = [];
 
         foreach (array_map('trim', explode(',', $raw)) as $sortField) {
@@ -206,7 +205,8 @@ final class QueryParser
             $desc = str_starts_with($sortField, '-');
             $field = ltrim($sortField, '-');
 
-            if (!in_array($field, $allowed, true)) {
+            // Check if field is allowed (including inherited fields from relationships)
+            if (!$this->sortingWhitelist->isFieldAllowed($type, $field)) {
                 $this->throwBadRequest($this->errors->sortFieldNotAllowed($type, $field));
             }
 

@@ -7,6 +7,7 @@ namespace AlexFigures\Symfony\Profile\Builtin;
 use AlexFigures\Symfony\Profile\Builtin\Hook\RelationshipCountsDocumentHook;
 use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
 use AlexFigures\Symfony\Profile\ProfileInterface;
+use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
 
 /**
  * Relationship Counts Profile.
@@ -66,5 +67,12 @@ final class RelationshipCountsProfile implements ProfileInterface
     public function hooks(): iterable
     {
         yield new RelationshipCountsDocumentHook($this->config);
+    }
+
+    public function requirements(): ?ProfileRequirements
+    {
+        // This profile has no requirements - it only adds metadata to documents
+        // and doesn't require any specific fields or attributes on entities
+        return null;
     }
 }

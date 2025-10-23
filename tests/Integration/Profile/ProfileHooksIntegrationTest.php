@@ -16,7 +16,9 @@ use AlexFigures\Symfony\Profile\ProfileRegistry;
 use AlexFigures\Symfony\Query\Criteria;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\AuditableProduct;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SoftDeletableArticle;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\HttpFoundation\Request;
@@ -159,15 +161,25 @@ final class ProfileHooksIntegrationTest extends DoctrineIntegrationTestCase
 
     public function testQueryHookCanModifyCriteria(): void
     {
-        self::markTestSkipped(
-            'Skipped until attribute-based field configuration is implemented. ' .
-            'SoftDeleteProfile requires #[SoftDeletable] attribute on entity to know which field to use. ' .
-            'See docs/profiles/validation.md for design.'
-        );
+        // Create soft-deletable articles - one active, one deleted
+        $activeArticle = new SoftDeletableArticle();
+        $activeArticle->setId('active-article');
+        $activeArticle->setTitle('Active Article');
+        $activeArticle->setContent('This is active');
+
+        $deletedArticle = new SoftDeletableArticle();
+        $deletedArticle->setId('deleted-article');
+        $deletedArticle->setTitle('Deleted Article');
+        $deletedArticle->setContent('This is deleted');
+        $deletedArticle->softDelete('test-user');
+
+        $this->em->persist($activeArticle);
+        $this->em->persist($deletedArticle);
+        $this->em->flush();
+        $this->em->clear();
 
         // Use SoftDeleteProfile which has QueryHook
         $profile = new SoftDeleteProfile();
-
         $this->profileRegistry->register($profile);
 
         // Create context with profile active
@@ -179,7 +191,7 @@ final class ProfileHooksIntegrationTest extends DoctrineIntegrationTestCase
         self::assertInstanceOf(SoftDeleteQueryHook::class, $queryHooks[0]);
 
         // Simulate hook invocation during query parsing
-        $request = Request::create('/articles', 'GET');
+        $request = Request::create('/soft-deletable-articles', 'GET');
         $criteria = new Criteria();
         foreach ($context->queryHooks() as $hook) {
             $hook->onParseQuery($context, $request, $criteria);
@@ -188,9 +200,104 @@ final class ProfileHooksIntegrationTest extends DoctrineIntegrationTestCase
         // Verify hook added custom conditions (soft delete filter)
         self::assertNotEmpty($criteria->customConditions);
 
-        // Perform database query with criteria
-        $articles = $this->repository->findCollection('articles', $criteria);
-        self::assertNotEmpty($articles);
+        // Apply custom conditions to a real query
+        $qb = $this->em->createQueryBuilder();
+        $qb->select('e')
+            ->from(SoftDeletableArticle::class, 'e');
+
+        foreach ($criteria->customConditions as $condition) {
+            $condition($qb);
+        }
+
+        $articles = $qb->getQuery()->getResult();
+
+        // Should only return active articles (deleted ones filtered out)
+        self::assertCount(1, $articles, 'Should only return active articles (deleted ones filtered out)');
+        self::assertSame('active-article', $articles[0]->getId());
+    }
+
+    public function testQueryHookReadsAttributeFromEntity(): void
+    {
+        // Create a soft-deletable article
+        $article = new SoftDeletableArticle();
+        $article->setId('soft-article-1');
+        $article->setTitle('Test Soft Delete');
+        $article->setContent('This article can be soft deleted');
+
+        $this->em->persist($article);
+        $this->em->flush();
+
+        // Soft delete it
+        $article->softDelete('test-user');
+        $this->em->flush();
+        $this->em->clear();
+
+        // Use SoftDeleteProfile with QueryHook
+        $profile = new SoftDeleteProfile();
+        $context = new ProfileContext([$profile->uri() => $profile]);
+
+        // Create criteria and invoke hooks
+        $request = Request::create('/soft-deletable-articles', 'GET');
+        $criteria = new Criteria();
+        foreach ($context->queryHooks() as $hook) {
+            $hook->onParseQuery($context, $request, $criteria);
+        }
+
+        // Verify hook added custom conditions
+        self::assertNotEmpty($criteria->customConditions);
+
+        // The hook should filter out soft-deleted articles by default
+        // When we apply the custom conditions to a query, deleted articles should be excluded
+        $qb = $this->em->createQueryBuilder();
+        $qb->select('e')
+            ->from(SoftDeletableArticle::class, 'e');
+
+        foreach ($criteria->customConditions as $condition) {
+            $condition($qb);
+        }
+
+        $results = $qb->getQuery()->getResult();
+
+        // Should be empty because the article is soft-deleted
+        self::assertEmpty($results, 'Soft-deleted articles should be filtered out by default');
+    }
+
+    public function testAuditTrailHookReadsAttributeFromEntity(): void
+    {
+        // Create an auditable product
+        $product = new AuditableProduct();
+        $product->setId('product-1');
+        $product->setName('Test Product');
+        $product->setPrice('99.99');
+
+        $this->em->persist($product);
+        $this->em->flush();
+        $this->em->clear();
+
+        // Use AuditTrailProfile with WriteHook
+        $profile = new AuditTrailProfile();
+        $context = new ProfileContext([$profile->uri() => $profile]);
+
+        // Verify hooks are registered
+        $writeHooks = iterator_to_array($context->writeHooks());
+        self::assertNotEmpty($writeHooks);
+        self::assertInstanceOf(AuditTrailWriteHook::class, $writeHooks[0]);
+
+        // Simulate hook invocation during create
+        $changeSet = new ChangeSet(['name' => 'New Product', 'price' => '49.99'], []);
+        foreach ($context->writeHooks() as $hook) {
+            $hook->onBeforeCreate($context, 'auditable-products', $changeSet);
+        }
+
+        // Verify hook added createdAt (it reads field names from #[Auditable] attribute)
+        self::assertArrayHasKey('createdAt', $changeSet->attributes);
+        self::assertInstanceOf(\DateTimeImmutable::class, $changeSet->attributes['createdAt']);
+
+        // Verify the actual entity has audit fields
+        $product = $this->em->find(AuditableProduct::class, 'product-1');
+        self::assertNotNull($product);
+        self::assertInstanceOf(\DateTimeImmutable::class, $product->getCreatedAt());
+        self::assertInstanceOf(\DateTimeImmutable::class, $product->getUpdatedAt());
     }
 
     public function testDocumentHookCanModifyLinks(): void

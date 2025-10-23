@@ -17,23 +17,9 @@ use AlexFigures\Symfony\Profile\ProfileContext;
  * Usage:
  * - On delete, sets deletedAt timestamp instead of removing entity
  * - Optionally tracks who deleted the resource (deletedBy field)
- *
- * @phpstan-type SoftDeleteWriteConfig array{
- *     deletedAtField?: string,
- *     deletedByField?: string,
- *     userProvider?: callable(): ?string
- * }
  */
 final readonly class SoftDeleteWriteHook implements WriteHook
 {
-    /**
-     * @param SoftDeleteWriteConfig $config
-     */
-    public function __construct(
-        private array $config = []
-    ) {
-    }
-
     public function onBeforeCreate(ProfileContext $context, string $type, ChangeSet $changeSet): void
     {
         // No action needed on create
@@ -46,9 +32,6 @@ final readonly class SoftDeleteWriteHook implements WriteHook
 
     public function onBeforeDelete(ProfileContext $context, string $type, string $id): void
     {
-        $deletedAtField = $this->config['deletedAtField'] ?? 'deletedAt';
-        $deletedByField = $this->config['deletedByField'] ?? null;
-
         // Note: This hook is informational - actual soft delete logic
         // should be implemented in your repository/entity manager layer.
         // This hook can be used to:
@@ -59,5 +42,11 @@ final readonly class SoftDeleteWriteHook implements WriteHook
         // The actual soft delete implementation should be in your Doctrine
         // entity lifecycle callbacks or repository methods that check for
         // this profile and set deletedAt instead of calling remove().
+        //
+        // To get field names from the entity's #[SoftDeletable] attribute:
+        // $entityClass = $registry->getByType($type)->class;
+        // $attribute = $context->attributeReader()->getAttribute($entityClass, \AlexFigures\Symfony\Profile\Attribute\SoftDeletable::class);
+        // $deletedAtField = $attribute?->deletedAtField ?? 'deletedAt';
+        // $deletedByField = $attribute?->deletedByField ?? null;
     }
 }

@@ -10,6 +10,8 @@ use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
 use AlexFigures\Symfony\Resource\Attribute\Id;
 use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use AlexFigures\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\Symfony\Resource\Attribute\SortableField;
+use AlexFigures\Symfony\Resource\Attribute\SortableFields;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -43,6 +45,11 @@ use Symfony\Component\Uid\Uuid;
     'id',
     'name',
     new FilterableField('parent', inherit: true),  // Inherits 'id' and 'name' from parent Category
+])]
+#[SortableFields([
+    'id',
+    'name',
+    new SortableField('parent', inherit: true),  // Inherits 'id' and 'name' from parent Category
 ])]
 class Category
 {

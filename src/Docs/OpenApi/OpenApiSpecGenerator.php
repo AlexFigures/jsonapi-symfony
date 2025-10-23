@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Docs\OpenApi;
 
+use AlexFigures\Symfony\Atomic\AtomicConfig;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
 use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
@@ -40,6 +41,7 @@ final class OpenApiSpecGenerator
         private readonly array $config,
         private readonly string $routePrefix,
         private readonly string $relationshipWriteMode,
+        private readonly ?AtomicConfig $atomicConfig = null,
     ) {
     }
 
@@ -87,6 +89,18 @@ final class OpenApiSpecGenerator
             foreach ($this->customRouteRegistry->all() as $customRoute) {
                 $paths = $this->mergePaths($paths, $this->buildCustomRoutePaths($customRoute));
             }
+        }
+
+        // Add atomic operations endpoint if enabled
+        if ($this->atomicConfig !== null && $this->atomicConfig->enabled) {
+            $paths = $this->mergePaths($paths, $this->buildAtomicOperationsPaths());
+            $schemas = array_merge($schemas, $this->atomicOperationsSchemas());
+
+            // Add Atomic Operations tag
+            $tags[] = [
+                'name' => 'Atomic Operations',
+                'description' => 'JSON:API Atomic Operations for batch processing',
+            ];
         }
 
         ksort($paths);
@@ -993,5 +1007,152 @@ final class OpenApiSpecGenerator
         }
 
         return $parameters;
+    }
+
+    /**
+     * Build OpenAPI paths for atomic operations endpoint.
+     *
+     * @return array<string, OpenApiSchema>
+     */
+    private function buildAtomicOperationsPaths(): array
+    {
+        if ($this->atomicConfig === null || !$this->atomicConfig->enabled) {
+            return [];
+        }
+
+        $endpoint = $this->atomicConfig->endpoint;
+
+        return [
+            $endpoint => [
+                'post' => [
+                    'tags' => ['Atomic Operations'],
+                    'operationId' => 'executeAtomicOperations',
+                    'summary' => 'Execute atomic operations',
+                    'description' => 'Execute multiple JSON:API operations atomically. All operations succeed or all fail together.',
+                    'requestBody' => [
+                        'required' => true,
+                        'content' => [
+                            MediaType::JSON_API_ATOMIC => [
+                                'schema' => ['$ref' => '#/components/schemas/AtomicOperationsRequest'],
+                            ],
+                        ],
+                    ],
+                    'responses' => [
+                        '200' => [
+                            'description' => 'Operations executed successfully',
+                            'content' => [
+                                MediaType::JSON_API_ATOMIC => [
+                                    'schema' => ['$ref' => '#/components/schemas/AtomicOperationsResponse'],
+                                ],
+                            ],
+                        ],
+                        '204' => [
+                            'description' => 'Operations executed successfully with no content',
+                        ],
+                        '400' => [
+                            'description' => 'Bad Request - Invalid operations',
+                            'content' => [
+                                MediaType::JSON_API => [
+                                    'schema' => ['$ref' => '#/components/schemas/ErrorDocument'],
+                                ],
+                            ],
+                        ],
+                        '403' => [
+                            'description' => 'Forbidden - Missing required ext header',
+                            'content' => [
+                                MediaType::JSON_API => [
+                                    'schema' => ['$ref' => '#/components/schemas/ErrorDocument'],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Build schemas for atomic operations.
+     *
+     * @return array<string, OpenApiSchema>
+     */
+    private function atomicOperationsSchemas(): array
+    {
+        return [
+            'AtomicOperation' => [
+                'type' => 'object',
+                'required' => ['op'],
+                'properties' => [
+                    'op' => [
+                        'type' => 'string',
+                        'enum' => ['add', 'update', 'remove'],
+                        'description' => 'Operation type',
+                    ],
+                    'ref' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'type' => ['type' => 'string'],
+                            'id' => ['type' => 'string'],
+                            'relationship' => ['type' => 'string'],
+                        ],
+                        'description' => 'Reference to the resource or relationship',
+                    ],
+                    'data' => [
+                        'oneOf' => [
+                            ['type' => 'object'],
+                            ['type' => 'array', 'items' => ['type' => 'object']],
+                            ['type' => 'null'],
+                        ],
+                        'description' => 'Operation data',
+                    ],
+                    'href' => [
+                        'type' => 'string',
+                        'format' => 'uri',
+                        'description' => 'Alternative to ref - URI reference',
+                    ],
+                ],
+                'additionalProperties' => false,
+            ],
+            'AtomicOperationsRequest' => [
+                'type' => 'object',
+                'required' => ['atomic:operations'],
+                'properties' => [
+                    'atomic:operations' => [
+                        'type' => 'array',
+                        'items' => ['$ref' => '#/components/schemas/AtomicOperation'],
+                        'minItems' => 1,
+                        'maxItems' => $this->atomicConfig !== null ? $this->atomicConfig->maxOperations : 100,
+                        'description' => 'Array of operations to execute atomically',
+                    ],
+                ],
+                'additionalProperties' => false,
+            ],
+            'AtomicOperationResult' => [
+                'type' => 'object',
+                'properties' => [
+                    'data' => [
+                        'oneOf' => [
+                            ['type' => 'object'],
+                            ['type' => 'array', 'items' => ['type' => 'object']],
+                            ['type' => 'null'],
+                        ],
+                        'description' => 'Result data for the operation',
+                    ],
+                ],
+                'additionalProperties' => true,
+            ],
+            'AtomicOperationsResponse' => [
+                'type' => 'object',
+                'required' => ['atomic:results'],
+                'properties' => [
+                    'atomic:results' => [
+                        'type' => 'array',
+                        'items' => ['$ref' => '#/components/schemas/AtomicOperationResult'],
+                        'description' => 'Results for each operation',
+                    ],
+                ],
+                'additionalProperties' => true,
+            ],
+        ];
     }
 }
