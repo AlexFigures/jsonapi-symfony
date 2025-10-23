@@ -15,7 +15,7 @@ use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
 use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
 use AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController;
 use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Data\ResourcePersister;
+use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
 use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
@@ -84,7 +84,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(AddHandler::class)
         ->args([
-            service(ResourcePersister::class),
+            service(ResourceProcessor::class),
             service(ChangeSetFactory::class),
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
@@ -94,7 +94,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(UpdateHandler::class)
         ->args([
-            service(ResourcePersister::class),
+            service(ResourceProcessor::class),
             service(ChangeSetFactory::class),
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
@@ -105,7 +105,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services
         ->set(RemoveHandler::class)
         ->args([
-            service(ResourcePersister::class),
+            service(ResourceProcessor::class),
             service(ErrorMapper::class),
         ])
     ;
