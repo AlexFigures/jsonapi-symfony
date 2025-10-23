@@ -6,11 +6,12 @@ namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
 
 use AlexFigures\Symfony\Profile\AttributeReader;
 use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\Validation\ProfileValidator;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\Symfony\Profile\Validation\FieldRequirement;
+use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
+use AlexFigures\Symfony\Profile\Validation\ValidationError;
+use AlexFigures\Symfony\Profile\Validation\ValidationResult;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * Validates profile requirements at compile-time.
@@ -42,9 +43,8 @@ final class ValidateProfilesPass implements CompilerPassInterface
         // Collect enabled profiles per resource type
         $enabledProfiles = $this->collectEnabledProfiles($container, $resourceTypes);
 
-        // Create validator and validate
-        $validator = $this->createValidator($container);
-        $result = $validator->validate($profilesByUri, $resourceTypes, $enabledProfiles);
+        // Validate using reflection (no Doctrine dependency)
+        $result = $this->validateWithReflection($profilesByUri, $resourceTypes, $enabledProfiles);
 
         // Handle validation result
         if ($result->hasErrors()) {
@@ -102,11 +102,11 @@ final class ValidateProfilesPass implements CompilerPassInterface
 
         // Get discovered resources from ResourceDiscoveryPass
         if ($container->hasParameter('jsonapi.discovered_resources')) {
-            /** @var list<array{type: string, class: class-string}> $discoveredResources */
+            /** @var array<string, class-string> $discoveredResources */
             $discoveredResources = $container->getParameter('jsonapi.discovered_resources');
 
-            foreach ($discoveredResources as $resource) {
-                $resourceTypes[$resource['type']] = $resource['class'];
+            foreach ($discoveredResources as $type => $class) {
+                $resourceTypes[$type] = $class;
             }
         }
 
@@ -154,19 +154,229 @@ final class ValidateProfilesPass implements CompilerPassInterface
     }
 
     /**
-     * Create ProfileValidator instance.
+     * Validate profiles using reflection (no Doctrine dependency).
+     *
+     * @param array<string, ProfileInterface> $profilesByUri
+     * @param array<string, class-string>     $resourceTypes
+     * @param array<string, list<string>>     $enabledProfiles
      */
-    private function createValidator(ContainerBuilder $container): ProfileValidator
-    {
-        // Get EntityManager from container
-        $entityManagerRef = new Reference('doctrine.orm.entity_manager');
-        /** @var \Doctrine\ORM\EntityManagerInterface $entityManager */
-        $entityManager = $container->get((string) $entityManagerRef);
-
-        // Create AttributeReader
+    private function validateWithReflection(
+        array $profilesByUri,
+        array $resourceTypes,
+        array $enabledProfiles
+    ): ValidationResult {
+        $result = new ValidationResult();
         $attributeReader = new AttributeReader();
 
-        return new ProfileValidator($entityManager, $attributeReader);
+        foreach ($enabledProfiles as $resourceType => $profileUris) {
+            if (!isset($resourceTypes[$resourceType])) {
+                // Resource type not found - this is a configuration error
+                foreach ($profileUris as $profileUri) {
+                    $result->addIssue(ValidationError::error(
+                        $profileUri,
+                        $resourceType,
+                        "Resource type '{$resourceType}' not found in resource registry"
+                    ));
+                }
+                continue;
+            }
+
+            $entityClass = $resourceTypes[$resourceType];
+
+            foreach ($profileUris as $profileUri) {
+                if (!isset($profilesByUri[$profileUri])) {
+                    $result->addIssue(ValidationError::error(
+                        $profileUri,
+                        $resourceType,
+                        "Profile '{$profileUri}' not found in profile registry"
+                    ));
+                    continue;
+                }
+
+                $profile = $profilesByUri[$profileUri];
+                $this->validateProfileForEntity($profile, $resourceType, $entityClass, $result, $attributeReader);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Validate a single profile for a single entity using reflection.
+     *
+     * @param class-string $entityClass
+     */
+    private function validateProfileForEntity(
+        ProfileInterface $profile,
+        string $resourceType,
+        string $entityClass,
+        ValidationResult $result,
+        AttributeReader $attributeReader
+    ): void {
+        $requirements = $profile->requirements();
+
+        // If profile has no requirements, nothing to validate
+        if ($requirements === null) {
+            return;
+        }
+
+        // Validate required attribute
+        if ($requirements->requiresAttribute()) {
+            $requiredAttribute = $requirements->getRequiredAttribute();
+            if ($requiredAttribute !== null) {
+                /** @var class-string $requiredAttribute */
+                if (!$attributeReader->hasAttribute($entityClass, $requiredAttribute)) {
+                    $result->addIssue(ValidationError::error(
+                        $profile->uri(),
+                        $resourceType,
+                        sprintf(
+                            "Entity '%s' must have #[%s] attribute to use this profile",
+                            $entityClass,
+                            $this->getShortClassName($requiredAttribute)
+                        )
+                    ));
+                }
+            }
+        }
+
+        // Validate required fields using reflection
+        if ($requirements->hasFieldRequirements()) {
+            $this->validateFieldsWithReflection($profile, $resourceType, $entityClass, $requirements, $result);
+        }
+    }
+
+    /**
+     * Validate fields using reflection instead of Doctrine metadata.
+     *
+     * @param class-string $entityClass
+     */
+    private function validateFieldsWithReflection(
+        ProfileInterface $profile,
+        string $resourceType,
+        string $entityClass,
+        ProfileRequirements $requirements,
+        ValidationResult $result
+    ): void {
+        if (!class_exists($entityClass)) {
+            $result->addIssue(ValidationError::error(
+                $profile->uri(),
+                $resourceType,
+                sprintf("Cannot load class '%s': class does not exist", $entityClass)
+            ));
+            return;
+        }
+
+        /** @var \ReflectionClass<object> $reflection */
+        $reflection = new \ReflectionClass($entityClass);
+
+        foreach ($requirements->getFieldRequirements() as $fieldName => $requirement) {
+            $this->validateFieldWithReflection($profile, $resourceType, $reflection, $fieldName, $requirement, $result);
+        }
+    }
+
+    /**
+     * Validate a single field using reflection.
+     *
+     * @param \ReflectionClass<object> $reflection
+     */
+    private function validateFieldWithReflection(
+        ProfileInterface $profile,
+        string $resourceType,
+        \ReflectionClass $reflection,
+        string $fieldName,
+        FieldRequirement $requirement,
+        ValidationResult $result
+    ): void {
+        // Check if property exists
+        if (!$reflection->hasProperty($fieldName)) {
+            if ($requirement->isRequired()) {
+                $result->addIssue(ValidationError::error(
+                    $profile->uri(),
+                    $resourceType,
+                    sprintf(
+                        "Missing required field '%s': %s",
+                        $fieldName,
+                        $requirement->description ?: 'no description'
+                    ),
+                    $fieldName
+                ));
+            }
+            return;
+        }
+
+        $property = $reflection->getProperty($fieldName);
+
+        // Validate type if specified
+        $propertyType = $property->getType();
+        if ($propertyType instanceof \ReflectionNamedType) {
+            $actualType = $propertyType->getName();
+
+            // Simple type matching (can be enhanced)
+            if (!$this->typesMatch($requirement->type, $actualType)) {
+                $severity = $requirement->isRequired() ? 'error' : 'warning';
+                $result->addIssue(ValidationError::$severity(
+                    $profile->uri(),
+                    $resourceType,
+                    sprintf(
+                        "Field '%s' type mismatch: expected '%s', got '%s'",
+                        $fieldName,
+                        $requirement->type,
+                        $actualType
+                    ),
+                    $fieldName
+                ));
+            }
+
+            // Validate nullable constraint
+            if (!$requirement->nullable && $propertyType->allowsNull()) {
+                $result->addIssue(ValidationError::warning(
+                    $profile->uri(),
+                    $resourceType,
+                    sprintf(
+                        "Field '%s' is nullable but profile expects non-nullable",
+                        $fieldName
+                    ),
+                    $fieldName
+                ));
+            }
+        }
+    }
+
+    /**
+     * Check if types match (simplified version).
+     */
+    private function typesMatch(string $expectedType, string $actualType): bool
+    {
+        // Normalize types
+        $expectedType = $this->normalizeType($expectedType);
+        $actualType = $this->normalizeType($actualType);
+
+        return $expectedType === $actualType;
+    }
+
+    /**
+     * Normalize type for comparison.
+     */
+    private function normalizeType(string $type): string
+    {
+        // Map common type aliases
+        $typeMap = [
+            'integer' => 'int',
+            'boolean' => 'bool',
+            'double' => 'float',
+        ];
+
+        $normalized = strtolower(trim($type));
+        return $typeMap[$normalized] ?? $normalized;
+    }
+
+    /**
+     * Get short class name without namespace.
+     */
+    private function getShortClassName(string $fqcn): string
+    {
+        $parts = explode('\\', $fqcn);
+        return end($parts);
     }
 
     /**
