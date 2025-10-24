@@ -84,4 +84,3 @@ final class CustomEndpointCollectorTest extends TestCase
         $collector->collect(); // Second call should use cache
     }
 }
-

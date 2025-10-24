@@ -50,7 +50,7 @@ final class PatchRelationshipDenormalizationTest extends IntegrationTestCase
         $articleId = $article->getId();
         $author1Id = $author1->getId();
         $author2Id = $author2->getId();
-        
+
         // Clear entity manager to ensure fresh load
         $this->em->clear();
 
@@ -88,11 +88,11 @@ final class PatchRelationshipDenormalizationTest extends IntegrationTestCase
         self::assertSame('Updated Title', $updatedArticle->getTitle());
         self::assertNotNull($updatedArticle->getAuthor());
         self::assertSame($author2Id, $updatedArticle->getAuthor()->getId());
-        
+
         // Verify that author1 still exists (wasn't replaced)
         $author1Check = $this->em->find(Author::class, $author1Id);
         self::assertNotNull($author1Check, 'Original author should still exist');
-        
+
         // Verify that author2 exists and is the same instance
         $author2Check = $this->em->find(Author::class, $author2Id);
         self::assertNotNull($author2Check, 'New author should exist');
@@ -123,7 +123,7 @@ final class PatchRelationshipDenormalizationTest extends IntegrationTestCase
         $this->em->flush();
         $articleId = $article->getId();
         $authorId = $author->getId();
-        
+
         // Clear entity manager
         $this->em->clear();
 
@@ -183,7 +183,7 @@ final class PatchRelationshipDenormalizationTest extends IntegrationTestCase
         $this->em->flush();
         $articleId = $article->getId();
         $authorId = $author->getId();
-        
+
         // Clear entity manager
         $this->em->clear();
 
@@ -214,10 +214,9 @@ final class PatchRelationshipDenormalizationTest extends IntegrationTestCase
         $updatedArticle = $this->em->find(Article::class, $articleId);
         self::assertNotNull($updatedArticle);
         self::assertNull($updatedArticle->getAuthor());
-        
+
         // Verify that the author still exists (wasn't deleted)
         $authorCheck = $this->em->find(Author::class, $authorId);
         self::assertNotNull($authorCheck, 'Author should still exist after relationship is cleared');
     }
 }
-

@@ -299,23 +299,26 @@ final class OpenApiSpecGenerator
         $collectionRef = '#/components/schemas/' . $names['collectionDocument'];
         $resourceRef = '#/components/schemas/' . $names['resourceDocument'];
 
-        return [
-            $path => [
-                'get' => [
-                    'tags' => [$tag],
-                    'operationId' => 'list' . $this->studly($metadata->type),
-                    'summary' => sprintf('List %s resources', $metadata->type),
-                    'responses' => [
-                        '200' => [
-                            'description' => 'Successful response',
-                            'content' => [
-                                MediaType::JSON_API => [
-                                    'schema' => ['$ref' => $collectionRef],
-                                ],
-                            ],
+        $getOperation = [
+            'tags' => [$tag],
+            'operationId' => 'list' . $this->studly($metadata->type),
+            'summary' => sprintf('List %s resources', $metadata->type),
+            'parameters' => $this->buildCollectionParameters($metadata),
+            'responses' => [
+                '200' => [
+                    'description' => 'Successful response',
+                    'content' => [
+                        MediaType::JSON_API => [
+                            'schema' => ['$ref' => $collectionRef],
                         ],
                     ],
                 ],
+            ],
+        ];
+
+        return [
+            $path => [
+                'get' => $getOperation,
                 'post' => [
                     'tags' => [$tag],
                     'operationId' => 'create' . $this->studly($metadata->type),
@@ -1383,5 +1386,156 @@ final class OpenApiSpecGenerator
         $parts = array_map('ucfirst', $parts);
 
         return strtolower($method) . implode('', $parts);
+    }
+
+    /**
+     * Build query parameters for collection GET operation.
+     *
+     * Includes pagination, filtering, sorting, sparse fieldsets, and include parameters.
+     *
+     * @return list<OpenApiSchema>
+     */
+    private function buildCollectionParameters(ResourceMetadata $metadata): array
+    {
+        $parameters = [];
+
+        // Pagination parameters
+        $parameters[] = [
+            'name' => 'page[number]',
+            'in' => 'query',
+            'description' => 'Page number for pagination',
+            'required' => false,
+            'schema' => [
+                'type' => 'integer',
+                'minimum' => 1,
+                'default' => 1,
+            ],
+        ];
+
+        $parameters[] = [
+            'name' => 'page[size]',
+            'in' => 'query',
+            'description' => 'Number of items per page',
+            'required' => false,
+            'schema' => [
+                'type' => 'integer',
+                'minimum' => 1,
+                'maximum' => 100,
+                'default' => 20,
+            ],
+        ];
+
+        // Filter parameters
+        if ($metadata->filterableFields !== null) {
+            foreach ($metadata->filterableFields->getFields() as $fieldName => $fieldConfig) {
+                foreach ($fieldConfig->operators as $operator) {
+                    $parameters[] = $this->buildFilterParameter($fieldName, $operator, $fieldConfig);
+                }
+            }
+        }
+
+        // Sort parameter
+        if ($metadata->sortableFields !== null) {
+            $sortableFieldNames = $metadata->sortableFields->getAllowedFields();
+            if ($sortableFieldNames !== []) {
+                $parameters[] = [
+                    'name' => 'sort',
+                    'in' => 'query',
+                    'description' => sprintf(
+                        'Sort order. Prefix with `-` for descending. Allowed fields: %s',
+                        implode(', ', $sortableFieldNames)
+                    ),
+                    'required' => false,
+                    'schema' => [
+                        'type' => 'string',
+                    ],
+                    'example' => '-' . $sortableFieldNames[0],
+                ];
+            }
+        }
+
+        // Sparse fieldsets parameter
+        $parameters[] = [
+            'name' => 'fields[' . $metadata->type . ']',
+            'in' => 'query',
+            'description' => 'Comma-separated list of fields to include in the response',
+            'required' => false,
+            'schema' => [
+                'type' => 'string',
+            ],
+        ];
+
+        // Include parameter (relationships)
+        if ($metadata->relationships !== []) {
+            $relationshipNames = array_keys($metadata->relationships);
+            $parameters[] = [
+                'name' => 'include',
+                'in' => 'query',
+                'description' => sprintf(
+                    'Comma-separated list of relationships to include. Available: %s',
+                    implode(', ', $relationshipNames)
+                ),
+                'required' => false,
+                'schema' => [
+                    'type' => 'string',
+                ],
+                'example' => $relationshipNames[0],
+            ];
+        }
+
+        return $parameters;
+    }
+
+    /**
+     * Build a filter parameter for OpenAPI spec.
+     *
+     * @return OpenApiSchema
+     */
+    private function buildFilterParameter(string $fieldName, string $operator, \AlexFigures\Symfony\Resource\Attribute\FilterableField $fieldConfig): array
+    {
+        $operatorDescriptions = [
+            'eq' => 'equals',
+            'ne' => 'not equals',
+            'gt' => 'greater than',
+            'gte' => 'greater than or equal',
+            'lt' => 'less than',
+            'lte' => 'less than or equal',
+            'like' => 'pattern match (use * as wildcard)',
+            'in' => 'value in list (comma-separated)',
+            'nin' => 'value not in list (comma-separated)',
+            'null' => 'is null (use 1 for true, 0 for false)',
+            'nnull' => 'is not null (use 1 for true, 0 for false)',
+        ];
+
+        $description = sprintf(
+            'Filter by %s (%s)',
+            $fieldName,
+            $operatorDescriptions[$operator] ?? $operator
+        );
+
+        if ($fieldConfig->hasCustomHandler()) {
+            $description .= ' [custom handler]';
+        }
+
+        $schema = [
+            'type' => 'string',
+        ];
+
+        // Add examples for specific operators
+        if ($operator === 'like') {
+            $schema['example'] = '*search*';
+        } elseif ($operator === 'in' || $operator === 'nin') {
+            $schema['example'] = 'value1,value2,value3';
+        } elseif ($operator === 'null' || $operator === 'nnull') {
+            $schema['example'] = '1';
+        }
+
+        return [
+            'name' => sprintf('filter[%s][%s]', $fieldName, $operator),
+            'in' => 'query',
+            'description' => $description,
+            'required' => false,
+            'schema' => $schema,
+        ];
     }
 }

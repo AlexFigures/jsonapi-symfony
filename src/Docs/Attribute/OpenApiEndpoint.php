@@ -69,16 +69,16 @@ use Attribute;
 final class OpenApiEndpoint
 {
     /**
-     * @param string                                    $summary     Short summary of the endpoint
-     * @param string|null                               $description Detailed description (optional)
-     * @param OpenApiRequestBody|null                   $requestBody Request body specification (optional)
-     * @param array<int, OpenApiResponse>               $responses   Response specifications indexed by HTTP status code
-     * @param list<string>                              $tags        Tags for grouping endpoints in documentation
-     * @param list<OpenApiParameter>                    $parameters  Query/path/header parameters (optional)
-     * @param string|null                               $operationId Unique operation ID (auto-generated if null)
-     * @param array<string, mixed>                      $security    Security requirements (optional)
-     * @param bool                                      $deprecated  Mark endpoint as deprecated
-     * @param array<string, OpenApiExample>             $examples    Request/response examples (optional)
+     * @param string                        $summary     Short summary of the endpoint
+     * @param string|null                   $description Detailed description (optional)
+     * @param OpenApiRequestBody|null       $requestBody Request body specification (optional)
+     * @param array<int, OpenApiResponse>   $responses   Response specifications indexed by HTTP status code
+     * @param list<string>                  $tags        Tags for grouping endpoints in documentation
+     * @param list<OpenApiParameter>        $parameters  Query/path/header parameters (optional)
+     * @param string|null                   $operationId Unique operation ID (auto-generated if null)
+     * @param array<string, mixed>          $security    Security requirements (optional)
+     * @param bool                          $deprecated  Mark endpoint as deprecated
+     * @param array<string, OpenApiExample> $examples    Request/response examples (optional)
      */
     public function __construct(
         public readonly string $summary,
@@ -94,4 +94,3 @@ final class OpenApiEndpoint
     ) {
     }
 }
-

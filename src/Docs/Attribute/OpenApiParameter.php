@@ -16,14 +16,14 @@ use Attribute;
 final class OpenApiParameter
 {
     /**
-     * @param string               $name        Parameter name
-     * @param string               $in          Parameter location: 'query', 'path', 'header', 'cookie'
-     * @param string               $description Parameter description
-     * @param bool                 $required    Whether the parameter is required
-     * @param string               $type        Parameter type: 'string', 'integer', 'boolean', 'array', 'object'
-     * @param string|null          $format      Parameter format (e.g., 'date-time', 'email', 'uri')
+     * @param string                    $name        Parameter name
+     * @param string                    $in          Parameter location: 'query', 'path', 'header', 'cookie'
+     * @param string                    $description Parameter description
+     * @param bool                      $required    Whether the parameter is required
+     * @param string                    $type        Parameter type: 'string', 'integer', 'boolean', 'array', 'object'
+     * @param string|null               $format      Parameter format (e.g., 'date-time', 'email', 'uri')
      * @param array<string, mixed>|null $schema      Full schema definition (overrides type/format if provided)
-     * @param mixed                $example     Example value
+     * @param mixed                     $example     Example value
      */
     public function __construct(
         public readonly string $name,
@@ -42,4 +42,3 @@ final class OpenApiParameter
         }
     }
 }
-

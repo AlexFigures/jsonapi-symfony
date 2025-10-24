@@ -17,7 +17,7 @@ final class RelationshipIgnoringDenormalizerTest extends TestCase
     protected function setUp(): void
     {
         $this->denormalizer = new RelationshipIgnoringDenormalizer();
-        
+
         // Create a mock inner denormalizer
         $this->innerDenormalizer = $this->createMock(DenormalizerInterface::class);
         $this->denormalizer->setDenormalizer($this->innerDenormalizer);
@@ -141,4 +141,3 @@ class TestAuthor
     public string $id = '';
     public string $name = '';
 }
-
