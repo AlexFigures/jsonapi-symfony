@@ -73,15 +73,15 @@ final class DoctrineFilterCompiler
         throw new \InvalidArgumentException(sprintf('Unsupported AST node type: %s', get_class($node)));
     }
 
-    private function compileComparison(Comparison $node, string $rootAlias, AbstractPlatform $platform): \AlexFigures\Symfony\Filter\Operator\DoctrineExpression
+    private function compileComparison(Comparison $node, string $rootAlias, AbstractPlatform $platform): ?\AlexFigures\Symfony\Filter\Operator\DoctrineExpression
     {
         // Check for custom filter handler first
         $customHandler = $this->filterHandlers->findHandler($node->fieldPath, $node->operator);
         if ($customHandler !== null) {
-            // For custom handlers, we need to create a temporary QueryBuilder to capture the modifications
-            // This is a simplified approach - in a real implementation, you might want to return
-            // a special expression type that can be applied later
-            throw new \LogicException('Custom filter handlers are not yet fully implemented in DoctrineFilterCompiler. Please use the repository-level integration instead.');
+            // Custom handlers are applied at the repository level (GenericDoctrineRepository)
+            // Skip them here and return null to exclude from the compiled expression
+            // The repository will apply them separately using the handler's apply() method
+            return null;
         }
 
         $operator = $this->operators->get($node->operator);
