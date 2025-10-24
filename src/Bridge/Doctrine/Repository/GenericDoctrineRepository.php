@@ -7,7 +7,15 @@ namespace AlexFigures\Symfony\Bridge\Doctrine\Repository;
 use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
 use AlexFigures\Symfony\Contract\Data\ResourceRepository;
 use AlexFigures\Symfony\Contract\Data\Slice;
+use AlexFigures\Symfony\Filter\Ast\Between;
+use AlexFigures\Symfony\Filter\Ast\Comparison;
+use AlexFigures\Symfony\Filter\Ast\Conjunction;
+use AlexFigures\Symfony\Filter\Ast\Disjunction;
+use AlexFigures\Symfony\Filter\Ast\Group;
+use AlexFigures\Symfony\Filter\Ast\Node;
+use AlexFigures\Symfony\Filter\Ast\NullCheck;
 use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
 use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
 use AlexFigures\Symfony\Query\Criteria;
 use AlexFigures\Symfony\Query\Sorting;
@@ -37,6 +45,7 @@ class GenericDoctrineRepository implements ResourceRepository
         private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
         private readonly DoctrineFilterCompiler $filterCompiler,
+        private readonly FilterHandlerRegistry $filterHandlers,
         private readonly SortHandlerRegistry $sortHandlers,
         private readonly ReadMapperInterface $readMapper,
     ) {
@@ -69,6 +78,10 @@ class GenericDoctrineRepository implements ResourceRepository
         }
 
         if ($criteria->filter !== null) {
+            // Apply custom filter handlers first
+            $this->applyCustomFilters($qb, $criteria->filter);
+
+            // Then apply standard filters through compiler
             $platform = $em->getConnection()->getDatabasePlatform();
             $this->filterCompiler->apply($qb, $criteria->filter, $platform);
         }
@@ -484,6 +497,10 @@ class GenericDoctrineRepository implements ResourceRepository
             ->from($entityClass, 'e');
 
         if ($criteria->filter !== null) {
+            // Apply custom filter handlers first
+            $this->applyCustomFilters($idQb, $criteria->filter);
+
+            // Then apply standard filters through compiler
             $platform = $em->getConnection()->getDatabasePlatform();
             $this->filterCompiler->apply($idQb, $criteria->filter, $platform);
         }
@@ -577,5 +594,43 @@ class GenericDoctrineRepository implements ResourceRepository
             $criteria->pagination->size,
             $total
         );
+    }
+
+    /**
+     * Apply custom filter handlers to the query builder.
+     *
+     * This method recursively walks the filter AST and applies custom handlers
+     * for fields that have them registered. Custom handlers are applied before
+     * the standard filter compilation.
+     */
+    private function applyCustomFilters(QueryBuilder $qb, Node $filterNode): void
+    {
+        if ($filterNode instanceof Comparison) {
+            $handler = $this->filterHandlers->findHandler($filterNode->fieldPath, $filterNode->operator);
+            if ($handler !== null) {
+                $handler->handle($filterNode->fieldPath, $filterNode->operator, $filterNode->values, $qb);
+            }
+        } elseif ($filterNode instanceof NullCheck) {
+            $operator = $filterNode->isNull ? 'null' : 'nnull';
+            $handler = $this->filterHandlers->findHandler($filterNode->fieldPath, $operator);
+            if ($handler !== null) {
+                $handler->handle($filterNode->fieldPath, $operator, [], $qb);
+            }
+        } elseif ($filterNode instanceof Between) {
+            $handler = $this->filterHandlers->findHandler($filterNode->fieldPath, 'between');
+            if ($handler !== null) {
+                $handler->handle($filterNode->fieldPath, 'between', [$filterNode->from, $filterNode->to], $qb);
+            }
+        } elseif ($filterNode instanceof Conjunction) {
+            foreach ($filterNode->children as $child) {
+                $this->applyCustomFilters($qb, $child);
+            }
+        } elseif ($filterNode instanceof Disjunction) {
+            foreach ($filterNode->children as $child) {
+                $this->applyCustomFilters($qb, $child);
+            }
+        } elseif ($filterNode instanceof Group) {
+            $this->applyCustomFilters($qb, $filterNode->expression);
+        }
     }
 }

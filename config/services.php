@@ -659,6 +659,7 @@ return static function (ContainerConfigurator $configurator): void {
             service('doctrine'),
             service(ResourceRegistryInterface::class),
             service(DoctrineFilterCompiler::class),
+            service(FilterHandlerRegistry::class),
             service(SortHandlerRegistry::class),
             service(\AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface::class),
         ])
