@@ -16,10 +16,10 @@ use Attribute;
 final class OpenApiResponse
 {
     /**
-     * @param string               $description Description of the response
-     * @param string|null          $contentType Content type (e.g., 'application/json', 'application/vnd.api+json')
-     * @param array<string, mixed>|null $schema      OpenAPI schema definition (mutually exclusive with schemaRef)
-     * @param string|null          $schemaRef   Reference to a schema (e.g., '#/components/schemas/ErrorDocument')
+     * @param string                            $description Description of the response
+     * @param string|null                       $contentType Content type (e.g., 'application/json', 'application/vnd.api+json')
+     * @param array<string, mixed>|null         $schema      OpenAPI schema definition (mutually exclusive with schemaRef)
+     * @param string|null                       $schemaRef   Reference to a schema (e.g., '#/components/schemas/ErrorDocument')
      * @param array<string, OpenApiHeader>|null $headers     Response headers
      */
     public function __construct(
@@ -34,4 +34,3 @@ final class OpenApiResponse
         }
     }
 }
-

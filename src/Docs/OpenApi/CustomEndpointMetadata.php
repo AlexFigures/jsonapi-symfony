@@ -14,9 +14,9 @@ use AlexFigures\Symfony\Docs\Attribute\OpenApiEndpoint;
 final class CustomEndpointMetadata
 {
     /**
-     * @param string          $path      Route path
-     * @param string          $method    HTTP method
-     * @param OpenApiEndpoint $openApi   OpenAPI metadata
+     * @param string          $path    Route path
+     * @param string          $method  HTTP method
+     * @param OpenApiEndpoint $openApi OpenAPI metadata
      */
     public function __construct(
         public readonly string $path,
@@ -25,4 +25,3 @@ final class CustomEndpointMetadata
     ) {
     }
 }
-

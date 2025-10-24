@@ -16,10 +16,10 @@ use Attribute;
 final class OpenApiRequestBody
 {
     /**
-     * @param string              $contentType Content type (e.g., 'application/json', 'multipart/form-data')
+     * @param string               $contentType Content type (e.g., 'application/json', 'multipart/form-data')
      * @param array<string, mixed> $schema      OpenAPI schema definition
-     * @param bool                $required    Whether the request body is required
-     * @param string|null         $description Description of the request body
+     * @param bool                 $required    Whether the request body is required
+     * @param string|null          $description Description of the request body
      */
     public function __construct(
         public readonly string $contentType,
@@ -29,4 +29,3 @@ final class OpenApiRequestBody
     ) {
     }
 }
-

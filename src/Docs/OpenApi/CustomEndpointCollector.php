@@ -98,4 +98,3 @@ final class CustomEndpointCollector
         return $this->endpoints;
     }
 }
-
