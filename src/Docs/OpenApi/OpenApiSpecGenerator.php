@@ -42,6 +42,7 @@ final class OpenApiSpecGenerator
         private readonly string $routePrefix,
         private readonly string $relationshipWriteMode,
         private readonly ?AtomicConfig $atomicConfig = null,
+        private readonly ?CustomEndpointCollector $customEndpointCollector = null,
     ) {
     }
 
@@ -101,6 +102,20 @@ final class OpenApiSpecGenerator
                 'name' => 'Atomic Operations',
                 'description' => 'JSON:API Atomic Operations for batch processing',
             ];
+        }
+
+        // Add custom endpoints with OpenApiEndpoint attribute
+        if ($this->customEndpointCollector !== null) {
+            foreach ($this->customEndpointCollector->collect() as $endpoint) {
+                $paths = $this->mergePaths($paths, $this->buildCustomEndpointPaths($endpoint));
+
+                // Add tags from custom endpoint
+                foreach ($endpoint->openApi->tags as $tag) {
+                    if (!in_array(['name' => $tag], $tags, true)) {
+                        $tags[] = ['name' => $tag];
+                    }
+                }
+            }
         }
 
         ksort($paths);
@@ -1214,5 +1229,159 @@ final class OpenApiSpecGenerator
                 'additionalProperties' => true,
             ],
         ];
+    }
+
+    /**
+     * Build OpenAPI paths for a custom endpoint with OpenApiEndpoint attribute.
+     *
+     * @return array<string, OpenApiSchema>
+     */
+    private function buildCustomEndpointPaths(CustomEndpointMetadata $endpoint): array
+    {
+        $openApi = $endpoint->openApi;
+        $operation = [
+            'operationId' => $openApi->operationId ?? $this->generateOperationId($endpoint->path, $endpoint->method),
+            'summary' => $openApi->summary,
+            'tags' => $openApi->tags,
+        ];
+
+        if ($openApi->description !== null) {
+            $operation['description'] = $openApi->description;
+        }
+
+        if ($openApi->deprecated) {
+            $operation['deprecated'] = true;
+        }
+
+        // Add parameters
+        if ($openApi->parameters !== []) {
+            $operation['parameters'] = array_map(
+                fn ($param) => $this->buildParameterSchema($param),
+                $openApi->parameters
+            );
+        }
+
+        // Add request body
+        if ($openApi->requestBody !== null) {
+            $requestBody = $openApi->requestBody;
+            $operation['requestBody'] = [
+                'required' => $requestBody->required,
+                'content' => [
+                    $requestBody->contentType => [
+                        'schema' => $requestBody->schema,
+                    ],
+                ],
+            ];
+
+            if ($requestBody->description !== null) {
+                $operation['requestBody']['description'] = $requestBody->description;
+            }
+        }
+
+        // Add responses
+        $operation['responses'] = [];
+        foreach ($openApi->responses as $statusCode => $response) {
+            $responseSchema = ['description' => $response->description];
+
+            if ($response->contentType !== null) {
+                $schema = $response->schemaRef !== null
+                    ? ['$ref' => $response->schemaRef]
+                    : $response->schema;
+
+                $responseSchema['content'] = [
+                    $response->contentType => [
+                        'schema' => $schema,
+                    ],
+                ];
+            }
+
+            if ($response->headers !== null) {
+                $responseSchema['headers'] = array_map(
+                    fn ($header) => $this->buildHeaderSchema($header),
+                    $response->headers
+                );
+            }
+
+            $operation['responses'][(string) $statusCode] = $responseSchema;
+        }
+
+        // Add security if specified
+        if ($openApi->security !== []) {
+            $operation['security'] = $openApi->security;
+        }
+
+        return [
+            $endpoint->path => [
+                $endpoint->method => $operation,
+            ],
+        ];
+    }
+
+    /**
+     * Build parameter schema from OpenApiParameter.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildParameterSchema(\AlexFigures\Symfony\Docs\Attribute\OpenApiParameter $param): array
+    {
+        $schema = [
+            'name' => $param->name,
+            'in' => $param->in,
+            'required' => $param->required,
+        ];
+
+        if ($param->description !== '') {
+            $schema['description'] = $param->description;
+        }
+
+        if ($param->schema !== null) {
+            $schema['schema'] = $param->schema;
+        } else {
+            $typeSchema = ['type' => $param->type];
+            if ($param->format !== null) {
+                $typeSchema['format'] = $param->format;
+            }
+
+            $schema['schema'] = $typeSchema;
+        }
+
+        if ($param->example !== null) {
+            $schema['example'] = $param->example;
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Build header schema from OpenApiHeader.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildHeaderSchema(\AlexFigures\Symfony\Docs\Attribute\OpenApiHeader $header): array
+    {
+        $schema = [
+            'description' => $header->description,
+            'schema' => ['type' => $header->type],
+        ];
+
+        if ($header->format !== null) {
+            $schema['schema']['format'] = $header->format;
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Generate operation ID from path and method.
+     */
+    private function generateOperationId(string $path, string $method): string
+    {
+        // Remove leading slash and convert to camelCase
+        $path = ltrim($path, '/');
+        $path = str_replace(['/', '-', '_', '{', '}'], ' ', $path);
+        $parts = array_filter(explode(' ', $path));
+        $parts = array_map('ucfirst', $parts);
+
+        return strtolower($method) . implode('', $parts);
     }
 }
