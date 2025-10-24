@@ -16,6 +16,7 @@ use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
 use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
 use AlexFigures\Symfony\Contract\Data\ResourceRepository;
 use AlexFigures\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\Docs\OpenApi\CustomEndpointCollector;
 use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
 use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
 use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
@@ -368,6 +369,13 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
+        ->set(CustomEndpointCollector::class)
+        ->args([
+            service('router'),
+        ])
+    ;
+
+    $services
         ->set(OpenApiSpecGenerator::class)
         ->args([
             service(ResourceRegistryInterface::class),
@@ -376,6 +384,7 @@ return static function (ContainerConfigurator $configurator): void {
             '%jsonapi.route_prefix%',
             '%jsonapi.relationships.write_response%',
             service('jsonapi.atomic_config_for_openapi'),
+            service(CustomEndpointCollector::class),
         ])
     ;
 
@@ -659,6 +668,7 @@ return static function (ContainerConfigurator $configurator): void {
             service('doctrine'),
             service(ResourceRegistryInterface::class),
             service(DoctrineFilterCompiler::class),
+            service(FilterHandlerRegistry::class),
             service(SortHandlerRegistry::class),
             service(\AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface::class),
         ])
