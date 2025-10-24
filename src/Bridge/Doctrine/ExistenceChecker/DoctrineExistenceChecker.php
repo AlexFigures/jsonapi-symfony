@@ -6,6 +6,7 @@ namespace AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker;
 
 use AlexFigures\Symfony\Contract\Data\ExistenceChecker;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use Doctrine\DBAL\Connections\PrimaryReadReplicaConnection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use RuntimeException;
@@ -44,6 +45,14 @@ final class DoctrineExistenceChecker implements ExistenceChecker
         $em = $this->getEntityManagerFor($entityClass);
         $classMetadata = $em->getClassMetadata($entityClass);
         $identifierField = $classMetadata->getSingleIdentifierFieldName();
+
+        // Ensure we query the primary database, not a replica
+        // This is critical for consistency: a related entity might have just been created
+        // and may not yet be replicated to read replicas
+        $connection = $em->getConnection();
+        if ($connection instanceof PrimaryReadReplicaConnection) {
+            $connection->ensureConnectedToPrimary();
+        }
 
         // Use COUNT query for optimal performance
         $qb = $em->createQueryBuilder();

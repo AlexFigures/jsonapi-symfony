@@ -16,6 +16,7 @@ use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Connections\PrimaryReadReplicaConnection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\AssociationMapping;
 use Doctrine\ORM\Mapping\InverseSideMapping;
@@ -288,6 +289,14 @@ class RelationshipResolver
         }
 
         // VERIFY policy: early existence check with good error message
+        // Ensure we query the primary database, not a replica
+        // This is critical for consistency: a related entity might have just been created
+        // and may not yet be replicated to read replicas
+        $connection = $targetEm->getConnection();
+        if ($connection instanceof PrimaryReadReplicaConnection) {
+            $connection->ensureConnectedToPrimary();
+        }
+
         $obj = $targetEm->find($class, $id);
         if (!\is_object($obj)) {
             // JSON:API spec requires 404 for missing related resources, not 422
@@ -355,6 +364,14 @@ class RelationshipResolver
                     );
                 }
                 continue;
+            }
+
+            // VERIFY policy: ensure we query the primary database, not a replica
+            // This is critical for consistency: related entities might have just been created
+            // and may not yet be replicated to read replicas
+            $connection = $targetEm->getConnection();
+            if ($connection instanceof PrimaryReadReplicaConnection) {
+                $connection->ensureConnectedToPrimary();
             }
 
             $qb = $targetEm->createQueryBuilder();
