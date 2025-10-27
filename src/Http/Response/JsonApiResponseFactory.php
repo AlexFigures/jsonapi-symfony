@@ -124,9 +124,9 @@ final class JsonApiResponseFactory
      *     ->build();
      * ```
      *
-     * @param string        $type      JSON:API resource type
-     * @param list<object>  $resources Array of resource entities
-     * @param int|null      $totalItems Total number of items (for pagination). If null, uses count($resources)
+     * @param string       $type       JSON:API resource type
+     * @param list<object> $resources  Array of resource entities
+     * @param int|null     $totalItems Total number of items (for pagination). If null, uses count($resources)
      *
      * @return JsonApiResponseBuilder Fluent builder for customizing the response
      */
@@ -274,4 +274,3 @@ final class JsonApiResponseFactory
         return $this->registry;
     }
 }
-

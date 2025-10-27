@@ -44,8 +44,8 @@ final class JsonApiErrorBuilder
     private array $headers = [];
 
     /**
-     * @param int                                                                                  $status           HTTP status code
-     * @param string|null                                                                          $detail           Error detail message
+     * @param int                                                                              $status           HTTP status code
+     * @param string|null                                                                      $detail           Error detail message
      * @param list<array{pointer: string, detail: string, code?: string, title?: string}>|null $validationErrors Array of validation errors
      */
     public function __construct(
@@ -297,4 +297,3 @@ final class JsonApiErrorBuilder
         return $result;
     }
 }
-

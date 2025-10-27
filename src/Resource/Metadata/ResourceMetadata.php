@@ -8,6 +8,7 @@ use AlexFigures\Symfony\Profile\ProfileContext;
 use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
 use AlexFigures\Symfony\Resource\Definition\ReadProjection;
 use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
+use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
 use AlexFigures\Symfony\Resource\Definition\VersionDefinition;
 use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
 use LogicException;
@@ -48,6 +49,11 @@ final class ResourceMetadata
     public ?VersionResolverInterface $versionResolver;
 
     /**
+     * @var list<ResourceOperation>
+     */
+    public array $allowedOperations;
+
+    /**
      * @param AttributeMap                             $attributes
      * @param RelationshipMap                          $relationships
      * @param class-string                             $class
@@ -58,6 +64,7 @@ final class ResourceMetadata
      * @param array<string, string>                    $fieldMap
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
      * @param array<string, class-string>              $writeRequests
+     * @param list<ResourceOperation>|null             $allowedOperations
      */
     public function __construct(
         public string $type,
@@ -85,6 +92,7 @@ final class ResourceMetadata
         array $relationshipPolicies = [],
         array $writeRequests = [],
         ?VersionResolverInterface $versionResolver = null,
+        ?array $allowedOperations = null,
     ) {
         $this->class = self::assertClassString($class, 'class');
         $this->dataClass = self::assertClassString($dataClass ?? $class, 'dataClass');
@@ -94,6 +102,7 @@ final class ResourceMetadata
         $this->relationshipPolicies = $relationshipPolicies;
         $this->writeRequests = $writeRequests;
         $this->versionResolver = $versionResolver;
+        $this->allowedOperations = $allowedOperations ?? ResourceOperation::cases();
     }
 
     /**
@@ -156,6 +165,7 @@ final class ResourceMetadata
             relationshipPolicies: $versionDefinition->relationshipPolicies + $this->relationshipPolicies,
             writeRequests: $versionDefinition->writeRequests + $this->writeRequests,
             versionResolver: $this->versionResolver,
+            allowedOperations: $this->allowedOperations,
         );
     }
 

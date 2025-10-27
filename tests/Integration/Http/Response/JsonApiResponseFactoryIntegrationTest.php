@@ -382,4 +382,3 @@ final class JsonApiResponseFactoryIntegrationTest extends DoctrineIntegrationTes
         self::assertArrayHasKey('download', $data['links']);
     }
 }
-

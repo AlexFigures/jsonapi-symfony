@@ -112,4 +112,3 @@ final class JsonApiResponseFactoryTest extends TestCase
         self::assertInstanceOf(JsonApiErrorBuilder::class, $builder);
     }
 }
-

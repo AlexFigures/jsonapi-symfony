@@ -10,6 +10,7 @@ use AlexFigures\Symfony\Resource\Attribute\Id;
 use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use AlexFigures\Symfony\Resource\Attribute\Relationship as RelationshipAttribute;
 use AlexFigures\Symfony\Resource\Attribute\SortableFields;
+use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
 use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
 use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
@@ -179,6 +180,9 @@ final class ResourceRegistry implements ResourceRegistryInterface
             $filterableFields = $filterableFieldsAttributes[0]->newInstance();
         }
 
+        // Normalize and validate operations
+        $allowedOperations = $this->normalizeOperations($resource->operations, $class);
+
         return new ResourceMetadata(
             type: $resource->type,
             class: $class,
@@ -199,6 +203,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
             relationshipPolicies: $resource->relationshipPolicies,
             writeRequests: $resource->writeRequests,
             versionResolver: $versionResolver,
+            allowedOperations: $allowedOperations,
         );
     }
 
@@ -467,5 +472,49 @@ final class ResourceRegistry implements ResourceRegistryInterface
         $attribute = $attributes[0]->newInstance();
 
         return $attribute->type;
+    }
+
+    /**
+     * Normalize and validate operations list.
+     *
+     * @param list<ResourceOperation>|null $operations
+     * @param class-string                 $class
+     *
+     * @return list<ResourceOperation>
+     */
+    private function normalizeOperations(?array $operations, string $class): array
+    {
+        // Null means all operations are allowed (backward compatibility)
+        if ($operations === null) {
+            return ResourceOperation::cases();
+        }
+
+        // Validate that all items are ResourceOperation instances
+        $normalized = [];
+        $seen = [];
+        foreach ($operations as $operation) {
+            if (!$operation instanceof ResourceOperation) {
+                throw new LogicException(sprintf(
+                    'Invalid operation for resource %s. Expected ResourceOperation enum, got %s.',
+                    $class,
+                    get_debug_type($operation)
+                ));
+            }
+
+            // Check for duplicates
+            $key = $operation->value;
+            if (isset($seen[$key])) {
+                throw new LogicException(sprintf(
+                    'Duplicate operation "%s" detected for resource %s.',
+                    $operation->value,
+                    $class
+                ));
+            }
+
+            $seen[$key] = true;
+            $normalized[] = $operation;
+        }
+
+        return $normalized;
     }
 }

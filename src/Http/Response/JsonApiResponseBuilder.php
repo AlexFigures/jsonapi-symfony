@@ -51,12 +51,12 @@ final class JsonApiResponseBuilder
     private ?Request $request = null;
 
     /**
-     * @param string                $type               JSON:API resource type
-     * @param string                $mode               Response mode: 'resource', 'collection', 'empty'
-     * @param object|list<object>|null $data            Resource(s) or null for empty responses
-     * @param int                   $status             HTTP status code
-     * @param int|null              $totalItems         Total items for collections (pagination)
-     * @param bool                  $autoLocationHeader Whether to automatically add Location header (for 201 Created)
+     * @param string                   $type               JSON:API resource type
+     * @param string                   $mode               Response mode: 'resource', 'collection', 'empty'
+     * @param object|list<object>|null $data               Resource(s) or null for empty responses
+     * @param int                      $status             HTTP status code
+     * @param int|null                 $totalItems         Total items for collections (pagination)
+     * @param bool                     $autoLocationHeader Whether to automatically add Location header (for 201 Created)
      */
     public function __construct(
         private readonly JsonApiResponseFactory $factory,
@@ -407,4 +407,3 @@ final class JsonApiResponseBuilder
         return new JsonResponse($document, $this->status, $headers);
     }
 }
-

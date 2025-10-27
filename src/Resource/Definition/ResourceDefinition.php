@@ -15,6 +15,7 @@ final class ResourceDefinition
      * @param array<string, string>                    $fieldMap
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
      * @param array<string, class-string>              $writeRequests
+     * @param list<ResourceOperation>                  $allowedOperations
      */
     public function __construct(
         public readonly string $type,
@@ -25,6 +26,7 @@ final class ResourceDefinition
         public readonly array $relationshipPolicies,
         public readonly array $writeRequests,
         public readonly ?VersionResolverInterface $versionResolver = null,
+        public readonly array $allowedOperations = [],
     ) {
     }
 
