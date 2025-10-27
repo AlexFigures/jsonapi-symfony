@@ -463,19 +463,19 @@ abstract class JsonApiTestCase extends TestCase
         $this->repository = $repository;
         $this->parser = $parser;
         $this->document = $document;
-        $this->collectionController = new CollectionController($registry, $repository, $parser, $document);
+        $this->collectionController = new CollectionController($registry, $repository, $parser, $document, $errorMapper);
         $this->resourceController = new ResourceController($registry, $repository, $parser, $document, $errorMapper);
         $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $errorMapper, $violationMapper, $eventDispatcher);
         $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $errorMapper, $violationMapper, $eventDispatcher);
-        $this->deleteController = new DeleteResourceController($registry, $persister, $transactionManager, $eventDispatcher);
+        $this->deleteController = new DeleteResourceController($registry, $persister, $transactionManager, $eventDispatcher, $errorMapper);
         $this->accessor = $accessor;
         $this->relationshipResolver = $relationshipResolver;
         $this->persister = $persister;
         $this->transactionManager = $transactionManager;
         $this->eventDispatcher = $eventDispatcher;
-        $this->relatedController = new RelatedController($registry, $relationshipReader, $parser, $document);
-        $this->relationshipGetController = new RelationshipGetController($linkageBuilder);
-        $this->relationshipWriteController = new RelationshipWriteController($relationshipValidator, $relationshipUpdater, $linkageBuilder, $relationshipResponseConfig, $errorMapper, $transactionManager, $eventDispatcher);
+        $this->relatedController = new RelatedController($registry, $relationshipReader, $parser, $document, $errorMapper);
+        $this->relationshipGetController = new RelationshipGetController($linkageBuilder, $registry, $errorMapper);
+        $this->relationshipWriteController = new RelationshipWriteController($relationshipValidator, $relationshipUpdater, $linkageBuilder, $relationshipResponseConfig, $errorMapper, $transactionManager, $eventDispatcher, $registry);
         $this->atomicController = $atomicController;
 
         $this->errorMapper = $errorMapper;

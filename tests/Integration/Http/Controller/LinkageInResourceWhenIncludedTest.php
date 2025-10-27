@@ -93,7 +93,8 @@ final class LinkageInResourceWhenIncludedTest extends DoctrineIntegrationTestCas
             $this->registry,
             $this->repository,
             $queryParser,
-            $documentBuilder
+            $documentBuilder,
+            $errorMapper
         );
     }
 

@@ -493,6 +493,8 @@ final class ResourceRegistry implements ResourceRegistryInterface
         $normalized = [];
         $seen = [];
         foreach ($operations as $operation) {
+            // Runtime validation - PHPDoc type hint is not enforced at runtime
+            /** @phpstan-ignore instanceof.alwaysTrue */
             if (!$operation instanceof ResourceOperation) {
                 throw new LogicException(sprintf(
                     'Invalid operation for resource %s. Expected ResourceOperation enum, got %s.',

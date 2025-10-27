@@ -237,7 +237,8 @@ final class InvalidationEventsTest extends JsonApiTestCase
             $this->registry(),
             $this->persister(),
             $this->transactionManager(),
-            $eventDispatcher
+            $eventDispatcher,
+            $this->errorMapper()
         );
     }
 
@@ -283,7 +284,8 @@ final class InvalidationEventsTest extends JsonApiTestCase
             $relationshipResponseConfig,
             $this->errorMapper(),
             $this->transactionManager(),
-            $eventDispatcher
+            $eventDispatcher,
+            $this->registry()
         );
     }
 }

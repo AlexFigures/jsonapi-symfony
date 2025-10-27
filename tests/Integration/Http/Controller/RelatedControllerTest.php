@@ -122,7 +122,8 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
             $this->registry,
             $relationshipReader,
             $queryParser,
-            $documentBuilder
+            $documentBuilder,
+            $errorMapper
         );
     }
 

@@ -155,6 +155,42 @@ final class JsonApiRouteLoader extends Loader
                 );
             }
 
+            // OPTIONS route for collection endpoint
+            // Always register if at least one collection operation is allowed
+            if ($this->isOperationAllowed(ResourceOperation::INDEX, $allowedOperations)
+                || $this->isOperationAllowed(ResourceOperation::CREATE, $allowedOperations)) {
+                $routes->add(
+                    $this->generateRouteName($resourceType, 'options'),
+                    new Route(
+                        path: "{$prefix}/{$resourceType}",
+                        defaults: [
+                            '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::collection',
+                            'type' => $resourceType,
+                        ],
+                        methods: ['OPTIONS'],
+                    )
+                );
+            }
+
+            // OPTIONS route for resource endpoint
+            // Always register if at least one resource operation is allowed
+            if ($this->isOperationAllowed(ResourceOperation::SHOW, $allowedOperations)
+                || $this->isOperationAllowed(ResourceOperation::UPDATE, $allowedOperations)
+                || $this->isOperationAllowed(ResourceOperation::DELETE, $allowedOperations)) {
+                $routes->add(
+                    $this->generateRouteName($resourceType, 'options.resource'),
+                    new Route(
+                        path: "{$prefix}/{$resourceType}/{id}",
+                        defaults: [
+                            '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::resource',
+                            'type' => $resourceType,
+                        ],
+                        requirements: ['id' => '[^/]+'],
+                        methods: ['OPTIONS'],
+                    )
+                );
+            }
+
             // Relationship routes
             if ($this->enableRelationshipRoutes && count($metadata->relationships) > 0) {
                 foreach ($metadata->relationships as $relationship) {
@@ -234,6 +270,36 @@ final class JsonApiRouteLoader extends Loader
                             ],
                             requirements: ['id' => '[^/]+'],
                             methods: ['GET'],
+                        )
+                    );
+
+                    // OPTIONS route for relationship endpoint
+                    $routes->add(
+                        $this->generateRouteName($resourceType, null, $relationshipName, 'options'),
+                        new Route(
+                            path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
+                            defaults: [
+                                '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::relationship',
+                                'type' => $resourceType,
+                                'rel' => $relationshipName,
+                            ],
+                            requirements: ['id' => '[^/]+'],
+                            methods: ['OPTIONS'],
+                        )
+                    );
+
+                    // OPTIONS route for related resource endpoint
+                    $routes->add(
+                        $this->generateRouteName($resourceType, null, $relationshipName, 'options.related'),
+                        new Route(
+                            path: "{$prefix}/{$resourceType}/{id}/{$relationshipName}",
+                            defaults: [
+                                '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::related',
+                                'type' => $resourceType,
+                                'rel' => $relationshipName,
+                            ],
+                            requirements: ['id' => '[^/]+'],
+                            methods: ['OPTIONS'],
                         )
                     );
                 }
