@@ -43,6 +43,12 @@ This is the complete developer guide for JsonApiBundle, a JSON:API 1.1 compliant
   - Route parameters and options
   - Practical examples
 
+- **[Response Factory](response-factory.md)** - Build JSON:API responses in custom controllers
+  - Fluent API for responses
+  - File uploads and webhooks
+  - Error handling
+  - Meta, links, and includes
+
 ### Integration Guides
 
 - **[Doctrine ORM Integration](integration-doctrine.md)** - Use with Doctrine ORM

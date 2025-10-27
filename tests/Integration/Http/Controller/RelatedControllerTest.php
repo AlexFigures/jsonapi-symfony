@@ -83,6 +83,7 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
             $this->managerRegistry,
             $this->registry,
             $filterCompiler,
+            $filterHandlerRegistry,
             $sortHandlerRegistry,
             $readMapper
         );

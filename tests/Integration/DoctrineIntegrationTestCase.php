@@ -134,6 +134,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $this->managerRegistry,
             $this->registry,
             $filterCompiler,
+            $filterHandlerRegistry,
             $sortHandlerRegistry,
             $readMapper,
         );

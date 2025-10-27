@@ -186,6 +186,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
             $this->managerRegistry,
             $this->registry,
             $filterCompiler,
+            $filterHandlerRegistry,
             $sortHandlerRegistry,
             $readMapper
         );

@@ -138,6 +138,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
             $this->managerRegistry,
             $this->registry,
             $filterCompiler,
+            $filterHandlerRegistry,
             $sortHandlerRegistry,
             $readMapper
         );
