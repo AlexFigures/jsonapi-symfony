@@ -245,7 +245,8 @@ final class RelationshipEventsTest extends JsonApiTestCase
             $relationshipResponseConfig,
             $this->errorMapper(),
             $this->transactionManager(),
-            $eventDispatcher
+            $eventDispatcher,
+            $this->registry()
         );
     }
 

@@ -83,6 +83,7 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
             $this->managerRegistry,
             $this->registry,
             $filterCompiler,
+            $filterHandlerRegistry,
             $sortHandlerRegistry,
             $readMapper
         );
@@ -121,7 +122,8 @@ final class RelatedControllerTest extends DoctrineIntegrationTestCase
             $this->registry,
             $relationshipReader,
             $queryParser,
-            $documentBuilder
+            $documentBuilder,
+            $errorMapper
         );
     }
 

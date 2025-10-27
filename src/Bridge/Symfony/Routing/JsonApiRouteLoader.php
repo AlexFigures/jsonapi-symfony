@@ -7,6 +7,7 @@ namespace AlexFigures\Symfony\Bridge\Symfony\Routing;
 use AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController;
 use AlexFigures\Symfony\Http\Controller\OpenApiController;
 use AlexFigures\Symfony\Http\Controller\SwaggerUiController;
+use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
 use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
 use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
@@ -74,71 +75,121 @@ final class JsonApiRouteLoader extends Loader
         foreach ($this->registry->all() as $metadata) {
             $resourceType = $metadata->type;
             $prefix = rtrim($this->routePrefix, '/');
+            $allowedOperations = $metadata->allowedOperations;
 
-            // Collection routes
-            $routes->add(
-                $this->generateRouteName($resourceType, 'index'),
-                new Route(
-                    path: "{$prefix}/{$resourceType}",
-                    defaults: [
-                        '_controller' => 'AlexFigures\Symfony\Http\Controller\CollectionController',
-                        'type' => $resourceType,
-                    ],
-                    methods: ['GET'],
-                )
-            );
+            // Collection routes - only if INDEX operation is allowed
+            if ($this->isOperationAllowed(ResourceOperation::INDEX, $allowedOperations)) {
+                $routes->add(
+                    $this->generateRouteName($resourceType, 'index'),
+                    new Route(
+                        path: "{$prefix}/{$resourceType}",
+                        defaults: [
+                            '_controller' => 'AlexFigures\Symfony\Http\Controller\CollectionController',
+                            'type' => $resourceType,
+                        ],
+                        methods: ['GET'],
+                    )
+                );
+            }
 
-            $routes->add(
-                $this->generateRouteName($resourceType, 'create'),
-                new Route(
-                    path: "{$prefix}/{$resourceType}",
-                    defaults: [
-                        '_controller' => 'AlexFigures\Symfony\Http\Controller\CreateResourceController',
-                        'type' => $resourceType,
-                    ],
-                    methods: ['POST'],
-                )
-            );
+            // Create route - only if CREATE operation is allowed
+            if ($this->isOperationAllowed(ResourceOperation::CREATE, $allowedOperations)) {
+                $routes->add(
+                    $this->generateRouteName($resourceType, 'create'),
+                    new Route(
+                        path: "{$prefix}/{$resourceType}",
+                        defaults: [
+                            '_controller' => 'AlexFigures\Symfony\Http\Controller\CreateResourceController',
+                            'type' => $resourceType,
+                        ],
+                        methods: ['POST'],
+                    )
+                );
+            }
 
-            // Resource routes
-            $routes->add(
-                $this->generateRouteName($resourceType, 'show'),
-                new Route(
-                    path: "{$prefix}/{$resourceType}/{id}",
-                    defaults: [
-                        '_controller' => 'AlexFigures\Symfony\Http\Controller\ResourceController',
-                        'type' => $resourceType,
-                    ],
-                    requirements: ['id' => '[^/]+'],
-                    methods: ['GET'],
-                )
-            );
+            // Show route - only if SHOW operation is allowed
+            if ($this->isOperationAllowed(ResourceOperation::SHOW, $allowedOperations)) {
+                $routes->add(
+                    $this->generateRouteName($resourceType, 'show'),
+                    new Route(
+                        path: "{$prefix}/{$resourceType}/{id}",
+                        defaults: [
+                            '_controller' => 'AlexFigures\Symfony\Http\Controller\ResourceController',
+                            'type' => $resourceType,
+                        ],
+                        requirements: ['id' => '[^/]+'],
+                        methods: ['GET'],
+                    )
+                );
+            }
 
-            $routes->add(
-                $this->generateRouteName($resourceType, 'update'),
-                new Route(
-                    path: "{$prefix}/{$resourceType}/{id}",
-                    defaults: [
-                        '_controller' => 'AlexFigures\Symfony\Http\Controller\UpdateResourceController',
-                        'type' => $resourceType,
-                    ],
-                    requirements: ['id' => '[^/]+'],
-                    methods: ['PATCH'],
-                )
-            );
+            // Update route - only if UPDATE operation is allowed
+            if ($this->isOperationAllowed(ResourceOperation::UPDATE, $allowedOperations)) {
+                $routes->add(
+                    $this->generateRouteName($resourceType, 'update'),
+                    new Route(
+                        path: "{$prefix}/{$resourceType}/{id}",
+                        defaults: [
+                            '_controller' => 'AlexFigures\Symfony\Http\Controller\UpdateResourceController',
+                            'type' => $resourceType,
+                        ],
+                        requirements: ['id' => '[^/]+'],
+                        methods: ['PATCH'],
+                    )
+                );
+            }
 
-            $routes->add(
-                $this->generateRouteName($resourceType, 'delete'),
-                new Route(
-                    path: "{$prefix}/{$resourceType}/{id}",
-                    defaults: [
-                        '_controller' => 'AlexFigures\Symfony\Http\Controller\DeleteResourceController',
-                        'type' => $resourceType,
-                    ],
-                    requirements: ['id' => '[^/]+'],
-                    methods: ['DELETE'],
-                )
-            );
+            // Delete route - only if DELETE operation is allowed
+            if ($this->isOperationAllowed(ResourceOperation::DELETE, $allowedOperations)) {
+                $routes->add(
+                    $this->generateRouteName($resourceType, 'delete'),
+                    new Route(
+                        path: "{$prefix}/{$resourceType}/{id}",
+                        defaults: [
+                            '_controller' => 'AlexFigures\Symfony\Http\Controller\DeleteResourceController',
+                            'type' => $resourceType,
+                        ],
+                        requirements: ['id' => '[^/]+'],
+                        methods: ['DELETE'],
+                    )
+                );
+            }
+
+            // OPTIONS route for collection endpoint
+            // Always register if at least one collection operation is allowed
+            if ($this->isOperationAllowed(ResourceOperation::INDEX, $allowedOperations)
+                || $this->isOperationAllowed(ResourceOperation::CREATE, $allowedOperations)) {
+                $routes->add(
+                    $this->generateRouteName($resourceType, 'options'),
+                    new Route(
+                        path: "{$prefix}/{$resourceType}",
+                        defaults: [
+                            '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::collection',
+                            'type' => $resourceType,
+                        ],
+                        methods: ['OPTIONS'],
+                    )
+                );
+            }
+
+            // OPTIONS route for resource endpoint
+            // Always register if at least one resource operation is allowed
+            if ($this->isOperationAllowed(ResourceOperation::SHOW, $allowedOperations)
+                || $this->isOperationAllowed(ResourceOperation::UPDATE, $allowedOperations)
+                || $this->isOperationAllowed(ResourceOperation::DELETE, $allowedOperations)) {
+                $routes->add(
+                    $this->generateRouteName($resourceType, 'options.resource'),
+                    new Route(
+                        path: "{$prefix}/{$resourceType}/{id}",
+                        defaults: [
+                            '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::resource',
+                            'type' => $resourceType,
+                        ],
+                        requirements: ['id' => '[^/]+'],
+                        methods: ['OPTIONS'],
+                    )
+                );
+            }
 
             // Relationship routes
             if ($this->enableRelationshipRoutes && count($metadata->relationships) > 0) {
@@ -219,6 +270,36 @@ final class JsonApiRouteLoader extends Loader
                             ],
                             requirements: ['id' => '[^/]+'],
                             methods: ['GET'],
+                        )
+                    );
+
+                    // OPTIONS route for relationship endpoint
+                    $routes->add(
+                        $this->generateRouteName($resourceType, null, $relationshipName, 'options'),
+                        new Route(
+                            path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
+                            defaults: [
+                                '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::relationship',
+                                'type' => $resourceType,
+                                'rel' => $relationshipName,
+                            ],
+                            requirements: ['id' => '[^/]+'],
+                            methods: ['OPTIONS'],
+                        )
+                    );
+
+                    // OPTIONS route for related resource endpoint
+                    $routes->add(
+                        $this->generateRouteName($resourceType, null, $relationshipName, 'options.related'),
+                        new Route(
+                            path: "{$prefix}/{$resourceType}/{id}/{$relationshipName}",
+                            defaults: [
+                                '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::related',
+                                'type' => $resourceType,
+                                'rel' => $relationshipName,
+                            ],
+                            requirements: ['id' => '[^/]+'],
+                            methods: ['OPTIONS'],
                         )
                     );
                 }
@@ -373,5 +454,21 @@ final class JsonApiRouteLoader extends Loader
         return $customRoute->controller ?? throw new \RuntimeException(
             sprintf('Custom route "%s" has no controller or handler configured.', $customRoute->name)
         );
+    }
+
+    /**
+     * Check if an operation is allowed for a resource.
+     *
+     * @param list<ResourceOperation> $allowedOperations
+     */
+    private function isOperationAllowed(ResourceOperation $operation, array $allowedOperations): bool
+    {
+        foreach ($allowedOperations as $allowed) {
+            if ($allowed === $operation) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

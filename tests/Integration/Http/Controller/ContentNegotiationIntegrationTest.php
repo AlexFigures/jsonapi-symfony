@@ -125,7 +125,8 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
             $this->registry,
             $this->repository,
             $queryParser,
-            $documentBuilder
+            $documentBuilder,
+            $errorMapper
         );
 
         // Set up CreateResourceController

@@ -9,11 +9,14 @@ use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use AlexFigures\Symfony\Events\RelationshipChangedEvent;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
 use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
 use AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
 use AlexFigures\Symfony\Http\Write\RelationshipDocumentValidator;
+use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
+use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,11 +35,15 @@ final class RelationshipWriteController
         private readonly ErrorMapper $errors,
         private readonly TransactionManager $transaction,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly ResourceRegistryInterface $registry,
     ) {
     }
 
     public function __invoke(Request $request, string $type, string $id, string $rel): Response
     {
+        $metadata = $this->registry->getByType($type);
+        $this->assertOperationAllowed(ResourceOperation::UPDATE, $metadata->allowedOperations);
+
         $payload = $this->decode($request);
         /** @var array{kind: 'to-one'|'to-many', data: null|array{type: string, id: string}|list<array{type: string, id: string}>} $validated */
         $validated = $this->validator->validate($type, $id, $rel, $payload, $request->getMethod());
@@ -135,5 +142,27 @@ final class RelationshipWriteController
         }
 
         return substr($normalized, 0, $semicolonPosition);
+    }
+
+    /**
+     * @param list<ResourceOperation> $allowedOperations
+     */
+    private function assertOperationAllowed(ResourceOperation $operation, array $allowedOperations): void
+    {
+        foreach ($allowedOperations as $allowed) {
+            if ($allowed === $operation) {
+                return;
+            }
+        }
+
+        // Collect all allowed HTTP methods from allowed operations
+        $allowedMethods = [];
+        foreach ($allowedOperations as $allowed) {
+            $allowedMethods = array_merge($allowedMethods, $allowed->httpMethods());
+        }
+        $allowedMethods = array_values(array_unique($allowedMethods));
+
+        $error = $this->errors->methodNotAllowed($allowedMethods);
+        throw new MethodNotAllowedException($allowedMethods, 'Operation not allowed', [$error]);
     }
 }

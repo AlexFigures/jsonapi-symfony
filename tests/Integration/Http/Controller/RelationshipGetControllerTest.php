@@ -6,6 +6,8 @@ namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
 use AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
 use AlexFigures\Symfony\Http\Controller\RelationshipGetController;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
@@ -76,7 +78,13 @@ final class RelationshipGetControllerTest extends DoctrineIntegrationTestCase
             $paginationConfig
         );
 
-        $this->controller = new RelationshipGetController($linkageBuilder);
+        $errorMapper = new ErrorMapper(new ErrorBuilder(true));
+
+        $this->controller = new RelationshipGetController(
+            $linkageBuilder,
+            $this->registry,
+            $errorMapper
+        );
     }
 
     /**

@@ -6,9 +6,12 @@ namespace AlexFigures\Symfony\Http\Controller;
 
 use AlexFigures\Symfony\Contract\Data\RelationshipReader;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
+use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
 use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Http\Request\QueryParser;
+use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,6 +26,7 @@ final class RelatedController
         private readonly RelationshipReader $reader,
         private readonly QueryParser $parser,
         private readonly DocumentBuilder $document,
+        private readonly ErrorMapper $errors,
     ) {
     }
 
@@ -33,6 +37,7 @@ final class RelatedController
         }
 
         $metadata = $this->registry->getByType($type);
+        $this->assertOperationAllowed(ResourceOperation::SHOW, $metadata->allowedOperations);
         $relationship = $metadata->relationships[$rel] ?? null;
 
         if (!$relationship instanceof RelationshipMetadata) {
@@ -81,5 +86,27 @@ final class RelatedController
         }
 
         return $response;
+    }
+
+    /**
+     * @param list<ResourceOperation> $allowedOperations
+     */
+    private function assertOperationAllowed(ResourceOperation $operation, array $allowedOperations): void
+    {
+        foreach ($allowedOperations as $allowed) {
+            if ($allowed === $operation) {
+                return;
+            }
+        }
+
+        // Collect all allowed HTTP methods from allowed operations
+        $allowedMethods = [];
+        foreach ($allowedOperations as $allowed) {
+            $allowedMethods = array_merge($allowedMethods, $allowed->httpMethods());
+        }
+        $allowedMethods = array_values(array_unique($allowedMethods));
+
+        $error = $this->errors->methodNotAllowed($allowedMethods);
+        throw new MethodNotAllowedException($allowedMethods, 'Operation not allowed', [$error]);
     }
 }

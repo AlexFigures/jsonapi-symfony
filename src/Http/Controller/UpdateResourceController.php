@@ -10,6 +10,7 @@ use AlexFigures\Symfony\Events\ResourceChangedEvent;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
 use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use AlexFigures\Symfony\Http\Exception\UnprocessableEntityException;
 use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
@@ -19,6 +20,7 @@ use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
 use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
 use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
 use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -49,6 +51,10 @@ final class UpdateResourceController
         if (!$this->registry->hasType($type)) {
             throw new NotFoundException(sprintf('Resource type "%s" not found.', $type));
         }
+
+        // Check if UPDATE operation is allowed
+        $metadata = $this->registry->getByType($type);
+        $this->assertOperationAllowed(ResourceOperation::UPDATE, $metadata->allowedOperations);
 
         $payload = $this->decode($request);
         $input = $this->validator->validateAndExtract($type, $id, $payload, 'PATCH');
@@ -124,5 +130,31 @@ final class UpdateResourceController
         }
 
         return substr($normalized, 0, $semicolonPosition);
+    }
+
+    /**
+     * Assert that an operation is allowed for the resource.
+     *
+     * @param list<ResourceOperation> $allowedOperations
+     *
+     * @throws MethodNotAllowedException
+     */
+    private function assertOperationAllowed(ResourceOperation $operation, array $allowedOperations): void
+    {
+        foreach ($allowedOperations as $allowed) {
+            if ($allowed === $operation) {
+                return;
+            }
+        }
+
+        // Collect all allowed HTTP methods from allowed operations
+        $allowedMethods = [];
+        foreach ($allowedOperations as $allowed) {
+            $allowedMethods = array_merge($allowedMethods, $allowed->httpMethods());
+        }
+        $allowedMethods = array_values(array_unique($allowedMethods));
+
+        $error = $this->errors->methodNotAllowed($allowedMethods);
+        throw new MethodNotAllowedException($allowedMethods, 'Operation not allowed', [$error]);
     }
 }

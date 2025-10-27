@@ -86,7 +86,8 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
             $responseConfig,
             $errorMapper,
             $transactionManager,
-            $eventDispatcher
+            $eventDispatcher,
+            $this->registry
         );
     }
 

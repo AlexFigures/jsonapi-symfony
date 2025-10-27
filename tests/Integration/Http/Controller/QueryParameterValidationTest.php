@@ -113,7 +113,8 @@ final class QueryParameterValidationTest extends DoctrineIntegrationTestCase
             $this->registry,
             $this->repository,
             $queryParser,
-            $documentBuilder
+            $documentBuilder,
+            $errorMapper
         );
     }
 

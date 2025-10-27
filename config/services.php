@@ -354,6 +354,17 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
+    // JSON:API Response Factory for custom controllers
+    $services
+        ->set(\AlexFigures\Symfony\Http\Response\JsonApiResponseFactory::class)
+        ->args([
+            service(DocumentBuilder::class),
+            service(LinkGenerator::class),
+            service(ErrorBuilder::class),
+            service(ResourceRegistryInterface::class),
+        ])
+    ;
+
     // AtomicConfig for OpenAPI (always available, even when atomic is disabled)
     $services
         ->set('jsonapi.atomic_config_for_openapi', \AlexFigures\Symfony\Atomic\AtomicConfig::class)

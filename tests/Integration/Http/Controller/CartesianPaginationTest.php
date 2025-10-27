@@ -108,7 +108,8 @@ final class CartesianPaginationTest extends DoctrineIntegrationTestCase
             $this->registry,
             $this->repository,
             $queryParser,
-            $documentBuilder
+            $documentBuilder,
+            $errorMapper
         );
     }
 

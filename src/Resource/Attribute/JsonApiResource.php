@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Resource\Attribute;
 
 use AlexFigures\Symfony\Resource\Definition\ReadProjection;
+use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use Attribute;
 
@@ -17,6 +18,7 @@ use Attribute;
  * Example usage:
  * ```php
  * use Symfony\Component\Serializer\Annotation\Groups;
+ * use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
  *
  * #[JsonApiResource(
  *     type: 'articles',
@@ -42,6 +44,19 @@ use Attribute;
  * }
  * ```
  *
+ * Example with limited operations (read-only resource):
+ * ```php
+ * #[JsonApiResource(
+ *     type: 'audit-logs',
+ *     operations: [ResourceOperation::INDEX, ResourceOperation::SHOW]
+ * )]
+ * final class AuditLog
+ * {
+ *     // Only GET collection and GET item routes will be registered
+ *     // POST, PATCH, DELETE will return 404
+ * }
+ * ```
+ *
  * @api This attribute is part of the public API and follows semantic versioning.
  * @since 0.1.0
  */
@@ -49,16 +64,13 @@ use Attribute;
 final class JsonApiResource
 {
     /**
-     * @param string               $type                   JSON:API resource type (e.g., 'articles', 'authors')
-     * @param array<string, mixed> $normalizationContext   Context for serialization (reading). Use ['groups' => ['resource:read']] to control which attributes are exposed.
-     * @param array<string, mixed> $denormalizationContext Context for deserialization (writing). Use ['groups' => ['resource:write']] to control which attributes can be modified.
-     * @param string|null          $routePrefix            Optional route prefix for this resource (defaults to global prefix)
-     * @param string|null          $description            Optional human-readable description for documentation
-     * @param bool                 $exposeId               Whether to expose the ID in the resource document (default: true)
-     */
-    /**
-     * @param array<string, mixed>                     $normalizationContext
-     * @param array<string, mixed>                     $denormalizationContext
+     * @param string                                   $type                   JSON:API resource type (e.g., 'articles', 'authors')
+     * @param array<string, mixed>                     $normalizationContext   Context for serialization (reading). Use ['groups' => ['resource:read']] to control which attributes are exposed.
+     * @param array<string, mixed>                     $denormalizationContext Context for deserialization (writing). Use ['groups' => ['resource:write']] to control which attributes can be modified.
+     * @param string|null                              $routePrefix            Optional route prefix for this resource (defaults to global prefix)
+     * @param string|null                              $description            Optional human-readable description for documentation
+     * @param bool                                     $exposeId               Whether to expose the ID in the resource document (default: true)
+     * @param list<ResourceOperation>|null             $operations             Allowed operations for this resource. Null means all operations are allowed (default).
      * @param array<string, string>                    $fieldMap
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
      * @param array<string, class-string>              $writeRequests
@@ -70,6 +82,7 @@ final class JsonApiResource
         public readonly ?string $routePrefix = null,
         public readonly ?string $description = null,
         public readonly bool $exposeId = true,
+        public readonly ?array $operations = null,
         public readonly ?string $dataClass = null,
         public readonly ?string $viewClass = null,
         public readonly ReadProjection $readProjection = ReadProjection::ENTITY,

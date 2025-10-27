@@ -198,7 +198,8 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
             $this->registry,
             $repository,
             $queryParser,
-            $documentBuilder
+            $documentBuilder,
+            $errorMapper
         );
     }
 
