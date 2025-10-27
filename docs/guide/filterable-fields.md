@@ -94,16 +94,38 @@ GET /api/products?filter[inStock][like]=true    # 'like' not allowed for 'inStoc
 The following operators are available by default:
 
 - `eq` - Equal
-- `ne` - Not equal  
+- `ne` - Not equal
 - `gt` - Greater than
 - `gte` - Greater than or equal
 - `lt` - Less than
 - `lte` - Less than or equal
-- `like` - SQL LIKE pattern matching
+- `like` - SQL LIKE pattern matching (case-sensitive)
+- `ilike` - SQL ILIKE pattern matching (case-insensitive, uses custom `ILIKE()` DQL function)
 - `in` - Value in list
 - `nin` - Value not in list
 - `null` - Is null
 - `nnull` - Is not null
+
+**Example: Case-Insensitive Search**
+
+```php
+#[FilterableFields([
+    new FilterableField('name', operators: ['eq', 'ilike']),  // Case-insensitive search
+    new FilterableField('email', operators: ['eq', 'like']),  // Case-sensitive search
+])]
+```
+
+```http
+# Case-insensitive search (matches "John", "JOHN", "john")
+GET /api/users?filter[name][ilike]=john
+
+# Case-sensitive search (matches only "john@example.com")
+GET /api/users?filter[email][like]=john@example.com
+```
+
+> **Note:** The `ilike` operator uses a custom `ILIKE()` DQL function that is automatically registered by the bundle.
+> On PostgreSQL, it translates to native `ILIKE` operator. On other databases, it uses `LOWER()` function.
+> You can override this function in your Doctrine configuration if needed. See [Custom DQL Functions](custom-dql-functions.md) for details.
 
 ## Custom Filter Handlers
 

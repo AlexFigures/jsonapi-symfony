@@ -16,7 +16,7 @@ final class FilterableFieldTest extends TestCase
         self::assertSame('title', $field->field);
         self::assertSame([
             'eq', 'ne', 'gt', 'gte', 'lt', 'lte',
-            'like', 'in', 'nin', 'null', 'nnull'
+            'like', 'ilike', 'in', 'nin', 'null', 'nnull'
         ], $field->operators);
         self::assertNull($field->customHandler);
     }
