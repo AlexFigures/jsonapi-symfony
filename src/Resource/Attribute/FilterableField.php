@@ -90,7 +90,7 @@ final class FilterableField
         public readonly string $field,
         array $operators = [
             'eq', 'ne', 'gt', 'gte', 'lt', 'lte',
-            'like', 'in', 'nin', 'null', 'nnull'
+            'like', 'ilike', 'in', 'nin', 'null', 'nnull'
         ],
         public readonly ?string $customHandler = null,
         public readonly bool $inherit = false,

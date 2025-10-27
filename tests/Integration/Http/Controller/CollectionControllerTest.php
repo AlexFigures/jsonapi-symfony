@@ -12,6 +12,7 @@ use AlexFigures\Symfony\Filter\Operator\BetweenOperator;
 use AlexFigures\Symfony\Filter\Operator\EqualOperator;
 use AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator;
 use AlexFigures\Symfony\Filter\Operator\GreaterThanOperator;
+use AlexFigures\Symfony\Filter\Operator\ILikeOperator;
 use AlexFigures\Symfony\Filter\Operator\InOperator;
 use AlexFigures\Symfony\Filter\Operator\IsNullOperator;
 use AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator;
@@ -163,6 +164,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
             new GreaterThanOperator(),
             new GreaterOrEqualOperator(),
             new LikeOperator(),
+            new ILikeOperator(),
             new InOperator(),
             new NotInOperator(),
             new BetweenOperator(),
@@ -186,6 +188,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
             $this->managerRegistry,
             $this->registry,
             $filterCompiler,
+            $filterHandlerRegistry,
             $sortHandlerRegistry,
             $readMapper
         );
@@ -2280,6 +2283,58 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         $titles = array_column(array_column($document['data'], 'attributes'), 'title');
         self::assertContains('Article 1', $titles);
         self::assertNotContains('Article 2', $titles);
+    }
+
+    /**
+     * Test: Case-insensitive filtering with ILIKE operator.
+     *
+     * Validates:
+     * - ILIKE operator performs case-insensitive pattern matching
+     * - Works correctly on PostgreSQL (native ILIKE) and other databases (LOWER())
+     */
+    public function testFilterWithILikeOperatorCaseInsensitive(): void
+    {
+        // Create articles with different case titles
+        $article1 = new Article();
+        $article1->setTitle('Symfony Framework');
+        $article1->setContent('Content about Symfony');
+        $this->em->persist($article1);
+
+        $article2 = new Article();
+        $article2->setTitle('SYMFONY TUTORIAL');
+        $article2->setContent('Tutorial content');
+        $this->em->persist($article2);
+
+        $article3 = new Article();
+        $article3->setTitle('symfony best practices');
+        $article3->setContent('Best practices guide');
+        $this->em->persist($article3);
+
+        $article4 = new Article();
+        $article4->setTitle('Laravel Framework');
+        $article4->setContent('Content about Laravel');
+        $this->em->persist($article4);
+
+        $this->em->flush();
+        $this->em->clear();
+
+        // Filter by title with ILIKE operator (case-insensitive)
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?filter[title][ilike]=symfony');
+        $response = ($this->controller)($request, 'articles');
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+
+        // Should return all 3 articles with "symfony" in title (case-insensitive)
+        self::assertCount(3, $document['data']);
+        self::assertSame(3, $document['meta']['total']);
+
+        $titles = array_column(array_column($document['data'], 'attributes'), 'title');
+        self::assertContains('Symfony Framework', $titles);
+        self::assertContains('SYMFONY TUTORIAL', $titles);
+        self::assertContains('symfony best practices', $titles);
+        self::assertNotContains('Laravel Framework', $titles);
     }
 
     /**

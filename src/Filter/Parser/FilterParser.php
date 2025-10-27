@@ -141,6 +141,7 @@ final class FilterParser
             case 'gt':
             case 'gte':
             case 'like':
+            case 'ilike':
                 return [new Comparison($field, $operator, $this->normalizeValues($value))];
             case 'in':
             case 'nin':

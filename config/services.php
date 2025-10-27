@@ -25,6 +25,7 @@ use AlexFigures\Symfony\Filter\Operator\BetweenOperator;
 use AlexFigures\Symfony\Filter\Operator\EqualOperator;
 use AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator;
 use AlexFigures\Symfony\Filter\Operator\GreaterThanOperator;
+use AlexFigures\Symfony\Filter\Operator\ILikeOperator;
 use AlexFigures\Symfony\Filter\Operator\InOperator;
 use AlexFigures\Symfony\Filter\Operator\IsNullOperator;
 use AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator;
@@ -600,6 +601,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services->set(GreaterThanOperator::class)->tag('jsonapi.filter.operator');
     $services->set(GreaterOrEqualOperator::class)->tag('jsonapi.filter.operator');
     $services->set(LikeOperator::class)->tag('jsonapi.filter.operator');
+    $services->set(ILikeOperator::class)->tag('jsonapi.filter.operator');
     $services->set(InOperator::class)->tag('jsonapi.filter.operator');
     $services->set(NotInOperator::class)->tag('jsonapi.filter.operator');
     $services->set(IsNullOperator::class)->tag('jsonapi.filter.operator');

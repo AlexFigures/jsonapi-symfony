@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Bridge\Symfony\Bundle;
 
 use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\CustomRouteHandlerPass;
+use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\RegisterDqlFunctionsPass;
 use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
 use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ValidateProfilesPass;
 use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
@@ -29,6 +30,9 @@ final class JsonApiBundle extends Bundle
 
         // Register compiler pass for profile validation (runs after resource discovery)
         $container->addCompilerPass(new ValidateProfilesPass());
+
+        // Register compiler pass for DQL functions (ILIKE, etc.)
+        $container->addCompilerPass(new RegisterDqlFunctionsPass());
     }
 
     public function getContainerExtension(): ExtensionInterface

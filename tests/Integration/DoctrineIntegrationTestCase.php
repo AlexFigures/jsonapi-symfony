@@ -116,6 +116,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             new \AlexFigures\Symfony\Filter\Operator\EqualOperator(),
             new \AlexFigures\Symfony\Filter\Operator\NotEqualOperator(),
             new \AlexFigures\Symfony\Filter\Operator\LikeOperator(),
+            new \AlexFigures\Symfony\Filter\Operator\ILikeOperator(),
             new \AlexFigures\Symfony\Filter\Operator\InOperator(),
             new \AlexFigures\Symfony\Filter\Operator\NotInOperator(),
             new \AlexFigures\Symfony\Filter\Operator\GreaterThanOperator(),
@@ -134,6 +135,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             $this->managerRegistry,
             $this->registry,
             $filterCompiler,
+            $filterHandlerRegistry,
             $sortHandlerRegistry,
             $readMapper,
         );
@@ -244,6 +246,9 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $config->setMetadataCache($cache);
         $config->setQueryCache($cache);
         $config->setResultCache($cache);
+
+        // Register custom DQL functions
+        $config->addCustomStringFunction('ILIKE', \AlexFigures\Symfony\Bridge\Doctrine\DQL\ILikeFunction::class);
 
         $connection = DriverManager::getConnection([
             'url' => $this->getDatabaseUrl(),
