@@ -14,6 +14,7 @@ use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
 use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use AlexFigures\Symfony\Http\Exception\UnprocessableEntityException;
 use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\Symfony\Http\Exception\ValidationException;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
 use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
@@ -74,6 +75,10 @@ final class UpdateResourceController
 
                 return $entity;
             });
+        } catch (ValidationException $exception) {
+            // Denormalization errors (e.g., invalid enum values, type mismatches)
+            // are already mapped to JSON:API errors by ConstraintViolationMapper
+            throw new UnprocessableEntityException($exception->getMessage(), $exception->getErrors(), previous: $exception);
         } catch (ValidationFailedException $exception) {
             $errors = $this->violationMapper->map($type, $exception->getViolations());
 

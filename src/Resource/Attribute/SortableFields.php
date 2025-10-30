@@ -32,11 +32,9 @@ use Attribute;
  *     public string $title;
  *
  *     #[Attribute]
- *     #[SerializationGroups(['read'])]
  *     public \DateTimeImmutable $createdAt;
  *
  *     #[Attribute]
- *     #[SerializationGroups(['read'])]
  *     public \DateTimeImmutable $updatedAt;
  *
  *     #[Attribute]

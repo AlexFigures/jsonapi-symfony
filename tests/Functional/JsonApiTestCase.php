@@ -24,6 +24,7 @@ use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use AlexFigures\Symfony\Http\Controller\CollectionController;
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
 use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
+use AlexFigures\Symfony\Http\Controller\OptionsController;
 use AlexFigures\Symfony\Http\Controller\RelatedController;
 use AlexFigures\Symfony\Http\Controller\RelationshipGetController;
 use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
@@ -97,6 +98,7 @@ abstract class JsonApiTestCase extends TestCase
     private ?RelatedController $relatedController = null;
     private ?RelationshipGetController $relationshipGetController = null;
     private ?RelationshipWriteController $relationshipWriteController = null;
+    private ?OptionsController $optionsController = null;
     private ?AtomicController $atomicController = null;
     private ?ErrorMapper $errorMapper = null;
     private ?ConstraintViolationMapper $violationMapper = null;
@@ -177,6 +179,15 @@ abstract class JsonApiTestCase extends TestCase
         \assert($this->relationshipWriteController instanceof RelationshipWriteController);
 
         return $this->relationshipWriteController;
+    }
+
+    protected function optionsController(): OptionsController
+    {
+        $this->boot();
+
+        \assert($this->optionsController instanceof OptionsController);
+
+        return $this->optionsController;
     }
 
     protected function atomicController(): AtomicController
@@ -476,6 +487,7 @@ abstract class JsonApiTestCase extends TestCase
         $this->relatedController = new RelatedController($registry, $relationshipReader, $parser, $document, $errorMapper);
         $this->relationshipGetController = new RelationshipGetController($linkageBuilder, $registry, $errorMapper);
         $this->relationshipWriteController = new RelationshipWriteController($relationshipValidator, $relationshipUpdater, $linkageBuilder, $relationshipResponseConfig, $errorMapper, $transactionManager, $eventDispatcher, $registry);
+        $this->optionsController = new OptionsController($registry);
         $this->atomicController = $atomicController;
 
         $this->errorMapper = $errorMapper;

@@ -2,7 +2,6 @@
 
 [![CI](https://github.com/AlexFigures/jsonapi-symfony/workflows/CI/badge.svg)](https://github.com/AlexFigures/jsonapi-symfony/actions)
 [![PHPStan Level 8](https://img.shields.io/badge/PHPStan-level%208-brightgreen.svg)](https://phpstan.org/)
-[![Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)](docs/PRODUCTION_READY.md)
 [![Spec Conformance](https://img.shields.io/badge/JSON:API-97.8%25-brightgreen.svg)](docs/conformance/spec-coverage.md)
 [![PHP Version](https://img.shields.io/badge/php-%5E8.2-blue.svg)](https://www.php.net/)
 [![Symfony Version](https://img.shields.io/badge/symfony-%5E7.1-blue.svg)](https://symfony.com/)
@@ -17,8 +16,13 @@
 ### Installation
 
 ```bash
-composer require jsonapi/symfony-jsonapi-bundle
+composer require alexfigures/symfony-jsonapi-bundle
 ```
+
+**Requirements:**
+- PHP 8.3 or higher
+- Symfony 7.1 or higher
+- Doctrine ORM 3.0+ (optional, for database integration)
 
 ### Basic Setup
 
@@ -88,17 +92,22 @@ open http://localhost:8000/_jsonapi/docs
 ```
 
 **📖 [Complete Getting Started Guide →](docs/guide/getting-started.md)**
-**🚀 [Production-Ready Features →](docs/PRODUCTION_READY.md)**
 **📊 [Interactive API Docs →](docs/guide/swagger-ui.md)**
 
 ## ✅ Compatibility Matrix
 
-| JsonApiBundle | PHP | Symfony |
-|---------------|-----|---------|
-| `main` branch | 8.2 · 8.3 · 8.4 | 7.1 · 7.2 · 7.3 |
-| Latest release | 8.2+ | 7.1+ |
+| JsonApiBundle | PHP | Symfony | Doctrine ORM |
+|---------------|-----|---------|--------------|
+| `main` branch | 8.2 · 8.3 · 8.4 | 7.1 · 7.2 · 7.3 | 3.0+ |
+| Latest release | 8.2+ | 7.1+ | 3.0+ |
 
 > CI runs the full test suite across PHP 8.2–8.4 with both stable and lowest-dependency sets to guarantee forwards and backwards compatibility inside each supported Symfony minor.
+
+**Tested Databases:**
+- PostgreSQL 16+
+- MySQL 8.0+
+- MariaDB 11+
+- SQLite 3.x
 
 ---
 
@@ -106,28 +115,58 @@ open http://localhost:8000/_jsonapi/docs
 
 ### For New Users
 
-- **[Production-Ready Features](docs/PRODUCTION_READY.md)** - ⭐ Complete guide to production features
 - **[Getting Started Guide](docs/guide/getting-started.md)** - Build your first API in 5 minutes
 - **[Swagger UI & OpenAPI](docs/guide/swagger-ui.md)** - Interactive API documentation
 - **[Configuration Reference](docs/guide/configuration.md)** - Complete configuration options
 - **[Doctrine Integration](docs/guide/integration-doctrine.md)** - Production-ready data layer
 - **[Examples & Recipes](docs/guide/examples.md)** - Real-world code examples
-- **[Serialization Groups](docs/guide/serialization-groups.md)** - Control read/write permissions
-- **[Migration Guide](docs/guide/migration-serialization-groups.md)** - 📢 Migrate from readable/writable to SerializationGroups
+- **[Custom Routes](docs/guide/custom-routes.md)** - Define custom endpoints with attributes
+- **[Response Factory](docs/guide/response-factory.md)** - Build JSON:API responses in custom controllers
 
 ### For Advanced Users
 
 - **[Advanced Features](docs/guide/advanced-features.md)** - Profiles, hooks, events, caching
+- **[Custom Handlers](docs/guide/custom-handlers.md)** - Handler-based custom routes with automatic transaction management
 - **[Public API Reference](docs/api/public-api.md)** - Stable API documentation
 - **[Troubleshooting Guide](docs/guide/troubleshooting.md)** - Common issues and solutions
 
 ### For Contributors
 
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
+- **[Testing Guide](TESTING.md)** - Running tests (unit, functional, integration with Docker)
 - **[Architecture Review](docs/architecture/review.md)** - Design and extensibility
 - **[BC Policy](docs/api/bc-policy.md)** - Backward compatibility guarantees
 
 **📖 [Complete Documentation Index →](docs/guide/README.md)**
+
+---
+
+## 🆕 Recent Updates
+
+### New Features
+
+- **Custom Route Handlers** - Build custom endpoints with automatic transaction management and JSON:API response formatting ([docs](docs/guide/custom-handlers.md))
+- **Response Factory** - Fluent API for building JSON:API responses in custom controllers ([docs](docs/guide/response-factory.md))
+- **Criteria Builder** - Add custom filters and conditions to JSON:API queries in custom route handlers ([docs](docs/guide/custom-routes.md#advanced-filtering-sorting-and-pagination-in-custom-routes))
+- **Custom Route Attributes** - Define custom endpoints using `#[JsonApiCustomRoute]` attribute ([docs](docs/guide/custom-routes.md))
+- **Media Type Configuration** - Configure different media types for different endpoints (e.g., docs, sandbox)
+- **Docker-based Integration Tests** - Run integration tests against real databases using Docker ([docs](TESTING.md))
+
+### Testing Improvements
+
+- **Docker Test Environment** - Integration tests now run in Docker with PostgreSQL, MySQL, and MariaDB
+- **Conformance Tests** - Snapshot-based tests ensure JSON:API specification compliance
+- **Mutation Testing** - Infection configured with 70% MSI threshold
+- **Quality Gates** - PHPStan level 8, Deptrac architecture rules, BC checks
+
+Run tests with:
+```bash
+make test              # Unit and functional tests
+make docker-test       # Integration tests in Docker
+make qa-full          # Full QA suite (tests, static analysis, mutation testing)
+```
+
+See [TESTING.md](TESTING.md) for complete testing documentation.
 
 ---
 
@@ -140,6 +179,7 @@ open http://localhost:8000/_jsonapi/docs
 ✅ **Generic Doctrine Repository** - Works out of the box, no custom code needed
 ✅ **Relationship Pagination** - Proper pagination for all relationship endpoints
 ✅ **PostgreSQL Optimized** - Tested and optimized for PostgreSQL
+✅ **Custom Route Handlers** - Build custom endpoints with automatic transaction management and JSON:API formatting
 
 ### Core Features
 
@@ -153,6 +193,7 @@ open http://localhost:8000/_jsonapi/docs
 ✅ **Write Operations** - POST, PATCH, DELETE with validation
 ✅ **Atomic Operations** - Batch operations in single transaction
 ✅ **Interactive Docs** - Swagger UI / Redoc integration
+✅ **Response Factory** - Build JSON:API responses in custom controllers
 
 ### Read Operations
 
@@ -183,6 +224,8 @@ open http://localhost:8000/_jsonapi/docs
 * **HTTP Caching** - ETag, Last-Modified, surrogate keys
 * **Custom Operators** - Extend filtering capabilities
 * **Cache Invalidation** - CDN/reverse proxy support
+* **Media Type Configuration** - Configure different media types for different endpoints
+* **Criteria Builder** - Add custom filters and conditions to JSON:API queries in custom handlers
 
 **📖 [See all features →](docs/guide/advanced-features.md)**
 
@@ -271,7 +314,7 @@ jsonapi:
             enabled: false
 ```
 
-**📖 [Swagger UI Documentation →](docs/features/swagger-ui.md)**
+**📖 [Swagger UI Documentation →](docs/guide/swagger-ui.md)**
 
 ---
 
@@ -323,6 +366,37 @@ jsonapi:
   }
 }
 ```
+
+---
+
+## 🛠️ Development & Testing
+
+### Quick Commands
+
+```bash
+# Install dependencies
+composer install
+# or
+make install
+
+# Run tests
+make test              # Unit and functional tests (no Docker required)
+make docker-test       # Integration tests with real databases
+make test-all          # All test suites
+
+# Code quality
+make stan              # PHPStan static analysis (level 8)
+make cs-fix            # Fix code style (PSR-12)
+make rector            # Automated refactoring
+make mutation          # Mutation testing (70% MSI threshold)
+make deptrac           # Architecture rules validation
+make bc-check          # Backward compatibility check
+
+# Full QA pipeline
+make qa-full           # Run all quality checks
+```
+
+See [TESTING.md](TESTING.md) for detailed testing documentation.
 
 ---
 

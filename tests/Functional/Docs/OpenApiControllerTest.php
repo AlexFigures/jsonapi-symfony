@@ -413,14 +413,6 @@ final class OpenApiControllerTest extends TestCase
 
     /**
      * Test that custom routes preserve the resource type format in URL paths.
-     *
-     * Note: The jsonapi.routing.naming_convention config affects ONLY route names
-     * (internal Symfony identifiers), NOT the URL paths. URL paths always use
-     * the resource type as defined in the entity metadata.
-     *
-     * For example, with resource type 'blog-posts':
-     * - Route name (with kebab-case convention): jsonapi.blog-posts.index
-     * - URL path: /api/blog-posts (uses resource type as-is)
      */
     public function testCustomRoutesPreserveResourceTypeFormat(): void
     {

@@ -529,14 +529,6 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('controller.service_arguments')
     ;
 
-    // Route name generator
-    $services
-        ->set(\AlexFigures\Symfony\Bridge\Symfony\Routing\RouteNameGenerator::class)
-        ->args([
-            '%jsonapi.routing.naming_convention%',
-        ])
-    ;
-
     // Automatic route loader
     $services
         ->set(\AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader::class)
@@ -546,7 +538,6 @@ return static function (ContainerConfigurator $configurator): void {
             true, // enableRelationshipRoutes
             '%jsonapi.docs.generator.openapi%',
             '%jsonapi.docs.ui%',
-            service(\AlexFigures\Symfony\Bridge\Symfony\Routing\RouteNameGenerator::class),
             service(\AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry::class),
         ])
         ->tag('routing.loader')

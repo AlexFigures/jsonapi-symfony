@@ -71,7 +71,6 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         }
 
         // Create new entity through SerializerEntityInstantiator
-        // It can call constructors with parameters and considers SerializationGroups
         try {
             $result = $this->instantiator->instantiate($entityClass, $metadata, $changes, isCreate: true);
         } catch (MissingConstructorArgumentsException $exception) {
