@@ -209,7 +209,7 @@ final class SerializerEntityInstantiator
         $data = [];
 
         foreach ($changes->attributes as $path => $value) {
-            // Look up attribute metadata by property path (same logic as filterBySerializationGroups)
+            // Look up attribute metadata by property path
             $attributeMetadata = $this->findAttributeMetadata($metadata, $path);
 
             if ($attributeMetadata !== null) {
@@ -245,7 +245,6 @@ final class SerializerEntityInstantiator
      *
      * Security-sensitive: when an attribute is renamed with #[Attribute(name: 'new-name')],
      * metadata is indexed by the new name while the ChangeSet keeps the property path.
-     * Without this lookup, attributes with SerializationGroups could be mishandled.
      */
     private function findAttributeMetadata(
         ResourceMetadata $metadata,

@@ -7,6 +7,9 @@ namespace AlexFigures\Symfony\Tests\JsonApiStatus;
 use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
 use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
 use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicy;
+use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,7 +23,19 @@ final class ContentNegotiationStatusTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->subscriber = new ContentNegotiationSubscriber(true, 'application/vnd.api+json');
+        $policyProvider = new class () implements MediaTypePolicyProviderInterface {
+            public function getPolicy(Request $request): MediaTypePolicy
+            {
+                return new MediaTypePolicy(
+                    allowedRequestTypes: [MediaType::JSON_API],
+                    negotiableResponseTypes: [MediaType::JSON_API],
+                    defaultResponseType: MediaType::JSON_API,
+                    enforceJsonApiParameters: true
+                );
+            }
+        };
+
+        $this->subscriber = new ContentNegotiationSubscriber(true, $policyProvider);
     }
 
     public function testContentTypeWithUnsupportedParameterTriggers415(): void

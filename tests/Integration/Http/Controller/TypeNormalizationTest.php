@@ -383,6 +383,51 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
         self::assertSame('123.45', $document['data']['attributes']['name']);
     }
 
+    /**
+     * Test: Invalid enum value returns 422 validation error.
+     *
+     * Validates that BackedEnumNormalizer errors are caught and
+     * converted to proper JSON:API validation errors.
+     */
+    public function testInvalidEnumValueReturns422ValidationError(): void
+    {
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'attributes' => [
+                    'name' => 'Test Entity',
+                    'status' => 'invalid-status', // Invalid enum value
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/type-test-entities', $payload);
+
+        try {
+            ($this->controller)($request, 'type-test-entities');
+            self::fail('Expected UnprocessableEntityException to be thrown');
+        } catch (\AlexFigures\Symfony\Http\Exception\UnprocessableEntityException $e) {
+            // Verify HTTP status code (422 for validation errors)
+            self::assertSame(422, $e->getStatusCode());
+
+            // Verify error details
+            $errors = $e->getErrors();
+            self::assertNotEmpty($errors, 'Expected at least one error');
+
+            $firstError = $errors[0];
+            self::assertSame('422', $firstError->status);
+            self::assertSame('validation-error', $firstError->code);
+
+            // Verify error message mentions the invalid value
+            self::assertStringContainsString('status', strtolower($firstError->detail));
+
+            // Verify JSON pointer points to the attribute
+            self::assertNotNull($firstError->source);
+            $pointer = $firstError->source->pointer ?? '';
+            self::assertSame('/data/attributes/status', $pointer);
+        }
+    }
+
     private function createJsonApiRequest(string $method, string $uri, array $payload): Request
     {
         return Request::create(

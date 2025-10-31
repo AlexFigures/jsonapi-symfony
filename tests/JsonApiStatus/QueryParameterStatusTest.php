@@ -46,7 +46,7 @@ final class QueryParameterStatusTest extends JsonApiTestCase
 
         $errors = $this->captureErrors($request, fn () => ($this->collectionController())($request, 'articles'));
 
-        self::assertSame('unknown-parameter', $errors[0]['code']);
+        self::assertSame('invalid-parameter', $errors[0]['code']);
         $this->assertErrorParameter($errors[0], 'unexpected');
     }
 

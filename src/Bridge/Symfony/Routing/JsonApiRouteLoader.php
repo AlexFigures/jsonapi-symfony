@@ -54,7 +54,6 @@ final class JsonApiRouteLoader extends Loader
         private readonly bool $enableRelationshipRoutes = true,
         private readonly array $openApiConfig = [],
         private readonly array $docsUiConfig = [],
-        private readonly ?RouteNameGenerator $routeNameGenerator = null,
         private readonly ?CustomRouteRegistryInterface $customRouteRegistry = null,
     ) {
         parent::__construct();
@@ -334,20 +333,6 @@ final class JsonApiRouteLoader extends Loader
             }
             $routeName = $customRoute->name;
 
-            // Apply route name transformation if configured
-            // Only transform names that match the exact canonical pattern: jsonapi.{type}.{action}
-            // Leave custom names like 'jsonapi.products.actions.publish' untouched
-            if ($this->routeNameGenerator !== null && str_starts_with($routeName, 'jsonapi.')) {
-                $parts = explode('.', $routeName);
-                if (count($parts) === 3 && $parts[0] === 'jsonapi') {
-                    // Only transform if it's exactly the canonical 3-part pattern
-                    $resourceType = $parts[1];
-                    $action = $parts[2];
-                    $routeName = $this->generateRouteName($resourceType, $action);
-                }
-                // For any other pattern (e.g., 'jsonapi.products.actions.publish'), leave the name unchanged
-            }
-
             // Determine controller based on whether this is a handler-based or controller-based route
             $controller = $this->resolveController($customRoute);
 
@@ -410,7 +395,7 @@ final class JsonApiRouteLoader extends Loader
     }
 
     /**
-     * Generate a route name using the configured naming convention.
+     * Generate a route name using snake_case convention.
      */
     private function generateRouteName(
         string $resourceType,
@@ -418,11 +403,6 @@ final class JsonApiRouteLoader extends Loader
         ?string $relationship = null,
         ?string $relationshipAction = null
     ): string {
-        if ($this->routeNameGenerator !== null) {
-            return $this->routeNameGenerator->generateRouteName($resourceType, $action, $relationship, $relationshipAction);
-        }
-
-        // Fallback to legacy naming for backward compatibility
         if ($relationship !== null) {
             if ($relationshipAction !== null) {
                 return "jsonapi.{$resourceType}.relationships.{$relationship}.{$relationshipAction}";

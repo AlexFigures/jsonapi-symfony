@@ -153,59 +153,6 @@ The instantiator respects `propertyPath` from attribute metadata:
 private string $nameEn;
 ```
 
-## SerializationGroups Support
-
-The instantiator fully supports `SerializationGroups` attribute:
-
-```php
-#[JsonApiResource(type: 'users')]
-class User
-{
-    #[Attribute]
-    #[SerializationGroups(['read', 'write'])]
-    private string $username;
-
-    #[Attribute]
-    #[SerializationGroups(['write'])]  // Only for write, never returned
-    private string $password;
-
-    #[Attribute]
-    #[SerializationGroups(['read', 'create'])]  // Can only be set on creation
-    private string $slug;
-
-    #[Attribute]
-    #[SerializationGroups(['read', 'update'])]  // Can only be set on update
-    private ?\DateTimeInterface $updatedAt = null;
-
-    public function __construct(
-        string $username,
-        string $password,
-        string $slug,
-    ) {
-        $this->uuid = Uuid::v7();
-        $this->username = $username;
-        $this->password = password_hash($password, PASSWORD_DEFAULT);
-        $this->slug = $slug;
-        $this->createdAt = new \DateTimeImmutable();
-    }
-}
-```
-
-### How It Works
-
-**On CREATE (POST):**
-- Attributes with `write` or `create` groups are passed to constructor
-- Attributes with only `update` group are ignored
-
-**On UPDATE (PATCH):**
-- Attributes with `write` or `update` groups are applied
-- Attributes with only `create` group are ignored
-
-This ensures that:
-- Passwords are never returned in responses
-- Slugs can only be set during creation
-- Update timestamps are only set during updates
-
 ## Configuration
 
 The `SerializerEntityInstantiator` is automatically registered and used by:

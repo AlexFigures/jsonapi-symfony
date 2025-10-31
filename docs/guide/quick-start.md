@@ -27,7 +27,6 @@ use AlexFigures\Symfony\Resource\Attribute\Attribute;
 use AlexFigures\Symfony\Resource\Attribute\Id;
 use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 use AlexFigures\Symfony\Resource\Attribute\Relationship;
-use AlexFigures\Symfony\Resource\Attribute\SerializationGroups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]

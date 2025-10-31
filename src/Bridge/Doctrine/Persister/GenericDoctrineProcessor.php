@@ -52,7 +52,6 @@ class GenericDoctrineProcessor implements ResourceProcessor
         }
 
         // Create new entity through SerializerEntityInstantiator
-        // It can call constructors with parameters and considers SerializationGroups
         $result = $this->instantiator->instantiate($entityClass, $metadata, $changes, isCreate: true);
         $entity = $result['entity'];
         $remainingChanges = $result['remainingChanges'];

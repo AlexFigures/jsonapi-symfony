@@ -35,7 +35,6 @@ use Attribute;
  *     public string $status;
  *
  *     #[Attribute]
- *     #[SerializationGroups(['read'])]
  *     public \DateTimeImmutable $createdAt;
  *
  *     #[Attribute]
