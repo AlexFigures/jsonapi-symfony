@@ -41,7 +41,6 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.media_types', $mediaTypes);
         $container->setParameter('jsonapi.media_type', $mediaTypes['default']['response']['default']);
         $container->setParameter('jsonapi.route_prefix', $config['route_prefix']);
-        $container->setParameter('jsonapi.routing', $config['routing']);
         $container->setParameter('jsonapi.pagination.default_size', $config['pagination']['default_size']);
         $container->setParameter('jsonapi.pagination.max_size', $config['pagination']['max_size']);
         $container->setParameter('jsonapi.write.allow_relationship_writes', $config['write']['allow_relationship_writes']);
