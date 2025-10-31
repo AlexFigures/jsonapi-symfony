@@ -473,6 +473,144 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
         }
     }
 
+    /**
+     * Test that null values in JSON/JSONB fields are preserved when skip_null_values => false.
+     *
+     * This tests the fix for the issue where null values in JSON objects were being stripped
+     * during denormalization because Symfony Serializer defaults to SKIP_NULL_VALUES = true.
+     *
+     * By setting 'skip_null_values' => false in denormalizationContext, we ensure that
+     * explicit null values are preserved in JSON/JSONB fields.
+     */
+    public function testJsonFieldPreservesNullValues(): void
+    {
+        // Create entity with JSON metadata containing null values
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'attributes' => [
+                    'name' => 'Test Entity',
+                    'metadata' => [
+                        'color' => 'red',
+                        'size' => null,  // Explicit null - should be preserved
+                        'weight' => 100,
+                        'description' => null,  // Another null - should be preserved
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/type-test-entities', $payload);
+        $response = ($this->controller)($request, 'type-test-entities');
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        $entityId = $document['data']['id'];
+
+        // Verify metadata is returned with null values preserved
+        self::assertArrayHasKey('metadata', $document['data']['attributes']);
+        $metadata = $document['data']['attributes']['metadata'];
+
+        self::assertIsArray($metadata);
+        self::assertArrayHasKey('color', $metadata);
+        self::assertSame('red', $metadata['color']);
+
+        self::assertArrayHasKey('size', $metadata);
+        self::assertNull($metadata['size'], 'Null value for "size" should be preserved');
+
+        self::assertArrayHasKey('weight', $metadata);
+        self::assertSame(100, $metadata['weight']);
+
+        self::assertArrayHasKey('description', $metadata);
+        self::assertNull($metadata['description'], 'Null value for "description" should be preserved');
+
+        // Verify persistence - clear entity manager and reload from database
+        $this->em->clear();
+        $entity = $this->em->find(TypeTestEntity::class, $entityId);
+        self::assertInstanceOf(TypeTestEntity::class, $entity);
+
+        $persistedMetadata = $entity->getMetadata();
+        self::assertIsArray($persistedMetadata);
+        self::assertArrayHasKey('size', $persistedMetadata);
+        self::assertNull($persistedMetadata['size'], 'Null value should be persisted in database');
+        self::assertArrayHasKey('description', $persistedMetadata);
+        self::assertNull($persistedMetadata['description'], 'Null value should be persisted in database');
+    }
+
+    /**
+     * Test that updating JSON field with null values works correctly.
+     */
+    public function testJsonFieldUpdateWithNullValues(): void
+    {
+        // Create entity with initial metadata
+        $createPayload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'attributes' => [
+                    'name' => 'Test Entity',
+                    'metadata' => [
+                        'color' => 'blue',
+                        'size' => 'large',
+                        'weight' => 200,
+                    ],
+                ],
+            ],
+        ];
+
+        $createRequest = $this->createJsonApiRequest('POST', '/api/type-test-entities', $createPayload);
+        $createResponse = ($this->controller)($createRequest, 'type-test-entities');
+        $createDocument = $this->decode($createResponse);
+        $entityId = $createDocument['data']['id'];
+
+        // Verify initial metadata
+        $this->em->clear();
+        $entity = $this->em->find(TypeTestEntity::class, $entityId);
+        $initialMetadata = $entity->getMetadata();
+        self::assertSame('blue', $initialMetadata['color']);
+        self::assertSame('large', $initialMetadata['size']);
+
+        // Update with null values using validatingProcessor directly
+        $changes = new \AlexFigures\Symfony\Contract\Data\ChangeSet(
+            attributes: [
+                'metadata' => [
+                    'color' => 'red',
+                    'size' => null,  // Set to null
+                    'weight' => 100,
+                    'newField' => null,  // Add new field with null
+                ],
+            ]
+        );
+
+        $updated = $this->validatingProcessor->processUpdate('type-test-entities', $entityId, $changes);
+        $updatedMetadata = $updated->getMetadata();
+
+        self::assertIsArray($updatedMetadata);
+        self::assertArrayHasKey('color', $updatedMetadata);
+        self::assertSame('red', $updatedMetadata['color']);
+        self::assertArrayHasKey('weight', $updatedMetadata);
+        self::assertSame(100, $updatedMetadata['weight']);
+
+        // These should have null values
+        self::assertArrayHasKey('size', $updatedMetadata);
+        self::assertNull($updatedMetadata['size'], 'Updated null value should be preserved in memory');
+        self::assertArrayHasKey('newField', $updatedMetadata);
+        self::assertNull($updatedMetadata['newField'], 'New null field should be preserved in memory');
+
+        // Force flush to database
+        $this->em->flush();
+
+        // Verify persistence - reload from database
+        $this->em->clear();
+        $persisted = $this->em->find(TypeTestEntity::class, $entityId);
+        $persistedMetadata = $persisted->getMetadata();
+
+        self::assertArrayHasKey('size', $persistedMetadata);
+        self::assertNull($persistedMetadata['size'], 'Updated null should be persisted in database');
+        self::assertArrayHasKey('newField', $persistedMetadata);
+        self::assertNull($persistedMetadata['newField'], 'New null field should be persisted in database');
+    }
+
     private function createJsonApiRequest(string $method, string $uri, array $payload): Request
     {
         return Request::create(

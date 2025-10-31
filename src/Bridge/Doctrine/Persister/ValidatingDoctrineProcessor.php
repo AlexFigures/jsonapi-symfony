@@ -235,14 +235,17 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         // Get denormalization groups from metadata
         $groups = $metadata->getDenormalizationGroups();
 
-        $context = [
-            AbstractNormalizer::OBJECT_TO_POPULATE => $entity,
-            AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false, // Strict mode: reject unknown attributes
-            AbstractNormalizer::COLLECT_DENORMALIZATION_ERRORS => true,
-            'deep_object_to_populate' => true, // Enable deep updates for embeddables and nested objects
-            AbstractNormalizer::GROUPS => $groups,
-            'is_create' => $isCreate, // Pass operation type for relationship resolver
-        ];
+        // Start with denormalizationContext from resource metadata
+        // This allows users to configure serializer options like skip_null_values
+        $context = $metadata->denormalizationContext;
+
+        // Merge with required options (these override user settings for correctness)
+        $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $entity;
+        $context[AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES] = false; // Strict mode: reject unknown attributes
+        $context[AbstractNormalizer::COLLECT_DENORMALIZATION_ERRORS] = true;
+        $context['deep_object_to_populate'] = true; // Enable deep updates for embeddables and nested objects
+        $context[AbstractNormalizer::GROUPS] = $groups;
+        $context['is_create'] = $isCreate; // Pass operation type for relationship resolver
 
         try {
             $this->instantiator->denormalizer()->denormalize(
