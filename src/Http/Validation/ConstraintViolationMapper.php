@@ -30,17 +30,13 @@ final class ConstraintViolationMapper
     {
         $metadata = $this->registry->getByType($resourceType);
         $errors = [];
-        $seenPointers = [];
 
         foreach ($violations as $violation) {
             /** @var ConstraintViolationInterface $violation */
             [$pointer, $meta] = $this->pointerFor($metadata, (string) $violation->getPropertyPath());
 
-            if (isset($seenPointers[$pointer])) {
-                continue;
-            }
-
-            $seenPointers[$pointer] = true;
+            // Do NOT deduplicate by pointer - a single field can violate multiple constraints
+            // (e.g., NotBlank + Length, or UniqueEntity + Format)
             $errors[] = $this->errors->validationError($pointer, (string) $violation->getMessage(), $meta);
         }
 
@@ -72,6 +68,12 @@ final class ConstraintViolationMapper
             $errors = $this->mapNotNormalizableValueError($resourceType, $exception);
         } elseif ($exception instanceof ExtraAttributesException) {
             $errors = $this->mapExtraAttributesError($resourceType, $exception);
+        } elseif ($exception instanceof \ValueError) {
+            // ValueError is thrown by BackedEnumNormalizer for invalid enum values
+            $errors = $this->mapValueError($resourceType, $exception);
+        } elseif ($exception instanceof \InvalidArgumentException) {
+            // InvalidArgumentException wraps ValueError from BackedEnumNormalizer
+            $errors = $this->mapInvalidArgumentException($resourceType, $exception);
         } else {
             // Fallback for unknown denormalization errors
             $errors[] = $this->errors->validationError(
@@ -209,6 +211,124 @@ final class ConstraintViolationMapper
     }
 
     /**
+     * Maps ValueError to JSON:API error.
+     *
+     * ValueError is thrown by BackedEnumNormalizer when an invalid enum value is provided.
+     * We need to extract the property name from the exception message or stack trace.
+     *
+     * @return list<ErrorObject>
+     */
+    private function mapValueError(string $resourceType, \ValueError $exception): array
+    {
+        $metadata = $this->registry->getByType($resourceType);
+        $message = $exception->getMessage();
+
+        // Try to extract enum class name from message
+        // Format: "\"invalid-value\" is not a valid backing value for enum App\\Entity\\Status"
+        $propertyPath = '';
+        if (preg_match('/for enum ([^\s]+)/', $message, $matches)) {
+            $enumClass = $matches[1];
+            // Try to find which property uses this enum
+            $propertyPath = $this->findPropertyByEnumClass($metadata, $enumClass);
+        }
+
+        [$pointer, $meta] = $this->pointerFor($metadata, $propertyPath);
+
+        return [$this->errors->validationError(
+            $pointer,
+            $message,
+            array_merge($meta, ['exception' => 'ValueError'])
+        )];
+    }
+
+    /**
+     * Maps InvalidArgumentException to JSON:API error.
+     *
+     * InvalidArgumentException wraps ValueError from BackedEnumNormalizer.
+     *
+     * @return list<ErrorObject>
+     */
+    private function mapInvalidArgumentException(string $resourceType, \InvalidArgumentException $exception): array
+    {
+        $metadata = $this->registry->getByType($resourceType);
+
+        // Extract the original ValueError if available
+        $previous = $exception->getPrevious();
+        if ($previous instanceof \ValueError) {
+            return $this->mapValueError($resourceType, $previous);
+        }
+
+        // Fallback: try to extract property from exception message
+        $message = $exception->getMessage();
+        $propertyPath = '';
+
+        // Format: "The data must belong to a backed enumeration of type App\\Entity\\Status"
+        if (preg_match('/of type ([^\s]+)/', $message, $matches)) {
+            $enumClass = $matches[1];
+            $propertyPath = $this->findPropertyByEnumClass($metadata, $enumClass);
+        }
+
+        [$pointer, $meta] = $this->pointerFor($metadata, $propertyPath);
+
+        return [$this->errors->validationError(
+            $pointer,
+            $message,
+            array_merge($meta, ['exception' => 'InvalidArgumentException'])
+        )];
+    }
+
+    /**
+     * Find property name by enum class.
+     *
+     * Searches through resource attributes to find which property uses the given enum class.
+     * Handles both real properties and virtual/read-only attributes (from getters).
+     */
+    private function findPropertyByEnumClass(ResourceMetadata $metadata, string $enumClass): string
+    {
+        // Normalize enum class name (remove leading backslash)
+        $enumClass = ltrim($enumClass, '\\');
+
+        foreach ($metadata->attributes as $attribute) {
+            $propertyName = $attribute->propertyPath ?? $attribute->name;
+
+            // Check if this is a real property (not a virtual/read-only attribute from a getter)
+            try {
+                $reflectionProperty = new \ReflectionProperty($metadata->class, $propertyName);
+                $type = $reflectionProperty->getType();
+
+                if ($type instanceof \ReflectionNamedType) {
+                    $typeName = ltrim($type->getName(), '\\');
+                    if ($typeName === $enumClass) {
+                        return $propertyName;
+                    }
+                }
+            } catch (\ReflectionException) {
+                // Property doesn't exist - this is a virtual/read-only attribute from a getter
+                // Try to infer type from getter method
+                $getterName = 'get' . ucfirst($propertyName);
+                if (method_exists($metadata->class, $getterName)) {
+                    try {
+                        $reflectionMethod = new \ReflectionMethod($metadata->class, $getterName);
+                        $returnType = $reflectionMethod->getReturnType();
+
+                        if ($returnType instanceof \ReflectionNamedType) {
+                            $typeName = ltrim($returnType->getName(), '\\');
+                            if ($typeName === $enumClass) {
+                                return $propertyName;
+                            }
+                        }
+                    } catch (\ReflectionException) {
+                        // Getter doesn't exist or can't be reflected - skip this attribute
+                        continue;
+                    }
+                }
+            }
+        }
+
+        return '';
+    }
+
+    /**
      * @return array{string, array<string, mixed>}
      */
     private function pointerFor(ResourceMetadata $metadata, string $propertyPath): array
@@ -225,9 +345,12 @@ final class ConstraintViolationMapper
         if (isset($attributeMap[$firstSegment])) {
             $pointer = $attributeMap[$firstSegment];
             // Handle nested property paths for embeddables (e.g., "contactInfo.email")
+            // RFC 6901 JSON Pointer requires forward slashes, not dots
             if ($remainder !== '' && str_starts_with($remainder, '.')) {
                 $nestedPath = substr($remainder, 1); // Remove leading dot
-                $pointer .= '.' . $nestedPath;
+                // Convert dots to slashes for RFC 6901 compliance
+                $nestedPath = str_replace('.', '/', $nestedPath);
+                $pointer .= '/' . $nestedPath;
             }
             return [$pointer, []];
         }

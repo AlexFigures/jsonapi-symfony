@@ -95,8 +95,10 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
             }
 
             throw $this->violationMapper->mapToException($type, $violations);
-        } catch (PartialDenormalizationException|NotNormalizableValueException|ExtraAttributesException $e) {
+        } catch (PartialDenormalizationException|NotNormalizableValueException|ExtraAttributesException|\ValueError|\InvalidArgumentException $e) {
             // Handle denormalization errors from strict mode
+            // ValueError is thrown by BackedEnumNormalizer for invalid enum values
+            // InvalidArgumentException wraps ValueError from BackedEnumNormalizer
             throw $this->violationMapper->mapDenormErrors($type, $e);
         }
         $entity = $result['entity'];
@@ -249,7 +251,9 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
                 null,
                 $context
             );
-        } catch (PartialDenormalizationException|NotNormalizableValueException|ExtraAttributesException $e) {
+        } catch (PartialDenormalizationException|NotNormalizableValueException|ExtraAttributesException|\ValueError|\InvalidArgumentException $e) {
+            // ValueError is thrown by BackedEnumNormalizer for invalid enum values
+            // InvalidArgumentException wraps ValueError from BackedEnumNormalizer
             throw $this->violationMapper->mapDenormErrors($metadata->type, $e);
         }
     }

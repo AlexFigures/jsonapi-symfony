@@ -387,7 +387,7 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
      * Test: Invalid enum value returns 422 validation error.
      *
      * Validates that BackedEnumNormalizer errors are caught and
-     * converted to proper JSON:API validation errors.
+     * converted to proper JSON:API validation errors when enum is set via setter.
      */
     public function testInvalidEnumValueReturns422ValidationError(): void
     {
@@ -425,6 +425,51 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
             self::assertNotNull($firstError->source);
             $pointer = $firstError->source->pointer ?? '';
             self::assertSame('/data/attributes/status', $pointer);
+        }
+    }
+
+    /**
+     * Test: Invalid enum value in constructor returns 422 validation error.
+     *
+     * Validates that ValueError thrown by BackedEnumNormalizer during object
+     * construction is caught and converted to proper JSON:API validation errors.
+     *
+     * This is the critical test case that reproduces the user's issue:
+     * when an invalid enum value is passed to a constructor parameter,
+     * BackedEnumNormalizer throws ValueError (not NotNormalizableValueException).
+     */
+    public function testInvalidEnumValueInConstructorReturns422ValidationError(): void
+    {
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'attributes' => [
+                    'name' => 'Test Entity',
+                    'constructorStatus' => 'invalid-constructor-status', // Invalid enum value in constructor
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/type-test-entities', $payload);
+
+        try {
+            ($this->controller)($request, 'type-test-entities');
+            self::fail('Expected UnprocessableEntityException to be thrown for invalid enum in constructor');
+        } catch (\AlexFigures\Symfony\Http\Exception\UnprocessableEntityException $e) {
+            // Verify HTTP status code (422 for validation errors)
+            self::assertSame(422, $e->getStatusCode(), 'Expected 422 status code for validation error');
+
+            // Verify error details
+            $errors = $e->getErrors();
+            self::assertNotEmpty($errors, 'Expected at least one error');
+
+            $firstError = $errors[0];
+            self::assertSame('422', $firstError->status);
+            self::assertSame('validation-error', $firstError->code);
+
+            // Verify error message contains information about the invalid value
+            self::assertNotEmpty($firstError->detail, 'Error detail should not be empty');
+            self::assertStringContainsString('invalid-constructor-status', strtolower($firstError->detail), 'Error should mention the invalid value');
         }
     }
 
