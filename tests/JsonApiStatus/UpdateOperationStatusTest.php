@@ -6,7 +6,7 @@ namespace AlexFigures\Symfony\Tests\JsonApiStatus;
 
 use AlexFigures\Symfony\Http\Exception\ConflictException;
 use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
+use AlexFigures\Symfony\Http\Exception\UnprocessableEntityException;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -77,8 +77,8 @@ final class UpdateOperationStatusTest extends JsonApiTestCase
 
         try {
             ($this->updateController())($this->jsonRequest('PATCH', '/api/articles/1', $payload), 'articles', '1');
-            self::fail('Expected ValidationException (422) when related resource is missing.');
-        } catch (ValidationException $exception) {
+            self::fail('Expected UnprocessableEntityException (422) when related resource is missing.');
+        } catch (UnprocessableEntityException $exception) {
             self::assertSame(422, $exception->getStatusCode());
         }
     }

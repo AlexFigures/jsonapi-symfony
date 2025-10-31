@@ -6,8 +6,11 @@ namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
 
 use AlexFigures\Symfony\Contract\Data\ChangeSet;
 use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
+use AlexFigures\Symfony\Http\Error\ErrorObject;
+use AlexFigures\Symfony\Http\Error\ErrorSource;
 use AlexFigures\Symfony\Http\Exception\ConflictException;
 use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\Symfony\Http\Exception\ValidationException;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -114,13 +117,25 @@ final class InMemoryPersister implements ResourceProcessor
             if (isset($data[0]) && is_array($data[0])) {
                 // To-many relationship
                 $relatedObjects = [];
-                foreach ($data as $identifier) {
+                foreach ($data as $index => $identifier) {
                     $relatedType = $identifier['type'];
                     $relatedId = $identifier['id'];
                     $relatedObject = $this->repository->get($relatedType, $relatedId);
-                    if ($relatedObject !== null) {
-                        $relatedObjects[] = $relatedObject;
+                    if ($relatedObject === null) {
+                        // Throw validation error for missing related resource
+                        $error = new ErrorObject(
+                            id: null,
+                            aboutLink: null,
+                            status: '422',
+                            code: 'validation-error',
+                            title: 'Validation failed',
+                            detail: sprintf('Related resource "%s" with id "%s" does not exist.', $relatedType, $relatedId),
+                            source: new ErrorSource(pointer: sprintf('/data/relationships/%s/data/%d/id', $name, $index)),
+                            meta: [],
+                        );
+                        throw new ValidationException([$error], 'Validation failed.');
                     }
+                    $relatedObjects[] = $relatedObject;
                 }
                 $this->accessor->setValue($model, $name, $relatedObjects);
             } else {
@@ -128,6 +143,20 @@ final class InMemoryPersister implements ResourceProcessor
                 $relatedType = $data['type'];
                 $relatedId = $data['id'];
                 $relatedObject = $this->repository->get($relatedType, $relatedId);
+                if ($relatedObject === null) {
+                    // Throw validation error for missing related resource
+                    $error = new ErrorObject(
+                        id: null,
+                        aboutLink: null,
+                        status: '422',
+                        code: 'validation-error',
+                        title: 'Validation failed',
+                        detail: sprintf('Related resource "%s" with id "%s" does not exist.', $relatedType, $relatedId),
+                        source: new ErrorSource(pointer: sprintf('/data/relationships/%s/data/id', $name)),
+                        meta: [],
+                    );
+                    throw new ValidationException([$error], 'Validation failed.');
+                }
                 $this->accessor->setValue($model, $name, $relatedObject);
             }
         }

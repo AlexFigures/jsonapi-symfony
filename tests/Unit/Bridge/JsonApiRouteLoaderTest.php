@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Unit\Bridge;
 
 use AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader;
-use AlexFigures\Symfony\Bridge\Symfony\Routing\RouteNameGenerator;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
@@ -308,46 +307,6 @@ final class JsonApiRouteLoaderTest extends TestCase
         $loader->load('.', 'jsonapi');
     }
 
-    public function testKebabCaseNamingConvention(): void
-    {
-        $registry = $this->createMock(ResourceRegistryInterface::class);
-        $registry->method('all')->willReturn([
-            new ResourceMetadata(
-                type: 'blog_posts',
-                class: \AlexFigures\Symfony\Tests\Fixtures\Model\BlogPost::class,
-                attributes: [],
-                relationships: [
-                    new RelationshipMetadata(
-                        name: 'author',
-                        toMany: false,
-                        targetType: 'authors',
-                        propertyPath: 'author',
-                    ),
-                ],
-            ),
-        ]);
-
-        $routeNameGenerator = new RouteNameGenerator(RouteNameGenerator::KEBAB_CASE);
-        $loader = new JsonApiRouteLoader($registry, '/api', true, [], [], $routeNameGenerator);
-        $routes = $loader->load('.', 'jsonapi');
-
-        // Check that route names use kebab-case
-        $this->assertNotNull($routes->get('jsonapi.blog-posts.index'));
-        $this->assertNotNull($routes->get('jsonapi.blog-posts.create'));
-        $this->assertNotNull($routes->get('jsonapi.blog-posts.show'));
-        $this->assertNotNull($routes->get('jsonapi.blog-posts.update'));
-        $this->assertNotNull($routes->get('jsonapi.blog-posts.delete'));
-
-        // Check relationship routes
-        $this->assertNotNull($routes->get('jsonapi.blog-posts.relationships.author.show'));
-        $this->assertNotNull($routes->get('jsonapi.blog-posts.relationships.author.update'));
-        $this->assertNotNull($routes->get('jsonapi.blog-posts.related.author'));
-
-        // Verify old snake_case routes don't exist
-        $this->assertNull($routes->get('jsonapi.blog_posts.index'));
-        $this->assertNull($routes->get('jsonapi.blog_posts.relationships.author.show'));
-    }
-
     public function testCustomRoutes(): void
     {
         $registry = $this->createMock(ResourceRegistryInterface::class);
@@ -381,7 +340,7 @@ final class JsonApiRouteLoaderTest extends TestCase
             ),
         ]);
 
-        $loader = new JsonApiRouteLoader($registry, '/api', true, [], [], null, $customRouteRegistry);
+        $loader = new JsonApiRouteLoader($registry, '/api', true, [], [], $customRouteRegistry);
         $routes = $loader->load('.', 'jsonapi');
 
         // Check custom routes are added
@@ -400,74 +359,6 @@ final class JsonApiRouteLoaderTest extends TestCase
         $this->assertSame(['GET'], $searchRoute->getMethods());
         $this->assertSame('App\Controller\SearchController', $searchRoute->getDefault('_controller'));
         $this->assertSame('articles', $searchRoute->getDefault('type'));
-    }
-
-    public function testCustomRoutesPreserveComplexNames(): void
-    {
-        $registry = $this->createMock(ResourceRegistryInterface::class);
-        $registry->method('all')->willReturn([]);
-
-        $routeNameGenerator = new \AlexFigures\Symfony\Bridge\Symfony\Routing\RouteNameGenerator('kebab-case');
-
-        $customRouteRegistry = $this->createMock(\AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface::class);
-        $customRouteRegistry->method('all')->willReturn([
-            // This should be transformed (canonical 3-part pattern)
-            new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata(
-                name: 'jsonapi.products.publish',
-                path: '/api/products/{id}/publish',
-                methods: ['POST'],
-                handler: null,
-                controller: 'App\Controller\PublishController',
-                resourceType: 'products',
-                defaults: [],
-                requirements: [],
-                description: null,
-                priority: 0,
-            ),
-            // This should NOT be transformed (4-part pattern)
-            new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata(
-                name: 'jsonapi.products.actions.archive',
-                path: '/api/products/{id}/archive',
-                methods: ['POST'],
-                handler: null,
-                controller: 'App\Controller\ArchiveController',
-                resourceType: 'products',
-                defaults: [],
-                requirements: [],
-                description: null,
-                priority: 0,
-            ),
-            // This should NOT be transformed (doesn't start with jsonapi.)
-            new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata(
-                name: 'custom.products.special',
-                path: '/api/products/special',
-                methods: ['GET'],
-                handler: null,
-                controller: 'App\Controller\SpecialController',
-                resourceType: 'products',
-                defaults: [],
-                requirements: [],
-                description: null,
-                priority: 0,
-            ),
-        ]);
-
-        $loader = new JsonApiRouteLoader($registry, '/api', true, [], [], $routeNameGenerator, $customRouteRegistry);
-        $routes = $loader->load('.', 'jsonapi');
-
-        // Check that canonical 3-part name was transformed (kebab-case)
-        $publishRoute = $routes->get('jsonapi.products.publish');
-        $this->assertNotNull($publishRoute);
-
-        // Check that 4-part name was preserved exactly
-        $archiveRoute = $routes->get('jsonapi.products.actions.archive');
-        $this->assertNotNull($archiveRoute);
-        $this->assertSame('/api/products/{id}/archive', $archiveRoute->getPath());
-
-        // Check that non-jsonapi name was preserved exactly
-        $specialRoute = $routes->get('custom.products.special');
-        $this->assertNotNull($specialRoute);
-        $this->assertSame('/api/products/special', $specialRoute->getPath());
     }
 
     public function testCustomRoutesPriorityOrdering(): void
@@ -512,7 +403,7 @@ final class JsonApiRouteLoaderTest extends TestCase
             ),
         ]);
 
-        $loader = new JsonApiRouteLoader($registry, '/api', true, [], [], null, $customRouteRegistry);
+        $loader = new JsonApiRouteLoader($registry, '/api', true, [], [], $customRouteRegistry);
         $routes = $loader->load('.', 'jsonapi');
 
         // Get all route names in order
@@ -541,10 +432,10 @@ final class JsonApiRouteLoaderTest extends TestCase
     }
 
     /**
-     * Test that resource types with multiple underscores generate correct routes.
+     * Test that resource types with underscores generate correct routes.
      *
      * This test verifies that resource types like 'category_synonyms' work correctly
-     * with both snake_case and kebab-case naming conventions.
+     * and that route names and URL paths preserve the underscores.
      */
     public function testResourceTypeWithMultipleUnderscores(): void
     {
@@ -565,53 +456,25 @@ final class JsonApiRouteLoaderTest extends TestCase
             ),
         ]);
 
-        // Test with snake_case naming convention (default)
-        $snakeLoader = new JsonApiRouteLoader($registry, '/api', true);
-        $snakeRoutes = $snakeLoader->load('.', 'jsonapi');
+        $loader = new JsonApiRouteLoader($registry, '/api', true);
+        $routes = $loader->load('.', 'jsonapi');
 
-        // Verify route names use snake_case
-        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.index'));
-        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.show'));
-        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.create'));
-        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.update'));
-        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.delete'));
+        // Verify route names use the resource type as-is (with underscores)
+        $this->assertNotNull($routes->get('jsonapi.category_synonyms.index'));
+        $this->assertNotNull($routes->get('jsonapi.category_synonyms.show'));
+        $this->assertNotNull($routes->get('jsonapi.category_synonyms.create'));
+        $this->assertNotNull($routes->get('jsonapi.category_synonyms.update'));
+        $this->assertNotNull($routes->get('jsonapi.category_synonyms.delete'));
 
         // Verify relationship routes
-        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.relationships.category.show'));
-        $this->assertNotNull($snakeRoutes->get('jsonapi.category_synonyms.related.category'));
+        $this->assertNotNull($routes->get('jsonapi.category_synonyms.relationships.category.show'));
+        $this->assertNotNull($routes->get('jsonapi.category_synonyms.related.category'));
 
         // Verify URL paths use resource type as-is (with underscores)
-        $indexRoute = $snakeRoutes->get('jsonapi.category_synonyms.index');
+        $indexRoute = $routes->get('jsonapi.category_synonyms.index');
         $this->assertSame('/api/category_synonyms', $indexRoute->getPath());
 
-        $showRoute = $snakeRoutes->get('jsonapi.category_synonyms.show');
+        $showRoute = $routes->get('jsonapi.category_synonyms.show');
         $this->assertSame('/api/category_synonyms/{id}', $showRoute->getPath());
-
-        // Test with kebab-case naming convention
-        $routeNameGenerator = new RouteNameGenerator(RouteNameGenerator::KEBAB_CASE);
-        $kebabLoader = new JsonApiRouteLoader($registry, '/api', true, [], [], $routeNameGenerator);
-        $kebabRoutes = $kebabLoader->load('.', 'jsonapi');
-
-        // Verify route names use kebab-case
-        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.index'));
-        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.show'));
-        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.create'));
-        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.update'));
-        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.delete'));
-
-        // Verify relationship routes use kebab-case
-        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.relationships.category.show'));
-        $this->assertNotNull($kebabRoutes->get('jsonapi.category-synonyms.related.category'));
-
-        // Verify URL paths still use resource type as-is (with underscores, NOT hyphens)
-        $kebabIndexRoute = $kebabRoutes->get('jsonapi.category-synonyms.index');
-        $this->assertSame('/api/category_synonyms', $kebabIndexRoute->getPath());
-
-        $kebabShowRoute = $kebabRoutes->get('jsonapi.category-synonyms.show');
-        $this->assertSame('/api/category_synonyms/{id}', $kebabShowRoute->getPath());
-
-        // Verify old snake_case route names don't exist when using kebab-case
-        $this->assertNull($kebabRoutes->get('jsonapi.category_synonyms.index'));
-        $this->assertNull($kebabRoutes->get('jsonapi.category_synonyms.relationships.category.show'));
     }
 }
