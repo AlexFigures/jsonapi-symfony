@@ -153,6 +153,15 @@ final class SerializerEntityInstantiator
         // Get denormalization groups from metadata
         $groups = $metadata->getDenormalizationGroups();
 
+        // Start with denormalizationContext from resource metadata
+        // This allows users to configure serializer options like skip_null_values
+        $context = $metadata->denormalizationContext;
+
+        // Merge with required options (these override user settings for correctness)
+        $context[AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES] = false; // Strict mode: reject unknown attributes
+        $context[AbstractNormalizer::COLLECT_DENORMALIZATION_ERRORS] = true; // Collect all denormalization errors
+        $context[AbstractNormalizer::GROUPS] = $groups; // Serialization groups for filtering
+
         // Use the Symfony Serializer to build the object
         // It automatically calls the constructor with the correct arguments
         // and filters attributes by groups
@@ -160,14 +169,7 @@ final class SerializerEntityInstantiator
             $data,
             $entityClass,
             null,
-            [
-                // Strict mode: reject unknown attributes
-                AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false,
-                // Collect all denormalization errors for better error reporting
-                AbstractNormalizer::COLLECT_DENORMALIZATION_ERRORS => true,
-                // Serialization groups for filtering
-                AbstractNormalizer::GROUPS => $groups,
-            ]
+            $context
         );
 
         if (!is_object($entity)) {

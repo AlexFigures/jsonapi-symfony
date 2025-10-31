@@ -29,7 +29,10 @@ use Symfony\Component\Uid\Uuid;
 #[JsonApiResource(
     type: 'type-test-entities',
     normalizationContext: ['groups' => ['type_test:read']],
-    denormalizationContext: ['groups' => ['type_test:write']],
+    denormalizationContext: [
+        'groups' => ['type_test:write'],
+        'skip_null_values' => false, // Preserve null values in JSONB fields
+    ],
 )]
 class TypeTestEntity
 {
@@ -105,6 +108,17 @@ class TypeTestEntity
     #[Attribute]
     #[Groups(['type_test:read', 'type_test:write'])]
     private ?float $rating = null;
+
+    /**
+     * Test JSONB type with null value preservation.
+     * This tests that null values inside JSON objects are preserved when skip_null_values => false.
+     *
+     * @var array<string, mixed>|null
+     */
+    #[ORM\Column(type: 'json', nullable: true)]
+    #[Attribute]
+    #[Groups(['type_test:read', 'type_test:write'])]
+    private ?array $metadata = null;
 
     public function __construct(?ArticleStatus $constructorStatus = null)
     {
@@ -208,6 +222,23 @@ class TypeTestEntity
     public function setRating(?float $rating): self
     {
         $this->rating = $rating;
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getMetadata(): ?array
+    {
+        return $this->metadata;
+    }
+
+    /**
+     * @param array<string, mixed>|null $metadata
+     */
+    public function setMetadata(?array $metadata): self
+    {
+        $this->metadata = $metadata;
         return $this;
     }
 }
