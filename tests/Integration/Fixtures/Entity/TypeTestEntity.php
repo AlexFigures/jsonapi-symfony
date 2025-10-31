@@ -56,11 +56,21 @@ class TypeTestEntity
 
     /**
      * Test BackedEnum type (BackedEnumNormalizer).
+     * This is set via setter, not constructor.
      */
     #[ORM\Column(enumType: ArticleStatus::class, nullable: true)]
     #[Attribute]
     #[Groups(['type_test:read', 'type_test:write'])]
     private ?ArticleStatus $status = null;
+
+    /**
+     * Test BackedEnum type in constructor (BackedEnumNormalizer).
+     * This tests ValueError handling when invalid enum value is passed to constructor.
+     */
+    #[ORM\Column(enumType: ArticleStatus::class, nullable: true)]
+    #[Attribute(name: 'constructorStatus')]
+    #[Groups(['type_test:read', 'type_test:write'])]
+    private ?ArticleStatus $constructorStatus;
 
     /**
      * Test DateTimeImmutable type (DateTimeNormalizer).
@@ -96,9 +106,10 @@ class TypeTestEntity
     #[Groups(['type_test:read', 'type_test:write'])]
     private ?float $rating = null;
 
-    public function __construct()
+    public function __construct(?ArticleStatus $constructorStatus = null)
     {
         $this->id = Uuid::v4()->toRfc4122();
+        $this->constructorStatus = $constructorStatus;
     }
 
     public function getId(): string
@@ -142,6 +153,17 @@ class TypeTestEntity
     public function setStatus(?ArticleStatus $status): self
     {
         $this->status = $status;
+        return $this;
+    }
+
+    public function getConstructorStatus(): ?ArticleStatus
+    {
+        return $this->constructorStatus;
+    }
+
+    public function setConstructorStatus(?ArticleStatus $constructorStatus): self
+    {
+        $this->constructorStatus = $constructorStatus;
         return $this;
     }
 
