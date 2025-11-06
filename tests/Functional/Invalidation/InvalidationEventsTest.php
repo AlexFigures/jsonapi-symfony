@@ -9,6 +9,9 @@ use AlexFigures\Symfony\Events\ResourceChangedEvent;
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
 use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
 use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
 use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -187,8 +190,15 @@ final class InvalidationEventsTest extends JsonApiTestCase
             $this->errorMapper()
         );
 
+        $operationValidator = new OperationValidator($this->errorMapper());
+        $requestDecoder = new RequestDecoder($this->errorMapper());
+        $responseFactory = new JsonApiResponseFactory();
+
         return new CreateResourceController(
             $this->registry(),
+            $operationValidator,
+            $requestDecoder,
+            $responseFactory,
             $validator,
             $this->changeSetFactory(),
             $this->persister(),
@@ -196,10 +206,8 @@ final class InvalidationEventsTest extends JsonApiTestCase
             $this->documentBuilder(),
             $this->linkGenerator(),
             $this->writeConfig(),
-            $this->errorMapper(),
             $this->violationMapper(),
             $eventDispatcher,
-            $this->relationshipResolver()
         );
     }
 
@@ -214,17 +222,22 @@ final class InvalidationEventsTest extends JsonApiTestCase
             $this->errorMapper()
         );
 
+        $operationValidator = new OperationValidator($this->errorMapper());
+        $requestDecoder = new RequestDecoder($this->errorMapper());
+        $responseFactory = new JsonApiResponseFactory();
+
         return new UpdateResourceController(
             $this->registry(),
+            $operationValidator,
+            $requestDecoder,
+            $responseFactory,
             $validator,
             $this->changeSetFactory(),
             $this->persister(),
             $this->transactionManager(),
             $this->documentBuilder(),
-            $this->errorMapper(),
             $this->violationMapper(),
             $eventDispatcher,
-            $this->relationshipResolver()
         );
     }
 
@@ -233,12 +246,14 @@ final class InvalidationEventsTest extends JsonApiTestCase
      */
     private function createDeleteControllerWithEventDispatcher(EventDispatcherInterface $eventDispatcher): DeleteResourceController
     {
+        $operationValidator = new OperationValidator($this->errorMapper());
+
         return new DeleteResourceController(
             $this->registry(),
+            $operationValidator,
             $this->persister(),
             $this->transactionManager(),
             $eventDispatcher,
-            $this->errorMapper()
         );
     }
 
@@ -277,15 +292,19 @@ final class InvalidationEventsTest extends JsonApiTestCase
 
         $relationshipResponseConfig = new \AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig('linkage');
 
+        $operationValidator = new \AlexFigures\Symfony\Http\Controller\Support\OperationValidator($this->errorMapper());
+        $requestDecoder = new \AlexFigures\Symfony\Http\Controller\Support\RequestDecoder($this->errorMapper());
+
         return new RelationshipWriteController(
+            $operationValidator,
+            $requestDecoder,
             $relationshipValidator,
             $relationshipUpdater,
             $linkageBuilder,
             $relationshipResponseConfig,
-            $this->errorMapper(),
             $this->transactionManager(),
             $eventDispatcher,
-            $this->registry()
+            $this->registry(),
         );
     }
 }

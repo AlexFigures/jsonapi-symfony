@@ -20,6 +20,9 @@ use AlexFigures\Symfony\Filter\Operator\LikeOperator;
 use AlexFigures\Symfony\Filter\Operator\NotEqualOperator;
 use AlexFigures\Symfony\Filter\Operator\NotInOperator;
 use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
@@ -77,7 +80,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
         $routes->add('jsonapi.related', new Route('/api/{type}/{id}/{relationship}'));
 
         // Add type-specific routes for LinkGenerator
-        foreach (['articles', 'authors', 'tags', 'categories'] as $type) {
+        foreach (['articles', 'authors', 'tags', 'categories', 'type-test-entities'] as $type) {
             $routes->add("jsonapi.{$type}.index", new Route("/api/{$type}"));
             $routes->add("jsonapi.{$type}.show", new Route("/api/{$type}/{id}"));
 
@@ -169,15 +172,21 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
         // Set up EventDispatcher
         $eventDispatcher = new EventDispatcher();
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $requestDecoder = new RequestDecoder($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         // Create UpdateResourceController
         $this->controller = new UpdateResourceController(
             $this->registry,
+            $operationValidator,
+            $requestDecoder,
+            $responseFactory,
             $inputValidator,
             $changeSetFactory,
             $this->validatingProcessor,
             $this->transactionManager,
             $documentBuilder,
-            $errorMapper,
             $violationMapper,
             $eventDispatcher
         );
@@ -1310,5 +1319,253 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
         // This demonstrates the problem:
         // If validation happens AFTER em->clear() but BEFORE flush,
         // it will see the old state and might produce incorrect results
+    }
+
+    /**
+     * Test that null values in JSON/JSONB fields are preserved during updates when skip_null_values => false.
+     *
+     * This tests the fix for the issue where null values in JSON objects were being stripped
+     * during denormalization because Symfony Serializer defaults to SKIP_NULL_VALUES = true.
+     *
+     * Test cases:
+     * 1. Create resource with initial JSON field values
+     * 2. Update JSON field with null values
+     * 3. Verify null values are preserved in response
+     * 4. Verify null values are persisted to database
+     * 5. Verify null values survive database round-trip
+     */
+    public function testUpdateResourceWithJsonFieldPreservesNullValues(): void
+    {
+        // Create entity with initial metadata
+        $entity = new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity();
+        $entity->setName('Test Entity');
+        $entity->setMetadata([
+            'color' => 'blue',
+            'size' => 'large',
+            'weight' => 200,
+            'description' => 'Original description',
+        ]);
+        $this->em->persist($entity);
+        $this->em->flush();
+        $entityId = $entity->getId();
+        $this->em->clear();
+
+        // Update with null values
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'id' => $entityId,
+                'attributes' => [
+                    'metadata' => [
+                        'color' => 'red',
+                        'size' => null,  // Set to null
+                        'weight' => 100,
+                        'description' => null,  // Set to null
+                        'newField' => null,  // Add new field with null
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('PATCH', "/api/type-test-entities/{$entityId}", $payload);
+        $response = ($this->controller)($request, 'type-test-entities', $entityId);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        $updatedMetadata = $document['data']['attributes']['metadata'];
+
+        // Verify null values are preserved in response
+        self::assertIsArray($updatedMetadata);
+        self::assertArrayHasKey('color', $updatedMetadata);
+        self::assertSame('red', $updatedMetadata['color']);
+
+        self::assertArrayHasKey('size', $updatedMetadata);
+        self::assertNull($updatedMetadata['size'], 'Updated null value for "size" should be preserved in response');
+
+        self::assertArrayHasKey('weight', $updatedMetadata);
+        self::assertSame(100, $updatedMetadata['weight']);
+
+        self::assertArrayHasKey('description', $updatedMetadata);
+        self::assertNull($updatedMetadata['description'], 'Updated null value for "description" should be preserved in response');
+
+        self::assertArrayHasKey('newField', $updatedMetadata);
+        self::assertNull($updatedMetadata['newField'], 'New null field should be preserved in response');
+
+        // Verify persistence - reload from database
+        $this->em->clear();
+        $persisted = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
+        $persistedMetadata = $persisted->getMetadata();
+
+        self::assertArrayHasKey('size', $persistedMetadata);
+        self::assertNull($persistedMetadata['size'], 'Updated null should be persisted in database');
+        self::assertArrayHasKey('description', $persistedMetadata);
+        self::assertNull($persistedMetadata['description'], 'Updated null should be persisted in database');
+        self::assertArrayHasKey('newField', $persistedMetadata);
+        self::assertNull($persistedMetadata['newField'], 'New null field should be persisted in database');
+
+        // Verify raw database value
+        $connection = $this->em->getConnection();
+        $sql = 'SELECT metadata FROM type_test_entities WHERE id = :id';
+        $rawMetadata = $connection->fetchOne($sql, ['id' => $entityId]);
+        $decodedRawMetadata = json_decode($rawMetadata, true);
+
+        self::assertArrayHasKey('size', $decodedRawMetadata);
+        self::assertNull($decodedRawMetadata['size'], 'Raw database JSON should contain null for "size"');
+        self::assertArrayHasKey('description', $decodedRawMetadata);
+        self::assertNull($decodedRawMetadata['description'], 'Raw database JSON should contain null for "description"');
+        self::assertArrayHasKey('newField', $decodedRawMetadata);
+        self::assertNull($decodedRawMetadata['newField'], 'Raw database JSON should contain null for "newField"');
+    }
+
+    /**
+     * Test updating JSON field from non-null to null values.
+     */
+    public function testUpdateJsonFieldFromNonNullToNull(): void
+    {
+        // Create entity with all non-null metadata
+        $entity = new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity();
+        $entity->setName('Test Entity');
+        $entity->setMetadata([
+            'field1' => 'value1',
+            'field2' => 'value2',
+            'field3' => 'value3',
+        ]);
+        $this->em->persist($entity);
+        $this->em->flush();
+        $entityId = $entity->getId();
+        $this->em->clear();
+
+        // Update all fields to null
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'id' => $entityId,
+                'attributes' => [
+                    'metadata' => [
+                        'field1' => null,
+                        'field2' => null,
+                        'field3' => null,
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('PATCH', "/api/type-test-entities/{$entityId}", $payload);
+        $response = ($this->controller)($request, 'type-test-entities', $entityId);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        $metadata = $document['data']['attributes']['metadata'];
+
+        self::assertIsArray($metadata);
+        self::assertCount(3, $metadata);
+        self::assertNull($metadata['field1']);
+        self::assertNull($metadata['field2']);
+        self::assertNull($metadata['field3']);
+
+        // Verify persistence
+        $this->em->clear();
+        $persisted = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
+        $persistedMetadata = $persisted->getMetadata();
+
+        self::assertNull($persistedMetadata['field1']);
+        self::assertNull($persistedMetadata['field2']);
+        self::assertNull($persistedMetadata['field3']);
+    }
+
+    /**
+     * Test partial update of JSON field preserves existing null values.
+     */
+    public function testPartialUpdatePreservesExistingNullValues(): void
+    {
+        // Create entity with some null values
+        $entity = new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity();
+        $entity->setName('Test Entity');
+        $entity->setMetadata([
+            'field1' => 'value1',
+            'field2' => null,
+            'field3' => 'value3',
+        ]);
+        $this->em->persist($entity);
+        $this->em->flush();
+        $entityId = $entity->getId();
+        $this->em->clear();
+
+        // Partial update - only update field1, keep field2 and field3
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'id' => $entityId,
+                'attributes' => [
+                    'metadata' => [
+                        'field1' => 'updated_value1',
+                        'field2' => null,  // Keep as null
+                        'field3' => 'value3',  // Keep as is
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('PATCH', "/api/type-test-entities/{$entityId}", $payload);
+        $response = ($this->controller)($request, 'type-test-entities', $entityId);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        $metadata = $document['data']['attributes']['metadata'];
+
+        self::assertSame('updated_value1', $metadata['field1']);
+        self::assertNull($metadata['field2'], 'Existing null value should be preserved');
+        self::assertSame('value3', $metadata['field3']);
+    }
+
+    /**
+     * Test updating JSON field to empty object.
+     */
+    public function testUpdateJsonFieldToEmptyObject(): void
+    {
+        // Create entity with metadata
+        $entity = new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity();
+        $entity->setName('Test Entity');
+        $entity->setMetadata([
+            'field1' => 'value1',
+            'field2' => 'value2',
+        ]);
+        $this->em->persist($entity);
+        $this->em->flush();
+        $entityId = $entity->getId();
+        $this->em->clear();
+
+        // Update to empty object
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'id' => $entityId,
+                'attributes' => [
+                    'metadata' => [],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('PATCH', "/api/type-test-entities/{$entityId}", $payload);
+        $response = ($this->controller)($request, 'type-test-entities', $entityId);
+
+        self::assertSame(Response::HTTP_OK, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        $metadata = $document['data']['attributes']['metadata'];
+
+        self::assertIsArray($metadata);
+        self::assertEmpty($metadata);
+
+        // Verify persistence
+        $this->em->clear();
+        $persisted = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
+        $persistedMetadata = $persisted->getMetadata();
+
+        self::assertIsArray($persistedMetadata);
+        self::assertEmpty($persistedMetadata);
     }
 }

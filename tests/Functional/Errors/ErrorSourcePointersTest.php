@@ -7,6 +7,9 @@ namespace AlexFigures\Symfony\Tests\Functional\Errors;
 use AlexFigures\Symfony\Contract\Data\ChangeSet;
 use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
 use AlexFigures\Symfony\Http\Write\WriteConfig;
 use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
@@ -294,8 +297,15 @@ final class ErrorSourcePointersTest extends JsonApiTestCase
         $writeConfig = new WriteConfig(true, $baseConfig->clientIdAllowed);
         $validator = new InputDocumentValidator($this->registry(), $writeConfig, $this->errorMapper());
 
+        $operationValidator = new OperationValidator($this->errorMapper());
+        $requestDecoder = new RequestDecoder($this->errorMapper());
+        $responseFactory = new JsonApiResponseFactory();
+
         return new CreateResourceController(
             $this->registry(),
+            $operationValidator,
+            $requestDecoder,
+            $responseFactory,
             $validator,
             $this->changeSetFactory(),
             $processor,
@@ -303,10 +313,8 @@ final class ErrorSourcePointersTest extends JsonApiTestCase
             $this->documentBuilder(),
             $this->linkGenerator(),
             $writeConfig,
-            $this->errorMapper(),
             $this->violationMapper(),
             $this->eventDispatcher(),
-            $this->relationshipResolver(),
         );
     }
 }

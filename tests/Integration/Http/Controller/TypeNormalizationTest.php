@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
@@ -86,8 +89,15 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
         $changeSetFactory = new ChangeSetFactory($this->registry);
         $eventDispatcher = new EventDispatcher();
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $requestDecoder = new RequestDecoder($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         $this->controller = new CreateResourceController(
             $this->registry,
+            $operationValidator,
+            $requestDecoder,
+            $responseFactory,
             $inputValidator,
             $changeSetFactory,
             $this->validatingProcessor,
@@ -95,7 +105,6 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
             $documentBuilder,
             $linkGenerator,
             $writeConfig,
-            $errorMapper,
             $this->violationMapper,
             $eventDispatcher
         );

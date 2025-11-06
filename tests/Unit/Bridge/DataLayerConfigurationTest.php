@@ -27,10 +27,10 @@ final class DataLayerConfigurationTest extends TestCase
         $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader'));
         $this->assertTrue($container->hasAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager'));
 
-        // Check that aliases point to Doctrine implementations
+        // Check that repository alias points to ResourceRepositoryLocator (which uses GenericDoctrineRepository as fallback)
         $repositoryAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository');
         $this->assertSame(
-            'AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository',
+            'AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceRepositoryLocator',
             (string) $repositoryAlias
         );
 
@@ -73,7 +73,7 @@ final class DataLayerConfigurationTest extends TestCase
 
         $repositoryAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceRepository');
         $this->assertSame(
-            'AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository',
+            'AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceRepositoryLocator',
             (string) $repositoryAlias
         );
     }

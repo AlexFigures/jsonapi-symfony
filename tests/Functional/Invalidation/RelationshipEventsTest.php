@@ -238,15 +238,19 @@ final class RelationshipEventsTest extends JsonApiTestCase
 
         $relationshipResponseConfig = new \AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig('linkage');
 
+        $operationValidator = new \AlexFigures\Symfony\Http\Controller\Support\OperationValidator($this->errorMapper());
+        $requestDecoder = new \AlexFigures\Symfony\Http\Controller\Support\RequestDecoder($this->errorMapper());
+
         return new RelationshipWriteController(
+            $operationValidator,
+            $requestDecoder,
             $relationshipValidator,
             $relationshipUpdater,
             $linkageBuilder,
             $relationshipResponseConfig,
-            $this->errorMapper(),
             $this->transactionManager(),
             $eventDispatcher,
-            $this->registry()
+            $this->registry(),
         );
     }
 

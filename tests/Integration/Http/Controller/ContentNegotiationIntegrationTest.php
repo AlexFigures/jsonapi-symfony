@@ -8,6 +8,9 @@ use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscri
 use AlexFigures\Symfony\Filter\Parser\FilterParser;
 use AlexFigures\Symfony\Http\Controller\CollectionController;
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
@@ -120,13 +123,17 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
             $filterParser
         );
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         // Set up CollectionController
         $this->collectionController = new CollectionController(
             $this->registry,
+            $operationValidator,
+            $responseFactory,
             $this->repository,
             $queryParser,
             $documentBuilder,
-            $errorMapper
         );
 
         // Set up CreateResourceController
@@ -134,8 +141,15 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         $inputValidator = new InputDocumentValidator($this->registry, $writeConfig, $errorMapper);
         $changeSetFactory = new ChangeSetFactory($this->registry);
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $requestDecoder = new RequestDecoder($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         $this->createController = new CreateResourceController(
             $this->registry,
+            $operationValidator,
+            $requestDecoder,
+            $responseFactory,
             $inputValidator,
             $changeSetFactory,
             $this->validatingProcessor,
@@ -143,7 +157,6 @@ final class ContentNegotiationIntegrationTest extends DoctrineIntegrationTestCas
             $documentBuilder,
             $this->linkGenerator,
             $writeConfig,
-            $errorMapper,
             $this->violationMapper,
             new EventDispatcher()
         );

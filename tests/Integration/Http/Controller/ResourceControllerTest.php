@@ -21,7 +21,11 @@ use AlexFigures\Symfony\Filter\Operator\NotEqualOperator;
 use AlexFigures\Symfony\Filter\Operator\NotInOperator;
 use AlexFigures\Symfony\Filter\Operator\Registry;
 use AlexFigures\Symfony\Http\Controller\ResourceController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorBuilder;
+use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Http\Request\QueryParser;
 use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
@@ -143,12 +147,17 @@ final class ResourceControllerTest extends DoctrineIntegrationTestCase
             $filterParser
         );
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         $this->controller = new ResourceController(
             $this->registry,
+            $operationValidator,
+            $responseFactory,
             $repository,
             $queryParser,
             $documentBuilder,
-            $errorMapper
+            $errorMapper,
         );
     }
 

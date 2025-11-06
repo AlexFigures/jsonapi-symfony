@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
@@ -76,7 +79,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         $routes->add('jsonapi.create', new Route('/api/{type}', methods: ['POST']));
 
         // Add type-specific routes for LinkGenerator
-        foreach (['articles', 'authors', 'tags', 'categories', 'category_synonyms', 'comments'] as $type) {
+        foreach (['articles', 'authors', 'tags', 'categories', 'category_synonyms', 'comments', 'type-test-entities'] as $type) {
             $routes->add("jsonapi.{$type}.index", new Route("/api/{$type}"));
             $routes->add("jsonapi.{$type}.show", new Route("/api/{$type}/{id}"));
 
@@ -126,9 +129,17 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         // Set up event dispatcher
         $eventDispatcher = new EventDispatcher();
 
+        // Set up controller support services
+        $operationValidator = new OperationValidator($errorMapper);
+        $requestDecoder = new RequestDecoder($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         // Create the controller
         $this->controller = new CreateResourceController(
             $this->registry,
+            $operationValidator,
+            $requestDecoder,
+            $responseFactory,
             $inputValidator,
             $changeSetFactory,
             $this->validatingProcessor,
@@ -136,7 +147,6 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
             $documentBuilder,
             $this->linkGenerator,
             $writeConfig,
-            $errorMapper,
             $this->violationMapper,
             $eventDispatcher
         );
@@ -1236,5 +1246,156 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         } catch (\AlexFigures\Symfony\Http\Exception\ConflictException $e) {
             self::assertSame(409, $e->getStatusCode(), 'ConflictException should have status code 409');
         }
+    }
+
+    /**
+     * Test that null values in JSON/JSONB fields are preserved when skip_null_values => false.
+     *
+     * This tests the fix for the issue where null values in JSON objects were being stripped
+     * during denormalization because Symfony Serializer defaults to SKIP_NULL_VALUES = true.
+     *
+     * By setting 'skip_null_values' => false in denormalizationContext on the TypeTestEntity,
+     * we ensure that explicit null values are preserved in JSON/JSONB fields.
+     *
+     * Test cases:
+     * 1. Create resource with JSON field containing null values
+     * 2. Verify null values are preserved in response
+     * 3. Verify null values are persisted to database
+     * 4. Verify null values survive database round-trip (reload from DB)
+     */
+    public function testCreateResourceWithJsonFieldPreservesNullValues(): void
+    {
+        // Create entity with JSON metadata containing null values
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'attributes' => [
+                    'name' => 'Test Entity with Null Metadata',
+                    'metadata' => [
+                        'color' => 'red',
+                        'size' => null,  // Explicit null - should be preserved
+                        'weight' => 100,
+                        'description' => null,  // Another null - should be preserved
+                        'tags' => ['important', 'test'],
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/type-test-entities', $payload);
+        $response = ($this->controller)($request, 'type-test-entities');
+
+        // Verify response status
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        $entityId = $document['data']['id'];
+
+        // Verify metadata is returned with null values preserved
+        self::assertArrayHasKey('metadata', $document['data']['attributes']);
+        $metadata = $document['data']['attributes']['metadata'];
+
+        self::assertIsArray($metadata);
+        self::assertArrayHasKey('color', $metadata);
+        self::assertSame('red', $metadata['color']);
+
+        self::assertArrayHasKey('size', $metadata);
+        self::assertNull($metadata['size'], 'Null value for "size" should be preserved in response');
+
+        self::assertArrayHasKey('weight', $metadata);
+        self::assertSame(100, $metadata['weight']);
+
+        self::assertArrayHasKey('description', $metadata);
+        self::assertNull($metadata['description'], 'Null value for "description" should be preserved in response');
+
+        self::assertArrayHasKey('tags', $metadata);
+        self::assertSame(['important', 'test'], $metadata['tags']);
+
+        // Verify persistence - clear entity manager and reload from database
+        $this->em->clear();
+        $entity = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
+        self::assertInstanceOf(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entity);
+
+        $persistedMetadata = $entity->getMetadata();
+        self::assertIsArray($persistedMetadata);
+        self::assertArrayHasKey('size', $persistedMetadata);
+        self::assertNull($persistedMetadata['size'], 'Null value should be persisted in database');
+        self::assertArrayHasKey('description', $persistedMetadata);
+        self::assertNull($persistedMetadata['description'], 'Null value should be persisted in database');
+
+        // Verify raw database value contains null
+        $connection = $this->em->getConnection();
+        $sql = 'SELECT metadata FROM type_test_entities WHERE id = :id';
+        $rawMetadata = $connection->fetchOne($sql, ['id' => $entityId]);
+        $decodedRawMetadata = json_decode($rawMetadata, true);
+
+        self::assertArrayHasKey('size', $decodedRawMetadata);
+        self::assertNull($decodedRawMetadata['size'], 'Raw database JSON should contain null for "size"');
+        self::assertArrayHasKey('description', $decodedRawMetadata);
+        self::assertNull($decodedRawMetadata['description'], 'Raw database JSON should contain null for "description"');
+    }
+
+    /**
+     * Test edge case: JSON field with only null values.
+     */
+    public function testCreateResourceWithJsonFieldContainingOnlyNulls(): void
+    {
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'attributes' => [
+                    'name' => 'Entity with Null-Only Metadata',
+                    'metadata' => [
+                        'field1' => null,
+                        'field2' => null,
+                        'field3' => null,
+                    ],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/type-test-entities', $payload);
+        $response = ($this->controller)($request, 'type-test-entities');
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        $metadata = $document['data']['attributes']['metadata'];
+
+        self::assertIsArray($metadata);
+        self::assertCount(3, $metadata);
+        self::assertArrayHasKey('field1', $metadata);
+        self::assertNull($metadata['field1']);
+        self::assertArrayHasKey('field2', $metadata);
+        self::assertNull($metadata['field2']);
+        self::assertArrayHasKey('field3', $metadata);
+        self::assertNull($metadata['field3']);
+    }
+
+    /**
+     * Test edge case: Empty JSON object.
+     */
+    public function testCreateResourceWithEmptyJsonField(): void
+    {
+        $payload = [
+            'data' => [
+                'type' => 'type-test-entities',
+                'attributes' => [
+                    'name' => 'Entity with Empty Metadata',
+                    'metadata' => [],
+                ],
+            ],
+        ];
+
+        $request = $this->createJsonApiRequest('POST', '/api/type-test-entities', $payload);
+        $response = ($this->controller)($request, 'type-test-entities');
+
+        self::assertSame(Response::HTTP_CREATED, $response->getStatusCode());
+
+        $document = $this->decode($response);
+        $metadata = $document['data']['attributes']['metadata'];
+
+        self::assertIsArray($metadata);
+        self::assertEmpty($metadata);
     }
 }

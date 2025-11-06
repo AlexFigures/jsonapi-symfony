@@ -121,10 +121,11 @@ final class JsonApiExtension extends Extension
     private function configureDataLayer(ContainerBuilder $container, array $config): void
     {
         if ($config['provider'] === 'doctrine') {
-            // Use Doctrine implementations
+            // Use ResourceRepositoryLocator to support both custom TypedResourceRepository
+            // and fallback to GenericDoctrineRepository for Doctrine entities
             $container->setAlias(
                 'AlexFigures\Symfony\Contract\Data\ResourceRepository',
-                'AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository'
+                'AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceRepositoryLocator'
             )->setPublic(false);
 
             $container->setAlias(
