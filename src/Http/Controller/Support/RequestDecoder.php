@@ -126,4 +126,3 @@ final class RequestDecoder
             : substr($normalized, 0, $semicolonPosition);
     }
 }
-

@@ -66,4 +66,3 @@ final class OperationValidator
         return array_values(array_unique($methods));
     }
 }
-

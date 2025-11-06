@@ -60,4 +60,3 @@ final class JsonApiResponseFactory
         return new Response('', Response::HTTP_NO_CONTENT);
     }
 }
-
