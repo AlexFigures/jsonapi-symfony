@@ -29,6 +29,9 @@ use AlexFigures\Symfony\Http\Controller\RelatedController;
 use AlexFigures\Symfony\Http\Controller\RelationshipGetController;
 use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
 use AlexFigures\Symfony\Http\Controller\ResourceController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\CorrelationIdProvider;
@@ -470,15 +473,19 @@ abstract class JsonApiTestCase extends TestCase
                 $inMemoryResolver->applyRelationships($entity, $relationshipsPayload, $resourceMetadata, $isCreate);
             });
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $requestDecoder = new RequestDecoder($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         $this->registry = $registry;
         $this->repository = $repository;
         $this->parser = $parser;
         $this->document = $document;
-        $this->collectionController = new CollectionController($registry, $repository, $parser, $document, $errorMapper);
-        $this->resourceController = new ResourceController($registry, $repository, $parser, $document, $errorMapper);
-        $this->createController = new CreateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $errorMapper, $violationMapper, $eventDispatcher);
-        $this->updateController = new UpdateResourceController($registry, $validator, $changeSetFactory, $persister, $transactionManager, $document, $errorMapper, $violationMapper, $eventDispatcher);
-        $this->deleteController = new DeleteResourceController($registry, $persister, $transactionManager, $eventDispatcher, $errorMapper);
+        $this->collectionController = new CollectionController($registry, $operationValidator, $responseFactory, $repository, $parser, $document);
+        $this->resourceController = new ResourceController($registry, $operationValidator, $responseFactory, $repository, $parser, $document, $errorMapper);
+        $this->createController = new CreateResourceController($registry, $operationValidator, $requestDecoder, $responseFactory, $validator, $changeSetFactory, $persister, $transactionManager, $document, $linkGenerator, $writeConfig, $violationMapper, $eventDispatcher);
+        $this->updateController = new UpdateResourceController($registry, $operationValidator, $requestDecoder, $responseFactory, $validator, $changeSetFactory, $persister, $transactionManager, $document, $violationMapper, $eventDispatcher);
+        $this->deleteController = new DeleteResourceController($registry, $operationValidator, $persister, $transactionManager, $eventDispatcher);
         $this->accessor = $accessor;
         $this->relationshipResolver = $relationshipResolver;
         $this->persister = $persister;
@@ -486,7 +493,7 @@ abstract class JsonApiTestCase extends TestCase
         $this->eventDispatcher = $eventDispatcher;
         $this->relatedController = new RelatedController($registry, $relationshipReader, $parser, $document, $errorMapper);
         $this->relationshipGetController = new RelationshipGetController($linkageBuilder, $registry, $errorMapper);
-        $this->relationshipWriteController = new RelationshipWriteController($relationshipValidator, $relationshipUpdater, $linkageBuilder, $relationshipResponseConfig, $errorMapper, $transactionManager, $eventDispatcher, $registry);
+        $this->relationshipWriteController = new RelationshipWriteController($operationValidator, $requestDecoder, $relationshipValidator, $relationshipUpdater, $linkageBuilder, $relationshipResponseConfig, $transactionManager, $eventDispatcher, $registry);
         $this->optionsController = new OptionsController($registry);
         $this->atomicController = $atomicController;
 

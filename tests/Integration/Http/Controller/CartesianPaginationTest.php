@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
 use AlexFigures\Symfony\Http\Controller\CollectionController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
@@ -104,12 +106,16 @@ final class CartesianPaginationTest extends DoctrineIntegrationTestCase
             new \AlexFigures\Symfony\Filter\Parser\FilterParser()
         );
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         $this->controller = new CollectionController(
             $this->registry,
+            $operationValidator,
+            $responseFactory,
             $this->repository,
             $queryParser,
             $documentBuilder,
-            $errorMapper
         );
     }
 

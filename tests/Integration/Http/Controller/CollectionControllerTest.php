@@ -23,6 +23,8 @@ use AlexFigures\Symfony\Filter\Operator\NotInOperator;
 use AlexFigures\Symfony\Filter\Operator\Registry;
 use AlexFigures\Symfony\Filter\Parser\FilterParser;
 use AlexFigures\Symfony\Http\Controller\CollectionController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
@@ -193,13 +195,17 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
             $readMapper
         );
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         // Create the controller with all dependencies
         $this->controller = new CollectionController(
             $this->registry,
+            $operationValidator,
+            $responseFactory,
             $repository,
             $queryParser,
             $documentBuilder,
-            $errorMapper
         );
     }
 

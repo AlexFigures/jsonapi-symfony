@@ -7,6 +7,9 @@ namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 use AlexFigures\Symfony\Filter\Parser\FilterParser;
 use AlexFigures\Symfony\Http\Controller\CreateResourceController;
 use AlexFigures\Symfony\Http\Controller\ResourceController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
@@ -112,13 +115,18 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
             $filterParser
         );
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         // Set up ResourceController (use repository from base class)
         $this->resourceController = new ResourceController(
             $this->registry,
+            $operationValidator,
+            $responseFactory,
             $this->repository,
             $queryParser,
             $documentBuilder,
-            $errorMapper
+            $errorMapper,
         );
 
         // Set up write dependencies
@@ -131,9 +139,16 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
         );
         $violationMapper = new ConstraintViolationMapper($this->registry, $errorMapper);
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $requestDecoder = new RequestDecoder($errorMapper);
+        $responseFactory = new JsonApiResponseFactory();
+
         // Set up CreateResourceController (use processor and transactionManager from base class)
         $this->createController = new CreateResourceController(
             $this->registry,
+            $operationValidator,
+            $requestDecoder,
+            $responseFactory,
             $inputValidator,
             $changeSetFactory,
             $this->processor,
@@ -141,7 +156,6 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
             $documentBuilder,
             $this->linkGenerator,
             $writeConfig,
-            $errorMapper,
             $violationMapper,
             new EventDispatcher()
         );

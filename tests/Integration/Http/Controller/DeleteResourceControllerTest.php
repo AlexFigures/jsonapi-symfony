@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
 
 use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
 use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
@@ -43,14 +44,15 @@ final class DeleteResourceControllerTest extends DoctrineIntegrationTestCase
 
         // Set up ErrorMapper
         $errorMapper = new ErrorMapper(new ErrorBuilder(true));
+        $operationValidator = new OperationValidator($errorMapper);
 
         // Create DeleteResourceController
         $this->controller = new DeleteResourceController(
             $this->registry,
+            $operationValidator,
             $this->validatingProcessor,
             $this->transactionManager,
             $eventDispatcher,
-            $errorMapper
         );
     }
 

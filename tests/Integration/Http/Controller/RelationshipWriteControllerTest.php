@@ -8,6 +8,8 @@ use AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecke
 use AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
 use AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
 use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Error\ErrorBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
@@ -79,15 +81,19 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
 
         $responseConfig = new WriteRelationshipsResponseConfig('204');
 
+        $operationValidator = new OperationValidator($errorMapper);
+        $requestDecoder = new RequestDecoder($errorMapper);
+
         $this->controller = new RelationshipWriteController(
+            $operationValidator,
+            $requestDecoder,
             $validator,
             $relationshipHandler,
             $linkageBuilder,
             $responseConfig,
-            $errorMapper,
             $transactionManager,
             $eventDispatcher,
-            $this->registry
+            $this->registry,
         );
     }
 

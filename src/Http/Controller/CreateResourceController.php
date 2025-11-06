@@ -7,27 +7,22 @@ namespace AlexFigures\Symfony\Http\Controller;
 use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
 use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use AlexFigures\Symfony\Events\ResourceChangedEvent;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
 use AlexFigures\Symfony\Http\Exception\ForbiddenException;
-use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
 use AlexFigures\Symfony\Http\Exception\NotFoundException;
 use AlexFigures\Symfony\Http\Exception\UnprocessableEntityException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
 use AlexFigures\Symfony\Http\Exception\ValidationException;
 use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
 use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
 use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
 use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
 use AlexFigures\Symfony\Http\Write\WriteConfig;
 use AlexFigures\Symfony\Query\Criteria;
 use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use RuntimeException;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -39,6 +34,9 @@ final class CreateResourceController
 {
     public function __construct(
         private readonly ResourceRegistryInterface $registry,
+        private readonly OperationValidator $operationValidator,
+        private readonly RequestDecoder $requestDecoder,
+        private readonly JsonApiResponseFactory $responseFactory,
         private readonly InputDocumentValidator $validator,
         private readonly ChangeSetFactory $changes,
         private readonly ResourceProcessor $processor,
@@ -46,7 +44,6 @@ final class CreateResourceController
         private readonly DocumentBuilder $document,
         private readonly LinkGenerator $links,
         private readonly WriteConfig $writeConfig,
-        private readonly ErrorMapper $errors,
         private readonly ConstraintViolationMapper $violationMapper,
         private readonly EventDispatcherInterface $eventDispatcher,
     ) {
@@ -60,9 +57,9 @@ final class CreateResourceController
 
         // Check if CREATE operation is allowed
         $metadata = $this->registry->getByType($type);
-        $this->assertOperationAllowed(ResourceOperation::CREATE, $metadata->allowedOperations);
+        $this->operationValidator->assertAllowed(ResourceOperation::CREATE, $metadata->allowedOperations);
 
-        $payload = $this->decode($request);
+        $payload = $this->requestDecoder->decode($request);
         $input = $this->validator->validateAndExtract($type, null, $payload, 'POST');
 
         $clientId = $input['id'];
@@ -114,81 +111,6 @@ final class CreateResourceController
 
         $self = $document['data']['links']['self'] ?? $this->links->resourceSelf($type, $resourceId);
 
-        return new JsonResponse(
-            $document,
-            Response::HTTP_CREATED,
-            [
-                'Content-Type' => MediaType::JSON_API,
-                'Location' => $self,
-            ]
-        );
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function decode(Request $request): array
-    {
-        $contentType = $request->headers->get('Content-Type');
-        if ($contentType !== null && MediaType::JSON_API !== $this->normalizeMediaType($contentType)) {
-            throw new UnsupportedMediaTypeException($contentType, 'JSON:API requires the "application/vnd.api+json" media type.');
-        }
-
-        $content = (string) $request->getContent();
-
-        if ($content === '') {
-            throw new BadRequestException('Request body must not be empty.', [$this->errors->invalidPointer('/', 'Request body must not be empty.')]);
-        }
-
-        $decoded = json_decode($content, true);
-        if ($decoded === null && json_last_error() !== \JSON_ERROR_NONE) {
-            $error = $this->errors->invalidJson(new RuntimeException(sprintf('Malformed JSON: %s.', json_last_error_msg())));
-            throw new BadRequestException('Malformed JSON.', [$error]);
-        }
-
-        if (!is_array($decoded) || array_is_list($decoded)) {
-            throw new BadRequestException('Request body must be a valid JSON object.', [$this->errors->invalidPointer('/', 'Request body must be a valid JSON object.')]);
-        }
-
-        /** @var array<string, mixed> $decoded */
-        return $decoded;
-    }
-
-    private function normalizeMediaType(string $value): string
-    {
-        $normalized = trim(strtolower($value));
-        $semicolonPosition = strpos($normalized, ';');
-
-        if ($semicolonPosition === false) {
-            return $normalized;
-        }
-
-        return substr($normalized, 0, $semicolonPosition);
-    }
-
-    /**
-     * Assert that an operation is allowed for the resource.
-     *
-     * @param list<ResourceOperation> $allowedOperations
-     *
-     * @throws MethodNotAllowedException
-     */
-    private function assertOperationAllowed(ResourceOperation $operation, array $allowedOperations): void
-    {
-        foreach ($allowedOperations as $allowed) {
-            if ($allowed === $operation) {
-                return;
-            }
-        }
-
-        // Collect all allowed HTTP methods from allowed operations
-        $allowedMethods = [];
-        foreach ($allowedOperations as $allowed) {
-            $allowedMethods = array_merge($allowedMethods, $allowed->httpMethods());
-        }
-        $allowedMethods = array_values(array_unique($allowedMethods));
-
-        $error = $this->errors->methodNotAllowed($allowedMethods);
-        throw new MethodNotAllowedException($allowedMethods, 'Operation not allowed', [$error]);
+        return $this->responseFactory->created($document, $self);
     }
 }

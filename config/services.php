@@ -51,6 +51,9 @@ use AlexFigures\Symfony\Http\Controller\RelatedController;
 use AlexFigures\Symfony\Http\Controller\RelationshipGetController;
 use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
 use AlexFigures\Symfony\Http\Controller\ResourceController;
+use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
+use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\CorrelationIdProvider;
@@ -258,6 +261,21 @@ return static function (ContainerConfigurator $configurator): void {
             service(ErrorBuilder::class),
         ])
     ;
+
+    // Controller support services
+    $services->set(OperationValidator::class)
+        ->args([
+            service(ErrorMapper::class),
+        ])
+    ;
+
+    $services->set(RequestDecoder::class)
+        ->args([
+            service(ErrorMapper::class),
+        ])
+    ;
+
+    $services->set(JsonApiResponseFactory::class);
 
     $services->set(CorrelationIdProvider::class);
 
@@ -675,6 +693,15 @@ return static function (ContainerConfigurator $configurator): void {
             service(FilterHandlerRegistry::class),
             service(SortHandlerRegistry::class),
             service(\AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface::class),
+        ])
+    ;
+
+    // ResourceRepositoryLocator - dispatches to custom TypedResourceRepository or falls back to GenericDoctrineRepository
+    $services
+        ->set(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceRepositoryLocator::class)
+        ->args([
+            tagged_iterator('jsonapi.resource_repository'),  // Custom typed repositories
+            service(\AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository::class),  // Fallback for Doctrine entities
         ])
     ;
 
