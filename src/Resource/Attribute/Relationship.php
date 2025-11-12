@@ -60,6 +60,26 @@ use Attribute;
  * }
  * ```
  *
+ * Example with propertyPath (path alias):
+ * ```php
+ * #[JsonApiResource(type: 'articles')]
+ * final class Article
+ * {
+ *     // Expose "tags" relationship that internally navigates through join table
+ *     #[Relationship(
+ *         toMany: true,
+ *         targetType: 'tags',
+ *         propertyPath: 'articleTags.tag'
+ *     )]
+ *     public function getTags(): Collection
+ *     {
+ *         return new ArrayCollection(
+ *             $this->articleTags->map(fn($at) => $at->getTag())->toArray()
+ *         );
+ *     }
+ * }
+ * ```
+ *
  * @api This attribute is part of the public API and follows semantic versioning.
  * @since 0.1.0
  */
@@ -71,12 +91,14 @@ final class Relationship
      * @param string|null                           $inverse       Name of the inverse relationship on the target resource
      * @param string|null                           $targetType    JSON:API type of the target resource (e.g., 'authors', 'comments')
      * @param RelationshipLinkingPolicy|string|null $linkingPolicy How to resolve relationship references (REFERENCE or VERIFY)
+     * @param string|null                           $propertyPath  Doctrine property path for filtering/sorting/including (e.g., 'articleTags.tag')
      */
     public function __construct(
         public readonly bool $toMany = false,
         public readonly ?string $inverse = null,
         public readonly ?string $targetType = null,
         public readonly RelationshipLinkingPolicy|string|null $linkingPolicy = null,
+        public readonly ?string $propertyPath = null,
     ) {
     }
 }

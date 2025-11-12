@@ -83,7 +83,7 @@ class GenericDoctrineRepository implements ResourceRepository
 
             // Then apply standard filters through compiler
             $platform = $em->getConnection()->getDatabasePlatform();
-            $this->filterCompiler->apply($qb, $criteria->filter, $platform);
+            $this->filterCompiler->apply($qb, $criteria->filter, $platform, $metadata);
         }
 
         if ($criteria->customConditions !== []) {
@@ -93,7 +93,7 @@ class GenericDoctrineRepository implements ResourceRepository
         }
 
         $this->applyEagerLoading($em, $qb, $metadata, $definition, $criteria->include);
-        $this->applySorting($qb, $criteria->sort);
+        $this->applySorting($qb, $criteria->sort, $metadata);
 
         $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
         $qb->setFirstResult($offset)
@@ -208,9 +208,11 @@ class GenericDoctrineRepository implements ResourceRepository
     /**
      * Apply sorting to the query builder.
      *
+     * Resolves propertyPath aliases before creating JOINs.
+     *
      * @param list<Sorting> $sorting
      */
-    private function applySorting(QueryBuilder $qb, array $sorting): void
+    private function applySorting(QueryBuilder $qb, array $sorting, \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata): void
     {
         $joinedForSort = [];
 
@@ -226,11 +228,13 @@ class GenericDoctrineRepository implements ResourceRepository
 
             $direction = $sort->desc ? 'DESC' : 'ASC';
 
+            // Resolve propertyPath aliases (e.g., "specialTags.name" → "articleSpecialTags.specialTag.name")
+            $resolvedField = $metadata->resolveFieldPath($sort->field);
+
             // Check if this is a relationship field path (e.g., "author.name")
-            if (str_contains($sort->field, '.')) {
-                $segments = explode('.', $sort->field);
+            if (str_contains($resolvedField, '.')) {
+                $segments = explode('.', $resolvedField);
                 $fieldName = array_pop($segments); // Last segment is the actual field
-                $relationshipPath = implode('.', $segments); // Everything before is the relationship path
 
                 // Build the join path and alias
                 $currentAlias = 'e';
@@ -253,7 +257,7 @@ class GenericDoctrineRepository implements ResourceRepository
                 $qb->addOrderBy($currentAlias . '.' . $fieldName, $direction);
             } else {
                 // Direct field on the root entity
-                $qb->addOrderBy('e.' . $sort->field, $direction);
+                $qb->addOrderBy('e.' . $resolvedField, $direction);
             }
         }
     }
@@ -502,7 +506,7 @@ class GenericDoctrineRepository implements ResourceRepository
 
             // Then apply standard filters through compiler
             $platform = $em->getConnection()->getDatabasePlatform();
-            $this->filterCompiler->apply($idQb, $criteria->filter, $platform);
+            $this->filterCompiler->apply($idQb, $criteria->filter, $platform, $metadata);
         }
 
         if ($criteria->customConditions !== []) {
@@ -511,7 +515,7 @@ class GenericDoctrineRepository implements ResourceRepository
             }
         }
 
-        $this->applySorting($idQb, $criteria->sort);
+        $this->applySorting($idQb, $criteria->sort, $metadata);
 
         $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
         $idQb->setFirstResult($offset)

@@ -227,4 +227,49 @@ final class ResourceMetadata
 
         return array_values(array_unique($normalized));
     }
+
+    /**
+     * Resolve a field path by expanding relationship aliases.
+     *
+     * If the first segment of the path is a relationship with a propertyPath or aliasPath,
+     * replace it with the appropriate path and append the rest of the path.
+     *
+     * Examples:
+     * - "specialTags.name" with specialTags.aliasPath="articleSpecialTags.specialTag"
+     *   → "articleSpecialTags.specialTag.name"
+     * - "specialTags.name" with specialTags.propertyPath="internalSpecialTags"
+     *   → "internalSpecialTags.name"
+     * - "title" (no relationship) → "title"
+     * - "author.name" (relationship without propertyPath/aliasPath) → "author.name"
+     *
+     * @param string $fieldPath The field path from the API (e.g., "specialTags.name")
+     *
+     * @return string The resolved Doctrine path (e.g., "articleSpecialTags.specialTag.name" or "internalSpecialTags.name")
+     */
+    public function resolveFieldPath(string $fieldPath): string
+    {
+        $segments = explode('.', $fieldPath);
+        $firstSegment = $segments[0];
+
+        // Check if the first segment is a relationship
+        if (isset($this->relationships[$firstSegment])) {
+            $relationship = $this->relationships[$firstSegment];
+
+            // Priority 1: Use aliasPath if available (for complex paths like "articleSpecialTags.specialTag")
+            if ($relationship->aliasPath !== null) {
+                $segments[0] = $relationship->aliasPath;
+                return implode('.', $segments);
+            }
+
+            // Priority 2: Use propertyPath if it differs from the relationship name
+            // (for simple redirects like "specialTags" → "internalSpecialTags")
+            if ($relationship->propertyPath !== null && $relationship->propertyPath !== $relationship->name) {
+                $segments[0] = $relationship->propertyPath;
+                return implode('.', $segments);
+            }
+        }
+
+        // No alias or redirect found, return as-is
+        return $fieldPath;
+    }
 }

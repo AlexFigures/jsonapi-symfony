@@ -61,6 +61,13 @@ This is the complete developer guide for JsonApiBundle, a JSON:API 1.1 compliant
 
 ### Advanced Topics
 
+- **[Path Aliases](path-aliases.md)** - Expose clean API paths that map to complex Doctrine relationships
+  - Basic usage with `propertyPath` parameter
+  - Join table scenarios with extra fields
+  - Deep path resolution and navigation
+  - Multiple aliases and semantic naming
+  - Performance considerations and best practices
+
 - **[Advanced Features](advanced-features.md)** - Profiles, hooks, events, caching
   - Profiles (RFC 6906)
   - Hooks system

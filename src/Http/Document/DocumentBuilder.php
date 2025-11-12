@@ -336,8 +336,8 @@ final class DocumentBuilder
      */
     private function resolveRelationshipLinkage(RelationshipMetadata $relationship, object $model): array|null
     {
-        $propertyPath = $relationship->propertyPath ?? $relationship->name;
-        $related = $this->accessor->getValue($model, $propertyPath);
+        // Resolve propertyPath aliases (e.g., "articleSpecialTags.specialTag")
+        $related = $this->resolvePropertyPath($model, $relationship);
 
         if ($relationship->toMany) {
             if ($related === null) {
@@ -413,8 +413,8 @@ final class DocumentBuilder
 
             /** @var RelationshipMetadata $relationship */
             $relationship = $metadata->relationships[$relationshipName];
-            $propertyPath = $relationship->propertyPath ?? $relationshipName;
-            $related = $this->accessor->getValue($model, $propertyPath);
+            // Resolve propertyPath aliases (e.g., "articleSpecialTags.specialTag")
+            $related = $this->resolvePropertyPath($model, $relationship);
 
             if ($related === null) {
                 continue;
@@ -575,5 +575,59 @@ final class DocumentBuilder
         }
 
         return [];
+    }
+
+    /**
+     * Resolve a relationship's value by walking the propertyPath.
+     *
+     * If the relationship has a propertyPath (e.g., "articleSpecialTags.specialTag"),
+     * this method walks the path step by step to resolve the final value.
+     *
+     * For example, with propertyPath="articleSpecialTags.specialTag":
+     * 1. Read "articleSpecialTags" from the model (returns Collection<ArticleSpecialTag>)
+     * 2. For each ArticleSpecialTag, read "specialTag" (returns SpecialTag)
+     * 3. Return Collection<SpecialTag>
+     *
+     * @return mixed The resolved relationship value (object, Collection, array, or null)
+     */
+    private function resolvePropertyPath(object $model, RelationshipMetadata $relationship): mixed
+    {
+        // Priority: aliasPath (for complex paths) > propertyPath (for simple redirects) > name (default)
+        // This ensures that:
+        // - #[Relationship(name: 'specialTags', propertyPath: 'articleSpecialTags.specialTag')] uses aliasPath
+        // - #[Relationship(name: 'creator', propertyPath: 'author')] uses propertyPath
+        // - #[Relationship(name: 'author')] uses name
+        $propertyPath = $relationship->aliasPath ?? $relationship->propertyPath ?? $relationship->name;
+
+        // If propertyPath contains dots, we need to walk the path
+        if (str_contains($propertyPath, '.')) {
+            $segments = explode('.', $propertyPath);
+            $current = $model;
+
+            foreach ($segments as $segment) {
+                if ($current === null) {
+                    return null;
+                }
+
+                // Handle collections
+                if ($current instanceof \Traversable || is_array($current)) {
+                    $items = [];
+                    foreach ($current as $item) {
+                        $value = $this->accessor->getValue($item, $segment);
+                        if ($value !== null) {
+                            $items[] = $value;
+                        }
+                    }
+                    $current = $items;
+                } else {
+                    $current = $this->accessor->getValue($current, $segment);
+                }
+            }
+
+            return $current;
+        }
+
+        // Simple property access
+        return $this->accessor->getValue($model, $propertyPath);
     }
 }
