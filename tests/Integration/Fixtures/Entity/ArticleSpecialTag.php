@@ -97,4 +97,3 @@ class ArticleSpecialTag
         return $this->createdAt;
     }
 }
-

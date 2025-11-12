@@ -613,14 +613,22 @@ final class DocumentBuilder
                 if ($current instanceof \Traversable || is_array($current)) {
                     $items = [];
                     foreach ($current as $item) {
+                        // Ensure $item is an object or array before accessing
+                        if (!is_object($item) && !is_array($item)) {
+                            continue;
+                        }
                         $value = $this->accessor->getValue($item, $segment);
                         if ($value !== null) {
                             $items[] = $value;
                         }
                     }
                     $current = $items;
-                } else {
+                } elseif (is_object($current)) {
+                    // $current is an object, we can access its property
                     $current = $this->accessor->getValue($current, $segment);
+                } else {
+                    // Unexpected type, return null
+                    return null;
                 }
             }
 

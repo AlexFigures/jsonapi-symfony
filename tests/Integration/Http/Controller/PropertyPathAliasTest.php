@@ -281,7 +281,7 @@ final class PropertyPathAliasTest extends DoctrineIntegrationTestCase
 
     /**
      * Test 2: Sort by aliased relationship field.
-     * 
+     *
      * Validates:
      * - sort=specialTags.name works
      * - Internally resolves to articleSpecialTags.specialTag.name
@@ -482,4 +482,3 @@ final class PropertyPathAliasTest extends DoctrineIntegrationTestCase
 
 
 }
-

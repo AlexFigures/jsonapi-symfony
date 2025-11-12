@@ -15,7 +15,7 @@ use Symfony\Component\Uid\Uuid;
 
 /**
  * SpecialTag entity for testing propertyPath aliases.
- * 
+ *
  * This is a JSON:API resource that will be accessed through
  * Article via ArticleSpecialTag join table using propertyPath.
  */
@@ -85,4 +85,3 @@ class SpecialTag
         return $this;
     }
 }
-

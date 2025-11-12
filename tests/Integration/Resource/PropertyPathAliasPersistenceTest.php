@@ -11,7 +11,6 @@ use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
 use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
 use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use Symfony\Component\PropertyAccess\PropertyAccess;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTags;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTagsSpecialTag;
@@ -25,10 +24,11 @@ use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SpecialTag;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity;
 use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\User;
+use Symfony\Component\PropertyAccess\PropertyAccess;
 
 /**
  * Integration test for PropertyPath aliases in relationship persistence.
- * 
+ *
  * This test verifies that relationships with propertyPath aliases work correctly
  * for persistence operations (CREATE/UPDATE) while maintaining the separation between:
  * - propertyPath: Real Doctrine property path for persistence
@@ -121,7 +121,7 @@ final class PropertyPathAliasPersistenceTest extends DoctrineIntegrationTestCase
 
     /**
      * Test creating a resource with aliased relationship.
-     * 
+     *
      * This verifies that the processor uses the correct propertyPath (not aliasPath)
      * for persistence operations.
      */
@@ -183,7 +183,7 @@ final class PropertyPathAliasPersistenceTest extends DoctrineIntegrationTestCase
         $specialTags = $reloadedArticle->getSpecialTags();
         $this->assertCount(2, $specialTags);
 
-        $tagNames = array_map(fn($tag) => $tag->getName(), $specialTags->toArray());
+        $tagNames = array_map(fn ($tag) => $tag->getName(), $specialTags->toArray());
         $this->assertContains('PHP', $tagNames);
         $this->assertContains('Symfony', $tagNames);
     }
