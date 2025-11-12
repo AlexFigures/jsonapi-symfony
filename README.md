@@ -111,6 +111,79 @@ open http://localhost:8000/_jsonapi/docs
 
 ---
 
+## 🎯 Key Features
+
+### 🔍 **Advanced Filtering & Querying**
+- **Complex Filters** - Support for `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `nin`, `like`, `ilike` operators
+- **Logical Operators** - Combine filters with `and`, `or`, `not` for complex queries
+- **Relationship Filtering** - Filter by nested relationship fields: `filter[author.name]=John`
+- **Whitelist-based Security** - Only explicitly allowed fields can be filtered using `#[FilterableFields]`
+
+```bash
+# Complex filtering example
+curl "api/articles?filter[and][0][status][eq]=published&filter[and][1][or][0][viewCount][gte]=100&filter[and][1][or][1][featured][eq]=true"
+```
+
+### 🔗 **Smart Relationship Handling**
+- **Zero N+1 Queries** - Automatic eager loading with optimized JOINs
+- **Deep Includes** - Include nested relationships: `include=author.company,tags`
+- **Relationship Linking Policies** - Control how relationships are validated (`VERIFY`, `ALLOW_ORPHANS`)
+- **Path Aliases** - Expose clean API paths that map to complex Doctrine relationships
+
+```php
+#[Relationship(
+    toMany: true,
+    targetType: 'tags',
+    propertyPath: 'articleTags.tag',  // Clean API: specialTags → complex path
+    linkingPolicy: RelationshipLinkingPolicy::VERIFY
+)]
+private Collection $specialTags;
+```
+
+### 📊 **Flexible Sorting & Pagination**
+- **Multi-field Sorting** - Sort by multiple fields: `sort=title,-createdAt,author.name`
+- **Relationship Sorting** - Sort by nested relationship fields
+- **Cursor & Offset Pagination** - Both pagination strategies supported
+- **Configurable Limits** - Set default and maximum page sizes
+
+### 🛡️ **Production-Ready Security**
+- **Strict Denormalization** - Reject unknown fields by default (`ALLOW_EXTRA_ATTRIBUTES=false`)
+- **Field Whitelisting** - Explicit control over filterable/sortable fields
+- **Validation Integration** - Full Symfony Validator integration
+- **Error Collection** - Collect and return all validation errors at once
+
+### 🚀 **Developer Experience**
+- **Attribute-Based Configuration** - No YAML/XML, everything in PHP attributes
+- **Auto-Generated OpenAPI** - Interactive Swagger UI documentation
+- **Custom Route Support** - Define custom endpoints with automatic JSON:API formatting
+- **Response Factory** - Fluent API for building JSON:API responses in custom controllers
+
+```php
+#[JsonApiResource(type: 'articles')]
+#[FilterableFields(['title', new FilterableField('author', inherit: true)])]
+#[SortableFields(['title', 'createdAt', new SortableField('author', inherit: true)])]
+final class Article
+{
+    #[Id] #[Attribute] public string $id;
+    #[Attribute] public string $title;
+    #[Relationship(targetType: 'authors')] public Author $author;
+}
+```
+
+### ⚡ **Performance Optimizations**
+- **Automatic Query Optimization** - Smart JOINs and SELECT field limiting
+- **Batch Operations** - Efficient bulk create/update/delete
+- **Caching Support** - HTTP caching headers and response caching
+- **Database Agnostic** - Works with PostgreSQL, MySQL, MariaDB, SQLite
+
+### 🔧 **Extensibility**
+- **Custom Handlers** - Build complex business logic with automatic transaction management
+- **Event System** - Hook into request/response lifecycle
+- **Custom Serialization** - Override default serialization behavior
+- **Middleware Support** - Standard Symfony middleware integration
+
+---
+
 ## 📚 Documentation
 
 ### For New Users
@@ -125,6 +198,7 @@ open http://localhost:8000/_jsonapi/docs
 
 ### For Advanced Users
 
+- **[Path Aliases](docs/guide/path-aliases.md)** - Expose clean API paths that map to complex Doctrine relationships
 - **[Advanced Features](docs/guide/advanced-features.md)** - Profiles, hooks, events, caching
 - **[Custom Handlers](docs/guide/custom-handlers.md)** - Handler-based custom routes with automatic transaction management
 - **[Public API Reference](docs/api/public-api.md)** - Stable API documentation
@@ -145,6 +219,15 @@ open http://localhost:8000/_jsonapi/docs
 
 ### New Features
 
+- **🆕 Path Aliases** - Expose clean API paths that map to complex Doctrine relationships using `propertyPath` parameter
+  ```php
+  #[Relationship(
+      toMany: true,
+      targetType: 'tags',
+      propertyPath: 'articleTags.tag'  // API: specialTags → Doctrine: articleTags.tag
+  )]
+  private Collection $specialTags;
+  ```
 - **Custom Route Handlers** - Build custom endpoints with automatic transaction management and JSON:API response formatting ([docs](docs/guide/custom-handlers.md))
 - **Response Factory** - Fluent API for building JSON:API responses in custom controllers ([docs](docs/guide/response-factory.md))
 - **Criteria Builder** - Add custom filters and conditions to JSON:API queries in custom route handlers ([docs](docs/guide/custom-routes.md#advanced-filtering-sorting-and-pagination-in-custom-routes))

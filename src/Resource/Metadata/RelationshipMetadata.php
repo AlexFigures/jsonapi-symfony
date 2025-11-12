@@ -20,6 +20,7 @@ final class RelationshipMetadata
         public ?int $maxItems = null, // For to-many relationships
         public bool $writableOnCreate = true,
         public bool $writableOnUpdate = true,
+        public ?string $aliasPath = null, // Path alias for API operations (filtering, sorting, includes)
     ) {
     }
 

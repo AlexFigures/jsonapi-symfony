@@ -15,6 +15,7 @@ use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
 use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
 use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\Symfony\Resource\Metadata\RelationshipSemantics;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use LogicException;
 use ReflectionAttribute;
@@ -292,14 +293,41 @@ final class ResourceRegistry implements ResourceRegistryInterface
                     : RelationshipLinkingPolicy::from($instance->linkingPolicy);
             }
 
+            // Determine real property path and alias path
+            // If the attribute specifies a propertyPath:
+            //   - If it contains a dot (e.g., 'articleSpecialTags.specialTag'), it's an API alias
+            //     Real property path comes from reflection ($propertyPath parameter)
+            //   - If it doesn't contain a dot (e.g., 'internalSpecialTags'), it's the real Doctrine property
+            //     No alias is set
+            $realPropertyPath = $propertyPath; // Default: use reflection-based path
+            $aliasPath = null;
+
+            if ($instance->propertyPath !== null) {
+                if (str_contains($instance->propertyPath, '.')) {
+                    // Dotted path = API alias for filtering/sorting/includes
+                    // Real property path stays as the reflection-based path
+                    $aliasPath = $instance->propertyPath;
+                } else {
+                    // Simple path = real Doctrine property for persistence
+                    // Override the reflection-based path
+                    $realPropertyPath = $instance->propertyPath;
+                }
+            }
+
             $relationships[$name] = new RelationshipMetadata(
                 $name,
                 $instance->toMany,
                 $targetType,
-                $propertyPath,
+                $realPropertyPath, // Real Doctrine property path for persistence
                 $targetClass,
                 $nullable,
                 $linkingPolicy,
+                RelationshipSemantics::REPLACE,
+                null, // minItems
+                null, // maxItems
+                true, // writableOnCreate
+                true, // writableOnUpdate
+                $aliasPath, // API alias path (null if no alias)
             );
         }
 

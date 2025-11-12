@@ -10,6 +10,7 @@ use AlexFigures\Symfony\Filter\Ast\Disjunction;
 use AlexFigures\Symfony\Filter\Ast\Node;
 use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
 use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\ORM\QueryBuilder;
 
@@ -21,14 +22,19 @@ final class DoctrineFilterCompiler
     /** @var array<string, string> */
     private array $joinedForFilter = [];
 
+    private ?ResourceMetadata $currentMetadata = null;
+
     public function __construct(
         private readonly Registry $operators,
         private readonly FilterHandlerRegistry $filterHandlers,
     ) {
     }
 
-    public function apply(QueryBuilder $qb, Node $ast, AbstractPlatform $platform): void
+    public function apply(QueryBuilder $qb, Node $ast, AbstractPlatform $platform, ?ResourceMetadata $metadata = null): void
     {
+        // Store metadata for use in other methods
+        $this->currentMetadata = $metadata;
+
         $rootAliases = $qb->getRootAliases();
         if ($rootAliases === []) {
             throw new \LogicException('QueryBuilder must have at least one root alias.');
@@ -40,7 +46,7 @@ final class DoctrineFilterCompiler
         $this->joinedForFilter = [];
 
         // Create JOINs for relationship paths in the filter
-        $this->createJoinsForFilter($qb, $ast, $rootAlias);
+        $this->createJoinsForFilter($qb, $ast, $rootAlias, $metadata);
 
         $expression = $this->compileNode($ast, $rootAlias, $platform);
 
@@ -51,6 +57,9 @@ final class DoctrineFilterCompiler
                 $qb->setParameter($name, $value);
             }
         }
+
+        // Clear metadata after use
+        $this->currentMetadata = null;
     }
 
     /**
@@ -147,16 +156,23 @@ final class DoctrineFilterCompiler
     /**
      * Build DQL field path from root alias and field path.
      *
+     * Resolves propertyPath aliases before building the DQL path.
+     *
      * Examples:
      * - "name" -> "e.name"
      * - "author.id" -> "filter_author.id" (uses JOIN alias)
      * - "tags.id" -> "filter_tags.id" (uses JOIN alias)
+     * - "specialTags.name" with propertyPath="articleSpecialTags.specialTag"
+     *   -> "filter_articleSpecialTags_specialTag.name"
      */
     private function buildDqlFieldPath(string $rootAlias, string $fieldPath): string
     {
+        // Resolve propertyPath aliases (e.g., "specialTags.name" → "articleSpecialTags.specialTag.name")
+        $resolvedPath = $this->currentMetadata?->resolveFieldPath($fieldPath) ?? $fieldPath;
+
         // Check if this is a relationship field path (e.g., "author.id")
-        if (str_contains($fieldPath, '.')) {
-            $segments = explode('.', $fieldPath);
+        if (str_contains($resolvedPath, '.')) {
+            $segments = explode('.', $resolvedPath);
             $fieldName = array_pop($segments); // Last segment is the actual field
 
             // Build the full join path to find the alias
@@ -177,42 +193,49 @@ final class DoctrineFilterCompiler
         }
 
         // Direct field on the root entity
-        return $rootAlias . '.' . $fieldPath;
+        return $rootAlias . '.' . $resolvedPath;
     }
 
     /**
      * Create JOINs for all relationship paths in the filter AST.
      */
-    private function createJoinsForFilter(QueryBuilder $qb, Node $ast, string $rootAlias): void
+    private function createJoinsForFilter(QueryBuilder $qb, Node $ast, string $rootAlias, ?ResourceMetadata $metadata): void
     {
-        $this->collectRelationshipPaths($ast, $qb, $rootAlias);
+        $this->collectRelationshipPaths($ast, $qb, $rootAlias, $metadata);
     }
 
     /**
      * Recursively collect relationship paths from the AST and create JOINs.
      */
-    private function collectRelationshipPaths(Node $node, QueryBuilder $qb, string $rootAlias): void
+    private function collectRelationshipPaths(Node $node, QueryBuilder $qb, string $rootAlias, ?ResourceMetadata $metadata): void
     {
         if ($node instanceof Comparison) {
-            $this->createJoinForFieldPath($qb, $rootAlias, $node->fieldPath);
+            $this->createJoinForFieldPath($qb, $rootAlias, $node->fieldPath, $metadata);
         } elseif ($node instanceof Conjunction || $node instanceof Disjunction) {
             foreach ($node->children as $child) {
-                $this->collectRelationshipPaths($child, $qb, $rootAlias);
+                $this->collectRelationshipPaths($child, $qb, $rootAlias, $metadata);
             }
         }
     }
 
     /**
      * Create JOIN for a field path if it contains relationships.
+     *
+     * Resolves propertyPath aliases before creating JOINs.
+     * For example, if "specialTags.name" has propertyPath="articleSpecialTags.specialTag",
+     * it will create JOINs for "articleSpecialTags" and "specialTag" instead.
      */
-    private function createJoinForFieldPath(QueryBuilder $qb, string $rootAlias, string $fieldPath): void
+    private function createJoinForFieldPath(QueryBuilder $qb, string $rootAlias, string $fieldPath, ?ResourceMetadata $metadata): void
     {
+        // Resolve propertyPath aliases (e.g., "specialTags.name" → "articleSpecialTags.specialTag.name")
+        $resolvedPath = $metadata?->resolveFieldPath($fieldPath) ?? $fieldPath;
+
         // Check if this is a relationship field path (e.g., "author.id")
-        if (!str_contains($fieldPath, '.')) {
+        if (!str_contains($resolvedPath, '.')) {
             return; // Direct field, no JOIN needed
         }
 
-        $segments = explode('.', $fieldPath);
+        $segments = explode('.', $resolvedPath);
         array_pop($segments); // Remove the field name, keep only relationship path
 
         // Build JOINs for each segment
