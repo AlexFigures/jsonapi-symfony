@@ -155,8 +155,8 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         // Validate before flush
         $this->validateWithGroups($entity, $type, $metadata, false);
 
-        // Re-apply to-one relationships to restore null values that may have been
-        // overwritten by Doctrine's eager loading during validation
+        // Re-apply to-one relationships that may have been overwritten by
+        // Doctrine's eager loading during validation (null and non-null alike)
         if (!empty($changes->relationships)) {
             $this->resyncToOneRelationships($entity, $changes->relationships, $metadata);
         }
@@ -308,14 +308,10 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     /**
      * Re-applies to-one relationships after validation.
      *
-     * This fixes an issue where Doctrine's eager loading during validation
-     * can overwrite null values with old database values. When a to-one
-     * relationship is set to null but configured as eager, Doctrine's
-     * UnitOfWork may reload the old value from the database during validation
-     * (e.g., when validators access relationship getters).
-     *
-     * This method re-applies only to-one relationships from the original
-     * payload to ensure null values are preserved.
+     * Doctrine eager loading during validation (e.g. UniqueEntity queries) can
+     * overwrite both null and non-null to-one associations with old database
+     * values. Re-apply every to-one relationship from the original payload so
+     * the UnitOfWork still sees the intended change before flush.
      *
      * @param array<string, array{data: mixed}> $relationshipsPayload
      */
@@ -324,37 +320,30 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         array $relationshipsPayload,
         \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata
     ): void {
-        $em = $this->getEntityManagerFor($metadata->getDataClass());
-        $classMetadata = $em->getClassMetadata($metadata->getDataClass());
+        $toOneRelationships = [];
 
         foreach ($relationshipsPayload as $relationshipName => $relationshipData) {
-            // Skip if relationship not in metadata
             if (!isset($metadata->relationships[$relationshipName])) {
                 continue;
             }
 
             $relMeta = $metadata->relationships[$relationshipName];
-
-            // Only process to-one relationships (to-many uses collections, no issue there)
             if ($relMeta->toMany) {
                 continue;
             }
 
-            $field = $relMeta->propertyPath ?? $relMeta->name;
-
-            // Only process Doctrine associations
-            if (!$classMetadata->hasAssociation($field)) {
-                continue;
-            }
-
-            // Re-apply the relationship value
-            $data = $relationshipData['data'] ?? null;
-
-            // Only re-sync if explicitly set to null in the payload
-            // (if data is not null, RelationshipResolver already set it correctly)
-            if ($data === null) {
-                $this->accessor->setValue($entity, $field, null);
-            }
+            $toOneRelationships[$relationshipName] = $relationshipData;
         }
+
+        if ($toOneRelationships === []) {
+            return;
+        }
+
+        $this->relationshipResolver->applyRelationships(
+            $entity,
+            $toOneRelationships,
+            $metadata,
+            false
+        );
     }
 }
