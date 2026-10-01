@@ -14,10 +14,10 @@ use AlexFigures\Symfony\Http\Exception\ValidationException;
  * - ALLOW_EXTRA_ATTRIBUTES = false (reject unknown attributes)
  * - COLLECT_DENORMALIZATION_ERRORS = true (collect all errors)
  *
- * @group integration
- * @group validation-groups
- * @group strict-denormalization
  */
+#[\PHPUnit\Framework\Attributes\Group('integration')]
+#[\PHPUnit\Framework\Attributes\Group('validation-groups')]
+#[\PHPUnit\Framework\Attributes\Group('strict-denormalization')]
 final class StrictDenormalizationTest extends ValidationGroupsIntegrationTestCase
 {
     public function testStrictModeRejectsExtraAttributes(): void

@@ -53,6 +53,7 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.errors.locale', $config['errors']['locale']);
         $container->setParameter('jsonapi.cache', $config['cache']);
         $container->setParameter('jsonapi.limits', $config['limits']);
+        $container->setParameter('jsonapi.filter_max_depth', $config['limits']['filter_max_depth']);
         $container->setParameter('jsonapi.performance', $config['performance']);
         $container->setParameter('jsonapi.atomic.enabled', $config['atomic']['enabled']);
         $container->setParameter('jsonapi.atomic.endpoint', $config['atomic']['endpoint']);
@@ -121,6 +122,10 @@ final class JsonApiExtension extends Extension
     private function configureDataLayer(ContainerBuilder $container, array $config): void
     {
         if ($config['provider'] === 'doctrine') {
+            $container->setAlias(\AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface::class, \AlexFigures\Symfony\Bridge\Doctrine\Concurrency\DoctrineWriteConcurrencyGuard::class);
+            $container->getDefinition('AlexFigures\\Symfony\\Bridge\\Symfony\\Routing\\JsonApiRouteLoader')
+                ->setArgument(6, new \Symfony\Component\DependencyInjection\Reference('AlexFigures\\Symfony\\Bridge\\Doctrine\\Identifier\\DoctrineIdentifierMetadataValidator'));
+
             // Use ResourceRepositoryLocator to support both custom TypedResourceRepository
             // and fallback to GenericDoctrineRepository for Doctrine entities
             $container->setAlias(

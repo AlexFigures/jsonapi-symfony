@@ -28,10 +28,11 @@ final class JsonApiResponseFactory
         int $status = Response::HTTP_OK,
         bool $isHead = false
     ): JsonResponse {
-        $response = new JsonResponse($document, $status);
+        $response = new \AlexFigures\Symfony\Http\Controller\Support\RepresentationResponse($document, $status);
         $response->headers->set('Content-Type', MediaType::JSON_API);
 
         if ($isHead) {
+            $response->representationContent = (string) $response->getContent();
             $response->setContent('');
         }
 

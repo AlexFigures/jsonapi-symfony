@@ -20,7 +20,7 @@ final class InOperator extends AbstractOperator
         AbstractPlatform $platform,
     ): DoctrineExpression {
         if ($values === []) {
-            throw new \InvalidArgumentException('InOperator requires at least one value.');
+            return new DoctrineExpression('1 = 0', []);
         }
 
         $paramName = 'in_' . str_replace('.', '_', uniqid('', true));

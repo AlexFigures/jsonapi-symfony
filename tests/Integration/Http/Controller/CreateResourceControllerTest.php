@@ -953,7 +953,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
             // For to-one relationships, pointer is: /data/relationships
             self::assertNotNull($firstError->source);
             $pointer = $firstError->source->pointer ?? '';
-            self::assertSame('/data/relationships', $pointer);
+            self::assertSame('/data/relationships/author/data/id', $pointer);
         }
     }
 

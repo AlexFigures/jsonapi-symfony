@@ -98,6 +98,11 @@ final class TestManagerRegistry implements ManagerRegistry
         return $this->managers[$managerName] ?? null;
     }
 
+    public function registerManager(string $name, EntityManagerInterface $manager): void
+    {
+        $this->managers[$name] = $manager;
+    }
+
     public function mapClassToManager(string $class, string $managerName): void
     {
         $this->classMap[$class] = $managerName;

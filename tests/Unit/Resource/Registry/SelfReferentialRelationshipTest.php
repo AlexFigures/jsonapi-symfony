@@ -12,8 +12,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests that self-referential relationships (using "self" type hint) are properly resolved.
  *
- * @group unit
  */
+#[\PHPUnit\Framework\Attributes\Group('unit')]
 final class SelfReferentialRelationshipTest extends TestCase
 {
     public function testSelfReferentialRelationshipResolvesToActualClassName(): void

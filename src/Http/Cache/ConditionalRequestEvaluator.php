@@ -59,6 +59,13 @@ final class ConditionalRequestEvaluator
 
     private bool $enableIfUnmodifiedSince;
 
+    public function needsWriteEvaluation(Request $request): bool
+    {
+        return $this->requireIfMatchOnWrite
+            || ($this->enableIfMatch && $request->headers->has('If-Match'))
+            || ($this->enableIfUnmodifiedSince && $request->headers->has('If-Unmodified-Since'));
+    }
+
     public function evaluate(Request $request, Response $response, ?string $etag, ?DateTimeImmutable $lastModified, bool $weak = false): void
     {
         $method = strtoupper($request->getMethod());
@@ -120,7 +127,7 @@ final class ConditionalRequestEvaluator
     {
         $ifMatch = $request->headers->get('If-Match');
         if ($this->requireIfMatchOnWrite && $ifMatch === null) {
-            $error = $this->errors->invalidHeader('If-Match', 'If-Match header is required for this request.');
+            $error = $this->errors->invalidHeader('If-Match', 'If-Match header is required for this request.', '428', \AlexFigures\Symfony\Http\Error\ErrorCodes::PRECONDITION_REQUIRED);
 
             throw new PreconditionRequiredException([$error]);
         }

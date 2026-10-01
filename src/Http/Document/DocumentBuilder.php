@@ -42,6 +42,8 @@ final class DocumentBuilder
      */
     public function buildCollection(string $type, array $models, Criteria $criteria, Slice $slice, Request $request): array
     {
+        $request->attributes->set('_jsonapi_models', $models);
+        $request->attributes->set('_jsonapi_model_type', $type);
         $data = [];
         $included = [];
         $visited = [];
@@ -91,7 +93,7 @@ final class DocumentBuilder
             'meta' => $meta,
         ];
 
-        if ($included !== []) {
+        if ($included !== [] || $criteria->include !== []) {
             $this->limits?->assertIncludedCount(count($included));
             $document['included'] = array_values($included);
         }
@@ -116,6 +118,8 @@ final class DocumentBuilder
      */
     public function buildResource(string $type, object $model, Criteria $criteria, Request $request): array
     {
+        $request->attributes->set('_jsonapi_models', [$model]);
+        $request->attributes->set('_jsonapi_model_type', $type);
         $includeTree = $this->buildIncludeTree($criteria);
         $included = [];
         $visited = [];
@@ -141,7 +145,7 @@ final class DocumentBuilder
             'data' => $this->buildResourceObject($type, $model, $criteria, $context, $includeTree),
         ];
 
-        if ($included !== []) {
+        if ($included !== [] || $criteria->include !== []) {
             $this->limits?->assertIncludedCount(count($included));
             $document['included'] = array_values($included);
         }
@@ -249,7 +253,9 @@ final class DocumentBuilder
             $propertyGroups = $groupsAttributes[0]->newInstance();
 
             // Check if there's an intersection between property groups and requested groups
-            return !empty(array_intersect($groups, $propertyGroups->getGroups()));
+            /** @var list<string>|null $declared */
+            $declared = get_object_vars($propertyGroups)['groups'] ?? null;
+            return !empty(array_intersect($groups, is_array($declared) ? $declared : $propertyGroups->getGroups()));
         } catch (\ReflectionException $e) {
             return true; // On error, show the attribute
         }
@@ -287,7 +293,7 @@ final class DocumentBuilder
         }
 
         if ($relationships !== [] && $context !== null) {
-            foreach ($context->documentHooks() as $hook) {
+            foreach ($context->forType($metadata->type)->documentHooks() as $hook) {
                 $hook->onResourceRelationships($context, $metadata, $relationships, $model);
             }
         }

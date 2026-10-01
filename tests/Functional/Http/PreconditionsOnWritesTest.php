@@ -129,8 +129,8 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
         ]));
         $request->attributes->set('_route', 'jsonapi.resource');
 
+        $this->applyCacheHeaders($request, new Response(), requireIfMatch: true);
         $response = ($this->updateController())($request, 'articles', '1');
-        $this->applyCacheHeaders($request, $response, requireIfMatch: true);
 
         self::assertSame(200, $response->getStatusCode(), 'PATCH with If-Match: * should succeed');
     }
@@ -177,8 +177,8 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
 
         $this->expectException(PreconditionRequiredException::class);
 
+        $this->applyCacheHeaders($request, new Response(), requireIfMatch: true);
         $response = ($this->updateController())($request, 'articles', '1');
-        $this->applyCacheHeaders($request, $response, requireIfMatch: true);
     }
 
     public function testDeleteWithMatchingIfMatchSucceeds(): void
@@ -340,7 +340,7 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
 
         $cacheKeyBuilder = new CacheKeyBuilder($config);
         $etagGenerator = new HashEtagGenerator($config);
-        $lastModified = new LastModifiedResolver();
+        $lastModified = new LastModifiedResolver(['last_modified' => ['resource_field' => 'createdAt']]);
         $conditional = new ConditionalRequestEvaluator($this->errorMapper(), $config);
         $headers = new HeadersApplier($headersConfig);
         $surrogates = new SurrogateKeyBuilder();
@@ -352,7 +352,9 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
             $lastModified,
             $conditional,
             $headers,
-            $surrogates
+            $surrogates,
+            $this->resourceController(),
+            $this->relationshipGetController()
         );
 
         $event = new ResponseEvent(
@@ -362,7 +364,14 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
             $response
         );
 
-        $subscriber->onKernelResponse($event);
+        if (in_array($request->getMethod(), ['PATCH', 'DELETE'], true)) {
+            $request->attributes->set('type', 'articles');
+            $request->attributes->set('id', '1');
+            $controller = $request->isMethod('DELETE') ? $this->deleteController() : $this->updateController();
+            $subscriber->onKernelController(new \Symfony\Component\HttpKernel\Event\ControllerEvent($this->createKernel(), $controller, $request, HttpKernelInterface::MAIN_REQUEST));
+        } else {
+            $subscriber->onKernelResponse($event);
+        }
     }
 
     private function createKernel(): HttpKernelInterface

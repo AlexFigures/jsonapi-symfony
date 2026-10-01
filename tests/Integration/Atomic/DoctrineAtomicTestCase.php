@@ -147,7 +147,7 @@ abstract class DoctrineAtomicTestCase extends DoctrineIntegrationTestCase
         $atomicValidator = new AtomicValidator($atomicConfig, $this->registry, $this->errorMapper);
 
         // Create AtomicTransaction
-        $atomicTransaction = new AtomicTransaction($this->transactionManager);
+        $atomicTransaction = new AtomicTransaction($this->transactionManager, $this->registry);
 
         // Create operation handlers
         // Use ValidatingDoctrineProcessor to support relationships
@@ -155,7 +155,8 @@ abstract class DoctrineAtomicTestCase extends DoctrineIntegrationTestCase
             $this->validatingProcessor,
             $this->changeSetFactory,
             $this->registry,
-            $this->accessor
+            $this->accessor,
+            $this->flushManager
         );
 
         $updateHandler = new UpdateHandler(
@@ -213,12 +214,12 @@ abstract class DoctrineAtomicTestCase extends DoctrineIntegrationTestCase
         $routes->add('jsonapi.relationship.write', new Route('/api/{type}/{id}/relationships/{rel}'));
 
         // Add type-specific routes
-        foreach (['articles', 'authors', 'tags', 'comments'] as $type) {
+        foreach (['articles', 'authors', 'tags', 'comments', 'generated-records'] as $type) {
             $routes->add("jsonapi.{$type}.index", new Route("/api/{$type}"));
             $routes->add("jsonapi.{$type}.show", new Route("/api/{$type}/{id}"));
 
             // Add relationship routes for all possible relationships
-            foreach (['articles', 'authors', 'tags', 'comments', 'author', 'comment'] as $rel) {
+            foreach (['articles', 'authors', 'tags', 'comments', 'author', 'comment', 'parent'] as $rel) {
                 $routes->add("jsonapi.{$type}.related.{$rel}", new Route("/api/{$type}/{id}/{$rel}"));
                 $routes->add("jsonapi.{$type}.relationships.{$rel}.show", new Route("/api/{$type}/{id}/relationships/{$rel}"));
             }

@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\Response;
  * Note: This test only verifies the factory methods return correct builder types.
  * Full integration tests with DocumentBuilder are in tests/Integration/.
  *
- * @covers \AlexFigures\Symfony\Http\Response\JsonApiResponseFactory
  */
 #[CoversClass(JsonApiResponseFactory::class)]
 final class JsonApiResponseFactoryTest extends TestCase

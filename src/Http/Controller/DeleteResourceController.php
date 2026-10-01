@@ -38,7 +38,7 @@ final class DeleteResourceController
         $metadata = $this->registry->getByType($type);
         $this->operationValidator->assertAllowed(ResourceOperation::DELETE, $metadata->allowedOperations);
 
-        $this->transaction->transactional(function () use ($type, $id): void {
+        \AlexFigures\Symfony\Contract\Tx\TransactionScope::run($this->transaction, $this->registry, [$type], function () use ($type, $id): void {
             // Process entity deletion (remove + schedule flush, flush handled by WriteListener)
             $this->processor->processDelete($type, $id);
         });

@@ -10,9 +10,9 @@ use AlexFigures\Symfony\Http\Exception\ValidationException;
 /**
  * Tests for validation groups during update operations.
  *
- * @group integration
- * @group validation-groups
  */
+#[\PHPUnit\Framework\Attributes\Group('integration')]
+#[\PHPUnit\Framework\Attributes\Group('validation-groups')]
 final class UpdateOperationGroupsTest extends ValidationGroupsIntegrationTestCase
 {
     public function testUpdateWithDefaultValidationGroups(): void

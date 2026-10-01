@@ -17,6 +17,7 @@ final class ErrorCodes
     public const TYPE_MISMATCH = 'type-mismatch';
     public const ID_MISMATCH = 'id-mismatch';
     public const CONFLICT = 'conflict';
+    public const UNSUPPORTED_TRANSACTION_BOUNDARY = 'unsupported-transaction-boundary';
     public const FORBIDDEN = 'forbidden';
     public const RESOURCE_NOT_FOUND = 'resource-not-found';
     public const METHOD_NOT_ALLOWED = 'method-not-allowed';

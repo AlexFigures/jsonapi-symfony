@@ -127,6 +127,34 @@ final class FilteringWhitelist
     private function validateComparison(string $type, Comparison $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
     {
         $field = $node->fieldPath;
+        $metadata = $this->registry->getByType($type);
+        $segments = explode('.', $field);
+        while (count($segments) > 1) {
+            $relationship = $metadata->relationships[array_shift($segments)] ?? null;
+            if ($relationship?->targetType === null) {
+                break;
+            }
+            $metadata = $this->registry->getByType($relationship->targetType);
+        }
+        $attribute = $metadata->attributes[$segments[0]] ?? null;
+        $types = $attribute->types ?? [];
+        if ($segments[0] === 'id') {
+            $property = $metadata->idPropertyPath ?? 'id';
+            $reflection = new \ReflectionClass($metadata->getDataClass());
+            if ($reflection->hasProperty($property)) {
+                $idType = $reflection->getProperty($property)->getType();
+                if ($idType instanceof \ReflectionNamedType) {
+                    $types[] = $idType->getName();
+                }
+            }
+        }
+        if (in_array('int', $types, true)) {
+            foreach ($node->values as $value) {
+                if (!is_int($value) && !(is_string($value) && preg_match('/^-?[0-9]+$/D', $value))) {
+                    throw new BadRequestException('Invalid integer filter operand.', [$this->errors->invalidParameter('filter', 'Expected an integer operand.')]);
+                }
+            }
+        }
 
         // Check if field is allowed (including inherited fields)
         if (!$filterableFields->isAllowed($field, $this->registry, $type)) {
@@ -166,6 +194,9 @@ final class FilteringWhitelist
     {
         $field = $node->fieldPath;
         $operator = $node->isNull ? 'null' : 'nnull';
+        if ($filterableFields->isOperatorAllowed($field, 'isnull', $this->registry, $type)) {
+            $operator = 'isnull';
+        }
 
         // Check if field is allowed (including inherited fields)
         if (!$filterableFields->isAllowed($field, $this->registry, $type)) {
@@ -183,18 +214,7 @@ final class FilteringWhitelist
      */
     private function validateBetween(string $type, Between $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
     {
-        $field = $node->fieldPath;
-        $operator = 'between';
-
-        // Check if field is allowed (including inherited fields)
-        if (!$filterableFields->isAllowed($field, $this->registry, $type)) {
-            $this->throwFieldNotAllowed($type, $field);
-        }
-
-        // Check if operator is allowed (including inherited fields)
-        if (!$filterableFields->isOperatorAllowed($field, $operator, $this->registry, $type)) {
-            $this->throwOperatorNotAllowed($type, $field, $operator);
-        }
+        $this->validateComparison($type, new Comparison($node->fieldPath, 'between', [$node->from, $node->to]), $filterableFields);
     }
 
     /**

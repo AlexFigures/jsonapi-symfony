@@ -27,6 +27,7 @@ final class RelatedController
         private readonly QueryParser $parser,
         private readonly DocumentBuilder $document,
         private readonly ErrorMapper $errors,
+        private readonly ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null,
     ) {
     }
 
@@ -70,11 +71,19 @@ final class RelatedController
                 }
 
                 $criteria = $this->parser->parse($targetType, $request);
-                $document = $this->document->buildResource($targetType, $model, $criteria, $request);
+                if ($criteria->customConditions !== [] && $this->repository !== null) {
+                    $targetMetadata = $this->registry->getByType($targetType);
+                    $accessor = \Symfony\Component\PropertyAccess\PropertyAccess::createPropertyAccessor();
+                    $idValue = $accessor->getValue($model, $targetMetadata->idPropertyPath ?? 'id');
+                    if (is_scalar($idValue) || $idValue instanceof \Stringable) {
+                        $model = $this->repository->findOne($targetType, (string) $idValue, $criteria);
+                    }
+                }
+                $document = $model === null ? ['jsonapi' => ['version' => '1.1'], 'links' => ['self' => $request->getUri()], 'data' => null] : $this->document->buildResource($targetType, $model, $criteria, $request);
             }
         }
 
-        $response = new JsonResponse(
+        $response = new \AlexFigures\Symfony\Http\Controller\Support\RepresentationResponse(
             $document,
             JsonResponse::HTTP_OK,
             ['Content-Type' => MediaType::JSON_API],
@@ -82,6 +91,7 @@ final class RelatedController
 
         // For HEAD requests, clear the content but keep all headers
         if ($request->isMethod('HEAD')) {
+            $response->representationContent = (string) $response->getContent();
             $response->setContent('');
         }
 

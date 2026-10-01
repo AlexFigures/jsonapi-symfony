@@ -24,6 +24,10 @@ final class RequestComplexityScorer
         $score += count($criteria->sort) * 2;
         $score += $criteria->pagination->size;
 
+        $filter = (new \AlexFigures\Symfony\Filter\Validation\FilterComplexityAnalyzer())->analyze($criteria->filter);
+        // Nodes and operands cost one each; relationship hops cost two.
+        $score += $filter->nodes + $filter->operands + 2 * $filter->pathHops;
+
         return $score;
     }
 }

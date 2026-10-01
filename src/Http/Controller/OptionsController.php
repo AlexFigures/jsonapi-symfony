@@ -114,7 +114,7 @@ final class OptionsController
      * Returns allowed methods for /api/{type}/{id}/relationships/{rel}.
      * GET/HEAD requires SHOW operation, write methods require UPDATE operation.
      */
-    public function relationship(string $type): Response
+    public function relationship(string $type, ?string $rel = null): Response
     {
         if (!$this->registry->hasType($type)) {
             throw new NotFoundException(sprintf('Resource type "%s" not found.', $type));
@@ -130,7 +130,11 @@ final class OptionsController
 
         // UPDATE operation allows PATCH, POST, DELETE
         if ($this->hasOperation(ResourceOperation::UPDATE, $metadata->allowedOperations)) {
-            $allowedMethods = array_merge($allowedMethods, ['PATCH', 'POST', 'DELETE']);
+            if ($rel !== null && !isset($metadata->relationships[$rel])) {
+                throw new NotFoundException('Relationship not found.');
+            }
+            $toMany = $rel === null || $metadata->relationships[$rel]->toMany;
+            $allowedMethods = array_merge($allowedMethods, $toMany ? ['PATCH', 'POST', 'DELETE'] : ['PATCH']);
         }
 
         // Always include OPTIONS itself

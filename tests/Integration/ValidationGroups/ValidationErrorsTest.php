@@ -10,10 +10,10 @@ use AlexFigures\Symfony\Http\Exception\ValidationException;
 /**
  * Tests for validation error formatting and JSON:API error structure.
  *
- * @group integration
- * @group validation-groups
- * @group validation-errors
  */
+#[\PHPUnit\Framework\Attributes\Group('integration')]
+#[\PHPUnit\Framework\Attributes\Group('validation-groups')]
+#[\PHPUnit\Framework\Attributes\Group('validation-errors')]
 final class ValidationErrorsTest extends ValidationGroupsIntegrationTestCase
 {
     public function testValidationErrorPointerForAttribute(): void

@@ -96,27 +96,13 @@ final class RelationshipDocumentValidator
             return null;
         }
 
-        if (!is_array($data) || array_is_list($data)) {
-            throw new BadRequestException('Relationship data must be an object.', [$this->errors->invalidPointer($pointer, 'Relationship data must be an object.')]);
-        }
-
-        $type = $data['type'] ?? null;
-        $id = $data['id'] ?? null;
-
-        if (!is_string($type) || $type === '') {
-            throw new BadRequestException('Relationship type must be a non-empty string.', [$this->errors->invalidPointer($pointer . '/type', 'Relationship type must be a non-empty string.')]);
-        }
-
-        if (!is_string($id) || $id === '') {
-            throw new BadRequestException('Relationship id must be a non-empty string.', [$this->errors->invalidPointer($pointer . '/id', 'Relationship id must be a non-empty string.')]);
-        }
-
-        if ($expectedType !== null && $expectedType !== $type) {
-            throw new ConflictException('Relationship type mismatch.', [$this->errors->invalidPointer($pointer . '/type', sprintf('Relationship "%s" must reference resources of type "%s".', $metadata->name, $expectedType), '409', ErrorCodes::TYPE_MISMATCH)]);
-        }
+        $identifier = RelationshipIdentifierValidator::validate($data, $expectedType, $pointer, $this->errors);
+        $type = $identifier['type'];
+        $id = $identifier['id'] ?? null;
+        \assert(is_string($id));
 
         if (!$this->exists->exists($type, $id)) {
-            throw new NotFoundException('Related resource not found.', [$this->errors->notFound(sprintf('Related resource "%s" with id "%s" was not found.', $type, $id), $pointer)]);
+            throw new NotFoundException('Related resource not found.', [$this->errors->notFound(sprintf('Related resource "%s" with id "%s" was not found.', $type, $id), $pointer . '/id')]);
         }
 
         return ['type' => $type, 'id' => $id];
@@ -177,7 +163,7 @@ final class RelationshipDocumentValidator
             }
 
             if (!$this->exists->exists($type, $id)) {
-                $notFoundErrors[] = $this->errors->notFound(sprintf('Related resource "%s" with id "%s" was not found.', $type, $id), $entryPointer);
+                $notFoundErrors[] = $this->errors->notFound(sprintf('Related resource "%s" with id "%s" was not found.', $type, $id), $entryPointer . '/id');
                 continue;
             }
 

@@ -49,6 +49,16 @@ final class OperationValidator
         );
     }
 
+    /** @param list<ResourceOperation> $allowedOperations */
+    public function assertAtomicAllowed(ResourceOperation $operation, array $allowedOperations): void
+    {
+        try {
+            $this->assertAllowed($operation, $allowedOperations);
+        } catch (MethodNotAllowedException $exception) {
+            throw new \AlexFigures\Symfony\Http\Exception\ForbiddenException('Operation not allowed', previous: $exception);
+        }
+    }
+
     /**
      * Extract all allowed HTTP methods from the allowed operations.
      *

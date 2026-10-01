@@ -105,6 +105,9 @@ class RelationshipResolver
                         );
                         continue;
                     }
+                    if (!\AlexFigures\Symfony\Bridge\Doctrine\Relationship\RelationshipNullability::allowsNull($ownerEm, $entity, $relMeta->propertyPath ?? $relMeta->name, $relMeta->nullable)) {
+                        throw new ValidationException([$this->createValidationError($this->pointerRelationships($relName), 'Relationship cannot be null.')]);
+                    }
                     $this->syncToOne($ownerEm, $entity, $resourceMetadata, $relMeta, null);
                     continue;
                 }
@@ -280,7 +283,7 @@ class RelationshipResolver
         $this->assertCompatibleEntityManagers($ownerEm, $targetEm, $ownerMeta->getDataClass(), $class);
 
         if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
-            $reference = $targetEm->getReference($class, $id);
+            $reference = $targetEm->getReference($class, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($targetEm, $class, $id));
 
             return $this->expectObject(
                 $reference,
@@ -297,12 +300,12 @@ class RelationshipResolver
             $connection->ensureConnectedToPrimary();
         }
 
-        $obj = $targetEm->find($class, $id);
+        $obj = $targetEm->find($class, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($targetEm, $class, $id));
         if (!\is_object($obj)) {
             // JSON:API spec requires 404 for missing related resources, not 422
             $error = $this->errors?->notFound(
                 sprintf('Related resource of type "%s" with id "%s" was not found.', $type, $id),
-                '/data/relationships'
+                $this->pointerRelationships($meta->name) . '/id'
             ) ?? new ErrorObject(
                 id: null,
                 aboutLink: null,
@@ -310,7 +313,7 @@ class RelationshipResolver
                 code: 'resource-not-found',
                 title: 'Resource Not Found',
                 detail: sprintf('Related resource of type "%s" with id "%s" was not found.', $type, $id),
-                source: new ErrorSource(pointer: '/data/relationships'),
+                source: new ErrorSource(pointer: $this->pointerRelationships($meta->name) . '/id'),
                 meta: ['type' => $type, 'id' => $id]
             );
 
@@ -359,7 +362,7 @@ class RelationshipResolver
             if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
                 foreach ($idsWithIndex as $idx => $id) {
                     $resolved[$id] = $this->expectObject(
-                        $targetEm->getReference($class, $id),
+                        $targetEm->getReference($class, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($targetEm, $class, $id)),
                         sprintf('Doctrine reference for "%s" returned a non-object.', $class)
                     );
                 }

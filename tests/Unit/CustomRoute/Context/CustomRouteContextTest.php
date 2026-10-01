@@ -12,8 +12,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
- * @covers \AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext::class)]
 final class CustomRouteContextTest extends TestCase
 {
     public function testGetResourceReturnsPreloadedResource(): void

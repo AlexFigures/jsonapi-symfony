@@ -77,6 +77,15 @@ final class ProfileContext
         return array_keys($this->activeProfiles);
     }
 
+    public function forType(string $type): self
+    {
+        $profiles = [];
+        foreach ($this->profilesForType($type) as $profile) {
+            $profiles[$profile->uri()] = $profile;
+        }
+        return new self($profiles, [], $this->sources, $this->attributeReader);
+    }
+
     public function has(string $uri): bool
     {
         return isset($this->activeProfiles[$uri]);

@@ -9,8 +9,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * @covers \AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult::class)]
 final class CustomRouteResultTest extends TestCase
 {
     public function testResourceFactoryMethod(): void

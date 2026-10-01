@@ -27,61 +27,23 @@ final class MediaTypeNegotiator
         $policy = $this->policyProvider->getPolicy($request);
 
         $contentType = $request->headers->get('Content-Type');
-        if ($contentType === null || !$this->containsAtomicExt($contentType)) {
-            throw new UnsupportedMediaTypeException($contentType, 'Atomic operations require the JSON:API media type with the atomic extension.');
+        $candidates = ParsedMediaType::parse($contentType ?? '');
+        $media = count($candidates) === 1 ? $candidates[0] : null;
+        $atomic = 'https://jsonapi.org/ext/atomic';
+        if ($media === null || !$media->validJsonApi([$atomic]) || !in_array($atomic, $media->extensions(), true)
+            || (!$policy->allowsAnyRequestType() && !in_array($media->name, $policy->allowedRequestTypes, true))) {
+            throw new UnsupportedMediaTypeException($contentType, 'Atomic operations require the JSON:API atomic extension.');
         }
-
-        $normalized = strtolower($this->stripParameters($contentType));
-        if (!$policy->allowsAnyRequestType() && !in_array($normalized, $policy->allowedRequestTypes, true)) {
-            throw new UnsupportedMediaTypeException(
-                $contentType,
-                'Atomic operations require the JSON:API media type for this endpoint.'
-            );
-        }
-
         $accept = $request->headers->get('Accept');
         if ($accept === null) {
             return;
         }
-
-        if (!$this->acceptsAtomic($accept)) {
-            throw new NotAcceptableException($accept, 'The requested media type does not include the JSON:API atomic extension.');
-        }
-    }
-
-    private function stripParameters(string $mediaType): string
-    {
-        $semicolonPosition = strpos($mediaType, ';');
-        if ($semicolonPosition === false) {
-            return trim($mediaType);
-        }
-
-        return trim(substr($mediaType, 0, $semicolonPosition));
-    }
-
-    private function containsAtomicExt(string $mediaType): bool
-    {
-        return str_contains(strtolower($mediaType), 'ext="https://jsonapi.org/ext/atomic"');
-    }
-
-    private function acceptsAtomic(string $accept): bool
-    {
-        $parts = array_map('trim', explode(',', $accept));
-
-        foreach ($parts as $part) {
-            if ($part === '*/*' || $part === MediaType::JSON_API_ATOMIC) {
-                return true;
-            }
-
-            if (stripos($part, 'application/vnd.api+json') === false) {
-                continue;
-            }
-
-            if ($this->containsAtomicExt($part)) {
-                return true;
+        foreach (ParsedMediaType::parse($accept, true) as $candidate) {
+            if ($candidate->quality > 0 && ($candidate->name === '*/*'
+                || ($candidate->validJsonApi([$atomic]) && in_array($atomic, $candidate->extensions(), true)))) {
+                return;
             }
         }
-
-        return false;
+        throw new NotAcceptableException($accept, 'No acceptable Atomic representation is available.');
     }
 }

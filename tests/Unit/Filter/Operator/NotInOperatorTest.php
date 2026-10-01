@@ -24,13 +24,13 @@ final class NotInOperatorTest extends TestCase
         self::assertSame(['draft', 'archived'], array_values($expression->parameters)[0]);
     }
 
-    public function testCompileRejectsEmptyValues(): void
+    public function testEmptySetMatchesEverything(): void
     {
         $operator = new NotInOperator();
         $platform = $this->createMock(AbstractPlatform::class);
 
-        $this->expectException(\InvalidArgumentException::class);
-
-        $operator->compile('e', 'e.status', [], $platform);
+        $expression = $operator->compile('e', 'e.status', [], $platform);
+        self::assertSame('1 = 1', $expression->dql);
+        self::assertSame([], $expression->parameters);
     }
 }

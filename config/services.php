@@ -113,6 +113,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->args([
             '%jsonapi.strict_content_negotiation%',
             service(MediaTypePolicyProviderInterface::class),
+            '%jsonapi.atomic.enabled%',
         ])
         ->tag('kernel.event_subscriber')
     ;
@@ -151,7 +152,7 @@ return static function (ContainerConfigurator $configurator): void {
 
     $services->alias(EtagGeneratorInterface::class, HashEtagGenerator::class);
 
-    $services->set(LastModifiedResolver::class);
+    $services->set(LastModifiedResolver::class)->args(['%jsonapi.cache%']);
 
     $services
         ->set(ConditionalRequestEvaluator::class)
@@ -195,6 +196,9 @@ return static function (ContainerConfigurator $configurator): void {
             service(ConditionalRequestEvaluator::class),
             service(HeadersApplier::class),
             service(SurrogateKeyBuilder::class),
+            service(ResourceController::class),
+            service(RelationshipGetController::class),
+            service(\AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface::class)->nullOnInvalid(),
         ])
         ->tag('kernel.event_subscriber')
     ;
@@ -334,7 +338,7 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
-    $services->set(FilterParser::class);
+    $services->set(FilterParser::class)->args(['%jsonapi.filter_max_depth%']);
 
     $services
         ->set(QueryParser::class)
@@ -490,6 +494,13 @@ return static function (ContainerConfigurator $configurator): void {
         ->args([
             service(ResourceRegistryInterface::class),
         ])
+    ;
+
+    $services
+        ->set(\AlexFigures\Symfony\Http\Controller\OptionsController::class)
+        ->autowire()
+        ->autoconfigure()
+        ->tag('controller.service_arguments')
     ;
 
     $services
@@ -660,6 +671,14 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
+    $services->set(\AlexFigures\Symfony\Bridge\Doctrine\Concurrency\DoctrineWriteConcurrencyGuard::class)->args([
+        service('doctrine'), service(ResourceRegistryInterface::class),
+        service(\AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager::class),
+    ]);
+    $services->set(\AlexFigures\Symfony\Bridge\Doctrine\Identifier\DoctrineIdentifierMetadataValidator::class)->args([
+        service('doctrine'),
+    ]);
+
     // Doctrine Bridge Services
     // These are registered here so users don't have to manually configure them
     // They will be used when data_layer.provider is set to 'doctrine' (default)
@@ -723,11 +742,17 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
+    $services->set(\AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks::class)->args([
+        service('request_stack'), service(PropertyAccessorInterface::class),
+        service(\AlexFigures\Symfony\Resource\Relationship\RelationshipResolver::class),
+    ]);
     // FlushManager - centralized flush control
     $services
         ->set(FlushManager::class)
         ->args([
             service('doctrine'),
+            service(\AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper::class),
+            service(ResourceRegistryInterface::class),
         ])
     ;
 
@@ -752,6 +777,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(\AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class),
             service(\AlexFigures\Symfony\Resource\Relationship\RelationshipResolver::class),
             service(FlushManager::class),
+            service(\AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks::class),
         ])
     ;
 
@@ -771,6 +797,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
             service(FlushManager::class),
+            service(ResourceRepository::class),
         ])
     ;
 

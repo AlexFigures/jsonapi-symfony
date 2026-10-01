@@ -160,7 +160,7 @@ final class AddHandlerEdgeCasesTest extends JsonApiTestCase
      * Test that empty string ID is ignored (not used as client ID).
      * Kills mutant: AddHandler.php:56 (NotIdentical - $data['id'] !== '' check)
      */
-    public function testAddOperationWithEmptyStringIdIgnoresIt(): void
+    public function testAddOperationWithEmptyStringIdRejectsIt(): void
     {
         $controller = $this->atomicController();
 
@@ -185,20 +185,12 @@ final class AddHandlerEdgeCasesTest extends JsonApiTestCase
             'HTTP_ACCEPT' => MediaType::JSON_API_ATOMIC,
         ], content: json_encode($payload, \JSON_THROW_ON_ERROR));
 
+        $this->expectException(BadRequestException::class);
         $response = $controller($request);
 
-        self::assertSame(200, $response->getStatusCode());
-        $result = json_decode($response->getContent(), true);
-        // Should have a generated ID, not empty string
-        self::assertNotEmpty($result['atomic:results'][0]['data']['id']);
-        self::assertNotSame('', $result['atomic:results'][0]['data']['id']);
     }
 
-    /**
-     * Test that non-string ID is ignored.
-     * Kills mutant: AddHandler.php:56 (LogicalAndSingleSubExprNegation - !is_string check)
-     */
-    public function testAddOperationWithNonStringIdIgnoresIt(): void
+    public function testAddOperationWithNonStringIdRejectsIt(): void
     {
         $controller = $this->atomicController();
 
@@ -223,19 +215,11 @@ final class AddHandlerEdgeCasesTest extends JsonApiTestCase
             'HTTP_ACCEPT' => MediaType::JSON_API_ATOMIC,
         ], content: json_encode($payload, \JSON_THROW_ON_ERROR));
 
+        $this->expectException(BadRequestException::class);
         $response = $controller($request);
 
-        self::assertSame(200, $response->getStatusCode());
-        $result = json_decode($response->getContent(), true);
-        // Should have a generated ID, not the numeric value
-        self::assertIsString($result['atomic:results'][0]['data']['id']);
-        self::assertNotSame('12345', $result['atomic:results'][0]['data']['id']);
     }
 
-    /**
-     * Test LID association with valid lid.
-     * Kills mutants related to LID handling (line 72)
-     */
     public function testAddOperationWithLidAssociatesCorrectly(): void
     {
         $controller = $this->atomicController();

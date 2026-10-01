@@ -18,8 +18,11 @@ use AlexFigures\Symfony\Filter\Ast\NullCheck;
  * Until then the parser recognises a pragmatic subset of the JSON:API filter
  * dialect so consumers can begin exercising the downstream components.
  */
-final class FilterParser
+final readonly class FilterParser
 {
+    public function __construct(private int $maxDepth = 8)
+    {
+    }
     /**
      * @param array<array-key, mixed> $rawFilters
      */
@@ -31,15 +34,18 @@ final class FilterParser
     /**
      * @param array<array-key, mixed> $raw
      */
-    private function parseGroup(array $raw): ?Node
+    private function parseGroup(array $raw, int $depth = 0): ?Node
     {
+        if ($this->maxDepth > 0 && $depth >= $this->maxDepth) {
+            throw new \InvalidArgumentException('Maximum filter depth exceeded.');
+        }
         $nodes = [];
 
         foreach ($raw as $key => $value) {
             if ($key === 'and') {
-                $node = $this->parseLogicalGroup($value, true);
+                $node = $this->parseLogicalGroup($value, true, $depth + 1);
             } elseif ($key === 'or') {
-                $node = $this->parseLogicalGroup($value, false);
+                $node = $this->parseLogicalGroup($value, false, $depth + 1);
             } elseif (is_string($key)) {
                 $node = $this->parseFieldComparisons($key, $value);
             } else {
@@ -62,7 +68,7 @@ final class FilterParser
         return new Conjunction($nodes);
     }
 
-    private function parseLogicalGroup(mixed $raw, bool $isAnd): ?Node
+    private function parseLogicalGroup(mixed $raw, bool $isAnd, int $depth): ?Node
     {
         if (!is_array($raw)) {
             throw new \InvalidArgumentException(sprintf('Logical group must be an array, "%s" given.', get_debug_type($raw)));
@@ -79,7 +85,7 @@ final class FilterParser
                 throw new \InvalidArgumentException(sprintf('Logical group entry at index %s must be an array, "%s" given.', (string) $index, get_debug_type($childRaw)));
             }
 
-            $node = $this->parseGroup($childRaw);
+            $node = $this->parseGroup($childRaw, $depth);
 
             if ($node !== null) {
                 $children[] = $node;
@@ -136,20 +142,23 @@ final class FilterParser
         switch ($operator) {
             case 'eq':
             case 'ne':
+            case 'neq':
             case 'lt':
             case 'lte':
             case 'gt':
             case 'gte':
             case 'like':
             case 'ilike':
-                return [new Comparison($field, $operator, $this->normalizeValues($value))];
+                $values = $this->normalizeValues($value);
+                if (count($values) !== 1) {
+                    throw new \InvalidArgumentException('Comparison operators require exactly one operand.');
+                }
+                return [new Comparison($field, $operator === 'ne' ? 'neq' : $operator, $values)];
             case 'in':
             case 'nin':
-                $values = $this->normalizeValues($value);
+                $values = $value === '' ? [] : $this->normalizeValues($value);
 
-                if ($values === []) {
-                    return [];
-                }
+
 
                 return [new Comparison($field, $operator, $values)];
             case 'between':
@@ -158,21 +167,26 @@ final class FilterParser
                 }
 
                 if ($this->isAssoc($value)) {
-                    if (!array_key_exists('from', $value) || !array_key_exists('to', $value)) {
+                    if (count($value) !== 2 || !array_key_exists('from', $value) || !array_key_exists('to', $value)) {
                         throw new \InvalidArgumentException('The "between" operator expects "from" and "to" keys.');
                     }
 
+                    $this->normalizeValues(array_values($value));
                     return [new Between($field, $value['from'], $value['to'])];
                 }
 
                 $values = array_values($value);
 
-                if (count($values) < 2) {
+                if (count($values) !== 2) {
                     throw new \InvalidArgumentException('The "between" operator expects exactly two values.');
                 }
 
+                $this->normalizeValues($values);
                 return [new Between($field, $values[0], $values[1])];
             case 'isnull':
+                if (!is_scalar($value) || !in_array(strtolower((string) $value), ['true', 'false', '1', '0', 'yes', 'no', ''], true)) {
+                    throw new \InvalidArgumentException('isnull expects a boolean operand.');
+                }
                 return [new NullCheck($field, $this->toBool($value))];
         }
 
@@ -188,7 +202,16 @@ final class FilterParser
             $raw = iterator_to_array($raw, false);
         }
 
-        return is_array($raw) ? array_values($raw) : [$raw];
+        if (is_array($raw) && !array_is_list($raw)) {
+            throw new \InvalidArgumentException('Filter operands must be scalars or lists of scalars.');
+        }
+        $values = is_array($raw) ? array_values($raw) : [$raw];
+        foreach ($values as $value) {
+            if (!is_scalar($value) && $value !== null) {
+                throw new \InvalidArgumentException('Filter operands must be scalar values.');
+            }
+        }
+        return $values;
     }
 
     private function toBool(mixed $value): bool

@@ -30,7 +30,7 @@ final class InputDocumentValidator
      *     relationships: array<string, array{data: mixed}>
      * }
      */
-    public function validateAndExtract(string $routeType, ?string $routeId, array $payload, string $method): array
+    public function validateAndExtract(string $routeType, ?string $routeId, array $payload, string $method, bool $allowLid = false): array
     {
         if (!$this->registry->hasType($routeType)) {
             throw new NotFoundException('Resource type not found.', [$this->errors->unknownType($routeType)]);
@@ -75,11 +75,17 @@ final class InputDocumentValidator
             }
         }
 
+        $metadata = $this->registry->getByType($routeType);
         /** @var array<string, array{data: mixed}> $relationships */
         $relationships = [];
         $relationshipErrors = [];
         if (array_key_exists('relationships', $data)) {
-            if (!is_array($data['relationships']) || array_is_list($data['relationships'])) {
+            if ($data['relationships'] instanceof \stdClass) {
+                $data['relationships'] = [];
+            } elseif ($data['relationships'] === []) {
+                throw new BadRequestException('Relationships must be an object.', [$this->errors->invalidPointer('/data/relationships', 'Relationships must be an object.')]);
+            }
+            if (!is_array($data['relationships']) || ($data['relationships'] !== [] && array_is_list($data['relationships']))) {
                 throw new BadRequestException('Document is invalid.', [$this->errors->invalidPointer('/data/relationships', 'The "relationships" member must be an object.')]);
             }
 
@@ -112,13 +118,35 @@ final class InputDocumentValidator
                     continue;
                 }
 
-                $relationships[$name] = ['data' => $relationship['data']];
+                if (!isset($metadata->relationships[$name])) {
+                    $relationshipErrors[] = $this->errors->invalidPointer('/data/relationships/' . $name, 'Unknown relationship.');
+                    continue;
+                }
+                $relMetadata = $metadata->relationships[$name];
+                $linkage = $relationship['data'];
+                $pointer = '/data/relationships/' . $name . '/data';
+                if ($relMetadata->toMany ? (!is_array($linkage) || !array_is_list($linkage))
+                    : ($linkage !== null && (!is_array($linkage) || array_is_list($linkage)))) {
+                    $relationshipErrors[] = $this->errors->invalidPointer($pointer, 'Invalid relationship cardinality.');
+                    continue;
+                }
+                $identifiers = $relMetadata->toMany ? $linkage : ($linkage === null ? [] : [$linkage]);
+                foreach ($identifiers as $index => $identifier) {
+                    $entry = $pointer . ($relMetadata->toMany ? '/' . $index : '');
+                    RelationshipIdentifierValidator::validate($identifier, $relMetadata->targetType, $entry, $this->errors, $allowLid);
+                }
+                $relationships[$name] = ['data' => $linkage];
             }
         }
 
         $attributes = [];
         if (array_key_exists('attributes', $data)) {
-            if (!is_array($data['attributes']) || array_is_list($data['attributes'])) {
+            if ($data['attributes'] instanceof \stdClass) {
+                $data['attributes'] = [];
+            } elseif ($data['attributes'] === []) {
+                throw new BadRequestException('Attributes must be an object.', [$this->errors->invalidPointer('/data/attributes', 'Attributes must be an object.')]);
+            }
+            if (!is_array($data['attributes']) || ($data['attributes'] !== [] && array_is_list($data['attributes']))) {
                 throw new BadRequestException('Document is invalid.', [$this->errors->invalidPointer('/data/attributes', 'The "attributes" member must be an object.')]);
             }
 

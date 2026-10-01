@@ -136,6 +136,7 @@ class GenericDoctrineRepository implements ResourceRepository
         $entityClass = $metadata->dataClass;
         $em = $this->getEntityManagerFor($entityClass);
 
+        $id = \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id);
         if ($definition->readProjection === ReadProjection::DTO) {
             $qb = $em->createQueryBuilder()
                 ->from($entityClass, 'e')
@@ -143,6 +144,9 @@ class GenericDoctrineRepository implements ResourceRepository
                 ->setParameter('id', $id);
 
             $this->applyDtoProjection($qb, $definition);
+            foreach ($criteria->customConditions as $condition) {
+                $condition($qb);
+            }
 
             $result = $qb->getQuery()->getArrayResult();
             $row = $result[0] ?? null;
@@ -150,7 +154,16 @@ class GenericDoctrineRepository implements ResourceRepository
             return $row === null ? null : $this->readMapper->toView($row, $definition, $criteria);
         }
 
-        $entity = $em->find($entityClass, $id);
+        if ($criteria->customConditions !== []) {
+            $identifier = $em->getClassMetadata($entityClass)->getSingleIdentifierFieldName();
+            $qb = $em->createQueryBuilder()->select('e')->from($entityClass, 'e')->where('e.' . $identifier . ' = :id')->setParameter('id', $id);
+            foreach ($criteria->customConditions as $condition) {
+                $condition($qb);
+            }
+            $entity = $qb->getQuery()->getOneOrNullResult();
+        } else {
+            $entity = $em->find($entityClass, $id);
+        }
 
         return $entity === null ? null : $this->readMapper->toView($entity, $definition, $criteria);
     }
@@ -260,6 +273,14 @@ class GenericDoctrineRepository implements ResourceRepository
                 // Direct field on the root entity
                 $qb->addOrderBy('e.' . $resolvedField, $direction);
             }
+        }
+        $identifier = $metadata->idPropertyPath ?? 'id';
+        $hasIdentifier = false;
+        foreach ($sorting as $sort) {
+            $hasIdentifier = $hasIdentifier || $metadata->resolveFieldPath($sort->field) === $identifier;
+        }
+        if (!$hasIdentifier) {
+            $qb->addOrderBy('e.' . $identifier, 'ASC');
         }
     }
 

@@ -78,6 +78,8 @@ return static function (ContainerConfigurator $configurator): void {
         ->set(AtomicTransaction::class)
         ->args([
             service(TransactionManager::class),
+            service(ResourceRegistryInterface::class),
+            service(\AlexFigures\Symfony\Http\Write\InputDocumentValidator::class),
         ])
     ;
 
@@ -88,6 +90,9 @@ return static function (ContainerConfigurator $configurator): void {
             service(ChangeSetFactory::class),
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
+            service(FlushManager::class),
+            service(\AlexFigures\Symfony\Http\Write\WriteConfig::class),
+            service(\AlexFigures\Symfony\Http\Write\InputDocumentValidator::class),
         ])
     ;
 
@@ -99,6 +104,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
             service(ErrorMapper::class),
+            service(\AlexFigures\Symfony\Http\Write\InputDocumentValidator::class),
         ])
     ;
 
@@ -147,4 +153,3 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('controller.service_arguments')
     ;
 };
-

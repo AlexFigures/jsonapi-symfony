@@ -1,5 +1,8 @@
 # JSON:API 1.1 Specification Coverage Matrix
 
+> **Current verification scope (2026-10-01):** historical coverage percentages below describe the older in-repository inventory and are not evidence of external acceptance conformance. The current [44-gap audit](acceptance-gap-report.md) records bundle regressions, exact remaining limitations and pending external branch verification. Do not consider new MUST fixes externally complete until application acceptance passes.
+
+
 This document maps JSON:API 1.1 specification requirements (MUST/SHOULD) to test cases in the JsonApiBundle.
 
 **Legend:**

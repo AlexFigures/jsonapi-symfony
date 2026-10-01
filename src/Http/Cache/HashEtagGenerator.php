@@ -34,7 +34,9 @@ final class HashEtagGenerator implements EtagGeneratorInterface
 
     public function generate(Request $request, Response $response, string $cacheKey, bool $weak): ?string
     {
-        $content = $response->getContent();
+        $content = $response instanceof \AlexFigures\Symfony\Http\Controller\Support\RepresentationResponse && $response->representationContent !== null
+            ? $response->representationContent
+            : $response->getContent();
         if ($content === false) {
             return null;
         }
