@@ -7,6 +7,7 @@ PHP ?= php
 DOCKER_COMPOSE ?= docker compose -f docker-compose.test.yml
 COMPOSER_LOCK := $(wildcard composer.lock)
 PHPSTAN_MEMORY_LIMIT ?= 1G
+MUTATION_MEMORY_LIMIT ?= 1G
 
 vendor/autoload.php: composer.json $(COMPOSER_LOCK)
 	$(COMPOSER) install
@@ -55,7 +56,7 @@ rector: vendor/autoload.php
 	vendor/bin/rector process
 
 mutation: vendor/autoload.php
-	XDEBUG_MODE=coverage vendor/bin/infection --threads=4 --min-msi=70 --min-covered-msi=70
+	XDEBUG_MODE=coverage $(PHP) -d memory_limit=$(MUTATION_MEMORY_LIMIT) vendor/bin/infection --threads=4 --min-msi=70 --min-covered-msi=70
 
 deptrac: vendor/autoload.php
 	vendor/bin/deptrac analyse

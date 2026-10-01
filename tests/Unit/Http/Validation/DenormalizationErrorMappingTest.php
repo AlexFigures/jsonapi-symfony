@@ -12,6 +12,7 @@ use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 
 final class DenormalizationErrorMappingTest extends TestCase
 {
@@ -46,5 +47,30 @@ final class DenormalizationErrorMappingTest extends TestCase
     public function testMapDenormErrorsMethodExists(): void
     {
         $this->assertTrue(method_exists($this->mapper, 'mapDenormErrors'));
+    }
+
+    public function testWrappedEnumValueErrorPreservesValueAndPointer(): void
+    {
+        $this->registry->method('getByType')->with('articles')->willReturn(new ResourceMetadata(
+            type: 'articles',
+            class: \stdClass::class,
+            attributes: ['status' => new AttributeMetadata('status', 'status')],
+            relationships: [],
+        ));
+        $exception = NotNormalizableValueException::createForUnexpectedDataType(
+            'The data must belong to a backed enumeration.',
+            'invalid-status',
+            ['int', 'string'],
+            'status',
+            true,
+            previous: new \ValueError('"invalid-status" is not a valid backing value for enum ArticleStatus'),
+        );
+
+        $error = $this->mapper->mapDenormErrors('articles', $exception)->getErrors()[0];
+
+        self::assertSame('422', $error->status);
+        self::assertStringContainsString('invalid-status', $error->detail);
+        self::assertStringContainsString('Expected type: int|string', $error->detail);
+        self::assertSame('/data/attributes/status', $error->source?->pointer);
     }
 }

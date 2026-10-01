@@ -172,7 +172,7 @@ final class SerializerEntityInstantiator
             $context
         );
 
-        if (!is_object($entity)) {
+        if (!$entity instanceof $entityClass) {
             throw new RuntimeException(sprintf('Serializer failed to create an instance of "%s".', $entityClass));
         }
 
