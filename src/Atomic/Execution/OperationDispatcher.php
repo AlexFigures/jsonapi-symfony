@@ -29,32 +29,40 @@ final class OperationDispatcher
     /**
      * @param list<Operation> $operations
      *
-     * @return array{0: list<array<string, mixed>>, 1: bool}
+     * @return array{0: list<array<string, mixed>|\stdClass>, 1: bool}
      */
     public function run(array $operations, LidRegistry $lids): array
     {
         return $this->transaction->run(function () use ($operations, $lids) {
-            $outcomes = [];
+            $resultSet = [];
+            $allEmpty = true;
 
             foreach ($operations as $operation) {
-                if ($operation->isRelationshipOperation()) {
-                    $outcomes[] = $this->relationships->handle($operation, $lids);
-                } else {
-                    $outcomes[] = match ($operation->op) {
-                        'add' => $this->add->handle($operation, $lids),
-                        'update' => $this->update->handle($operation, $lids),
-                        'remove' => $this->remove->handle($operation, $lids),
-                        default => OperationOutcome::empty(),
-                    };
-                }
+                try {
+                    if ($operation->isRelationshipOperation()) {
+                        $outcome = $this->relationships->handle($operation, $lids);
+                    } else {
+                        $outcome = match ($operation->op) {
+                            'add' => $this->add->handle($operation, $lids),
+                            'update' => $this->update->handle($operation, $lids),
+                            'remove' => $this->remove->handle($operation, $lids),
+                            default => OperationOutcome::empty(),
+                        };
+                    }
 
-                // Flush after each operation to make entities available for subsequent operations
-                // This is critical for LID resolution: entities created in operation N must be
-                // available in the database for operation N+1 to reference them
-                $this->flushManager->flush();
+                    // Flush after each operation to make entities available for subsequent operations
+                    // This is critical for LID resolution: entities created in operation N must be
+                    // available in the database for operation N+1 to reference them
+                    $this->flushManager->flush();
+                    [$snapshot, $empty] = $this->results->build([$operation], [$outcome]);
+                    $resultSet[] = $snapshot[0];
+                    $allEmpty = $allEmpty && $empty;
+                } catch (\AlexFigures\Symfony\Http\Exception\JsonApiHttpException $exception) {
+                    throw \AlexFigures\Symfony\Http\Error\AtomicErrorRebaser::rebase($exception, $operation->pointer);
+                }
             }
 
-            return $this->results->build($operations, $outcomes);
+            return [$resultSet, $allEmpty];
         });
     }
 }

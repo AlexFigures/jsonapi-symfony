@@ -59,7 +59,7 @@ final class DoctrineExistenceChecker implements ExistenceChecker
         $qb->select('COUNT(e.' . $identifierField . ')')
             ->from($entityClass, 'e')
             ->where('e.' . $identifierField . ' = :id')
-            ->setParameter('id', $id);
+            ->setParameter('id', \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         $count = (int) $qb->getQuery()->getSingleScalarResult();
 

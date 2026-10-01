@@ -10,8 +10,8 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \AlexFigures\Symfony\Filter\Operator\ILikeOperator
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\AlexFigures\Symfony\Filter\Operator\ILikeOperator::class)]
 final class ILikeOperatorTest extends TestCase
 {
     private ILikeOperator $operator;

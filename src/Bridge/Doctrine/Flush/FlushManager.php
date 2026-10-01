@@ -29,8 +29,16 @@ final class FlushManager
     /** @var array<int, EntityManagerInterface> */
     private array $managersToFlush = [];
 
+    /** @var array<int, class-string> */
+    private array $classesToFlush = [];
+
+    /** @var array<int, class-string> */
+    private array $transactionClasses = [];
+
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
+        private readonly ?\AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper $errors = null,
+        private readonly ?\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $resources = null,
     ) {
     }
 
@@ -49,6 +57,8 @@ final class FlushManager
     {
         $em = $this->getEntityManagerFor($entityClass);
         $this->managersToFlush[spl_object_id($em)] = $em;
+        $this->classesToFlush[spl_object_id($em)] = $entityClass;
+        $this->transactionClasses[spl_object_id($em)] = $entityClass;
         $this->flushScheduled = true;
     }
 
@@ -66,11 +76,20 @@ final class FlushManager
             return;
         }
 
-        foreach ($this->managersToFlush as $em) {
-            $em->flush();
+        foreach ($this->managersToFlush as $key => $em) {
+            try {
+                $em->flush();
+            } catch (\Doctrine\DBAL\Exception\ConstraintViolationException|\Doctrine\ORM\OptimisticLockException $exception) {
+                $type = $this->resources?->getByClass($this->classesToFlush[$key])?->type;
+                if ($type !== null && $this->errors !== null) {
+                    throw $this->errors->mapDatabaseError($type, $exception);
+                }
+                throw $exception;
+            }
         }
 
         $this->managersToFlush = [];
+        $this->classesToFlush = [];
         $this->flushScheduled = false;
     }
 
@@ -82,8 +101,21 @@ final class FlushManager
      */
     public function clear(): void
     {
+        $this->transactionClasses = [];
         $this->flushScheduled = false;
         $this->managersToFlush = [];
+        $this->classesToFlush = [];
+    }
+
+    public function mapTransactionError(\Throwable $exception): \Throwable
+    {
+        if (!$exception instanceof \Doctrine\DBAL\Exception\ConstraintViolationException
+            && !$exception instanceof \Doctrine\ORM\OptimisticLockException) {
+            return $exception;
+        }
+        $entityClass = end($this->transactionClasses);
+        $type = $entityClass === false ? null : $this->resources?->getByClass($entityClass)?->type;
+        return $type !== null && $this->errors !== null ? $this->errors->mapDatabaseError($type, $exception) : $exception;
     }
 
     /**

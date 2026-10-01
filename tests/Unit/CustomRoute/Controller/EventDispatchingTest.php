@@ -14,8 +14,8 @@ use Symfony\Component\HttpFoundation\Response;
  * This test verifies the fix for the regression where update events
  * were not dispatched when handlers returned DTOs without id property.
  *
- * @covers \AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController::dispatchEventIfNeeded
  */
+#[\PHPUnit\Framework\Attributes\CoversMethod(\AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController::class, 'dispatchEventIfNeeded')]
 final class EventDispatchingTest extends TestCase
 {
     public function testUpdateEventUsesRouteParameterNotExtractedId(): void

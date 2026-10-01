@@ -1,0 +1,583 @@
+{
+  "branch": "fix/acceptance-gaps",
+  "external_baseline_revision": "5458778adc87386ffff9c07f009c25906e0971db",
+  "scope": "Only jsonapi-symfony. External acceptance verification is reserved for the user after branch installation.",
+  "gaps": [
+    {
+      "id": "CACHE-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Cache/controller boundary",
+      "root_cause_and_change": "Write preconditions were evaluated after processor persistence; now current representation is checked at kernel.controller before writes.",
+      "previous_bundle_coverage": "Existing PreconditionsOnWritesTest inspected HTTP status after mutation; no database-state guarantee.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/WritePreconditionsRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "CACHE-002",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Cache/document metadata",
+      "root_cause_and_change": "Resolver ignored configured entity timestamp; document carries current models and timestamp field/per-type configuration is used.",
+      "previous_bundle_coverage": "Existing cache tests did not compare Last-Modified to persisted entity timestamp.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/WritePreconditionsRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Atomic target validation",
+      "root_cause_and_change": "Missing ref/href blocked canonical creation; infer collection from data.type.",
+      "previous_bundle_coverage": "Old unit test incorrectly expected missing-target error; revised to canonical target inference.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/AcceptanceGapsTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-002",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Atomic target validation",
+      "root_cause_and_change": "Missing ref/href blocked update resource object; infer type/id/lid and verify explicit identifier consistency.",
+      "previous_bundle_coverage": "Explicit refs were covered; inferred targets were not.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/AcceptanceGapsTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-003",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Shared identifier validation",
+      "root_cause_and_change": "Identifier parsers preferred id over lid; reject dual identifiers at document/ref boundary.",
+      "previous_bundle_coverage": "Existing Atomic tests did not reject a ref containing both identifiers.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-004",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Atomic/Doctrine flush lifecycle",
+      "root_cause_and_change": "Generated identifiers were read before flush; materialize inside the same transaction before LID association, and test later rollback.",
+      "previous_bundle_coverage": "Existing Doctrine Atomic fixtures generated UUID strings in constructors, hiding database-generated IDs.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/AcceptanceGapsTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-005",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Atomic URI target resolution",
+      "root_cause_and_change": "Href resolver only supported absolute paths; resolve relative paths and same-origin URIs with complete origin/path checks.",
+      "previous_bundle_coverage": "Only absolute-path href cases were covered.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-006",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Atomic URI target resolution",
+      "root_cause_and_change": "Extra path segments were discarded; require a complete collection/item/relationship target.",
+      "previous_bundle_coverage": "Existing href tests did not cover valid-prefix plus unrecognized suffix.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-007",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Atomic result encoding",
+      "root_cause_and_change": "PHP empty arrays encoded as []; use stdClass for empty result objects.",
+      "previous_bundle_coverage": "Existing result assertions used associative decoding, obscuring object/list distinction.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/AcceptanceGapsTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-008",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Atomic result snapshots",
+      "root_cause_and_change": "Mutable entities were serialized after the whole batch; snapshot each representation immediately after its operation.",
+      "previous_bundle_coverage": "Existing tests did not mutate the same resource twice and inspect both results.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/AcceptanceGapsTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-009",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Resource operation policy",
+      "root_cause_and_change": "Atomic bypassed resource metadata operations; reuse OperationValidator for create/update/delete and relationship UPDATE policy.",
+      "previous_bundle_coverage": "Ordinary operation policy was covered; Atomic enforcement was missing.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-010",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Atomic write configuration",
+      "root_cause_and_change": "Atomic assigned client IDs without ordinary WriteConfig policy; validate policy before passing ID to the shared processor.",
+      "previous_bundle_coverage": "Ordinary POST policy was covered; Atomic policy parity was missing.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/IdentifierAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-011",
+      "status": "partially fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Error pointer rebasing",
+      "root_cause_and_change": "Operation errors exposed ordinary pointers; common rebaser retains exception subclass and public paths. Commit-level attribution remains a follow-up.",
+      "previous_bundle_coverage": "Existing validation tests did not check operation-prefixed public pointers.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-012",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Media negotiation/DI",
+      "root_cause_and_change": "Strict global negotiation rejected the enabled Atomic extension; share parser and inject Atomic enablement into global policy.",
+      "previous_bundle_coverage": "Atomic controller negotiation was covered separately from global strict negotiation.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Unit/Http/Negotiation/AcceptanceNegotiationTest.php",
+        "tests/Unit/Bridge/DataLayerConfigurationTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ATOMIC-013",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Media negotiation",
+      "root_cause_and_change": "Substring matching accepted non-JSON:API or charset media types; shared parser enforces base type, parameters and recognized extension.",
+      "previous_bundle_coverage": "Existing Atomic media tests did not cover text/plain with ext or charset.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Unit/Http/Negotiation/AcceptanceNegotiationTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "CONTENT-NEGOTIATION-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Media candidate selection",
+      "root_cause_and_change": "An invalid candidate invalidated the entire Accept header; skip it and select a valid candidate in either ordering.",
+      "previous_bundle_coverage": "Existing tests covered isolated invalid headers, not mixed candidates.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Unit/Http/Negotiation/AcceptanceNegotiationTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "CONTENT-NEGOTIATION-002",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "HTTP Accept metadata",
+      "root_cause_and_change": "q was treated as a media parameter; parse quality separately, sort candidates and exclude q=0.",
+      "previous_bundle_coverage": "Existing negotiation tests did not cover q weights and exclusions.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Unit/Http/Negotiation/AcceptanceNegotiationTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "RELATIONSHIP-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Relationship resolution",
+      "root_cause_and_change": "Missing target errors pointed to the relationship container; append the public linkage identifier member.",
+      "previous_bundle_coverage": "Missing-resource cases existed without exact public identifier pointer assertions.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/RelationshipAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "RELATIONSHIP-002",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Shared linkage validation",
+      "root_cause_and_change": "Ordinary relationship type mismatches became validation 422; shared boundary validator reports 409, matching relationship endpoints.",
+      "previous_bundle_coverage": "Separate endpoint/resource tests lacked status parity.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "RELATIONSHIP-003",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Input whitelist",
+      "root_cause_and_change": "Ordinary input whitelisted attributes but ignored unknown relationships; validate names and public pointers.",
+      "previous_bundle_coverage": "Attribute whitelist was covered; relationship names were not.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "RELATIONSHIP-004",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Doctrine association nullability",
+      "root_cause_and_change": "Nullable PHP properties hid non-null join columns; use ORM metadata before assigning null, and prove unchanged database state.",
+      "previous_bundle_coverage": "Existing null cases did not combine PHP nullable property with non-null Doctrine association.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/RelationshipAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "RELATIONSHIP-005",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Relationship document links",
+      "root_cause_and_change": "Standalone linkage exposed only self; reuse LinkGenerator for related navigation.",
+      "previous_bundle_coverage": "Old relationship snapshot asserted only self; snapshot now also preserves related link.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ERROR-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Query error titles",
+      "root_cause_and_change": "Filter whitelist error codes were absent from title map; add stable titles.",
+      "previous_bundle_coverage": "Existing query errors did not assert nonempty titles across whitelist failures.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/QueryAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ERROR-002",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Linkage document boundary",
+      "root_cause_and_change": "Malformed cardinality reached resolver/property access; validate to-one object/null and to-many identifier lists first.",
+      "previous_bundle_coverage": "Valid linkage tests existed; malformed to-one arrays were not covered.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "WRITE-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "JSON structural decoding",
+      "root_cause_and_change": "Associative decoding collapsed {} and []; preserve empty objects and reject list values where objects are required.",
+      "previous_bundle_coverage": "PHP-array based tests hid JSON empty-object semantics.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "INCLUDE-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Document generation",
+      "root_cause_and_change": "Empty include collector caused included omission; distinguish requested inclusion from no request.",
+      "previous_bundle_coverage": "Existing include cases covered nonempty included resources.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "FILTER-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Filter AST/operator naming",
+      "root_cause_and_change": "Parser/public whitelist/compiler disagreed on ne/neq; normalize both to neq while allowing both public spellings.",
+      "previous_bundle_coverage": "Operator unit tests did not execute both HTTP spellings against Doctrine.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/QueryAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "FILTER-002",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Filter parser/compiler",
+      "root_cause_and_change": "Between AST lacked compilation and cardinality validation; require exactly two scalar operands and compile BETWEEN.",
+      "previous_bundle_coverage": "Operator tests existed without parser-to-Doctrine execution and malformed operands.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/QueryAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "FILTER-003",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Filter parser/compiler",
+      "root_cause_and_change": "NullCheck AST was not compiled; support IS NULL/IS NOT NULL including public datetime aliases.",
+      "previous_bundle_coverage": "Existing filter coverage did not execute NullCheck AST against PostgreSQL.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/QueryAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "FILTER-004",
+      "status": "partially fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Doctrine ILIKE platform detection",
+      "root_cause_and_change": "DQL function called removed platform getName; detect PostgreSQLPlatform by class. PostgreSQL execution is tested with declared DBAL 3 dev dependency; DBAL 4 matrix is pending.",
+      "previous_bundle_coverage": "Existing tests did not execute ILIKE through PostgreSQL DQL with this platform path.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/QueryAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "FILTER-005",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Set predicates",
+      "root_cause_and_change": "Empty operands reached Doctrine binding; compile empty IN as false and NOT IN as true.",
+      "previous_bundle_coverage": "Old NotInOperatorTest expected an exception instead of intended empty-set semantics.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/QueryAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "ALIAS-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Metadata field resolution",
+      "root_cause_and_change": "Public attribute names were emitted into DQL; shared metadata resolution maps aliases for filtering and sorting.",
+      "previous_bundle_coverage": "Relationship aliases were covered; external scalar aliases were not.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/QueryAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "QUERY-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Pagination boundary",
+      "root_cause_and_change": "Scalar/list/nested page forms reached casts or Symfony argument handling; reject shapes with public parameter sources.",
+      "previous_bundle_coverage": "Existing tests primarily covered scalar numeric pagination.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/QueryAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "QUERY-002",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Filter boundary/limits",
+      "root_cause_and_change": "Malformed operands and deep groups reached compilation; validate scalar shapes, integer operands and bounded group depth.",
+      "previous_bundle_coverage": "Existing AST cases did not cover hostile operands and deep recursive HTTP filters.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/QueryAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "HTTP-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Representation validators",
+      "root_cause_and_change": "HEAD body was emptied before hashing; retain selected GET representation internally for validator computation.",
+      "previous_bundle_coverage": "Existing HEAD tests asserted empty body without GET validator parity.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php",
+        "tests/Integration/Atomic/WritePreconditionsRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "HTTP-002",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Controller DI/Allow",
+      "root_cause_and_change": "OptionsController was absent from services; register it and derive relationship methods from cardinality and operation policy.",
+      "previous_bundle_coverage": "Directly constructed OPTIONS tests did not cover DI registration or to-one exclusions.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Functional/AcceptanceWriteContractTest.php",
+        "tests/Unit/Bridge/DataLayerConfigurationTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "DOCTRINE-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Flush/transaction error boundary",
+      "root_cause_and_change": "Unique errors occur at deferred flush or commit; narrowly map constraints at actual execution boundary and roll back.",
+      "previous_bundle_coverage": "Existing mapper tests did not cover live deferred flush/commit with database-state assertions.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/AcceptanceGapsTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "DOCTRINE-002",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Flush/transaction error boundary",
+      "root_cause_and_change": "Delete FK restrictions escaped transaction error mapping; convert to 422 and retain parent row.",
+      "previous_bundle_coverage": "An old controller test expected raw Doctrine FK exception; corrected to public JSON:API exception.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/AcceptanceGapsTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "UUID-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Mapped identifier conversion",
+      "root_cause_and_change": "Raw JSON IDs reached typed setters; use mapped Doctrine type conversion for processors, repositories and relationships.",
+      "previous_bundle_coverage": "Existing UUIDs were string identifiers or non-ID fields, not typed Uuid identifiers.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/IdentifierAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "UUID-002",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Mapped identifier conversion",
+      "root_cause_and_change": "Malformed typed route IDs reached lower Doctrine layers; return 400 while valid missing identifiers still yield null/404.",
+      "previous_bundle_coverage": "Existing route tests did not compare malformed vs valid missing typed UUID IDs.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/IdentifierAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "PROFILE-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Per-resource profile context",
+      "root_cause_and_change": "Document hooks used only globally active profiles; include per-type defaults when building resource relationships.",
+      "previous_bundle_coverage": "Profile negotiation/hook units did not verify default activation through document generation.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/ProfileAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "PROFILE-002",
+      "status": "partially fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Profile query lifecycle",
+      "root_cause_and_change": "Query hooks were not applied to Doctrine read criteria; apply generic hooks to collection/item and related reads.",
+      "previous_bundle_coverage": "Existing hook tests did not query actual Doctrine collections/items. Related SQL path and profile control flags need further coverage.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/ProfileAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "PROFILE-003",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Profile write lifecycle",
+      "root_cause_and_change": "Write hooks were detached from processors; apply trusted hook changes after client input, before validation/persistence.",
+      "previous_bundle_coverage": "Hook unit tests did not reload updated timestamps from PostgreSQL.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/ProfileAcceptanceRegressionTest.php",
+        "tests/Unit/Profile/ProfileWriteHooksTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    },
+    {
+      "id": "SORT-001",
+      "status": "fixed",
+      "verification_scope": "bundle regression; external acceptance pending",
+      "subsystem": "Doctrine pagination ordering",
+      "root_cause_and_change": "Nonunique sorts produced unstable row ordering; append ascending mapped ID internally without changing client criteria.",
+      "previous_bundle_coverage": "Existing sorting tests did not prove pagination tie-breaking across repeated reads.",
+      "regression_required": true,
+      "bundle_regressions": [
+        "tests/Integration/Atomic/QueryAcceptanceRegressionTest.php"
+      ],
+      "acceptance_result": "not run: user requested bundle-only implementation and separate branch validation"
+    }
+  ]
+}

@@ -105,7 +105,8 @@ final class FilterableField
      */
     public function isOperatorAllowed(string $operator): bool
     {
-        return in_array($operator, $this->operators, true);
+        $aliases = ['neq' => 'ne', 'ne' => 'neq', 'isnull' => 'null'];
+        return in_array($operator, $this->operators, true) || (isset($aliases[$operator]) && in_array($aliases[$operator], $this->operators, true));
     }
 
     /**

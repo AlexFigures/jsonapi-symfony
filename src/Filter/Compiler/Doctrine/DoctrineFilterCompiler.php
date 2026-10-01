@@ -67,6 +67,15 @@ final class DoctrineFilterCompiler
      */
     private function compileNode(Node $node, string $rootAlias, AbstractPlatform $platform): ?\AlexFigures\Symfony\Filter\Operator\DoctrineExpression
     {
+        if ($node instanceof \AlexFigures\Symfony\Filter\Ast\Between) {
+            return $this->compileComparison(new Comparison($node->fieldPath, 'between', [$node->from, $node->to]), $rootAlias, $platform);
+        }
+        if ($node instanceof \AlexFigures\Symfony\Filter\Ast\NullCheck) {
+            return new \AlexFigures\Symfony\Filter\Operator\DoctrineExpression(
+                $this->buildDqlFieldPath($rootAlias, $node->fieldPath) . ($node->isNull ? ' IS NULL' : ' IS NOT NULL'),
+                []
+            );
+        }
         if ($node instanceof Comparison) {
             return $this->compileComparison($node, $rootAlias, $platform);
         }
@@ -209,7 +218,7 @@ final class DoctrineFilterCompiler
      */
     private function collectRelationshipPaths(Node $node, QueryBuilder $qb, string $rootAlias, ?ResourceMetadata $metadata): void
     {
-        if ($node instanceof Comparison) {
+        if ($node instanceof Comparison || $node instanceof \AlexFigures\Symfony\Filter\Ast\Between || $node instanceof \AlexFigures\Symfony\Filter\Ast\NullCheck) {
             $this->createJoinForFieldPath($qb, $rootAlias, $node->fieldPath, $metadata);
         } elseif ($node instanceof Conjunction || $node instanceof Disjunction) {
             foreach ($node->children as $child) {

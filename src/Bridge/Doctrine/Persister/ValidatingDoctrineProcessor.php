@@ -54,6 +54,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         private readonly SerializerEntityInstantiator $instantiator,
         private readonly RelationshipResolver $relationshipResolver,
         private readonly FlushManager $flushManager,
+        private readonly ?\AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks $profileHooks = null,
     ) {
     }
 
@@ -64,7 +65,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $em = $this->getEntityManagerFor($entityClass);
 
         // Check for ID conflict
-        if ($clientId !== null && $em->find($entityClass, $clientId)) {
+        if ($clientId !== null && $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $clientId))) {
             throw new ConflictException(
                 sprintf('Resource "%s" with id "%s" already exists.', $type, $clientId)
             );
@@ -109,7 +110,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
 
         // Set ID if needed
         if ($clientId !== null) {
-            $this->accessor->setValue($entity, $idPath, $clientId);
+            $this->accessor->setValue($entity, $idPath, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $clientId));
         } elseif ($classMetadata->isIdentifierNatural()) {
             // Check if ID is already set (e.g., in constructor)
             try {
@@ -126,6 +127,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         // Apply remaining attributes and relationships through strict Serializer denormalization
         $this->denormalizeInto($entity, $remainingChanges, $metadata, true);
 
+        $this->profileHooks?->apply($entity, $metadata, true, $changes);
         // Validate before persist
         $this->validateWithGroups($entity, $type, $metadata, true);
 
@@ -141,7 +143,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->getDataClass();
         $em = $this->getEntityManagerFor($entityClass);
-        $entity = $em->find($entityClass, $id);
+        $entity = $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -151,8 +153,8 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
 
         // Apply attributes and relationships through strict Serializer denormalization
         $this->denormalizeInto($entity, $changes, $metadata, false);
-        $toOneRelationships = $this->getToOneRelationshipValues($entity, $changes->relationships, $metadata);
-
+        $profileRelationships = $this->profileHooks?->apply($entity, $metadata, false, $changes) ?? [];
+        $toOneRelationships = $this->getToOneRelationshipValues($entity, array_replace($changes->relationships, $profileRelationships), $metadata);
         // Validate before flush
         $this->validateWithGroups($entity, $type, $metadata, false);
 
@@ -178,7 +180,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->getDataClass();
         $em = $this->getEntityManagerFor($entityClass);
-        $entity = $em->find($entityClass, $id);
+        $entity = $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -186,6 +188,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
             );
         }
 
+        $this->profileHooks?->beforeDelete($type, $id);
         // Mark entity for removal and schedule flush
         $em->remove($entity);
         $this->flushManager->scheduleFlush($entityClass);

@@ -321,6 +321,7 @@ final class Configuration implements ConfigurationInterface
         $limits = $root->arrayNode('limits')->addDefaultsIfNotSet();
         $limitsChildren = $limits->children();
         $limitsChildren->integerNode('include_max_depth')->defaultValue(3)->min(0)->end();
+        $limitsChildren->integerNode('filter_max_depth')->defaultValue(8)->min(1)->end();
         $limitsChildren->integerNode('include_max_paths')->defaultValue(20)->min(0)->end();
         $limitsChildren->integerNode('fields_max_total')->defaultValue(120)->min(0)->end();
         $limitsChildren->integerNode('page_max_size')->defaultValue(100)->min(0)->end();

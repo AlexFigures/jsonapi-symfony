@@ -10,10 +10,10 @@ use AlexFigures\Symfony\Http\Exception\ValidationException;
 /**
  * Tests for edge cases in validation and denormalization.
  *
- * @group integration
- * @group validation-groups
- * @group edge-cases
  */
+#[\PHPUnit\Framework\Attributes\Group('integration')]
+#[\PHPUnit\Framework\Attributes\Group('validation-groups')]
+#[\PHPUnit\Framework\Attributes\Group('edge-cases')]
 final class EdgeCasesTest extends ValidationGroupsIntegrationTestCase
 {
     public function testNoValidationGroupsInMetadata(): void

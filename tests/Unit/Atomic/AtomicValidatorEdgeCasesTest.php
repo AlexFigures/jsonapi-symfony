@@ -68,7 +68,7 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
      * Test that operation without ref or href throws error.
      * Kills mutant: AtomicValidator.php:60-61 (Identical - $ref === null check)
      */
-    public function testOperationWithoutRefOrHrefThrowsError(): void
+    public function testAddInfersTargetFromResourceObject(): void
     {
         $operation = new Operation(
             op: 'add',
@@ -79,10 +79,8 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
             pointer: '/atomic:operations/0'
         );
 
-        $this->expectException(BadRequestException::class);
-        $this->expectExceptionMessage('Missing operation target');
-
-        $this->validator->validate([$operation]);
+        [$validated] = $this->validator->validate([$operation]);
+        self::assertSame('articles', $validated[0]->ref->type);
     }
 
     /**

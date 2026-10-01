@@ -1,5 +1,8 @@
 # Test Gap Analysis & Remediation Plan
 
+> **Current verification scope (2026-10-01):** historical coverage percentages below describe the older in-repository inventory and are not evidence of external acceptance conformance. The current [44-gap audit](acceptance-gap-report.md) records bundle regressions, exact remaining limitations and pending external branch verification. Do not consider new MUST fixes externally complete until application acceptance passes.
+
+
 This document identifies missing or incomplete test coverage and provides a prioritized plan for filling gaps.
 
 ---
@@ -25,7 +28,7 @@ This document identifies missing or incomplete test coverage and provides a prio
 
 ## Critical Gaps (P0 - Must Fix Before Release)
 
-**None identified.** All MUST requirements from JSON:API 1.1 are covered.
+**External acceptance identified P0 gaps.** The current iteration implements them with bundle PostgreSQL/HTTP regressions; external verification is pending. See the current audit linked above.
 
 ---
 

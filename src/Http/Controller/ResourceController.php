@@ -42,6 +42,12 @@ final class ResourceController
         $metadata = $this->registry->getByType($type);
         $this->operationValidator->assertAllowed(ResourceOperation::SHOW, $metadata->allowedOperations);
 
+        return $this->currentRepresentation($request, $type, $id);
+    }
+
+    /** @internal Used to evaluate write validators without imposing the SHOW policy. */
+    public function currentRepresentation(Request $request, string $type, string $id): JsonResponse
+    {
         $criteria = $this->parser->parse($type, $request);
         $model = $this->repository->findOne($type, $id, $criteria);
 

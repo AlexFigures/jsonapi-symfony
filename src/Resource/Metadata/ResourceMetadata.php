@@ -251,6 +251,14 @@ final class ResourceMetadata
         $segments = explode('.', $fieldPath);
         $firstSegment = $segments[0];
 
+        if (isset($this->attributes[$firstSegment])) {
+            $segments[0] = $this->attributes[$firstSegment]->propertyPath ?? $firstSegment;
+            return implode('.', $segments);
+        }
+        if ($firstSegment === 'id') {
+            $segments[0] = $this->idPropertyPath ?? 'id';
+            return implode('.', $segments);
+        }
         // Check if the first segment is a relationship
         if (isset($this->relationships[$firstSegment])) {
             $relationship = $this->relationships[$firstSegment];

@@ -18,10 +18,20 @@ class JsonApiHttpException extends RuntimeException implements HttpExceptionInte
         private readonly int $statusCode,
         string $message = '',
         private readonly array $headers = [],
-        private readonly array $errors = [],
+        private array $errors = [],
         ?\Throwable $previous = null,
     ) {
         parent::__construct($message === '' ? (string) $statusCode : $message, 0, $previous);
+    }
+
+    /**
+     * @internal
+     * @param list<ErrorObject> $errors
+     */
+    public function withErrors(array $errors): static
+    {
+        $this->errors = $errors;
+        return $this;
     }
 
     public function getStatusCode(): int

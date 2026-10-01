@@ -34,9 +34,19 @@ final class ErrorObjectStatusTest extends JsonApiTestCase
         }
     }
 
-    public function testErrorLinksAreNotConfiguredYet(): void
+    public function testConfiguredErrorAboutLinkIsSerialized(): void
     {
-        self::markTestSkipped('links.about / links.type are not surfaced by current ErrorBuilder configuration.');
+        $error = (new \AlexFigures\Symfony\Http\Error\ErrorBuilder(true))->create('404', 'not-found', aboutLink: 'https://example.org/problems/missing-resource');
+        $request = Request::create('/api/articles/missing');
+        $errors = $this->captureErrors($request, static function () use ($error): void {
+            throw new NotFoundException('Missing resource.', [$error]);
+        }, 404);
+        self::assertSame('https://example.org/problems/missing-resource', $errors[0]['links']['about']);
+    }
+
+    public function testErrorTypeLinkIsNotImplemented(): void
+    {
+        self::markTestSkipped('ErrorObject does not yet expose the optional links.type member.');
     }
 
     /**

@@ -30,19 +30,19 @@ final class AtomicValidator
      *
      * @return array{0: list<Operation>, 1: LidRegistry}
      */
-    public function validate(array $operations): array
+    public function validate(array $operations, ?\Symfony\Component\HttpFoundation\Request $request = null): array
     {
         $lidRegistry = new LidRegistry();
         $validated = [];
 
         foreach ($operations as $operation) {
-            $validated[] = $this->validateOperation($operation, $lidRegistry);
+            $validated[] = $this->validateOperation($operation, $lidRegistry, $request);
         }
 
         return [$validated, $lidRegistry];
     }
 
-    private function validateOperation(Operation $operation, LidRegistry $lids): Operation
+    private function validateOperation(Operation $operation, LidRegistry $lids, ?\Symfony\Component\HttpFoundation\Request $request): Operation
     {
         if (!in_array($operation->op, self::ALLOWED_OPS, true)) {
             throw new BadRequestException('Unsupported atomic operation.', [
@@ -57,23 +57,26 @@ final class AtomicValidator
         }
 
         $ref = $operation->ref;
+        if ($ref === null && $operation->href === null && in_array($operation->op, ['add', 'update'], true)
+            && is_array($operation->data) && is_string($operation->data['type'] ?? null)) {
+            foreach (['id', 'lid'] as $member) {
+                if (isset($operation->data[$member]) && (!is_string($operation->data[$member]) || $operation->data[$member] === '')) {
+                    throw new BadRequestException('Invalid resource identifier.');
+                }
+            }
+            $ref = new Ref($operation->data['type'], is_string($operation->data['id'] ?? null) ? $operation->data['id'] : null, is_string($operation->data['lid'] ?? null) ? $operation->data['lid'] : null, null);
+        }
         if ($ref === null) {
             if ($operation->href === null) {
-                throw new BadRequestException('Missing operation target.', [
-                    $this->errors->invalidPointer($operation->pointer, 'Each operation MUST include a "ref" or "href" member.'),
-                ]);
+                throw new BadRequestException('Missing operation target.', [$this->errors->invalidPointer($operation->pointer, 'The operation needs a target or an identifying resource object.')]);
             }
-
             if (!$this->config->allowHref) {
-                throw new BadRequestException('Href targets are disabled.', [
-                    $this->errors->invalidPointer($operation->pointer . '/href', 'The "href" member is not allowed by server configuration.'),
-                ]);
+                throw new BadRequestException('Href targets are disabled.');
             }
-
-            $ref = $this->refFromHref($operation->href, $operation->pointer . '/href');
+            $ref = $this->refFromHref($operation->href, $operation->pointer . '/href', $request);
         }
 
-        $typePointer = $operation->ref !== null ? $operation->pointer . '/ref/type' : $operation->pointer . '/href';
+        $typePointer = $operation->ref !== null ? $operation->pointer . '/ref/type' : $operation->pointer . ($operation->href !== null ? '/href' : '/data/type');
 
         if (!$this->registry->hasType($ref->type)) {
             throw new BadRequestException('Unknown resource type.', [
@@ -84,7 +87,16 @@ final class AtomicValidator
             ]);
         }
 
+        if ($ref->lid !== null && $lids->has($ref->lid) && $lids->getType($ref->lid) !== $ref->type) {
+            throw new BadRequestException('Local identifier type mismatch.', [$this->errors->invalidPointer($operation->pointer . '/ref/type', 'The lid belongs to a different resource type.')]);
+        }
         $metadata = $this->registry->getByType($ref->type);
+        $policyOperation = $ref->relationship !== null ? \AlexFigures\Symfony\Resource\Definition\ResourceOperation::UPDATE : match ($operation->op) {
+            'add' => \AlexFigures\Symfony\Resource\Definition\ResourceOperation::CREATE,
+            'update' => \AlexFigures\Symfony\Resource\Definition\ResourceOperation::UPDATE,
+            'remove' => \AlexFigures\Symfony\Resource\Definition\ResourceOperation::DELETE,
+        };
+        (new \AlexFigures\Symfony\Http\Controller\Support\OperationValidator($this->errors))->assertAtomicAllowed($policyOperation, $metadata->allowedOperations);
 
         if ($ref->relationship !== null) {
             $relationship = $metadata->relationships[$ref->relationship] ?? null;
@@ -106,6 +118,20 @@ final class AtomicValidator
 
     private function validateResourceTarget(Operation $operation, Ref $ref, ResourceMetadata $metadata, LidRegistry $lids): void
     {
+        if (is_array($operation->data)) {
+            $data = $operation->data;
+            if (isset($data['id'], $data['lid'])) {
+                throw new BadRequestException('Identifiers cannot contain both id and lid.', [$this->errors->invalidPointer($operation->pointer . '/data', 'Use either id or lid.')]);
+            }
+            foreach (['id', 'lid'] as $member) {
+                if (isset($data[$member]) && (!is_string($data[$member]) || $data[$member] === '')) {
+                    throw new BadRequestException('Invalid identifier.', [$this->errors->invalidPointer($operation->pointer . '/data/' . $member, 'Identifiers must be non-empty strings.')]);
+                }
+            }
+            if ($operation->op === 'update' && isset($data['id']) && $ref->id !== null && $data['id'] !== $ref->id) {
+                throw new BadRequestException('Identifier mismatch.', [$this->errors->invalidPointer($operation->pointer . '/data/id', 'The data identifier must match the target.')]);
+            }
+        }
         if ($operation->op === 'add') {
             $this->assertDataIsResource($operation);
             $data = $operation->data;
@@ -204,50 +230,43 @@ final class AtomicValidator
 
     private function validateResourceIdentifier(Operation $operation, mixed $identifier, string $expectedType, string $pointer, LidRegistry $lids): void
     {
-        if (!is_array($identifier) || array_is_list($identifier)) {
-            throw new BadRequestException('Invalid resource identifier.', [
-                $this->errors->invalidPointer($pointer, 'Resource identifiers MUST be objects containing at least a type member.'),
-            ]);
-        }
-
-        $type = $identifier['type'] ?? null;
-        if (!is_string($type) || $type === '') {
-            throw new BadRequestException('Invalid resource identifier type.', [
-                $this->errors->invalidPointer($pointer . '/type', 'Resource identifiers MUST contain a non-empty type.'),
-            ]);
-        }
-
-        if ($type !== $expectedType) {
-            throw new BadRequestException('Type mismatch.', [
-                $this->errors->invalidPointer($pointer . '/type', sprintf('Resource type must be "%s", got "%s".', $expectedType, $type)),
-            ]);
-        }
-
-        if (!isset($identifier['id']) && !isset($identifier['lid'])) {
-            throw new BadRequestException('Missing identifier id.', [
-                $this->errors->invalidPointer($pointer, 'Resource identifiers MUST include an "id" or "lid" member.'),
-            ]);
-        }
-
-        if (isset($identifier['lid']) && is_string($identifier['lid']) && $identifier['lid'] !== '') {
-            $lids->register($identifier['lid'], $type);
-        }
+        \AlexFigures\Symfony\Http\Write\RelationshipIdentifierValidator::validate($identifier, $expectedType, $pointer, $this->errors, true, 400);
     }
 
-    private function refFromHref(string $href, string $pointer): Ref
+    private function refFromHref(string $href, string $pointer, ?\Symfony\Component\HttpFoundation\Request $request = null): Ref
     {
-        if (str_contains($href, '://')) {
-            throw new BadRequestException('Absolute href not allowed.', [
-                $this->errors->invalidPointer($pointer, 'The "href" member MUST be a relative URI.'),
-            ]);
+        $parts = parse_url($href);
+        if ($parts === false || isset($parts['query']) || isset($parts['fragment']) || isset($parts['user']) || isset($parts['pass'])) {
+            throw new BadRequestException('Invalid href.', [$this->errors->invalidPointer($pointer, 'Unsupported URI reference.')]);
         }
-
+        if (isset($parts['host']) || isset($parts['scheme'])) {
+            if ($request === null || !isset($parts['host']) || strtolower($parts['host']) !== strtolower($request->getHost())
+                || ($parts['scheme'] ?? $request->getScheme()) !== $request->getScheme()
+                || ($parts['port'] ?? (($parts['scheme'] ?? $request->getScheme()) === 'https' ? 443 : 80)) !== $request->getPort()) {
+                throw new BadRequestException('External href not allowed.', [$this->errors->invalidPointer($pointer, 'The target must have the same origin as the request.')]);
+            }
+        }
+        $href = $parts['path'] ?? '';
         if (!str_starts_with($href, '/')) {
-            throw new BadRequestException('Invalid href.', [
-                $this->errors->invalidPointer($pointer, 'The "href" member MUST start with the configured route prefix.'),
-            ]);
+            $href = rtrim($this->config->routePrefix, '/') . '/' . $href;
         }
-
+        if (str_contains($href, '//') || str_ends_with($href, '/')) {
+            throw new BadRequestException('Invalid href path.');
+        }
+        // Resolve dot segments, rejecting encoded separators before matching the complete target.
+        $resolved = [];
+        foreach (explode('/', $href) as $segment) {
+            $segment = rawurldecode($segment);
+            if ($segment === '..') {
+                array_pop($resolved);
+            } elseif ($segment !== '.' && $segment !== '') {
+                if (str_contains($segment, '/') || str_contains($segment, '\\')) {
+                    throw new BadRequestException('Invalid href path segment.');
+                }
+                $resolved[] = $segment;
+            }
+        }
+        $href = '/' . implode('/', $resolved);
         $routePrefix = rtrim($this->config->routePrefix, '/');
         if ($routePrefix === '') {
             $routePrefix = '/';
@@ -273,14 +292,20 @@ final class AtomicValidator
         $relationship = null;
 
         if ($segments !== []) {
-            $id = array_shift($segments) ?: null;
+            $id = array_shift($segments);
         }
 
         if ($segments !== [] && $segments[0] === 'relationships') {
             array_shift($segments);
-            $relationship = array_shift($segments) ?: null;
+            $relationship = array_shift($segments);
+            if ($relationship === null) {
+                throw new BadRequestException('A relationship href must include its name.', [$this->errors->invalidPointer($pointer, 'Missing relationship name.')]);
+            }
         }
 
+        if ($segments !== [] || $type === '') {
+            throw new BadRequestException('Invalid href target.', [$this->errors->invalidPointer($pointer, 'All href path segments must identify a supported target.')]);
+        }
         return new Ref($type, $id, null, $relationship);
     }
 }

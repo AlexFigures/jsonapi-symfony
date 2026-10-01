@@ -19,7 +19,7 @@ final class BetweenOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        if (count($values) < 2) {
+        if (count($values) !== 2) {
             throw new \InvalidArgumentException('BetweenOperator requires exactly two values (min and max).');
         }
 

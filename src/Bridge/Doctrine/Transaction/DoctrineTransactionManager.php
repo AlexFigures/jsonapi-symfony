@@ -40,8 +40,14 @@ class DoctrineTransactionManager implements TransactionManager
             $this->flushManager->flush();
 
             foreach ($managers as $manager) {
-                $manager->commit();
+                try {
+                    $manager->commit();
+                } catch (\Doctrine\DBAL\Driver\Exception $exception) {
+                    throw $manager->getConnection()->getDriver()->getExceptionConverter()->convert($exception, null);
+                }
             }
+
+            $this->flushManager->clear();
 
             return $result;
         } catch (\Throwable $exception) {
@@ -55,9 +61,10 @@ class DoctrineTransactionManager implements TransactionManager
                 $manager->close();
             }
 
+            $mapped = $this->flushManager->mapTransactionError($exception);
             $this->flushManager->clear();
 
-            throw $exception;
+            throw $mapped;
         }
     }
 

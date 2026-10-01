@@ -45,6 +45,12 @@ final class QueryParser
         $criteria->sort = $this->parseSort($type, $request);
         $criteria->filter = $this->parseFilter($type, $request);
 
+        $context = \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
+        if ($context !== null) {
+            foreach ($context->queryHooks() as $hook) {
+                $hook->onParseQuery($context, $request, $criteria);
+            }
+        }
         $this->limits?->enforce($type, $criteria);
 
         return $criteria;
@@ -52,8 +58,15 @@ final class QueryParser
 
     private function parsePagination(Request $request): Pagination
     {
-        /** @var array<string, mixed> $page */
-        $page = (array) $request->query->all('page');
+        $page = $request->query->all()['page'] ?? [];
+        if (!is_array($page) || ($page !== [] && array_is_list($page))) {
+            $this->throwBadRequest($this->errors->invalidParameter('page', 'page must be an object.'));
+        }
+        foreach (array_keys($page) as $member) {
+            if (!in_array($member, ['number', 'size'], true)) {
+                $this->throwBadRequest($this->errors->invalidParameter('page', 'Unknown pagination member.'));
+            }
+        }
 
         $number = $page['number'] ?? 1;
         $size = $page['size'] ?? $this->paginationConfig->defaultSize;

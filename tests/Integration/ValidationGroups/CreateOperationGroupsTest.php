@@ -11,9 +11,9 @@ use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ValidatedArticle;
 /**
  * Tests for validation groups during create operations.
  *
- * @group integration
- * @group validation-groups
  */
+#[\PHPUnit\Framework\Attributes\Group('integration')]
+#[\PHPUnit\Framework\Attributes\Group('validation-groups')]
 final class CreateOperationGroupsTest extends ValidationGroupsIntegrationTestCase
 {
     public function testCreateWithDefaultValidationGroups(): void

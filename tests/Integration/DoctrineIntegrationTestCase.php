@@ -105,6 +105,11 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             Comment::class,
             Tag::class,
             Product::class,
+            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\GeneratedRecord::class,
+            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypedIdentifierRecord::class,
+            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\AuditableProduct::class,
+            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SoftDeletableArticle::class,
+            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\RequiredChild::class,
             TypeTestEntity::class,
             User::class,
         ]);
@@ -147,7 +152,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         );
 
         // Create FlushManager
-        $this->flushManager = new FlushManager($this->managerRegistry);
+        $this->flushManager = new FlushManager($this->managerRegistry, new \AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper($this->registry, new \AlexFigures\Symfony\Http\Error\ErrorMapper(new \AlexFigures\Symfony\Http\Error\ErrorBuilder(false))), $this->registry);
 
         $this->processor = new GenericDoctrineProcessor(
             $this->managerRegistry,

@@ -21,6 +21,7 @@ final class RelationshipGetController
         private readonly LinkageBuilder $linkage,
         private readonly ResourceRegistryInterface $registry,
         private readonly ErrorMapper $errors,
+        private readonly ?\AlexFigures\Symfony\Http\Link\LinkGenerator $links = null,
     ) {
     }
 
@@ -29,6 +30,12 @@ final class RelationshipGetController
         $metadata = $this->registry->getByType($type);
         $this->assertOperationAllowed(ResourceOperation::SHOW, $metadata->allowedOperations);
 
+        return $this->currentRepresentation($request, $type, $id, $rel);
+    }
+
+    /** @internal Used to evaluate validators before relationship mutation. */
+    public function currentRepresentation(Request $request, string $type, string $id, string $rel): JsonResponse
+    {
         [, $data] = $this->linkage->read($type, $id, $rel, $request);
 
         $document = [
@@ -37,7 +44,11 @@ final class RelationshipGetController
             'data' => $data,
         ];
 
-        $response = new JsonResponse(
+        if ($this->links !== null) {
+            $document['links']['related'] = $this->links->relationshipRelated($type, $id, $rel);
+        }
+
+        $response = new \AlexFigures\Symfony\Http\Controller\Support\RepresentationResponse(
             $document,
             JsonResponse::HTTP_OK,
             ['Content-Type' => MediaType::JSON_API],
@@ -45,6 +56,7 @@ final class RelationshipGetController
 
         // For HEAD requests, clear the content but keep all headers
         if ($request->isMethod('HEAD')) {
+            $response->representationContent = (string) $response->getContent();
             $response->setContent('');
         }
 

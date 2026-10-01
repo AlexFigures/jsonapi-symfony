@@ -246,7 +246,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
                 'data' => [
                     'type' => 'articles',
                     'id' => $articleId,
-                    'attributes' => [], // Empty attributes required for update
+                    'attributes' => new \stdClass(), // JSON object for an empty partial update
                     'relationships' => [
                         'author' => [
                             'data' => null,

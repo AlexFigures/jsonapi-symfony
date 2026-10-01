@@ -1332,6 +1332,10 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         self::assertIsArray($document['data']);
         self::assertCount(2, $document['data']);
 
+        // Identify resources independently of deterministic UUID ordering.
+        $resources = array_column($document['data'], null, 'id');
+        $document['data'] = [$resources[$article1->getId()], $resources[$article2->getId()]];
+
         // First article should have null author and empty tags array
         self::assertArrayHasKey('relationships', $document['data'][0]);
         self::assertNull($document['data'][0]['relationships']['author']['data']);

@@ -53,6 +53,7 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.errors.locale', $config['errors']['locale']);
         $container->setParameter('jsonapi.cache', $config['cache']);
         $container->setParameter('jsonapi.limits', $config['limits']);
+        $container->setParameter('jsonapi.filter_max_depth', $config['limits']['filter_max_depth']);
         $container->setParameter('jsonapi.performance', $config['performance']);
         $container->setParameter('jsonapi.atomic.enabled', $config['atomic']['enabled']);
         $container->setParameter('jsonapi.atomic.endpoint', $config['atomic']['endpoint']);

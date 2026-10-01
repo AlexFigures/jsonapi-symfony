@@ -12,6 +12,20 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 #[CoversClass(JsonApiExtension::class)]
 final class DataLayerConfigurationTest extends TestCase
 {
+    public function testAcceptanceServicesShareConfiguredPolicies(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        (new JsonApiExtension())->load([['atomic' => ['enabled' => true], 'limits' => ['filter_max_depth' => 4]]], $container);
+        $options = $container->getDefinition(\AlexFigures\Symfony\Http\Controller\OptionsController::class);
+        self::assertTrue($options->hasTag('controller.service_arguments'));
+        self::assertSame('%jsonapi.atomic.enabled%', $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber::class)->getArgument(2));
+        self::assertSame(4, $container->getParameter('jsonapi.filter_max_depth'));
+        foreach ([\AlexFigures\Symfony\Atomic\Execution\Handlers\AddHandler::class => 6, \AlexFigures\Symfony\Atomic\Execution\Handlers\UpdateHandler::class => 5] as $handler => $index) {
+            self::assertSame(\AlexFigures\Symfony\Http\Write\InputDocumentValidator::class, (string) $container->getDefinition($handler)->getArgument($index));
+        }
+    }
+
     public function testDefaultDoctrineProvider(): void
     {
         $container = new ContainerBuilder();

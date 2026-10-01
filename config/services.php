@@ -113,6 +113,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->args([
             '%jsonapi.strict_content_negotiation%',
             service(MediaTypePolicyProviderInterface::class),
+            '%jsonapi.atomic.enabled%',
         ])
         ->tag('kernel.event_subscriber')
     ;
@@ -151,7 +152,7 @@ return static function (ContainerConfigurator $configurator): void {
 
     $services->alias(EtagGeneratorInterface::class, HashEtagGenerator::class);
 
-    $services->set(LastModifiedResolver::class);
+    $services->set(LastModifiedResolver::class)->args(['%jsonapi.cache%']);
 
     $services
         ->set(ConditionalRequestEvaluator::class)
@@ -195,6 +196,8 @@ return static function (ContainerConfigurator $configurator): void {
             service(ConditionalRequestEvaluator::class),
             service(HeadersApplier::class),
             service(SurrogateKeyBuilder::class),
+            service(ResourceController::class),
+            service(RelationshipGetController::class),
         ])
         ->tag('kernel.event_subscriber')
     ;
@@ -334,7 +337,7 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
-    $services->set(FilterParser::class);
+    $services->set(FilterParser::class)->args(['%jsonapi.filter_max_depth%']);
 
     $services
         ->set(QueryParser::class)
@@ -490,6 +493,13 @@ return static function (ContainerConfigurator $configurator): void {
         ->args([
             service(ResourceRegistryInterface::class),
         ])
+    ;
+
+    $services
+        ->set(\AlexFigures\Symfony\Http\Controller\OptionsController::class)
+        ->autowire()
+        ->autoconfigure()
+        ->tag('controller.service_arguments')
     ;
 
     $services
@@ -723,11 +733,17 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
+    $services->set(\AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks::class)->args([
+        service('request_stack'), service(PropertyAccessorInterface::class),
+        service(\AlexFigures\Symfony\Resource\Relationship\RelationshipResolver::class),
+    ]);
     // FlushManager - centralized flush control
     $services
         ->set(FlushManager::class)
         ->args([
             service('doctrine'),
+            service(\AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper::class),
+            service(ResourceRegistryInterface::class),
         ])
     ;
 
@@ -752,6 +768,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(\AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class),
             service(\AlexFigures\Symfony\Resource\Relationship\RelationshipResolver::class),
             service(FlushManager::class),
+            service(\AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks::class),
         ])
     ;
 
@@ -771,6 +788,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
             service(FlushManager::class),
+            service(ResourceRepository::class),
         ])
     ;
 

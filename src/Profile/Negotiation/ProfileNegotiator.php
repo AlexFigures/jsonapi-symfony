@@ -158,24 +158,19 @@ final class ProfileNegotiator
         }
 
         $profiles = [];
-        $parts = preg_split('/,(?![^\"]*\")/', $header) ?: [$header];
-        foreach ($parts as $part) {
-            if (!preg_match('/profile\s*=\s*([^;]+)/i', $part, $matches)) {
+        foreach (\AlexFigures\Symfony\Http\Negotiation\ParsedMediaType::parse($header, true) as $media) {
+            if ($media->quality <= 0 || !$media->validJsonApi(['https://jsonapi.org/ext/atomic'])) {
                 continue;
             }
-
-            $raw = trim($matches[1]);
-            $raw = trim($raw, "'\"");
-            if ($raw === '') {
-                continue;
-            }
-
-            foreach (preg_split('/\s+/', $raw) ?: [] as $uri) {
-                $uri = trim($uri);
-                if ($uri !== '') {
-                    $profiles[] = $uri;
+            $raw = $media->parameters['profile'] ?? '';
+            if (is_string($raw)) {
+                foreach (preg_split('/\s+/', trim($raw)) ?: [] as $uri) {
+                    if ($uri !== '') {
+                        $profiles[] = $uri;
+                    }
                 }
             }
+            break;
         }
 
         return $profiles;

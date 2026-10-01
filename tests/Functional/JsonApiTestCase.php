@@ -492,7 +492,7 @@ abstract class JsonApiTestCase extends TestCase
         $this->transactionManager = $transactionManager;
         $this->eventDispatcher = $eventDispatcher;
         $this->relatedController = new RelatedController($registry, $relationshipReader, $parser, $document, $errorMapper);
-        $this->relationshipGetController = new RelationshipGetController($linkageBuilder, $registry, $errorMapper);
+        $this->relationshipGetController = new RelationshipGetController($linkageBuilder, $registry, $errorMapper, $linkGenerator);
         $this->relationshipWriteController = new RelationshipWriteController($operationValidator, $requestDecoder, $relationshipValidator, $relationshipUpdater, $linkageBuilder, $relationshipResponseConfig, $transactionManager, $eventDispatcher, $registry);
         $this->optionsController = new OptionsController($registry);
         $this->atomicController = $atomicController;

@@ -248,7 +248,7 @@ final class DeleteResourceControllerTest extends DoctrineIntegrationTestCase
         $this->em->clear();
 
         // Attempt to delete author should fail due to foreign key constraint
-        $this->expectException(\Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException::class);
+        $this->expectException(\AlexFigures\Symfony\Http\Exception\ValidationException::class);
 
         ($this->controller)('authors', $authorId);
     }

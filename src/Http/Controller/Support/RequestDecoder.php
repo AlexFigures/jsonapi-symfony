@@ -55,7 +55,8 @@ final class RequestDecoder
             return;
         }
 
-        $normalized = $this->normalizeMediaType($contentType);
+        $candidates = \AlexFigures\Symfony\Http\Negotiation\ParsedMediaType::parse($contentType);
+        $normalized = count($candidates) === 1 ? $candidates[0]->name : '';
 
         if (MediaType::JSON_API !== $normalized) {
             throw new UnsupportedMediaTypeException(
@@ -93,13 +94,10 @@ final class RequestDecoder
      */
     private function parseJson(string $content): array
     {
-        $decoded = json_decode($content, true);
-
-        if ($decoded === null && json_last_error() !== \JSON_ERROR_NONE) {
-            $error = $this->errors->invalidJson(
-                new RuntimeException(sprintf('Malformed JSON: %s.', json_last_error_msg()))
-            );
-            throw new BadRequestException('Malformed JSON.', [$error]);
+        try {
+            $decoded = \AlexFigures\Symfony\Http\Write\JsonDocument::decode($content);
+        } catch (\JsonException $exception) {
+            throw new BadRequestException('Malformed JSON.', [$this->errors->invalidJson($exception)], previous: $exception);
         }
 
         if (!is_array($decoded) || array_is_list($decoded)) {
@@ -113,16 +111,4 @@ final class RequestDecoder
         return $decoded;
     }
 
-    /**
-     * Normalize media type by removing parameters.
-     */
-    private function normalizeMediaType(string $value): string
-    {
-        $normalized = trim(strtolower($value));
-        $semicolonPosition = strpos($normalized, ';');
-
-        return $semicolonPosition === false
-            ? $normalized
-            : substr($normalized, 0, $semicolonPosition);
-    }
 }

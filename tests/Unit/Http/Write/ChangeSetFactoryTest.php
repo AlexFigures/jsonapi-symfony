@@ -12,8 +12,8 @@ use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @group unit
  */
+#[\PHPUnit\Framework\Attributes\Group('unit')]
 final class ChangeSetFactoryTest extends TestCase
 {
     private ResourceRegistryInterface $registry;
@@ -132,6 +132,7 @@ final class ChangeSetFactoryTest extends TestCase
         $this->factory->fromInput('articles', ['title' => 'Test', 'unknown' => 'value'], []);
     }
 
+    #[\PHPUnit\Framework\Attributes\IgnoreDeprecations]
     public function testFromAttributesIsDeprecatedButStillWorks(): void
     {
         $metadata = new ResourceMetadata(

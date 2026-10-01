@@ -29,8 +29,13 @@ final class AtomicController
     {
         $this->negotiator->assertAtomicExt($request);
         $operations = $this->parser->parse($request);
-        [$validated, $lids] = $this->validator->validate($operations);
-        [$resultSet, $allEmpty] = $this->dispatcher->run($validated, $lids);
+        [$validated, $lids] = $this->validator->validate($operations, $request);
+        try {
+            [$resultSet, $allEmpty] = $this->dispatcher->run($validated, $lids);
+        } catch (\AlexFigures\Symfony\Http\Exception\JsonApiHttpException $exception) {
+            // Commit errors apply to the batch when no individual operation can be identified.
+            throw \AlexFigures\Symfony\Http\Error\AtomicErrorRebaser::rebase($exception, '/atomic:operations', true);
+        }
 
         if ($allEmpty) {
             return new Response(null, Response::HTTP_NO_CONTENT, ['Content-Type' => MediaType::JSON_API_ATOMIC]);

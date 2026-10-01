@@ -76,7 +76,7 @@ final class WriteListener implements EventSubscriberInterface
         try {
             // Flush all pending changes
             $this->flushManager->flush();
-        } catch (\Throwable $e) {
+        } catch (\Doctrine\DBAL\Exception\ConstraintViolationException|\Doctrine\ORM\OptimisticLockException $e) {
             // Convert database errors to JSON:API errors
             throw $this->errorMapper->mapDatabaseError($type, $e);
         }

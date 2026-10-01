@@ -34,7 +34,7 @@ final class ChangeSetFactory
 
         foreach ($attributes as $name => $value) {
             if (!isset($metadata->attributes[$name])) {
-                throw new BadRequestException(sprintf('Unknown attribute "%s" for type "%s".', $name, $type));
+                throw new BadRequestException(sprintf('Unknown attribute "%s" for type "%s".', $name, $type), [new \AlexFigures\Symfony\Http\Error\ErrorObject(null, null, '400', 'unknown-attribute', 'Unknown Attribute', 'Unknown attribute.', new \AlexFigures\Symfony\Http\Error\ErrorSource(pointer: '/data/attributes/' . $name))]);
             }
 
             /** @var AttributeMetadata $attribute */

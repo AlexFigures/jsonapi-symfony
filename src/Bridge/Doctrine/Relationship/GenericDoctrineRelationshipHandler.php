@@ -44,6 +44,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
         private readonly FlushManager $flushManager,
+        private readonly ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null,
     ) {
     }
 
@@ -139,6 +140,22 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         }
 
         $objects = $this->ensureObjectList($items, 'related collection items');
+        if ($criteria->customConditions !== [] && $this->repository !== null) {
+            $targetType = $metadata->relationships[$relationship]->targetType;
+            if ($targetType !== null) {
+                $ids = array_map(fn (object $item): string => $this->extractId($item), $objects);
+                $identifier = $this->registry->getByType($targetType)->idPropertyPath ?? 'id';
+                $selected = clone $criteria;
+                $selected->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $qb) use ($ids, $identifier): void {
+                    if ($ids === []) {
+                        $qb->andWhere('1 = 0');
+                        return;
+                    }
+                    $qb->andWhere('e.' . $identifier . ' IN (:relationshipIds)')->setParameter('relationshipIds', $ids);
+                };
+                return $this->repository->findCollection($targetType, $selected);
+            }
+        }
         $total = count($objects);
 
         // Apply pagination
@@ -162,6 +179,10 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $normalizedTargetId = $this->normalizeTargetId($relationshipMetadata, $payload);
 
         if ($normalizedTargetId === null) {
+            $em = $this->getEntityManagerFor($resource::class);
+            if (!RelationshipNullability::allowsNull($em, $resource, $propertyPath, $relationshipMetadata->nullable)) {
+                throw new \AlexFigures\Symfony\Http\Exception\ValidationException([new \AlexFigures\Symfony\Http\Error\ErrorObject(null, null, '422', 'validation-error', 'Validation Error', 'Relationship cannot be null.', new \AlexFigures\Symfony\Http\Error\ErrorSource(pointer: '/data'))]);
+            }
             $this->accessor->setValue($resource, $propertyPath, null);
         } else {
             $relatedEntity = $this->findRelatedEntity($targetClass, $normalizedTargetId);
@@ -259,7 +280,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $entityClass = $metadata->dataClass;
 
         $em = $this->getEntityManagerFor($entityClass);
-        $entity = $em->find($entityClass, $id);
+        $entity = $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -307,7 +328,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
     private function findRelatedEntity(string $entityClass, string $id): object
     {
         $em = $this->getEntityManagerFor($entityClass);
-        $entity = $em->find($entityClass, $id);
+        $entity = $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         if ($entity === null) {
             throw new NotFoundException(
