@@ -11,8 +11,16 @@ parameters:
     - name: Application
       collectors:
         - type: classNameRegex
-          value: '#^AlexFigures\\Symfony\\(?!Contract).+#'
+          value: '#^AlexFigures\\Symfony\\(?!(?:Contract|Query|Filter\\Ast|Http\\Exception)\\|Http\\Error\\(?:ErrorObject|ErrorSource)$).+#'
+    # Query DTOs, filter nodes and error types are shared with the public contracts.
+    - name: Shared
+      collectors:
+        - type: classNameRegex
+          value: '#^AlexFigures\\Symfony\\(?:Query\\|Filter\\Ast\\|Http\\Exception\\|Http\\Error\\(?:ErrorObject|ErrorSource)$)#'
   ruleset:
-    Contract: []
+    Contract:
+      - Shared
+    Shared: []
     Application:
       - Contract
+      - Shared

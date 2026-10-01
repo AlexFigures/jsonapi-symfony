@@ -137,8 +137,8 @@ final class AddHandler
     /**
      * Resolve LID in a single resource identifier.
      *
-     * @param  array<string, mixed> $identifier
-     * @return array<string, mixed>
+     * @param  array<array-key, mixed> $identifier
+     * @return array<array-key, mixed>
      */
     private function resolveLidInIdentifier(array $identifier, LidRegistry $lids): array
     {

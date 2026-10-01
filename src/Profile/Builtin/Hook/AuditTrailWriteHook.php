@@ -25,7 +25,8 @@ use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
  *     createdByField?: string,
  *     updatedAtField?: string,
  *     updatedByField?: string,
- *     userProvider?: callable(): ?string
+ *     userProvider?: callable(): ?string,
+ *     ...
  * }
  */
 final readonly class AuditTrailWriteHook implements WriteHook

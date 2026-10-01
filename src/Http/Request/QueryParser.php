@@ -156,7 +156,7 @@ final class QueryParser
      */
     private function parseInclude(string $type, Request $request): array
     {
-        $raw = $request->query->get('include');
+        $raw = $request->query->all()['include'] ?? null;
         if ($raw === null || $raw === '') {
             return [];
         }
@@ -186,7 +186,7 @@ final class QueryParser
      */
     private function parseSort(string $type, Request $request): array
     {
-        $raw = $request->query->get('sort');
+        $raw = $request->query->all()['sort'] ?? null;
         if ($raw === null || $raw === '') {
             return [];
         }

@@ -9,7 +9,7 @@ use InvalidArgumentException;
 final class WriteRelationshipsResponseConfig
 {
     /**
-     * @param 'linkage'|'204' $mode
+     * @param string $mode Validated to be either 'linkage' or '204'.
      */
     public function __construct(public string $mode = 'linkage')
     {

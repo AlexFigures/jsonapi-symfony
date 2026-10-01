@@ -19,6 +19,7 @@ final class DefaultWriteMapper implements WriteMapperInterface
     public function apply(object $entity, object $requestDto, ResourceDefinition $definition, WriteContext $context): void
     {
         foreach (get_object_vars($requestDto) as $property => $value) {
+            $property = (string) $property;
             if (property_exists($entity, $property)) {
                 $entity->{$property} = $value;
             }

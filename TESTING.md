@@ -150,7 +150,7 @@ docker compose -f docker-compose.test.yml stop
 
 ### Requirements
 
-- PHP 8.2+
+- PHP 8.4 for the development toolchain and CI (the bundle runtime supports PHP 8.2+)
 - PostgreSQL 16+ (optional)
 - MySQL 8.0+ (optional)
 - MariaDB 11+ (optional)
