@@ -5,82 +5,86 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Bridge\Doctrine\Transaction;
 
 use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\Symfony\Contract\Tx\ScopedTransactionManagerInterface;
+use AlexFigures\Symfony\Http\Exception\UnsupportedTransactionBoundaryException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
-/**
- * Doctrine-backed transaction manager implementation.
- *
- * Leverages Doctrine ORM's native transaction facilities.
- */
-class DoctrineTransactionManager implements TransactionManager
+class DoctrineTransactionManager implements ScopedTransactionManagerInterface
 {
+    private ?EntityManagerInterface $active = null;
+
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
         private readonly FlushManager $flushManager,
     ) {
     }
 
+    /** Legacy callers without resource context use only the default manager. */
     public function transactional(callable $callback): mixed
     {
-        $managers = $this->collectEntityManagers();
+        $manager = $this->active ?? $this->managerRegistry->getManager();
 
-        if ($managers === []) {
-            return $callback();
-        }
+        return $manager instanceof EntityManagerInterface ? $this->run($manager, $callback) : $callback();
+    }
 
-        foreach ($managers as $manager) {
-            $manager->beginTransaction();
-        }
+    /** @template T
+     * @param  list<class-string> $dataClasses
+     * @param  callable():T       $callback
+     * @return T
+     */
+    public function transactionalFor(array $dataClasses, callable $callback): mixed
+    {
+        $manager = (new DoctrineTransactionBoundaryResolver($this->managerRegistry))->resolve($dataClasses);
 
-        try {
-            $result = $callback();
+        return $manager === null ? $callback() : $this->run($manager, $callback);
+    }
 
-            $this->flushManager->flush();
-
-            foreach ($managers as $manager) {
-                try {
-                    $manager->commit();
-                } catch (\Doctrine\DBAL\Driver\Exception $exception) {
-                    throw $manager->getConnection()->getDriver()->getExceptionConverter()->convert($exception, null);
-                }
+    /** @template T
+     * @param  callable():T $callback
+     * @return T
+     */
+    private function run(EntityManagerInterface $manager, callable $callback): mixed
+    {
+        if ($this->active !== null) {
+            if ($this->active !== $manager || $this->active->getConnection() !== $manager->getConnection()) {
+                throw new UnsupportedTransactionBoundaryException();
             }
+            // Nested resource writes participate in the outer transaction, never commit it.
+            $result = $callback();
+            $this->flushManager->flush();
+            return $result;
+        }
 
-            $this->flushManager->clear();
+        $this->flushManager->restrictTo($manager);
+        $this->active = $manager;
+        $started = false;
+        try {
+            $manager->beginTransaction();
+            $started = true;
+            $result = $callback();
+            $this->flushManager->flush();
+            try {
+                $manager->commit();
+            } catch (\Doctrine\DBAL\Driver\Exception $exception) {
+                throw $manager->getConnection()->getDriver()->getExceptionConverter()->convert($exception, null);
+            }
 
             return $result;
         } catch (\Throwable $exception) {
-            foreach (array_reverse($managers) as $manager) {
+            if ($started) {
                 try {
                     $manager->rollback();
                 } catch (\Throwable) {
-                    // Ignore rollback failures; connection may already be closed.
+                    // Preserve the original error if the connection has already rolled back.
                 }
-
                 $manager->close();
             }
-
-            $mapped = $this->flushManager->mapTransactionError($exception);
+            throw $this->flushManager->mapTransactionError($exception);
+        } finally {
             $this->flushManager->clear();
-
-            throw $mapped;
+            $this->flushManager->restrictTo(null);
+            $this->active = null;
         }
-    }
-
-    /**
-     * @return list<EntityManagerInterface>
-     */
-    private function collectEntityManagers(): array
-    {
-        $managers = [];
-
-        foreach ($this->managerRegistry->getManagers() as $manager) {
-            if ($manager instanceof EntityManagerInterface) {
-                $managers[] = $manager;
-            }
-        }
-
-        return $managers;
     }
 }

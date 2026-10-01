@@ -256,6 +256,8 @@ final class QueryParser
         try {
             $filterNode = $this->filterParser->parse($rawFilter);
 
+            $this->limits?->enforceFilter($filterNode);
+
             // Validate against whitelist
             $this->filteringWhitelist->validate($type, $filterNode);
 

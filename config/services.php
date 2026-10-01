@@ -198,6 +198,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(SurrogateKeyBuilder::class),
             service(ResourceController::class),
             service(RelationshipGetController::class),
+            service(\AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface::class)->nullOnInvalid(),
         ])
         ->tag('kernel.event_subscriber')
     ;
@@ -669,6 +670,14 @@ return static function (ContainerConfigurator $configurator): void {
             service(FilterHandlerRegistry::class),
         ])
     ;
+
+    $services->set(\AlexFigures\Symfony\Bridge\Doctrine\Concurrency\DoctrineWriteConcurrencyGuard::class)->args([
+        service('doctrine'), service(ResourceRegistryInterface::class),
+        service(\AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager::class),
+    ]);
+    $services->set(\AlexFigures\Symfony\Bridge\Doctrine\Identifier\DoctrineIdentifierMetadataValidator::class)->args([
+        service('doctrine'),
+    ]);
 
     // Doctrine Bridge Services
     // These are registered here so users don't have to manually configure them

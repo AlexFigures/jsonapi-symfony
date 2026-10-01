@@ -26,6 +26,18 @@ final class FlushManager
 {
     private bool $flushScheduled = false;
 
+    private ?EntityManagerInterface $boundary = null;
+
+    public function restrictTo(?EntityManagerInterface $manager): void
+    {
+        foreach ($this->managersToFlush as $scheduled) {
+            if ($manager !== null && $manager !== $scheduled) {
+                throw new \AlexFigures\Symfony\Http\Exception\UnsupportedTransactionBoundaryException();
+            }
+        }
+        $this->boundary = $manager;
+    }
+
     /** @var array<int, EntityManagerInterface> */
     private array $managersToFlush = [];
 
@@ -56,6 +68,9 @@ final class FlushManager
     public function scheduleFlush(string $entityClass): void
     {
         $em = $this->getEntityManagerFor($entityClass);
+        if ($this->boundary !== null && $this->boundary !== $em) {
+            throw new \AlexFigures\Symfony\Http\Exception\UnsupportedTransactionBoundaryException();
+        }
         $this->managersToFlush[spl_object_id($em)] = $em;
         $this->classesToFlush[spl_object_id($em)] = $entityClass;
         $this->transactionClasses[spl_object_id($em)] = $entityClass;

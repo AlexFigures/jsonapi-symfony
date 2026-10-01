@@ -49,6 +49,8 @@ final class WritePreconditionsRegressionTest extends DoctrineAtomicTestCase
             self::fail('The precondition must fail before calling the write controller.');
         } catch (JsonApiHttpException $exception) {
             self::assertSame($status, $exception->getStatusCode());
+            self::assertSame((string) $status, $exception->getErrors()[0]->status);
+            self::assertSame('If-Match', $exception->getErrors()[0]->source->header);
         }
         $this->em->clear();
         $persisted = $this->em->find(GeneratedRecord::class, $model->id);

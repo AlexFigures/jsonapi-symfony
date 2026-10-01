@@ -127,7 +127,7 @@ final class ConditionalRequestEvaluator
     {
         $ifMatch = $request->headers->get('If-Match');
         if ($this->requireIfMatchOnWrite && $ifMatch === null) {
-            $error = $this->errors->invalidHeader('If-Match', 'If-Match header is required for this request.');
+            $error = $this->errors->invalidHeader('If-Match', 'If-Match header is required for this request.', '428', \AlexFigures\Symfony\Http\Error\ErrorCodes::PRECONDITION_REQUIRED);
 
             throw new PreconditionRequiredException([$error]);
         }

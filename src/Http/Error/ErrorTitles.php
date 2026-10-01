@@ -21,6 +21,7 @@ final class ErrorTitles
         ErrorCodes::TYPE_MISMATCH => 'Type mismatch',
         ErrorCodes::ID_MISMATCH => 'ID mismatch',
         ErrorCodes::CONFLICT => 'Conflict',
+        ErrorCodes::UNSUPPORTED_TRANSACTION_BOUNDARY => 'Unsupported transaction boundary',
         ErrorCodes::FORBIDDEN => 'Forbidden',
         ErrorCodes::RESOURCE_NOT_FOUND => 'Resource not found',
         ErrorCodes::METHOD_NOT_ALLOWED => 'Method not allowed',

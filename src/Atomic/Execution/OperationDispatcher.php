@@ -63,6 +63,6 @@ final class OperationDispatcher
             }
 
             return [$resultSet, $allEmpty];
-        });
+        }, $operations);
     }
 }

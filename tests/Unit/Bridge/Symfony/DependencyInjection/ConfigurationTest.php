@@ -10,6 +10,32 @@ use Symfony\Component\Config\Definition\Processor;
 
 final class ConfigurationTest extends TestCase
 {
+    public function testFilterLimitsHaveSafeDefaultsAndCanBeDisabled(): void
+    {
+        $limits = $this->process()['limits'];
+        self::assertSame(8, $limits['filter_max_depth']);
+        self::assertSame(100, $limits['filter_max_nodes']);
+        self::assertSame(200, $limits['filter_max_operands']);
+        $config = (new Processor())->processConfiguration(new Configuration(), [['limits' => ['filter_max_depth' => 0, 'filter_max_nodes' => 0, 'filter_max_operands' => 0]]]);
+        self::assertSame(0, $config['limits']['filter_max_depth']);
+        self::assertSame(0, $config['limits']['filter_max_nodes']);
+        self::assertSame(0, $config['limits']['filter_max_operands']);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalidFilterLimits')]
+    public function testNegativeFilterLimitIsInvalid(string $name): void
+    {
+        $this->expectException(\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException::class);
+        (new Processor())->processConfiguration(new Configuration(), [['limits' => [$name => -1]]]);
+    }
+
+    public static function invalidFilterLimits(): iterable
+    {
+        foreach (['filter_max_depth', 'filter_max_nodes', 'filter_max_operands'] as $name) {
+            yield $name => [$name];
+        }
+    }
+
     public function testDxSectionDefaults(): void
     {
         $config = $this->process();

@@ -36,7 +36,7 @@ final readonly class FilterParser
      */
     private function parseGroup(array $raw, int $depth = 0): ?Node
     {
-        if ($depth > $this->maxDepth) {
+        if ($this->maxDepth > 0 && $depth >= $this->maxDepth) {
             throw new \InvalidArgumentException('Maximum filter depth exceeded.');
         }
         $nodes = [];

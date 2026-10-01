@@ -22,10 +22,24 @@ final class LimitsEnforcer
 
     public function enforce(string $type, Criteria $criteria): void
     {
+        $this->enforceFilter($criteria->filter);
         $this->enforceIncludeLimits($criteria);
         $this->enforceFieldsLimits($criteria);
         $this->enforcePagination($criteria);
         $this->enforceComplexity($criteria);
+    }
+
+    public function enforceFilter(?\AlexFigures\Symfony\Filter\Ast\Node $filter): void
+    {
+        $complexity = (new \AlexFigures\Symfony\Filter\Validation\FilterComplexityAnalyzer())->analyze($filter);
+        foreach (['depth' => 8, 'nodes' => 100, 'operands' => 200] as $metric => $default) {
+            $limit = $this->config['filter_max_' . $metric] ?? $default;
+            if ($limit > 0 && $complexity->{$metric} > $limit) {
+                throw new BadRequestException('Filter complexity exceeded.', [
+                    $this->errors->invalidParameter('filter', sprintf('Filter %s cannot exceed %d (received %d).', $metric, $limit, $complexity->{$metric})),
+                ]);
+            }
+        }
     }
 
     public function assertIncludedCount(int $count): void

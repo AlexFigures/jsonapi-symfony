@@ -21,6 +21,9 @@ final class DataLayerConfigurationTest extends TestCase
         self::assertTrue($options->hasTag('controller.service_arguments'));
         self::assertSame('%jsonapi.atomic.enabled%', $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber::class)->getArgument(2));
         self::assertSame(4, $container->getParameter('jsonapi.filter_max_depth'));
+        self::assertSame(\AlexFigures\Symfony\Bridge\Doctrine\Concurrency\DoctrineWriteConcurrencyGuard::class, (string) $container->getAlias(\AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface::class));
+        self::assertSame(\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface::class, (string) $container->getDefinition(\AlexFigures\Symfony\Atomic\Execution\AtomicTransaction::class)->getArgument(1));
+        self::assertSame(\AlexFigures\Symfony\Bridge\Doctrine\Identifier\DoctrineIdentifierMetadataValidator::class, (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader::class)->getArgument(6));
         foreach ([\AlexFigures\Symfony\Atomic\Execution\Handlers\AddHandler::class => 6, \AlexFigures\Symfony\Atomic\Execution\Handlers\UpdateHandler::class => 5] as $handler => $index) {
             self::assertSame(\AlexFigures\Symfony\Http\Write\InputDocumentValidator::class, (string) $container->getDefinition($handler)->getArgument($index));
         }

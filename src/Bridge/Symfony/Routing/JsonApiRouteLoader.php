@@ -55,6 +55,7 @@ final class JsonApiRouteLoader extends Loader
         private readonly array $openApiConfig = [],
         private readonly array $docsUiConfig = [],
         private readonly ?CustomRouteRegistryInterface $customRouteRegistry = null,
+        private readonly ?\AlexFigures\Symfony\Contract\Resource\ResourceMetadataValidatorInterface $metadataValidator = null,
     ) {
         parent::__construct();
     }
@@ -72,6 +73,7 @@ final class JsonApiRouteLoader extends Loader
         $this->addCustomRoutes($routes, true);
 
         foreach ($this->registry->all() as $metadata) {
+            $this->metadataValidator?->validate($metadata);
             $resourceType = $metadata->type;
             $prefix = rtrim($this->routePrefix, '/');
             $allowedOperations = $metadata->allowedOperations;

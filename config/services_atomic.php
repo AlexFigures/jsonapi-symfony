@@ -78,6 +78,8 @@ return static function (ContainerConfigurator $configurator): void {
         ->set(AtomicTransaction::class)
         ->args([
             service(TransactionManager::class),
+            service(ResourceRegistryInterface::class),
+            service(\AlexFigures\Symfony\Http\Write\InputDocumentValidator::class),
         ])
     ;
 
@@ -151,4 +153,3 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('controller.service_arguments')
     ;
 };
-

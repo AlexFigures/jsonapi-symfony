@@ -147,7 +147,7 @@ abstract class DoctrineAtomicTestCase extends DoctrineIntegrationTestCase
         $atomicValidator = new AtomicValidator($atomicConfig, $this->registry, $this->errorMapper);
 
         // Create AtomicTransaction
-        $atomicTransaction = new AtomicTransaction($this->transactionManager);
+        $atomicTransaction = new AtomicTransaction($this->transactionManager, $this->registry);
 
         // Create operation handlers
         // Use ValidatingDoctrineProcessor to support relationships

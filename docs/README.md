@@ -157,3 +157,8 @@ MIT License - See [LICENSE](../LICENSE) for details.
 **Last Updated**: 2025-10-07
 **Status**: ✅ Complete
 
+
+## Stabilization toward 1.0
+
+- [Correctness pass and read-path implementation plan](architecture/acceptance-second-pass.md)
+- [Stable 1.0 roadmap and independent release gates](architecture/stable-1.0-roadmap.md)

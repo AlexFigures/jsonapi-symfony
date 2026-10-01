@@ -123,10 +123,15 @@ jsonapi:
     
     # Complexity limits (DoS protection)
     limits:
-        max_include_depth: 3
-        max_fields_per_type: 50
-        max_sort_fields: 5
-        max_filter_depth: 3
+        include_max_depth: 3
+        include_max_paths: 20
+        fields_max_total: 120
+        page_max_size: 100
+        included_max_resources: 1000
+        filter_max_depth: 8
+        filter_max_nodes: 100
+        filter_max_operands: 200
+        complexity_budget: 200
     
     # Documentation
     docs:
@@ -659,65 +664,32 @@ jsonapi:
 
 ### Complexity Limits
 
-#### `limits.max_include_depth`
+All limits are nonnegative integers. Zero disables that individual guard.
 
-**Type:** `integer`  
-**Default:** `3`
-
-Maximum depth for `include` parameter (DoS protection).
-
-```yaml
-jsonapi:
-    limits:
-        max_include_depth: 3
-```
-
-**Example:** `include=author.articles.comments` (depth = 3)
-
----
-
-#### `limits.max_fields_per_type`
-
-**Type:** `integer`  
-**Default:** `50`
-
-Maximum number of fields in `fields[type]` parameter.
+| Configuration | Default | Guard |
+| --- | --- | --- |
+| `limits.include_max_depth` | 3 | Include path depth. |
+| `limits.include_max_paths` | 20 | Number of include paths. |
+| `limits.fields_max_total` | 120 | Total requested sparse fields across all types. |
+| `limits.page_max_size` | 100 | Maximum page size, in addition to pagination settings. |
+| `limits.included_max_resources` | 1000 | Distinct included resources in the resulting document. |
+| `limits.filter_max_depth` | 8 | Structural AST depth, including logical groups. |
+| `limits.filter_max_nodes` | 100 | All AST nodes, including logical groups and leaf comparisons. |
+| `limits.filter_max_operands` | 200 | Values across the complete filter; every IN/NOT IN list value counts. |
+| `limits.complexity_budget` | 200 | Overall request score including filters, includes, fields, sorts and page size. |
 
 ```yaml
 jsonapi:
     limits:
-        max_fields_per_type: 50
+        filter_max_depth: 8
+        filter_max_nodes: 100
+        filter_max_operands: 200
+        complexity_budget: 200
 ```
 
----
+Filter limits run before whitelist validation and repository access, and are checked again after profile query hooks. A leaf has depth one; a disjunction of 100 comparisons has 101 nodes. BETWEEN contributes two operands and null checks contribute none. Filters add `nodes + operands + 2 * relationship_path_hops` to the overall score. Absolute filter guards remain active when the overall budget is disabled.
 
-#### `limits.max_sort_fields`
-
-**Type:** `integer`  
-**Default:** `5`
-
-Maximum number of fields in `sort` parameter.
-
-```yaml
-jsonapi:
-    limits:
-        max_sort_fields: 5
-```
-
----
-
-#### `limits.max_filter_depth`
-
-**Type:** `integer`  
-**Default:** `3`
-
-Maximum nesting depth for filter expressions.
-
-```yaml
-jsonapi:
-    limits:
-        max_filter_depth: 3
-```
+The included-resource count currently protects the final document; it does not yet prevent all query/hydration amplification. Budget-aware batch fetching is the next read-path phase. Full relationship linkage can also be expensive for large collections; choose `relationships.linkage_in_resource` deliberately. See the [correctness report and read-path plan](../architecture/acceptance-second-pass.md) for the current guarantees and remaining limits.
 
 ---
 
