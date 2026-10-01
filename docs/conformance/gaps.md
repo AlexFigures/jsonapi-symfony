@@ -350,3 +350,86 @@ JsonApiBundle has **excellent test coverage** (98.5% of spec requirements). The 
 **Reviewer**: Codex QA Agent  
 **Status**: ✅ Complete
 
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Router
+    participant DeleteResourceController
+    participant ResourceRegistry
+    participant TransactionManager
+    participant ResourcePersister
+    participant EventDispatcher
+
+    Note over Client,EventDispatcher: Deleting a Resource (DELETE /api/{type}/{id})
+
+    Client->>Router: DELETE /api/articles/123
+    Router->>DeleteResourceController: __invoke(type='articles', id='123')
+    
+    Note over DeleteResourceController: Validate resource type exists
+    
+    DeleteResourceController->>ResourceRegistry: hasType('articles')
+    ResourceRegistry-->>DeleteResourceController: true
+    
+    alt Resource type not found
+        DeleteResourceController->>DeleteResourceController: throw NotFoundException
+        DeleteResourceController-->>Client: 404 Not Found
+    end
+    
+    Note over DeleteResourceController: Execute deletion in transaction
+    
+    DeleteResourceController->>TransactionManager: transactional(fn)
+    TransactionManager->>TransactionManager: Begin transaction
+    
+    Note over TransactionManager: Delete resource
+    
+    TransactionManager->>ResourcePersister: delete('articles', '123')
+    
+    Note over ResourcePersister: Load and remove entity
+    
+    ResourcePersister->>ResourcePersister: Load Article entity by ID
+    
+    alt Resource not found
+        ResourcePersister->>ResourcePersister: throw NotFoundException
+        TransactionManager->>TransactionManager: Rollback transaction
+        DeleteResourceController-->>Client: 404 Not Found
+    end
+    
+    Note over ResourcePersister: Handle relationship cleanup
+    
+    ResourcePersister->>ResourcePersister: Check for relationship constraints
+    
+    alt Foreign key constraint violation
+        ResourcePersister->>ResourcePersister: Database constraint error
+        TransactionManager->>TransactionManager: Rollback transaction
+        DeleteResourceController->>DeleteResourceController: throw ConflictException
+        DeleteResourceController-->>Client: 409 Conflict
+    end
+    
+    Note over ResourcePersister: Remove entity
+    
+    ResourcePersister->>ResourcePersister: Mark entity for deletion
+    ResourcePersister->>ResourcePersister: Flush changes
+    ResourcePersister-->>TransactionManager: Deletion successful
+    
+    TransactionManager->>TransactionManager: Commit transaction
+    TransactionManager-->>DeleteResourceController: Transaction committed
+    
+    Note over DeleteResourceController: Dispatch event
+    
+    DeleteResourceController->>EventDispatcher: dispatch(ResourceChangedEvent('articles', '123', 'delete'))
+    EventDispatcher-->>DeleteResourceController: Event dispatched
+    
+    Note over DeleteResourceController: Create response
+    
+    DeleteResourceController->>DeleteResourceController: Build Response
+    DeleteResourceController->>DeleteResourceController: Set status 204 No Content
+    DeleteResourceController->>DeleteResourceController: Set empty body
+    
+    DeleteResourceController-->>Router: Response(204)
+    Router-->>Client: 204 No Content
+    
+    Note over Client,EventDispatcher: Response characteristics:<br/>1. Status 204 No Content<br/>2. Empty response body<br/>3. No Content-Type header required<br/>4. Idempotent operation
+
+
+
+```

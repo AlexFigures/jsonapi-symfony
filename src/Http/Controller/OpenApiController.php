@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 final class OpenApiController
 {
     /**
-     * @param array{enabled: bool} $config
+     * @param array{enabled?: bool} $config
      */
     public function __construct(
         private readonly OpenApiSpecGenerator $generator,

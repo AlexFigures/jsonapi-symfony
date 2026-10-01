@@ -28,6 +28,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use RuntimeException;
+use Stringable;
 
 /**
  * Generic Doctrine repository for JSON:API resources.
@@ -537,7 +538,7 @@ class GenericDoctrineRepository implements ResourceRepository
         $idField = $classMetadata->getSingleIdentifierFieldName();
         $ids = [];
         foreach ($paginatedEntities as $entity) {
-            $ids[] = $classMetadata->getFieldValue($entity, $idField);
+            $ids[] = $this->identifierMapKey($classMetadata->getFieldValue($entity, $idField));
         }
 
         // Step 2: Fetch full entities with eager loading by IDs
@@ -564,7 +565,7 @@ class GenericDoctrineRepository implements ResourceRepository
             // Preserve order from step 1 by creating a map and reordering
             $rowsById = [];
             foreach ($rows as $row) {
-                $rowsById[$row[$idField]] = $row;
+                $rowsById[$this->identifierMapKey($row[$idField])] = $row;
             }
 
             $items = [];
@@ -580,7 +581,7 @@ class GenericDoctrineRepository implements ResourceRepository
             // Preserve order from step 1 by creating a map and reordering
             $entitiesById = [];
             foreach ($rows as $entity) {
-                $entityId = $classMetadata->getFieldValue($entity, $idField);
+                $entityId = $this->identifierMapKey($classMetadata->getFieldValue($entity, $idField));
                 $entitiesById[$entityId] = $entity;
             }
 
@@ -598,6 +599,18 @@ class GenericDoctrineRepository implements ResourceRepository
             $criteria->pagination->size,
             $total
         );
+    }
+
+    private function identifierMapKey(mixed $identifier): int|string
+    {
+        if (is_int($identifier) || is_string($identifier)) {
+            return $identifier;
+        }
+        if ($identifier instanceof Stringable) {
+            return (string) $identifier;
+        }
+
+        throw new RuntimeException('Resource identifiers must be integers, strings or Stringable objects.');
     }
 
     /**

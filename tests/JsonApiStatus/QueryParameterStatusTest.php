@@ -10,6 +10,26 @@ use Throwable;
 
 final class QueryParameterStatusTest extends JsonApiTestCase
 {
+    public function testIncludeArrayReturns400WithParameterSource(): void
+    {
+        $request = Request::create('/api/articles?include[]=author', 'GET');
+
+        $errors = $this->captureErrors($request, fn () => ($this->collectionController())($request, 'articles'));
+
+        self::assertSame('invalid-parameter', $errors[0]['code']);
+        $this->assertErrorParameter($errors[0], 'include');
+    }
+
+    public function testSortArrayReturns400WithParameterSource(): void
+    {
+        $request = Request::create('/api/articles?sort[]=title', 'GET');
+
+        $errors = $this->captureErrors($request, fn () => ($this->collectionController())($request, 'articles'));
+
+        self::assertSame('invalid-parameter', $errors[0]['code']);
+        $this->assertErrorParameter($errors[0], 'sort');
+    }
+
     public function testIncludeUnsupportedReturns400(): void
     {
         $request = Request::create('/api/articles', 'GET', ['include' => 'unknown']);

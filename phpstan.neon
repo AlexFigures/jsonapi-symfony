@@ -9,8 +9,6 @@ parameters:
         - stubs/doctrine.php
         - tests/bootstrap.php
     treatPhpDocTypesAsCertain: true
-    checkMissingIterableValueType: true
-    checkGenericClassInNonGenericObjectType: true
     reportUnmatchedIgnoredErrors: true
     checkMissingCallableSignature: true
     checkExplicitMixed: true

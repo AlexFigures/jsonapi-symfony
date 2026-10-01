@@ -168,7 +168,7 @@ class RelationshipResolver
     // ─────────────────────────────────────────────────────────────────────────────
 
     /**
-     * @param  array<string, mixed>         $ri
+     * @param  array<array-key, mixed>      $ri
      * @return array{type:string,id:string}
      * @throws ValidationException
      */

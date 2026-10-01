@@ -157,6 +157,12 @@ final class ConstraintViolationMapper
         [$pointer, $meta] = $this->pointerFor($metadata, $path);
 
         $message = $exception->getMessage();
+        // Symfony wraps invalid enum values in NotNormalizableValueException.
+        // Preserve the original ValueError detail, including the rejected value.
+        $previous = $exception->getPrevious();
+        if ($previous instanceof \ValueError) {
+            $message = $previous->getMessage();
+        }
         $expectedTypes = $exception->getExpectedTypes();
 
         // Detect missing required field error and customize message

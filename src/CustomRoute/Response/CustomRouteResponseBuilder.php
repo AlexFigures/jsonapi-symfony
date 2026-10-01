@@ -92,6 +92,9 @@ final class CustomRouteResponseBuilder
             if (isset($data[0]) && is_array($data[0])) {
                 // Multiple errors
                 foreach ($data as $errorData) {
+                    if (!is_array($errorData)) {
+                        return $this->buildInternalErrorResponse('Error result must contain only error objects');
+                    }
                     $errors[] = $this->buildErrorObject($errorData, $result->getStatus());
                 }
             } else {
@@ -235,7 +238,7 @@ final class CustomRouteResponseBuilder
     /**
      * Build an error object from error data.
      *
-     * @param  array<string, mixed>                                                                                $errorData
+     * @param  array<array-key, mixed>                                                                             $errorData
      * @return array{status: string, code: string, title: string, detail: string, source?: array{pointer: string}}
      */
     private function buildErrorObject(array $errorData, int $status): array

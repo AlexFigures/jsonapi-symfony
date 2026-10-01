@@ -39,7 +39,8 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
  * @phpstan-type RelationshipCountsConfig array{
  *     includeRelationships?: list<string>,
  *     excludeRelationships?: list<string>,
- *     propertyAccessor?: PropertyAccessorInterface
+ *     propertyAccessor?: PropertyAccessorInterface,
+ *     ...
  * }
  */
 final readonly class RelationshipCountsDocumentHook implements DocumentHook

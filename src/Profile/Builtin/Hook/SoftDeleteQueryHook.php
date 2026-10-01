@@ -25,7 +25,8 @@ use Symfony\Component\HttpFoundation\Request;
  * @phpstan-type SoftDeleteQueryConfig array{
  *     deletedAtField?: string,
  *     withTrashedParam?: string,
- *     onlyTrashedParam?: string
+ *     onlyTrashedParam?: string,
+ *     ...
  * }
  */
 final readonly class SoftDeleteQueryHook implements QueryHook

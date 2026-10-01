@@ -61,6 +61,23 @@ vendor/bin/phpunit --testsuite=Conformance
 
 ## Docker Environment
 
+Requires Docker Compose v2. `make docker-up` waits for database health checks
+before returning.
+
+The default network explicitly uses `172.30.250.0/24` to support hosts where VPN
+routes prevent Docker from automatically allocating a subnet. Compose creates
+this network; there is no need to run `docker network create` manually. This
+subnet takes precedence over a broader VPN route, so choose another unused subnet
+if VPN services use addresses in this range:
+
+```bash
+JSONAPI_DOCKER_SUBNET=172.30.251.0/24 make docker-up
+```
+
+To change the subnet of an existing project network, first run
+`docker compose -f docker-compose.test.yml down` (without `-v` to keep database
+volumes), then start it again with the new subnet.
+
 ### Start Up
 
 ```bash
@@ -68,10 +85,10 @@ vendor/bin/phpunit --testsuite=Conformance
 make docker-up
 
 # Check status
-docker-compose -f docker-compose.test.yml ps
+docker compose -f docker-compose.test.yml ps
 
 # Tail logs
-docker-compose -f docker-compose.test.yml logs -f
+docker compose -f docker-compose.test.yml logs -f
 ```
 
 ### Available Databases
@@ -86,16 +103,25 @@ After `make docker-up` you have access to:
 
 ```bash
 # Entire integration suite
-docker-compose -f docker-compose.test.yml exec php vendor/bin/phpunit --testsuite=Integration
+docker compose -f docker-compose.test.yml exec php vendor/bin/phpunit --testsuite=Integration
 
 # PostgreSQL-only tests
-docker-compose -f docker-compose.test.yml exec php vendor/bin/phpunit tests/Integration/PostgreSQL/
+docker compose -f docker-compose.test.yml exec php vendor/bin/phpunit tests/Integration/PostgreSQL/
 
 # Single test
-docker-compose -f docker-compose.test.yml exec php vendor/bin/phpunit tests/Integration/PostgreSQL/GenericRepositoryTest.php
+docker compose -f docker-compose.test.yml exec php vendor/bin/phpunit tests/Integration/PostgreSQL/GenericRepositoryTest.php
 ```
 
 ### Debugging in Docker
+
+`make install`, `make stan`, and `make cs-fix` use host tools by default, including
+in CI jobs that provision PHP directly. To run them in the started PHP container:
+
+```bash
+make install COMPOSER='docker compose -f docker-compose.test.yml exec -T php composer'
+make stan PHP='docker compose -f docker-compose.test.yml exec -T php php'
+make cs-fix PHP='docker compose -f docker-compose.test.yml exec -T php php'
+```
 
 ```bash
 # Open a shell in the PHP container
@@ -107,7 +133,7 @@ composer --version
 vendor/bin/phpunit --version
 
 # Connect to PostgreSQL
-docker-compose -f docker-compose.test.yml exec postgres psql -U jsonapi -d jsonapi_test
+docker compose -f docker-compose.test.yml exec postgres psql -U jsonapi -d jsonapi_test
 ```
 
 ### Shutdown
@@ -117,14 +143,14 @@ docker-compose -f docker-compose.test.yml exec postgres psql -U jsonapi -d jsona
 make docker-down
 
 # Stop only (keep data)
-docker-compose -f docker-compose.test.yml stop
+docker compose -f docker-compose.test.yml stop
 ```
 
 ## Local Testing (without Docker)
 
 ### Requirements
 
-- PHP 8.2+
+- PHP 8.4 for the development toolchain and CI (the bundle runtime supports PHP 8.2+)
 - PostgreSQL 16+ (optional)
 - MySQL 8.0+ (optional)
 - MariaDB 11+ (optional)
@@ -245,10 +271,10 @@ See `.github/workflows/ci.yml`.
 **Fix:**
 ```bash
 # Ensure containers are running
-docker-compose -f docker-compose.test.yml ps
+docker compose -f docker-compose.test.yml ps
 
 # Inspect logs
-docker-compose -f docker-compose.test.yml logs postgres
+docker compose -f docker-compose.test.yml logs postgres
 
 # Wait until databases are ready
 make docker-up

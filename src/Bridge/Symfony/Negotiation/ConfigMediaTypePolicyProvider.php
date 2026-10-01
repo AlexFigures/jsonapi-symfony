@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInterface
 {
     /**
-     * @var array<int, array{scope: array<string, string|null>, policy: MediaTypePolicy}>
+     * @var array<int, array{scope: array{path_prefix: string|null, route_name: string|null, attribute: string|null}, policy: MediaTypePolicy}>
      */
     private array $channels;
 
@@ -46,7 +46,7 @@ final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInte
 
     /**
      * @param  array<int, array{scope?: array<string, string|null>, request?: array{allowed?: list<string>}, response?: array{default?: string, negotiable?: list<string>}}> $channels
-     * @return array<int, array{scope: array<string, string|null>, policy: MediaTypePolicy}>
+     * @return array<int, array{scope: array{path_prefix: string|null, route_name: string|null, attribute: string|null}, policy: MediaTypePolicy}>
      */
     private function buildChannels(array $channels): array
     {

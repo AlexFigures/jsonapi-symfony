@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 final class SwaggerUiController
 {
     /**
-     * @param array{enabled: bool, route: string, spec_url: string, theme: string} $config
+     * @param array{enabled?: bool, route: string, spec_url: string, theme: string} $config
      */
     public function __construct(
         private readonly array $config,
