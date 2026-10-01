@@ -3,12 +3,13 @@
 .PHONY: stan cs-fix rector install mutation deptrac bc-check stress-mem stress-perf qa-full
 
 COMPOSER ?= composer
+PHP ?= php
 DOCKER_COMPOSE ?= docker compose -f docker-compose.test.yml
 COMPOSER_LOCK := $(wildcard composer.lock)
 PHPSTAN_MEMORY_LIMIT ?= 1G
 
 vendor/autoload.php: composer.json $(COMPOSER_LOCK)
-	$(DOCKER_COMPOSE) $(COMPOSER) install
+	$(COMPOSER) install
 
 install: vendor/autoload.php
 
@@ -45,10 +46,10 @@ docker-shell:
 	$(DOCKER_COMPOSE) exec php sh
 
 stan: vendor/autoload.php
-	$(DOCKER_COMPOSE) exec php php -d memory_limit=$(PHPSTAN_MEMORY_LIMIT) vendor/bin/phpstan analyse --memory-limit=$(PHPSTAN_MEMORY_LIMIT)
+	$(PHP) -d memory_limit=$(PHPSTAN_MEMORY_LIMIT) vendor/bin/phpstan analyse --memory-limit=$(PHPSTAN_MEMORY_LIMIT)
 
 cs-fix: vendor/autoload.php
-	$(DOCKER_COMPOSE) exec php vendor/bin/php-cs-fixer fix
+	$(PHP) vendor/bin/php-cs-fixer fix
 
 rector: vendor/autoload.php
 	vendor/bin/rector process

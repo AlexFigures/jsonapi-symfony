@@ -114,6 +114,15 @@ docker compose -f docker-compose.test.yml exec php vendor/bin/phpunit tests/Inte
 
 ### Debugging in Docker
 
+`make install`, `make stan`, and `make cs-fix` use host tools by default, including
+in CI jobs that provision PHP directly. To run them in the started PHP container:
+
+```bash
+make install COMPOSER='docker compose -f docker-compose.test.yml exec -T php composer'
+make stan PHP='docker compose -f docker-compose.test.yml exec -T php php'
+make cs-fix PHP='docker compose -f docker-compose.test.yml exec -T php php'
+```
+
 ```bash
 # Open a shell in the PHP container
 make docker-shell
