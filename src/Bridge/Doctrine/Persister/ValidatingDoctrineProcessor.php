@@ -151,14 +151,20 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
 
         // Apply attributes and relationships through strict Serializer denormalization
         $this->denormalizeInto($entity, $changes, $metadata, false);
+        $toOneRelationships = $this->getToOneRelationshipValues($entity, $changes->relationships, $metadata);
 
         // Validate before flush
         $this->validateWithGroups($entity, $type, $metadata, false);
 
-        // Re-apply to-one relationships to restore null values that may have been
-        // overwritten by Doctrine's eager loading during validation
-        if (!empty($changes->relationships)) {
-            $this->resyncToOneRelationships($entity, $changes->relationships, $metadata);
+        // Restore resolved values overwritten by EAGER hydration during validation.
+        // Doctrine field access avoids running setters and inverse synchronization twice.
+        if ($toOneRelationships !== []) {
+            $classMetadata = $em->getClassMetadata($entityClass);
+            foreach ($toOneRelationships as $field => $value) {
+                if ($classMetadata->getFieldValue($entity, $field) !== $value) {
+                    $classMetadata->setFieldValue($entity, $field, $value);
+                }
+            }
         }
 
         // Entity is already managed, schedule flush
@@ -306,28 +312,26 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     }
 
     /**
-     * Re-applies to-one relationships after validation.
+     * Captures resolved to-one values before validation can rehydrate associations.
+     * Only relationships present in the update payload are restored afterwards.
      *
-     * This fixes an issue where Doctrine's eager loading during validation
-     * can overwrite null values with old database values. When a to-one
-     * relationship is set to null but configured as eager, Doctrine's
-     * UnitOfWork may reload the old value from the database during validation
-     * (e.g., when validators access relationship getters).
-     *
-     * This method re-applies only to-one relationships from the original
-     * payload to ensure null values are preserved.
-     *
-     * @param array<string, array{data: mixed}> $relationshipsPayload
+     * @param  array<string, array{data: mixed}> $relationshipsPayload
+     * @return array<string, mixed>              Values keyed by their Doctrine association field
      */
-    private function resyncToOneRelationships(
+    private function getToOneRelationshipValues(
         object $entity,
         array $relationshipsPayload,
         \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata
-    ): void {
+    ): array {
+        if ($relationshipsPayload === []) {
+            return [];
+        }
+
         $em = $this->getEntityManagerFor($metadata->getDataClass());
         $classMetadata = $em->getClassMetadata($metadata->getDataClass());
+        $values = [];
 
-        foreach ($relationshipsPayload as $relationshipName => $relationshipData) {
+        foreach ($relationshipsPayload as $relationshipName => $_relationshipData) {
             // Skip if relationship not in metadata
             if (!isset($metadata->relationships[$relationshipName])) {
                 continue;
@@ -343,18 +347,13 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
             $field = $relMeta->propertyPath ?? $relMeta->name;
 
             // Only process Doctrine associations
-            if (!$classMetadata->hasAssociation($field)) {
+            if (!$classMetadata->isSingleValuedAssociation($field)) {
                 continue;
             }
 
-            // Re-apply the relationship value
-            $data = $relationshipData['data'] ?? null;
-
-            // Only re-sync if explicitly set to null in the payload
-            // (if data is not null, RelationshipResolver already set it correctly)
-            if ($data === null) {
-                $this->accessor->setValue($entity, $field, null);
-            }
+            $values[$field] = $classMetadata->getFieldValue($entity, $field);
         }
+
+        return $values;
     }
 }

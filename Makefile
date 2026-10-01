@@ -3,11 +3,12 @@
 .PHONY: stan cs-fix rector install mutation deptrac bc-check stress-mem stress-perf qa-full
 
 COMPOSER ?= composer
+DOCKER_COMPOSE ?= docker compose -f docker-compose.test.yml
 COMPOSER_LOCK := $(wildcard composer.lock)
 PHPSTAN_MEMORY_LIMIT ?= 1G
 
 vendor/autoload.php: composer.json $(COMPOSER_LOCK)
-	$(COMPOSER) install
+	$(DOCKER_COMPOSE) $(COMPOSER) install
 
 install: vendor/autoload.php
 
@@ -31,25 +32,23 @@ test-all: vendor/autoload.php
 
 # Docker commands
 docker-up:
-	docker-compose -f docker-compose.test.yml up -d
-	@echo "Waiting for databases to be ready..."
-	@sleep 10
+	$(DOCKER_COMPOSE) up -d --wait --wait-timeout 120
 
 docker-down:
-	docker-compose -f docker-compose.test.yml down -v
+	$(DOCKER_COMPOSE) down -v
 
 docker-test: docker-up
-	docker-compose -f docker-compose.test.yml exec php vendor/bin/phpunit --testsuite=Integration
+	$(DOCKER_COMPOSE) exec php vendor/bin/phpunit --testsuite=Integration
 	$(MAKE) docker-down
 
 docker-shell:
-	docker-compose -f docker-compose.test.yml exec php sh
+	$(DOCKER_COMPOSE) exec php sh
 
 stan: vendor/autoload.php
-	php -d memory_limit=$(PHPSTAN_MEMORY_LIMIT) vendor/bin/phpstan analyse --memory-limit=$(PHPSTAN_MEMORY_LIMIT)
+	$(DOCKER_COMPOSE) exec php php -d memory_limit=$(PHPSTAN_MEMORY_LIMIT) vendor/bin/phpstan analyse --memory-limit=$(PHPSTAN_MEMORY_LIMIT)
 
 cs-fix: vendor/autoload.php
-	vendor/bin/php-cs-fixer fix
+	$(DOCKER_COMPOSE) exec php vendor/bin/php-cs-fixer fix
 
 rector: vendor/autoload.php
 	vendor/bin/rector process

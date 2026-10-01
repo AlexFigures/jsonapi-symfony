@@ -5,6 +5,7 @@ RUN apk add --no-cache \
     postgresql-dev \
     mysql-dev \
     sqlite-dev \
+    icu-dev \
     autoconf \
     g++ \
     make \
@@ -13,7 +14,9 @@ RUN apk add --no-cache \
     linux-headers
 
 # Install PHP extensions
-RUN docker-php-ext-install \
+RUN docker-php-ext-install -j2 \
+    bcmath \
+    intl \
     pdo \
     pdo_pgsql \
     pdo_mysql
