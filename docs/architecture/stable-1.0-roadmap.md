@@ -24,7 +24,7 @@
 | 12. Documentation sync | Installation, resources/CRUD, relationships, query options, errors, Atomic, caching, profiles, topology, providers, performance/limits and known limitations. | Docs describe the executable frozen contract and match the example consumer. |
 | 13. RC | Release `1.0.0-rc.1`; fix bugs, docs, compatibility and accidental API problems. | No major feature additions during RC; repair flawed contracts before final even if RC BC is needed. |
 
-The next implementation branch handles N+1, pagination, include amplification and linkage cost together through the explicit fetch plan. Filter protection is already part of this correctness pass. External torture expectations remain unchanged during bundle development.
+The same working branch now implements the native Doctrine fetch plan, distinct-root pagination, bounded includes/linkage and grouped profile counts. Dedicated relationship endpoints and application-specific fallback paths still require work before the read contract can be frozen. See [read-path stabilization](read-path-stabilization.md). Filter protection is already part of this correctness pass. External torture expectations remain unchanged during bundle development.
 
 ## Independent result classification
 
@@ -32,7 +32,7 @@ External results use `PASS`, `SUPPORTED LIMITATION`, `APPLICATION POLICY`, or `I
 
 ## Support contract and freeze audit
 
-Persistence claims include the built-in Doctrine ORM provider, multiple managers, primary/replica integration, and application-level tenant/shard routing only after verification. Atomic guarantees one boundary per request with rejection before mutation. Reads guarantee bounded relationship loading/includes/filters and distinct-root pagination after the dedicated branch is confirmed. IDs include integer, UUID and natural string; unsupported composites fail at discovery.
+Persistence claims include the built-in Doctrine ORM provider, multiple managers, primary/replica integration, and application-level tenant/shard routing only after verification. Atomic guarantees one boundary per request with rejection before mutation. Reads guarantee bounded relationship loading/includes/filters and distinct-root pagination after the read-path changes are independently confirmed. IDs include integer, UUID and natural string; unsupported composites fail at discovery.
 
 Audit interfaces, attributes, enums, value objects, exceptions, events, hooks, aliases, configuration and commands as PUBLIC or INTERNAL. Examine `ResourceRepository`, `ResourceProcessor`, `TransactionManager`, filter/sort/relationship handlers, profiles/hooks, mapping and cache strategies for extensibility throughout 1.x. Review historical naming, duplicate concepts and namespace boundaries before freezing. Configuration and named attribute constructor arguments are public API too.
 

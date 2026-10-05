@@ -29,6 +29,17 @@ final class DataLayerConfigurationTest extends TestCase
         }
     }
 
+    public function testDoctrineRepresentationPreloaderIsOptionalAndWiredToDocumentBuilder(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        (new JsonApiExtension())->load([], $container);
+        $capability = \AlexFigures\Symfony\Contract\Data\RepresentationPreloaderInterface::class;
+        self::assertSame(\AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader::class, (string) $container->getAlias($capability));
+        self::assertSame($capability, (string) $container->getDefinition(\AlexFigures\Symfony\Http\Document\DocumentBuilder::class)->getArgument(5));
+        self::assertSame('legacy', $container->getParameter('jsonapi.performance.doctrine.collection_sort_policy'));
+    }
+
     public function testDefaultDoctrineProvider(): void
     {
         $container = new ContainerBuilder();

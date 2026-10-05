@@ -328,6 +328,7 @@ final class Configuration implements ConfigurationInterface
         $limitsChildren->integerNode('fields_max_total')->defaultValue(120)->min(0)->end();
         $limitsChildren->integerNode('page_max_size')->defaultValue(100)->min(0)->end();
         $limitsChildren->integerNode('included_max_resources')->defaultValue(1000)->min(0)->end();
+        $limitsChildren->integerNode('relationship_max_identifiers')->defaultValue(10000)->min(0)->end();
         $limitsChildren->integerNode('complexity_budget')->defaultValue(200)->min(0)->end();
         $limits->end();
     }
@@ -342,6 +343,7 @@ final class Configuration implements ConfigurationInterface
         $doctrineChildren->scalarNode('query_cache_pool')->defaultValue('cache.app')->end();
         $doctrineChildren->booleanNode('enable_second_level_cache')->defaultFalse()->end();
         $doctrineChildren->booleanNode('hydrate_partial_by_fields')->defaultTrue()->end();
+        $doctrineChildren->enumNode('collection_sort_policy')->values(['reject', 'legacy'])->defaultValue('legacy')->end();
         $doctrineChildren->enumNode('default_fetch')->values(['lazy', 'eager', 'extra_lazy'])->defaultValue('lazy')->end();
         $doctrine->end();
         $performanceChildren->booleanNode('head_enabled')->defaultTrue()->end();

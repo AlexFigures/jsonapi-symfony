@@ -45,7 +45,7 @@ final class AtomicTransaction
                     }
                 }
             }
-            return \AlexFigures\Symfony\Contract\Tx\TransactionScope::run($this->transactions, $this->resources, AtomicResourceTypes::collect($operations), $callback);
+            return \AlexFigures\Symfony\Tx\TransactionScope::run($this->transactions, $this->resources, AtomicResourceTypes::collect($operations), $callback);
         }
         if ($operations !== [] && $this->transactions instanceof \AlexFigures\Symfony\Contract\Tx\ScopedTransactionManagerInterface) {
             throw new \LogicException('Scoped Atomic execution requires a resource registry for transaction preflight.');

@@ -50,7 +50,7 @@ final class RelationshipWriteController
         $data = $validated['data'];
 
         // Execute relationship update within a transaction
-        \AlexFigures\Symfony\Contract\Tx\TransactionScope::run($this->transaction, $this->registry, [$type], function () use ($request, $kind, $data, $type, $id, $rel): void {
+        \AlexFigures\Symfony\Tx\TransactionScope::run($this->transaction, $this->registry, [$type], function () use ($request, $kind, $data, $type, $id, $rel): void {
             if ($request->isMethod('PATCH')) {
                 if ($kind === 'to-one') {
                     /** @var array{type: string, id: string}|null $data */

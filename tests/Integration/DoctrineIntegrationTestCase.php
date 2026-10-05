@@ -259,7 +259,17 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             'url' => $this->getDatabaseUrl(),
         ], $config);
 
-        return new EntityManager($connection, $config);
+        $em = new EntityManager($connection, $config);
+        // PostgreSQL sequence fixtures use identity generation on non-sequence platforms.
+        if (!$connection->getDatabasePlatform()->supportsSequences()) {
+            foreach ($em->getMetadataFactory()->getAllMetadata() as $metadata) {
+                if ($metadata->generatorType === \Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_SEQUENCE) {
+                    $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_IDENTITY);
+                    $metadata->setIdGenerator(new \Doctrine\ORM\Id\IdentityGenerator());
+                }
+            }
+        }
+        return $em;
     }
 
     private function createSchema(): void

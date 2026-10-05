@@ -43,7 +43,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
  *     ...
  * }
  */
-final readonly class RelationshipCountsDocumentHook implements DocumentHook
+final readonly class RelationshipCountsDocumentHook implements DocumentHook, \AlexFigures\Symfony\Profile\Hook\FetchPlanHookInterface
 {
     private PropertyAccessorInterface $propertyAccessor;
 
@@ -54,6 +54,19 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook
         private array $config = []
     ) {
         $this->propertyAccessor = $config['propertyAccessor'] ?? PropertyAccess::createPropertyAccessor();
+    }
+
+    public function relationshipCounts(ResourceMetadata $metadata): array
+    {
+        $names = [];
+        foreach ($metadata->relationships as $name => $relationship) {
+            if ($relationship->toMany
+                && (!isset($this->config['includeRelationships']) || in_array($name, $this->config['includeRelationships'], true))
+                && !in_array($name, $this->config['excludeRelationships'] ?? [], true)) {
+                $names[] = $name;
+            }
+        }
+        return $names;
     }
 
     public function onTopLevelLinks(ProfileContext $context, array &$links, Request $request): void
@@ -78,6 +91,15 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook
 
             // Skip if in exclude list
             if (in_array($relationshipName, $excludeList, true)) {
+                continue;
+            }
+
+            $identifier = $context->relationshipReads === null ? null : $this->propertyAccessor->getValue($model, $metadata->idPropertyPath ?? 'id');
+            $id = is_scalar($identifier) || $identifier instanceof \Stringable ? (string) $identifier : '';
+            $count = $context->relationshipReads?->count($metadata->type, $id, $relationshipName);
+            if ($count !== null) {
+                $existing = $relationshipData['meta'] ?? [];
+                $relationshipData['meta'] = array_merge(is_array($existing) ? $existing : [], ['count' => $count]);
                 continue;
             }
 

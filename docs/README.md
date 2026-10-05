@@ -160,5 +160,7 @@ MIT License - See [LICENSE](../LICENSE) for details.
 
 ## Stabilization toward 1.0
 
-- [Correctness pass and read-path implementation plan](architecture/acceptance-second-pass.md)
+- [Correctness pass and regression report](architecture/acceptance-second-pass.md)
+- [Implemented read-path and remaining release blockers](architecture/read-path-stabilization.md)
+- [Upgrade toward 1.0 (draft)](../UPGRADE-1.0.md)
 - [Stable 1.0 roadmap and independent release gates](architecture/stable-1.0-roadmap.md)

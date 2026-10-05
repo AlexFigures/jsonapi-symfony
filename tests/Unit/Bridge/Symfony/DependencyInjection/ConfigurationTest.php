@@ -114,6 +114,28 @@ final class ConfigurationTest extends TestCase
         );
     }
 
+    public function testReadSafetyDefaultsAndStrictCollectionSortPolicy(): void
+    {
+        $config = $this->process();
+        self::assertSame(10000, $config['limits']['relationship_max_identifiers']);
+        self::assertSame('legacy', $config['performance']['doctrine']['collection_sort_policy']);
+        $strict = $this->process([['limits' => ['relationship_max_identifiers' => 0], 'performance' => ['doctrine' => ['collection_sort_policy' => 'reject']]]]);
+        self::assertSame(0, $strict['limits']['relationship_max_identifiers']);
+        self::assertSame('reject', $strict['performance']['doctrine']['collection_sort_policy']);
+    }
+
+    public function testNegativeRelationshipBudgetIsRejected(): void
+    {
+        $this->expectException(\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException::class);
+        $this->process([['limits' => ['relationship_max_identifiers' => -1]]]);
+    }
+
+    public function testUnknownCollectionSortPolicyIsRejected(): void
+    {
+        $this->expectException(\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException::class);
+        $this->process([['performance' => ['doctrine' => ['collection_sort_policy' => 'accidental']]]]);
+    }
+
     private function process(array $configs = []): array
     {
         $processor = new Processor();

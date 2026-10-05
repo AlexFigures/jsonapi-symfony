@@ -20,7 +20,6 @@ use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
 use AlexFigures\Symfony\Query\Criteria;
 use AlexFigures\Symfony\Query\Sorting;
 use AlexFigures\Symfony\Resource\Definition\ReadProjection;
-use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
 use AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
@@ -37,8 +36,8 @@ use Stringable;
  * - Filtering (full support for every operator)
  * - Sorting
  * - Pagination
- * - Sparse fieldsets (partial hydration)
- * - Eager loading for includes (prevents N+1 queries)
+ * - Root-resource pagination independent of joined row counts
+ * Representation relationship loading is delegated to the optional preloader.
  */
 class GenericDoctrineRepository implements ResourceRepository
 {
@@ -49,6 +48,7 @@ class GenericDoctrineRepository implements ResourceRepository
         private readonly FilterHandlerRegistry $filterHandlers,
         private readonly SortHandlerRegistry $sortHandlers,
         private readonly ReadMapperInterface $readMapper,
+        private readonly string $collectionSortPolicy = 'legacy',
     ) {
     }
 
@@ -56,76 +56,51 @@ class GenericDoctrineRepository implements ResourceRepository
     {
         $metadata = $this->registry->getByType($type);
         $definition = $metadata->getDefinition();
-        /** @var class-string $entityClass */
         $entityClass = $metadata->dataClass;
         $em = $this->getEntityManagerFor($entityClass);
-
-        // Check if we have to-many includes that would cause cartesian product
-        $hasToManyIncludes = $this->hasToManyIncludes($em, $metadata, $criteria->include);
-
-        if ($hasToManyIncludes && $criteria->include !== []) {
-            // Use two-step approach to avoid cartesian product pagination issues
-            return $this->findCollectionWithTwoStepLoading($em, $entityClass, $metadata, $definition, $criteria);
-        }
-
-        // Standard single-query approach (safe for to-one relationships only)
-        $qb = $em->createQueryBuilder()
-            ->from($entityClass, 'e');
-
-        if ($definition->readProjection === ReadProjection::DTO) {
-            $this->applyDtoProjection($qb, $definition);
-        } else {
-            $qb->select('e');
-        }
-
+        $roots = $em->createQueryBuilder()->select('e')->from($entityClass, 'e');
         if ($criteria->filter !== null) {
-            // Apply custom filter handlers first
-            $this->applyCustomFilters($qb, $criteria->filter);
-
-            // Then apply standard filters through compiler
-            $platform = $em->getConnection()->getDatabasePlatform();
-            $this->filterCompiler->apply($qb, $criteria->filter, $platform, $metadata);
+            $this->applyCustomFilters($roots, $criteria->filter);
+            $this->filterCompiler->apply($roots, $criteria->filter, $em->getConnection()->getDatabasePlatform(), $metadata);
         }
-
-        if ($criteria->customConditions !== []) {
+        foreach ($criteria->customConditions as $condition) {
+            $condition($roots);
+        }
+        $this->applySorting($roots, $criteria->sort, $metadata);
+        [$entities, $total] = (new \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineRootPaginator())->paginate(
+            $roots,
+            ($criteria->pagination->number - 1) * $criteria->pagination->size,
+            $criteria->pagination->size,
+        );
+        if ($definition->readProjection === ReadProjection::DTO && $entities !== []) {
+            $idField = $em->getClassMetadata($entityClass)->getSingleIdentifierFieldName();
+            $ids = array_map(static fn (object $entity): mixed => $em->getClassMetadata($entityClass)->getFieldValue($entity, $idField), $entities);
+            $projection = $em->createQueryBuilder()->from($entityClass, 'e')->where('e.' . $idField . ' IN (:pageIds)');
+            \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierParameters::bind($projection, $em, $entityClass, 'pageIds', array_map(fn (mixed $id): string => (string) $this->identifierMapKey($id), $ids));
+            \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineReadProjection::apply($projection, $definition);
+            $projection->addSelect('e.' . $idField . ' AS __jsonapi_root_id');
             foreach ($criteria->customConditions as $condition) {
-                $condition($qb);
+                $condition($projection);
             }
-        }
-
-        $this->applyEagerLoading($em, $qb, $metadata, $definition, $criteria->include);
-        $this->applySorting($qb, $criteria->sort, $metadata);
-
-        $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
-        $qb->setFirstResult($offset)
-           ->setMaxResults($criteria->pagination->size);
-
-        $query = $qb->getQuery();
-
-        if ($definition->readProjection === ReadProjection::DTO) {
             /** @var list<array<string, mixed>> $rows */
-            $rows = $query->getArrayResult();
-            $items = [];
+            $rows = $projection->getQuery()->getArrayResult();
+            $byId = [];
             foreach ($rows as $row) {
-                $items[] = $this->readMapper->toView($row, $definition, $criteria);
+                $key = $this->identifierMapKey($row['__jsonapi_root_id']);
+                unset($row['__jsonapi_root_id']);
+                $byId[$key] = $row;
+            }
+            $items = [];
+            foreach ($ids as $id) {
+                $key = $this->identifierMapKey($id);
+                if (isset($byId[$key])) {
+                    $items[] = $this->readMapper->toView($byId[$key], $definition, $criteria);
+                }
             }
         } else {
-            /** @var list<object> $rows */
-            $rows = $query->getResult();
-            $items = [];
-            foreach ($rows as $entity) {
-                $items[] = $this->readMapper->toView($entity, $definition, $criteria);
-            }
+            $items = array_map(fn (object $entity): object => $this->readMapper->toView($entity, $definition, $criteria), $entities);
         }
-
-        $total = $this->countTotal($qb);
-
-        return new Slice(
-            items: $items,
-            pageNumber: $criteria->pagination->number,
-            pageSize: $criteria->pagination->size,
-            totalItems: $total,
-        );
+        return new Slice($items, $criteria->pagination->number, $criteria->pagination->size, $total);
     }
 
     public function findOne(string $type, string $id, Criteria $criteria): ?object
@@ -137,13 +112,15 @@ class GenericDoctrineRepository implements ResourceRepository
         $em = $this->getEntityManagerFor($entityClass);
 
         $id = \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id);
+        $classMetadata = $em->getClassMetadata($entityClass);
+        $idField = $classMetadata->getSingleIdentifierFieldName();
         if ($definition->readProjection === ReadProjection::DTO) {
             $qb = $em->createQueryBuilder()
                 ->from($entityClass, 'e')
-                ->where('e.id = :id')
-                ->setParameter('id', $id);
+                ->where('e.' . $idField . ' = :id')
+                ->setParameter('id', $id, $classMetadata->getTypeOfField($idField));
 
-            $this->applyDtoProjection($qb, $definition);
+            \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineReadProjection::apply($qb, $definition);
             foreach ($criteria->customConditions as $condition) {
                 $condition($qb);
             }
@@ -226,7 +203,7 @@ class GenericDoctrineRepository implements ResourceRepository
      *
      * @param list<Sorting> $sorting
      */
-    private function applySorting(QueryBuilder $qb, array $sorting, \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata): void
+    private function applySorting(QueryBuilder $qb, array $sorting, ResourceMetadata $metadata): void
     {
         $joinedForSort = [];
 
@@ -254,7 +231,16 @@ class GenericDoctrineRepository implements ResourceRepository
                 $currentAlias = 'e';
                 $fullJoinPath = '';
 
+                $classMetadata = $qb->getEntityManager()->getClassMetadata($metadata->dataClass);
                 foreach ($segments as $index => $relationshipName) {
+                    if ($classMetadata->hasAssociation($relationshipName)) {
+                        if ($this->collectionSortPolicy === 'reject' && $classMetadata->isCollectionValuedAssociation($relationshipName)) {
+                            throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Collection sorting requires an explicit aggregate handler.', [
+                                new \AlexFigures\Symfony\Http\Error\ErrorObject(null, null, '400', \AlexFigures\Symfony\Http\Error\ErrorCodes::COLLECTION_SORT_UNSUPPORTED, \AlexFigures\Symfony\Http\Error\ErrorTitles::MAP[\AlexFigures\Symfony\Http\Error\ErrorCodes::COLLECTION_SORT_UNSUPPORTED], 'Sorting through a to-many relationship requires a registered custom sort handler with explicit aggregate semantics.', new \AlexFigures\Symfony\Http\Error\ErrorSource(parameter: 'sort')),
+                            ]);
+                        }
+                        $classMetadata = $qb->getEntityManager()->getClassMetadata($classMetadata->getAssociationTargetClass($relationshipName));
+                    }
                     $fullJoinPath = $currentAlias . '.' . $relationshipName;
                     $joinAlias = 'sort_' . str_replace('.', '_', implode('_', array_slice($segments, 0, $index + 1)));
 
@@ -274,132 +260,13 @@ class GenericDoctrineRepository implements ResourceRepository
                 $qb->addOrderBy('e.' . $resolvedField, $direction);
             }
         }
-        $identifier = $metadata->idPropertyPath ?? 'id';
+        $identifier = $qb->getEntityManager()->getClassMetadata($metadata->dataClass)->getSingleIdentifierFieldName();
         $hasIdentifier = false;
         foreach ($sorting as $sort) {
             $hasIdentifier = $hasIdentifier || $metadata->resolveFieldPath($sort->field) === $identifier;
         }
         if (!$hasIdentifier) {
             $qb->addOrderBy('e.' . $identifier, 'ASC');
-        }
-    }
-
-    private function countTotal(QueryBuilder $qb): int
-    {
-        $countQb = clone $qb;
-        $rootAliases = $countQb->getRootAliases();
-        $rootAlias = $rootAliases[0] ?? 'e';
-
-        $countQb->select(sprintf('COUNT(DISTINCT %s)', $rootAlias))
-            ->setFirstResult(0)
-            ->setMaxResults(null)
-            ->resetDQLPart('orderBy'); // Remove ORDER BY for count query
-
-        return (int) $countQb->getQuery()->getSingleScalarResult();
-    }
-
-    /**
-     * Apply eager loading (JOINs) for included relationships to prevent N+1 queries.
-     *
-     * @param list<string> $includes
-     */
-    private function applyEagerLoading(EntityManagerInterface $em, QueryBuilder $qb, ResourceMetadata $metadata, ResourceDefinition $definition, array $includes): void
-    {
-        if ($includes === []) {
-            return;
-        }
-
-        $classMetadata = $em->getClassMetadata($metadata->dataClass);
-        $joinedRelationships = [];
-
-        foreach ($includes as $includePath) {
-            $segments = explode('.', $includePath);
-            $currentAlias = 'e';
-            $currentMetadata = $classMetadata;
-            $currentResourceMetadata = $metadata;
-
-            foreach ($segments as $index => $relationshipName) {
-                // Check if relationship exists in JSON:API metadata
-                if (!isset($currentResourceMetadata->relationships[$relationshipName])) {
-                    // Skip unknown relationships
-                    continue 2;
-                }
-
-                $relationship = $currentResourceMetadata->relationships[$relationshipName];
-
-                // Check if relationship exists in Doctrine metadata
-                if (!$currentMetadata->hasAssociation($relationshipName)) {
-                    // Skip if not a Doctrine association
-                    continue 2;
-                }
-
-                // Create unique alias for this relationship
-                $joinAlias = $relationshipName . '_' . $index;
-                $joinPath = $currentAlias . '.' . $relationshipName;
-
-                // Avoid duplicate joins
-                if (!in_array($joinPath, $joinedRelationships, true)) {
-                    // Use LEFT JOIN to include entities even if relationship is null
-                    $qb->leftJoin($joinPath, $joinAlias);
-                    if ($definition->readProjection !== ReadProjection::DTO) {
-                        $qb->addSelect($joinAlias);
-                    }
-                    $joinedRelationships[] = $joinPath;
-                }
-
-                // Prepare for next segment (nested includes)
-                if ($index < count($segments) - 1) {
-                    $currentAlias = $joinAlias;
-
-                    // Get target entity class
-                    $targetResourceMetadata = null;
-                    if ($relationship->targetType !== null && $this->registry->hasType($relationship->targetType)) {
-                        $targetResourceMetadata = $this->registry->getByType($relationship->targetType);
-                        $targetClass = $targetResourceMetadata->dataClass;
-                    } elseif ($relationship->targetClass !== null) {
-                        $targetClass = $relationship->targetClass;
-                        $targetResourceMetadata = $this->registry->getByClass($targetClass);
-                    } else {
-                        continue 2;
-                    }
-
-                    if (!class_exists($targetClass) && !interface_exists($targetClass)) {
-                        continue 2;
-                    }
-
-                    /** @var class-string $targetClass */
-                    $this->getEntityManagerFor($targetClass, $em);
-                    $currentMetadata = $em->getClassMetadata($targetClass);
-
-                    if ($targetResourceMetadata === null) {
-                        continue 2;
-                    }
-
-                    $currentResourceMetadata = $targetResourceMetadata;
-                }
-            }
-        }
-    }
-
-    private function applyDtoProjection(QueryBuilder $qb, ResourceDefinition $definition): void
-    {
-        $selects = [];
-
-        foreach ($definition->fieldMap as $field => $expression) {
-            $selects[] = sprintf('%s AS %s', $expression, $field);
-        }
-
-        if ($selects === []) {
-            $qb->select('e');
-
-            return;
-        }
-
-        $first = array_shift($selects);
-        $qb->select($first);
-
-        foreach ($selects as $select) {
-            $qb->addSelect($select);
         }
     }
 
@@ -441,185 +308,6 @@ class GenericDoctrineRepository implements ResourceRepository
         }
 
         return $objects;
-    }
-
-    /**
-     * Check if any of the includes are to-many relationships.
-     *
-     * @param list<string> $includes
-     */
-    private function hasToManyIncludes(EntityManagerInterface $em, ResourceMetadata $metadata, array $includes): bool
-    {
-        if ($includes === []) {
-            return false;
-        }
-
-        $classMetadata = $em->getClassMetadata($metadata->dataClass);
-
-        foreach ($includes as $includePath) {
-            $segments = explode('.', $includePath);
-            $currentMetadata = $classMetadata;
-            $currentResourceMetadata = $metadata;
-
-            foreach ($segments as $relationshipName) {
-                // Check if relationship exists in JSON:API metadata
-                if (!isset($currentResourceMetadata->relationships[$relationshipName])) {
-                    continue 2;
-                }
-
-                // Check if relationship exists in Doctrine metadata
-                if (!$currentMetadata->hasAssociation($relationshipName)) {
-                    continue 2;
-                }
-
-                // Check if it's a to-many relationship
-                if ($currentMetadata->isCollectionValuedAssociation($relationshipName)) {
-                    return true;
-                }
-
-                // Prepare for next segment (nested includes)
-                $relationship = $currentResourceMetadata->relationships[$relationshipName];
-                $targetResourceMetadata = null;
-                if ($relationship->targetType !== null && $this->registry->hasType($relationship->targetType)) {
-                    $targetResourceMetadata = $this->registry->getByType($relationship->targetType);
-                    $targetClass = $targetResourceMetadata->dataClass;
-                } elseif ($relationship->targetClass !== null) {
-                    $targetClass = $relationship->targetClass;
-                    $targetResourceMetadata = $this->registry->getByClass($targetClass);
-                } else {
-                    continue 2;
-                }
-
-                if (!class_exists($targetClass) && !interface_exists($targetClass)) {
-                    continue 2;
-                }
-
-                $currentMetadata = $em->getClassMetadata($targetClass);
-                $currentResourceMetadata = $targetResourceMetadata;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Two-step loading to avoid cartesian product pagination issues.
-     *
-     * Step 1: Fetch IDs of root entities with pagination applied
-     * Step 2: Fetch full entities by IDs with eager loading
-     *
-     * @param class-string $entityClass
-     */
-    private function findCollectionWithTwoStepLoading(
-        EntityManagerInterface $em,
-        string $entityClass,
-        ResourceMetadata $metadata,
-        ResourceDefinition $definition,
-        Criteria $criteria
-    ): Slice {
-        // Step 1: Get IDs with pagination (no joins, no cartesian product)
-        $idQb = $em->createQueryBuilder()
-            ->select('e')
-            ->from($entityClass, 'e');
-
-        if ($criteria->filter !== null) {
-            // Apply custom filter handlers first
-            $this->applyCustomFilters($idQb, $criteria->filter);
-
-            // Then apply standard filters through compiler
-            $platform = $em->getConnection()->getDatabasePlatform();
-            $this->filterCompiler->apply($idQb, $criteria->filter, $platform, $metadata);
-        }
-
-        if ($criteria->customConditions !== []) {
-            foreach ($criteria->customConditions as $condition) {
-                $condition($idQb);
-            }
-        }
-
-        $this->applySorting($idQb, $criteria->sort, $metadata);
-
-        $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
-        $idQb->setFirstResult($offset)
-             ->setMaxResults($criteria->pagination->size);
-
-        // Get total count before applying pagination
-        $total = $this->countTotal($idQb);
-
-        // Fetch entities (we need full entities to get their IDs)
-        /** @var list<object> $paginatedEntities */
-        $paginatedEntities = $idQb->getQuery()->getResult();
-
-        if ($paginatedEntities === []) {
-            return new Slice([], $criteria->pagination->number, $criteria->pagination->size, $total);
-        }
-
-        // Extract IDs
-        $classMetadata = $em->getClassMetadata($entityClass);
-        $idField = $classMetadata->getSingleIdentifierFieldName();
-        $ids = [];
-        foreach ($paginatedEntities as $entity) {
-            $ids[] = $this->identifierMapKey($classMetadata->getFieldValue($entity, $idField));
-        }
-
-        // Step 2: Fetch full entities with eager loading by IDs
-        $qb = $em->createQueryBuilder()
-            ->from($entityClass, 'e')
-            ->where('e.' . $idField . ' IN (:ids)')
-            ->setParameter('ids', $ids);
-
-        if ($definition->readProjection === ReadProjection::DTO) {
-            $this->applyDtoProjection($qb, $definition);
-        } else {
-            $qb->select('e');
-        }
-
-        // Apply eager loading for includes
-        $this->applyEagerLoading($em, $qb, $metadata, $definition, $criteria->include);
-
-        $query = $qb->getQuery();
-
-        if ($definition->readProjection === ReadProjection::DTO) {
-            /** @var list<array<string, mixed>> $rows */
-            $rows = $query->getArrayResult();
-
-            // Preserve order from step 1 by creating a map and reordering
-            $rowsById = [];
-            foreach ($rows as $row) {
-                $rowsById[$this->identifierMapKey($row[$idField])] = $row;
-            }
-
-            $items = [];
-            foreach ($ids as $id) {
-                if (isset($rowsById[$id])) {
-                    $items[] = $this->readMapper->toView($rowsById[$id], $definition, $criteria);
-                }
-            }
-        } else {
-            /** @var list<object> $rows */
-            $rows = $query->getResult();
-
-            // Preserve order from step 1 by creating a map and reordering
-            $entitiesById = [];
-            foreach ($rows as $entity) {
-                $entityId = $this->identifierMapKey($classMetadata->getFieldValue($entity, $idField));
-                $entitiesById[$entityId] = $entity;
-            }
-
-            $items = [];
-            foreach ($ids as $id) {
-                if (isset($entitiesById[$id])) {
-                    $items[] = $this->readMapper->toView($entitiesById[$id], $definition, $criteria);
-                }
-            }
-        }
-
-        return new Slice(
-            $items,
-            $criteria->pagination->number,
-            $criteria->pagination->size,
-            $total
-        );
     }
 
     private function identifierMapKey(mixed $identifier): int|string

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Bridge\Doctrine\Identifier;
 
-use AlexFigures\Symfony\Contract\Resource\ResourceMetadataValidatorInterface;
 use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\Symfony\Resource\Metadata\ResourceMetadataValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 

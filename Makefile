@@ -14,9 +14,9 @@ vendor/autoload.php: composer.json $(COMPOSER_LOCK)
 
 install: vendor/autoload.php
 
-# Tests without Docker (Unit and Functional only)
+# Tests without Docker (including protocol/conformance regression coverage)
 test: vendor/autoload.php
-	vendor/bin/phpunit --testsuite=Unit,Functional
+	vendor/bin/phpunit --testsuite=Unit,Functional,Conformance,JsonApiStatus
 
 test-unit: vendor/autoload.php
 	vendor/bin/phpunit --testsuite=Unit

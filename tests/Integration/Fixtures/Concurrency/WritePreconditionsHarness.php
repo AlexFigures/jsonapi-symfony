@@ -86,7 +86,8 @@ final class WritePreconditionsHarness
         $routes->add('jsonapi.generated-records.related.parent', new Route('/api/generated-records/{id}/parent'));
         $routes->add('jsonapi.generated-records.relationships.parent.show', new Route('/api/generated-records/{id}/relationships/parent'));
         $links = new LinkGenerator(new UrlGenerator($routes, new RequestContext()));
-        $document = new DocumentBuilder($resources, $accessor, $links, 'always');
+        $preloader = new \AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader($managers, $resources, $accessor, new DefaultReadMapper(), new \AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner('always'), $errors, []);
+        $document = new DocumentBuilder($resources, $accessor, $links, 'always', preloader: $preloader);
         $policy = new OperationValidator($errors);
         $responses = new JsonApiResponseFactory();
         $parser = new QueryParser($resources, new PaginationConfig(), new SortingWhitelist($resources), new FilteringWhitelist($resources, $errors), $errors, new FilterParser());

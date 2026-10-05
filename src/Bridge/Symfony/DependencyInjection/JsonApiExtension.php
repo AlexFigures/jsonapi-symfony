@@ -55,6 +55,7 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.limits', $config['limits']);
         $container->setParameter('jsonapi.filter_max_depth', $config['limits']['filter_max_depth']);
         $container->setParameter('jsonapi.performance', $config['performance']);
+        $container->setParameter('jsonapi.performance.doctrine.collection_sort_policy', $config['performance']['doctrine']['collection_sort_policy']);
         $container->setParameter('jsonapi.atomic.enabled', $config['atomic']['enabled']);
         $container->setParameter('jsonapi.atomic.endpoint', $config['atomic']['endpoint']);
         $container->setParameter('jsonapi.atomic.require_ext_header', $config['atomic']['require_ext_header']);
@@ -122,6 +123,7 @@ final class JsonApiExtension extends Extension
     private function configureDataLayer(ContainerBuilder $container, array $config): void
     {
         if ($config['provider'] === 'doctrine') {
+            $container->setAlias(\AlexFigures\Symfony\Contract\Data\RepresentationPreloaderInterface::class, \AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader::class);
             $container->setAlias(\AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface::class, \AlexFigures\Symfony\Bridge\Doctrine\Concurrency\DoctrineWriteConcurrencyGuard::class);
             $container->getDefinition('AlexFigures\\Symfony\\Bridge\\Symfony\\Routing\\JsonApiRouteLoader')
                 ->setArgument(6, new \Symfony\Component\DependencyInjection\Reference('AlexFigures\\Symfony\\Bridge\\Doctrine\\Identifier\\DoctrineIdentifierMetadataValidator'));

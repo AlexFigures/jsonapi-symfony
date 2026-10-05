@@ -35,6 +35,48 @@ jobs:
       - name: PHP CS Fixer (dry-run)
         run: vendor/bin/php-cs-fixer fix --dry-run --diff
 
+  integration:
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer
+
+      - name: Install bundle dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Start bundle integration databases
+        run: make docker-up
+
+      - name: PostgreSQL, MySQL and concurrency regressions
+        run: >-
+          docker compose -f docker-compose.test.yml exec -T
+          -e DATABASE_URL_PGSQL=postgresql://jsonapi:secret@postgres:5432/jsonapi_test
+          php vendor/bin/phpunit --testsuite=Integration
+          --log-junit reports/integration.xml
+
+      - name: Database logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.test.yml logs --tail=100
+
+      - name: Upload integration results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-integration-results
+          path: reports/integration.xml
+          if-no-files-found: ignore
+
+      - name: Stop bundle integration services
+        if: always()
+        run: docker compose -f docker-compose.test.yml down --volumes --remove-orphans
+
   quality:
     runs-on: ubuntu-latest
     needs: tests

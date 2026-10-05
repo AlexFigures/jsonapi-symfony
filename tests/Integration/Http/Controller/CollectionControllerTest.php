@@ -1186,7 +1186,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         $this->em->clear();
 
         // Request collection with nested include: author.articles
-        $request = $this->createJsonApiGetRequest('GET', '/api/articles?include=author.articles');
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?include=author.articles&page[size]=1');
         $response = ($this->controller)($request, 'articles');
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
@@ -1202,7 +1202,9 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
 
         // Count articles in included (should be at least 2 - the other articles by same author)
         $includedArticles = array_filter($document['included'], fn ($item) => $item['type'] === 'articles');
-        self::assertGreaterThanOrEqual(2, count($includedArticles));
+        self::assertCount(2, $includedArticles);
+        $primaryIds = array_column($document['data'], 'id');
+        self::assertSame([], array_intersect($primaryIds, array_column($includedArticles, 'id')));
     }
 
     /**
@@ -1589,7 +1591,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
 
         // Request collection with nested include: author.articles
         // This should include the author and all their articles
-        $request = $this->createJsonApiGetRequest('GET', '/api/articles?include=author.articles');
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?include=author.articles&page[size]=1');
         $response = ($this->controller)($request, 'articles');
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
@@ -1608,7 +1610,8 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         $articles = array_filter($document['included'], fn ($item) => $item['type'] === 'articles');
 
         self::assertCount(1, $authors); // One author
-        self::assertGreaterThanOrEqual(2, count($articles)); // At least 2 other articles by same author
+        self::assertCount(2, $articles); // Exactly the two resources outside the root page.
+        self::assertSame([], array_intersect(array_column($document['data'], 'id'), array_column($articles, 'id')));
     }
 
     /**

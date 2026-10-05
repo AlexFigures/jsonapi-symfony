@@ -26,6 +26,7 @@ final class DocumentBuilder
         private readonly LinkGenerator $links,
         private readonly string $relationshipLinkageMode = 'when_included',
         private readonly ?LimitsEnforcer $limits = null,
+        private readonly ?\AlexFigures\Symfony\Contract\Data\RepresentationPreloaderInterface $preloader = null,
     ) {
     }
 
@@ -47,13 +48,17 @@ final class DocumentBuilder
         $data = [];
         $included = [];
         $visited = [];
+        foreach ($models as $root) {
+            $visited[$type . ':' . $this->resolveId($this->registry->getByType($type), $root)] = true;
+        }
         $includeTree = $this->buildIncludeTree($criteria);
-        $context = ProfileContext::fromRequest($request);
+        $reads = $this->preloader?->preload($type, $models, $criteria, $request);
+        $context = ProfileContext::fromRequest($request)?->withRelationshipReads($reads);
 
         foreach ($models as $model) {
-            $data[] = $this->buildResourceObject($type, $model, $criteria, $context, $includeTree);
+            $data[] = $this->buildResourceObject($type, $model, $criteria, $context, $includeTree, $reads);
             if ($includeTree !== []) {
-                $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context);
+                $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context, $reads);
             }
         }
 
@@ -122,11 +127,12 @@ final class DocumentBuilder
         $request->attributes->set('_jsonapi_model_type', $type);
         $includeTree = $this->buildIncludeTree($criteria);
         $included = [];
-        $visited = [];
-        $context = ProfileContext::fromRequest($request);
+        $visited = [$type . ':' . $this->resolveId($this->registry->getByType($type), $model) => true];
+        $reads = $this->preloader?->preload($type, [$model], $criteria, $request);
+        $context = ProfileContext::fromRequest($request)?->withRelationshipReads($reads);
 
         if ($includeTree !== []) {
-            $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context);
+            $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context, $reads);
         }
 
         /** @var array<string, string|list<string>> $links */
@@ -142,7 +148,7 @@ final class DocumentBuilder
         $document = [
             'jsonapi' => ['version' => '1.1'],
             'links' => $links,
-            'data' => $this->buildResourceObject($type, $model, $criteria, $context, $includeTree),
+            'data' => $this->buildResourceObject($type, $model, $criteria, $context, $includeTree, $reads),
         ];
 
         if ($included !== [] || $criteria->include !== []) {
@@ -168,7 +174,7 @@ final class DocumentBuilder
      *     relationships?: array<string, array<string, mixed>>
      * }
      */
-    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null, array $activeIncludeTree = []): array
+    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null, array $activeIncludeTree = [], ?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $reads = null): array
     {
         $metadata = $this->registry->getByType($type);
         $fields = $criteria->fields[$type] ?? null;
@@ -185,7 +191,7 @@ final class DocumentBuilder
 
         $resource['attributes'] = $attributes === [] ? new stdClass() : $attributes;
 
-        $relationships = $this->buildRelationships($metadata, $model, $criteria, $id, $context, $activeIncludeTree);
+        $relationships = $this->buildRelationships($metadata, $model, $criteria, $id, $context, $activeIncludeTree, $reads);
         if ($relationships !== []) {
             $resource['relationships'] = $relationships;
         }
@@ -266,7 +272,7 @@ final class DocumentBuilder
      *
      * @return array<string, array<string, mixed>>
      */
-    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id, ?ProfileContext $context, array $activeIncludeTree = []): array
+    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id, ?ProfileContext $context, array $activeIncludeTree = [], ?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $reads = null): array
     {
         $relationships = [];
         $fields = $criteria->fields[$metadata->type] ?? null;
@@ -285,7 +291,8 @@ final class DocumentBuilder
             ];
 
             if ($this->shouldIncludeRelationshipData($criteria, $metadata->type, $name, $activeIncludeTree)) {
-                $linkage = $this->resolveRelationshipLinkage($relationship, $model);
+                $cached = $reads?->identifiers($metadata->type, $id, $name);
+                $linkage = $cached === null ? $this->resolveRelationshipLinkage($relationship, $model) : ($relationship->toMany ? $cached : ($cached[0] ?? null));
                 $data['data'] = $linkage;
             }
 
@@ -308,7 +315,7 @@ final class DocumentBuilder
     {
         return match ($this->relationshipLinkageMode) {
             'always' => true,
-            'never' => false,
+            'never' => isset($activeIncludeTree[$relationship]),
             default => $this->isRelationshipRequested($criteria, $type, $relationship, $activeIncludeTree),
         };
     }
@@ -397,7 +404,7 @@ final class DocumentBuilder
      * @param array<string, array<string, mixed>> $included
      * @param array<string, bool>                 $visited
      */
-    private function gatherIncluded(string $type, object $model, array $includeTree, Criteria $criteria, array &$included, array &$visited, ?ProfileContext $context): void
+    private function gatherIncluded(string $type, object $model, array $includeTree, Criteria $criteria, array &$included, array &$visited, ?ProfileContext $context, ?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $reads = null): void
     {
         if ($includeTree === []) {
             return;
@@ -420,13 +427,14 @@ final class DocumentBuilder
             /** @var RelationshipMetadata $relationship */
             $relationship = $metadata->relationships[$relationshipName];
             // Resolve propertyPath aliases (e.g., "articleSpecialTags.specialTag")
-            $related = $this->resolvePropertyPath($model, $relationship);
+            $cached = $reads?->related($type, $this->resolveId($metadata, $model), $relationshipName);
+            $related = $cached ?? $this->resolvePropertyPath($model, $relationship);
 
             if ($related === null) {
                 continue;
             }
 
-            $relatedItems = $relationship->toMany ? $this->normalizeToMany($related) : [$related];
+            $relatedItems = $cached ?? ($relationship->toMany ? $this->normalizeToMany($related) : [$related]);
 
             foreach ($relatedItems as $relatedItem) {
                 if (!is_object($relatedItem)) {
@@ -443,7 +451,7 @@ final class DocumentBuilder
                     $relatedType = $metadataForClass->type;
                 }
 
-                $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria, $context, $children);
+                $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria, $context, $children, $reads);
                 $typeValue = $resource['type'];
                 $idValue = $resource['id'];
 
@@ -456,11 +464,12 @@ final class DocumentBuilder
                 if (!isset($visited[$identifier])) {
                     $visited[$identifier] = true;
                     $included[$identifier] = $resource;
+                    $this->limits?->assertIncludedCount(count($included));
                     if ($children !== []) {
-                        $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context);
+                        $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context, $reads);
                     }
                 } elseif ($children !== []) {
-                    $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context);
+                    $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context, $reads);
                 }
             }
         }

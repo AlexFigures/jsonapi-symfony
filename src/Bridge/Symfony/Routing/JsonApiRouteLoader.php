@@ -55,7 +55,7 @@ final class JsonApiRouteLoader extends Loader
         private readonly array $openApiConfig = [],
         private readonly array $docsUiConfig = [],
         private readonly ?CustomRouteRegistryInterface $customRouteRegistry = null,
-        private readonly ?\AlexFigures\Symfony\Contract\Resource\ResourceMetadataValidatorInterface $metadataValidator = null,
+        private readonly ?\AlexFigures\Symfony\Resource\Metadata\ResourceMetadataValidatorInterface $metadataValidator = null,
     ) {
         parent::__construct();
     }

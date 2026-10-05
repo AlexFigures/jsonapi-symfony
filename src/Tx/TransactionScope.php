@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Tx;
+namespace AlexFigures\Symfony\Tx;
 
+use AlexFigures\Symfony\Contract\Tx\ScopedTransactionManagerInterface;
+use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 
 /** @internal Adapts optional scoped transactions while retaining custom providers' contract. */

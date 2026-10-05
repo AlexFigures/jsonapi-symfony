@@ -50,7 +50,8 @@ final class ProfileContext
         array $activeProfiles,
         array $profilesPerType = [],
         array $sources = [],
-        ?AttributeReader $attributeReader = null
+        ?AttributeReader $attributeReader = null,
+        public readonly ?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $relationshipReads = null,
     ) {
         $this->activeProfiles = $activeProfiles;
         $this->profilesPerType = $profilesPerType;
@@ -83,7 +84,12 @@ final class ProfileContext
         foreach ($this->profilesForType($type) as $profile) {
             $profiles[$profile->uri()] = $profile;
         }
-        return new self($profiles, [], $this->sources, $this->attributeReader);
+        return new self($profiles, [], $this->sources, $this->attributeReader, $this->relationshipReads);
+    }
+
+    public function withRelationshipReads(?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $reads): self
+    {
+        return new self($this->activeProfiles, $this->profilesPerType, $this->sources, $this->attributeReader, $reads);
     }
 
     public function has(string $uri): bool

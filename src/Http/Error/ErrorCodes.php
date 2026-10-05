@@ -31,6 +31,8 @@ final class ErrorCodes
     public const PRECONDITION_FAILED = 'precondition-failed';
     public const PRECONDITION_REQUIRED = 'precondition-required';
     public const REQUEST_COMPLEXITY_EXCEEDED = 'request-complexity-exceeded';
+    public const COLLECTION_SORT_UNSUPPORTED = 'collection-sort-unsupported';
+    public const RELATIONSHIP_IDENTIFIERS_LIMIT = 'relationship-identifiers-limit';
     public const INCLUDED_RESOURCES_LIMIT = 'included-resources-limit';
     public const INTERNAL_SERVER_ERROR = 'internal-server-error';
 }

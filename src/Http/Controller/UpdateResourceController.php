@@ -58,7 +58,7 @@ final class UpdateResourceController
         $input = $this->validator->validateAndExtract($type, $id, $payload, 'PATCH');
 
         try {
-            $model = \AlexFigures\Symfony\Contract\Tx\TransactionScope::run($this->transaction, $this->registry, [$type], function () use ($type, $id, $input) {
+            $model = \AlexFigures\Symfony\Tx\TransactionScope::run($this->transaction, $this->registry, [$type], function () use ($type, $id, $input) {
                 // Create ChangeSet with both attributes and relationships
                 // The processor will handle applying both before validation
                 $changes = $this->changes->fromInput(
@@ -87,6 +87,7 @@ final class UpdateResourceController
             new ResourceChangedEvent($type, $id, 'update')
         );
 
+        $request->attributes->set('_jsonapi_representation_flushed', true);
         $document = $this->document->buildResource($type, $model, new Criteria(), $request);
 
         return $this->responseFactory->create($document, Response::HTTP_OK, $request->isMethod('HEAD'));

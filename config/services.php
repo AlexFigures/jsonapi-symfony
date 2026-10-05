@@ -373,6 +373,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(LinkGenerator::class),
             '%jsonapi.relationships.linkage_in_resource%',
             service(LimitsEnforcer::class),
+            service(\AlexFigures\Symfony\Contract\Data\RepresentationPreloaderInterface::class)->nullOnInvalid(),
         ])
     ;
 
@@ -712,8 +713,16 @@ return static function (ContainerConfigurator $configurator): void {
             service(FilterHandlerRegistry::class),
             service(SortHandlerRegistry::class),
             service(\AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface::class),
+            '%jsonapi.performance.doctrine.collection_sort_policy%',
         ])
     ;
+
+    $services->set(\AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner::class)->args(['%jsonapi.relationships.linkage_in_resource%']);
+    $services->set(\AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader::class)->args([
+        service('doctrine'), service(ResourceRegistryInterface::class), service(PropertyAccessorInterface::class),
+        service(\AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface::class),
+        service(\AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner::class), service(ErrorMapper::class), '%jsonapi.limits%',
+    ]);
 
     // ResourceRepositoryLocator - dispatches to custom TypedResourceRepository or falls back to GenericDoctrineRepository
     $services

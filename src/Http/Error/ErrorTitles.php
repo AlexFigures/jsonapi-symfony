@@ -35,6 +35,8 @@ final class ErrorTitles
         ErrorCodes::PRECONDITION_FAILED => 'Precondition failed',
         ErrorCodes::PRECONDITION_REQUIRED => 'Precondition required',
         ErrorCodes::REQUEST_COMPLEXITY_EXCEEDED => 'Request too complex',
+        ErrorCodes::COLLECTION_SORT_UNSUPPORTED => 'Collection sort unsupported',
+        ErrorCodes::RELATIONSHIP_IDENTIFIERS_LIMIT => 'Relationship identifier limit exceeded',
         ErrorCodes::INCLUDED_RESOURCES_LIMIT => 'Included resources limit exceeded',
         ErrorCodes::INTERNAL_SERVER_ERROR => 'Internal server error',
     ];
