@@ -24,9 +24,9 @@ final class ContentNegotiationSubscriberTest extends TestCase
     {
         $events = ContentNegotiationSubscriber::getSubscribedEvents();
 
-        self::assertArrayHasKey(KernelEvents::REQUEST, $events);
+        self::assertArrayHasKey(KernelEvents::CONTROLLER, $events);
         self::assertArrayHasKey(KernelEvents::RESPONSE, $events);
-        self::assertSame(['onKernelRequest', 512], $events[KernelEvents::REQUEST]);
+        self::assertSame(['onKernelController', -16], $events[KernelEvents::CONTROLLER]);
         self::assertSame(['onKernelResponse', -512], $events[KernelEvents::RESPONSE]);
     }
 

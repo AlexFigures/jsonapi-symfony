@@ -166,3 +166,4 @@ MIT License - See [LICENSE](../LICENSE) for details.
 - [Stable 1.0 roadmap and independent release gates](architecture/stable-1.0-roadmap.md)
 
 - [Relationship graph scopes and extension costs](architecture/relationship-graph-reads.md)
+- [RC extension/configuration gaps and regression contracts](architecture/rc-extension-gaps.md)

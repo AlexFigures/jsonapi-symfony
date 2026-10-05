@@ -55,6 +55,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         private readonly RelationshipResolver $relationshipResolver,
         private readonly FlushManager $flushManager,
         private readonly ?\AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks $profileHooks = null,
+        private readonly ?DoctrineWriteRequestMapper $writeRequests = null,
     ) {
     }
 
@@ -73,7 +74,9 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
 
         // Create new entity through SerializerEntityInstantiator
         try {
-            $result = $this->instantiator->instantiate($entityClass, $metadata, $changes, isCreate: true);
+            $mapped = $this->writeRequests?->map($metadata, $changes, 'create');
+            $result = $mapped === null ? $this->instantiator->instantiate($entityClass, $metadata, $changes, isCreate: true)
+                : ['entity' => $mapped, 'remainingChanges' => new ChangeSet([], $changes->relationships)];
         } catch (MissingConstructorArgumentsException $exception) {
             $violations = new ConstraintViolationList();
 
@@ -152,7 +155,8 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         }
 
         // Apply attributes and relationships through strict Serializer denormalization
-        $this->denormalizeInto($entity, $changes, $metadata, false);
+        $mapped = $this->writeRequests?->map($metadata, $changes, 'update', $entity);
+        $this->denormalizeInto($entity, $mapped === null ? $changes : new ChangeSet([], $changes->relationships), $metadata, false);
         $profileRelationships = $this->profileHooks?->apply($entity, $metadata, false, $changes) ?? [];
         $toOneRelationships = $this->getToOneRelationshipValues($entity, array_replace($changes->relationships, $profileRelationships), $metadata);
         // Validate before flush
@@ -190,7 +194,9 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
 
         $this->profileHooks?->beforeDelete($type, $id);
         // Mark entity for removal and schedule flush
-        $em->remove($entity);
+        if (!$this->profileHooks?->softDelete($entity, $metadata)) {
+            $em->remove($entity);
+        }
         $this->flushManager->scheduleFlush($entityClass);
     }
 
@@ -259,7 +265,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         try {
             $this->instantiator->denormalizer()->denormalize(
                 $data,
-                $metadata->class,
+                $metadata->getDataClass(),
                 null,
                 $context
             );

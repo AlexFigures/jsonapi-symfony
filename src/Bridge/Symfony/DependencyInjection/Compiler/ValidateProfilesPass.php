@@ -76,6 +76,11 @@ final class ValidateProfilesPass implements CompilerPassInterface
                 continue;
             }
 
+            if ($definition->getArguments() !== [] || $definition->isAutowired() || $definition->getFactory() !== null) {
+                $this->hasDeferredProfiles = true;
+                continue;
+            }
+
             // Instantiate profile to get its URI
             // Note: This assumes profiles have no required constructor dependencies
             // or have default values for all parameters

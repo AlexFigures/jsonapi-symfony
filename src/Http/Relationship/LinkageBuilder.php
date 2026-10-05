@@ -21,6 +21,7 @@ final class LinkageBuilder
         private readonly ResourceRegistryInterface $registry,
         private readonly RelationshipReader $reader,
         private readonly PaginationConfig $paginationConfig,
+        private readonly int $maxIdentifiers = 0,
     ) {
     }
 
@@ -42,7 +43,17 @@ final class LinkageBuilder
 
         if ($relationship->toMany) {
             $pagination = $this->parsePagination($request);
+            if ($this->maxIdentifiers > 0 && $pagination->size > $this->maxIdentifiers) {
+                // Probe at most budget + 1 identifiers before allocating the response.
+                $probe = $this->reader->getToManyIds($type, $id, $rel, new Pagination(1, $this->maxIdentifiers + 1));
+                if ($probe->totalItems > $this->maxIdentifiers) {
+                    throw new BadRequestException('Relationship identifier budget exceeded.');
+                }
+            }
             $slice = $this->reader->getToManyIds($type, $id, $rel, $pagination);
+            if ($this->maxIdentifiers > 0 && count($slice->ids) > $this->maxIdentifiers) {
+                throw new BadRequestException('Relationship identifier budget exceeded.');
+            }
             $targetType = $this->determineTargetType($relationship, $rel);
 
             $data = array_map(

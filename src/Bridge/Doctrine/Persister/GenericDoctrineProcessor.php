@@ -125,7 +125,9 @@ class GenericDoctrineProcessor implements ResourceProcessor
 
         $this->profileHooks?->beforeDelete($type, $id);
         // Mark entity for removal and schedule flush
-        $em->remove($entity);
+        if (!$this->profileHooks?->softDelete($entity, $metadata)) {
+            $em->remove($entity);
+        }
         $this->flushManager->scheduleFlush($entityClass);
     }
 

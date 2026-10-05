@@ -46,6 +46,7 @@ final class JsonApiRouteLoader extends Loader
 
     /**
      * @param array{enabled?: bool, route?: string} $openApiConfig
+     * @param array{enabled?: bool, route?: string} $jsonSchemaConfig
      * @param array{enabled?: bool, route?: string} $docsUiConfig
      */
     public function __construct(
@@ -56,6 +57,7 @@ final class JsonApiRouteLoader extends Loader
         private readonly array $docsUiConfig = [],
         private readonly ?CustomRouteRegistryInterface $customRouteRegistry = null,
         private readonly ?\AlexFigures\Symfony\Resource\Metadata\ResourceMetadataValidatorInterface $metadataValidator = null,
+        private readonly array $jsonSchemaConfig = [],
     ) {
         parent::__construct();
     }
@@ -365,6 +367,13 @@ final class JsonApiRouteLoader extends Loader
 
     private function addDocumentationRoutes(RouteCollection $routes): void
     {
+        if (($this->jsonSchemaConfig['enabled'] ?? false) === true) {
+            $routes->add('jsonapi.docs.schemas', new Route(
+                path: $this->jsonSchemaConfig['route'] ?? '/_jsonapi/schemas',
+                defaults: ['_controller' => \AlexFigures\Symfony\Http\Controller\JsonSchemaController::class, '_jsonapi_native_media_type' => 'application/schema+json'],
+                methods: ['GET'],
+            ));
+        }
         if (($this->openApiConfig['enabled'] ?? false) === true) {
             $path = $this->openApiConfig['route'] ?? '/_jsonapi/openapi.json';
 
@@ -374,6 +383,7 @@ final class JsonApiRouteLoader extends Loader
                     path: $path,
                     defaults: [
                         '_controller' => OpenApiController::class,
+                    '_jsonapi_native_media_type' => 'application/vnd.oai.openapi+json',
                     ],
                     methods: ['GET'],
                 )
@@ -389,6 +399,7 @@ final class JsonApiRouteLoader extends Loader
                     path: $path,
                     defaults: [
                         '_controller' => SwaggerUiController::class,
+                    '_jsonapi_native_media_type' => 'text/html',
                     ],
                     methods: ['GET'],
                 )

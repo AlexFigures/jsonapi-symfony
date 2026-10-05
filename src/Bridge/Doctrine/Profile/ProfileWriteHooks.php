@@ -53,6 +53,29 @@ final readonly class ProfileWriteHooks
         return $relationships;
     }
 
+    /** Returns true when the active profile replaces physical deletion. */
+    public function softDelete(object $entity, ResourceMetadata $metadata): bool
+    {
+        $request = $this->requests->getCurrentRequest();
+        $context = $request === null ? null : ProfileContext::fromRequest($request)?->forType($metadata->type);
+        $profile = $context?->profile(\AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile::URI);
+        if (!$profile instanceof \AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile) {
+            return false;
+        }
+        $config = $profile->configuration();
+        if (($config['delete_semantics'] ?? 'soft') !== 'soft') {
+            return false;
+        }
+        $attribute = $context->attributeReader()->getAttribute($metadata->dataClass, \AlexFigures\Symfony\Profile\Attribute\SoftDeletable::class);
+        $field = $config['field'] ?? $config['deletedAtField'] ?? 'deletedAt';
+        if ($attribute instanceof \AlexFigures\Symfony\Profile\Attribute\SoftDeletable && ($attribute->deletedAtField !== 'deletedAt' || $field === 'deletedAt')) {
+            $field = $attribute->deletedAtField;
+        }
+        $value = ($config['strategy'] ?? 'timestamp') === 'boolean' ? true : new \DateTimeImmutable();
+        $this->accessor->setValue($entity, $field, $value);
+        return true;
+    }
+
     public function beforeDelete(string $type, string $id): void
     {
         $request = $this->requests->getCurrentRequest();

@@ -43,6 +43,7 @@ class RelationshipResolver
         private readonly PropertyAccessorInterface $accessor,
         private readonly ?ErrorMapper $errors = null,
         private readonly bool $errorOnUnknownRelationship = false,
+        private readonly ?\Symfony\Component\HttpFoundation\RequestStack $requests = null,
     ) {
     }
 
@@ -108,6 +109,7 @@ class RelationshipResolver
                     if (!\AlexFigures\Symfony\Bridge\Doctrine\Relationship\RelationshipNullability::allowsNull($ownerEm, $entity, $relMeta->propertyPath ?? $relMeta->name, $relMeta->nullable)) {
                         throw new ValidationException([$this->createValidationError($this->pointerRelationships($relName), 'Relationship cannot be null.')]);
                     }
+                    $this->beforeReplace($entity, $resourceMetadata, $relMeta, []);
                     $this->syncToOne($ownerEm, $entity, $resourceMetadata, $relMeta, null);
                     continue;
                 }
@@ -115,6 +117,7 @@ class RelationshipResolver
                 if (\is_array($data) && isset($data['type'])) {
                     // to-one
                     $ri = $this->validateResourceIdentifier($relName, $data, $relMeta);
+                    $this->beforeReplace($entity, $resourceMetadata, $relMeta, [$ri]);
                     $target = $this->resolveTarget($ownerEm, $resourceMetadata, $ri['type'], $ri['id'], $relMeta);
                     $this->syncToOne($ownerEm, $entity, $resourceMetadata, $relMeta, $target);
                     continue;
@@ -145,6 +148,7 @@ class RelationshipResolver
                     if (!empty($errorBucket)) {
                         // fall through to throwing below
                     } else {
+                        $this->beforeReplace($entity, $resourceMetadata, $relMeta, $list);
                         $this->syncToMany($ownerEm, $entity, $resourceMetadata, $relMeta, $list);
                     }
                     continue;
@@ -163,6 +167,31 @@ class RelationshipResolver
 
         if ($errorBucket) {
             throw new ValidationException($errorBucket);
+        }
+    }
+
+    /** @param list<array{type: string, id: string}> $identifiers */
+    private function beforeReplace(object $entity, ResourceMetadata $metadata, RelationshipMetadata $relationship, array $identifiers): void
+    {
+        $request = $this->requests?->getCurrentRequest();
+        $context = $request === null ? null : \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($metadata->type);
+        if ($context === null || $context->relationshipHooks() === []) {
+            return;
+        }
+        $targets = array_map(static fn (array $identifier): \AlexFigures\Symfony\Contract\Data\ResourceIdentifier => new \AlexFigures\Symfony\Contract\Data\ResourceIdentifier($identifier['type'], $identifier['id']), $identifiers);
+        $path = $metadata->idPropertyPath ?? 'id';
+        try {
+            $value = $this->accessor->getValue($entity, $path);
+            $id = is_scalar($value) || $value instanceof \Stringable ? (string) $value : '';
+        } catch (\Symfony\Component\PropertyAccess\Exception\UninitializedPropertyException) {
+            $id = '';
+        }
+        foreach ($context->relationshipHooks() as $hook) {
+            if ($relationship->toMany) {
+                $hook->onBeforeRelReplaceToMany($context, $metadata->type, $id, $relationship->name, $targets);
+            } else {
+                $hook->onBeforeRelReplaceToOne($context, $metadata->type, $id, $relationship->name, $targets[0] ?? null);
+            }
         }
     }
 

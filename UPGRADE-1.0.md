@@ -97,3 +97,13 @@ Before final 1.0, append every approved namespace/interface/service-alias move, 
 **Why:** Scopes must survive every transport path, and read costs require an explicit provider plan.
 
 **Migration:** Review repository decorators for optional `Criteria::identifiersOnly` results, implement bounded/scoped computed readers, declare hook reads, then opt into `relationships.unplanned_read_policy: reject`. Keep `legacy` only where application-specific getters have an understood cost. Computed endpoints need a custom `TypedRelationshipReader`. Do not rely on a self link for resources that expose no SHOW route. See [graph read contract](docs/architecture/relationship-graph-reads.md).
+
+## Extension execution and effective configuration
+
+**Before:** Registered custom operators, operation input DTOs, read/relationship hooks and several profile/configuration options were accepted as configuration but ignored or rejected at runtime. Documentation routes and schemas could advertise behavior different from the configured bundle.
+
+**After:** Registered operators pass the filter parser; custom handlers retain application query parameters; built-in Doctrine reads and relationship mutations invoke their profile hooks. Create/update input DTOs are validated and passed to `WriteMapperInterface`, and reads choose their representation using the current negotiated profile context. Soft-delete visibility, flags, boolean strategy and soft/hard deletion are effective. Standalone linkage obeys identifier budgets, generated routes emit configured surrogate keys and Atomic parsing enforces the lid switch. Documentation operations, inherited fields, write groups, pagination and examples reflect their source contracts. The JSON Schema route and profile-validation command are registered.
+
+**Why:** Public extension points and configuration must have executable effects before they can be frozen for 1.0.
+
+**Migration:** Review input DTO defaults and write mappers, because these now execute; invalid input can return 422 before entity mutation. Audit hook restrictions that previously did not run. If physical removal is required while the soft-delete profile is active, explicitly set `profiles.soft_delete.delete_semantics: hard`; the configured default `soft` is now enforced. Remove non-JSON:API query parameters from ordinary CRUD requests; custom handlers retain them. Keep explicit linkage pages within `relationship_max_identifiers`. Validate profiles through `jsonapi:validate-profiles`. Negotiation now follows router/controller discovery, so routing errors can precede 406/415 errors. See [RC extension/configuration regression report](docs/architecture/rc-extension-gaps.md) for exact boundaries and independent verification status.

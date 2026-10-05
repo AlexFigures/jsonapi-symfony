@@ -48,7 +48,18 @@ final class QueryParser
         $criteria->fields = $this->parseFields($request);
         $criteria->include = $this->parseInclude($type, $request);
         $criteria->sort = $this->parseSort($type, $request);
-        $criteria->filter = $this->parseFilter($type, $request);
+        $context = \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
+        $filterRequest = $request;
+        $query = $request->query->all();
+        foreach ($context?->queryHooks() ?? [] as $hook) {
+            if ($hook instanceof \AlexFigures\Symfony\Profile\Hook\FilterParameterProviderInterface && isset($query['filter']) && is_array($query['filter'])) {
+                foreach ($hook->filterParameters() as $flag) {
+                    unset($query['filter'][$flag]);
+                }
+                $filterRequest = $request->duplicate(query: $query);
+            }
+        }
+        $criteria->filter = $this->parseFilter($type, $filterRequest);
 
         $context = \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
         if ($context !== null) {

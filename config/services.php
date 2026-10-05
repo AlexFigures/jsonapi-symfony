@@ -339,7 +339,7 @@ return static function (ContainerConfigurator $configurator): void {
         ])
     ;
 
-    $services->set(FilterParser::class)->args(['%jsonapi.filter_max_depth%']);
+    $services->set(FilterParser::class)->args(['%jsonapi.filter_max_depth%', service(\AlexFigures\Symfony\Filter\Operator\Registry::class)]);
 
     $services
         ->set(QueryParser::class)
@@ -421,6 +421,8 @@ return static function (ContainerConfigurator $configurator): void {
             '%jsonapi.relationships.write_response%',
             service('jsonapi.atomic_config_for_openapi'),
             service(CustomEndpointCollector::class),
+            service(PaginationConfig::class),
+            service('serializer.mapping.class_metadata_factory')->nullOnInvalid(),
         ])
     ;
 
@@ -447,6 +449,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(RelationshipReader::class),
             service(PaginationConfig::class),
+            '%jsonapi.relationship_max_identifiers%',
         ])
     ;
 
@@ -561,6 +564,13 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('controller.service_arguments')
     ;
 
+    $services->set(\AlexFigures\Symfony\Bridge\Symfony\Command\ValidateProfilesCommand::class)
+        ->args([service(\AlexFigures\Symfony\Profile\ProfileRegistry::class), service(ResourceRegistryInterface::class), service('doctrine.orm.entity_manager')->nullOnInvalid(), service('parameter_bag')])->autoconfigure()->tag('console.command');
+
+    $services->set(\AlexFigures\Symfony\Http\Controller\JsonSchemaController::class)->args([
+        service(OpenApiSpecGenerator::class), '%jsonapi.docs.generator.json_schema%', service(\AlexFigures\Symfony\Profile\ProfileRegistry::class),
+    ])->tag('controller.service_arguments');
+
     // Automatic route loader
     $services
         ->set(\AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader::class)
@@ -571,6 +581,8 @@ return static function (ContainerConfigurator $configurator): void {
             '%jsonapi.docs.generator.openapi%',
             '%jsonapi.docs.ui%',
             service(\AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry::class),
+            null,
+            '%jsonapi.docs.generator.json_schema%',
         ])
         ->tag('routing.loader')
     ;
@@ -587,7 +599,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set('jsonapi.null_relationship_reader', \AlexFigures\Symfony\Contract\Data\NullRelationshipReader::class)
+        ->set('jsonapi.null_relationship_reader', \AlexFigures\Symfony\Bridge\Symfony\Null\NullRelationshipReader::class)
     ;
 
     $services
@@ -595,7 +607,7 @@ return static function (ContainerConfigurator $configurator): void {
     ;
 
     $services
-        ->set('jsonapi.null_relationship_updater', \AlexFigures\Symfony\Contract\Data\NullRelationshipUpdater::class)
+        ->set('jsonapi.null_relationship_updater', \AlexFigures\Symfony\Bridge\Symfony\Null\NullRelationshipUpdater::class)
     ;
 
     $services
@@ -716,6 +728,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(SortHandlerRegistry::class),
             service(\AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface::class),
             '%jsonapi.performance.doctrine.collection_sort_policy%',
+            service(\Symfony\Component\HttpFoundation\RequestStack::class),
         ])
     ;
 
@@ -750,6 +763,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
             service(ErrorMapper::class),
+            false, service('request_stack'),
         ])
     ;
 
@@ -777,6 +791,14 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('kernel.event_subscriber')
     ;
 
+    $services->set(\AlexFigures\Symfony\Resource\Mapper\DefaultWriteMapper::class)->args([service(PropertyAccessorInterface::class)]);
+    $services->alias(\AlexFigures\Symfony\Resource\Mapper\WriteMapperInterface::class, \AlexFigures\Symfony\Resource\Mapper\DefaultWriteMapper::class);
+    $services->set(\AlexFigures\Symfony\Bridge\Doctrine\Persister\DoctrineWriteRequestMapper::class)->args([
+        service(\AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator::class),
+        service('validator'), service(ConstraintViolationMapper::class),
+        service(\AlexFigures\Symfony\Resource\Mapper\WriteMapperInterface::class), service('request_stack'),
+    ]);
+
     $services
         ->set(\AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor::class)
         ->args([
@@ -789,6 +811,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(\AlexFigures\Symfony\Resource\Relationship\RelationshipResolver::class),
             service(FlushManager::class),
             service(\AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks::class),
+            service(\AlexFigures\Symfony\Bridge\Doctrine\Persister\DoctrineWriteRequestMapper::class),
         ])
     ;
 

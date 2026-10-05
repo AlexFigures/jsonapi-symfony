@@ -291,6 +291,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $targetClass = $this->determineTargetClass($relationshipMetadata, $this->getClassMetadata($resource), $propertyPath);
 
         $normalizedTargetId = $this->normalizeTargetId($relationshipMetadata, $payload);
+        $this->beforeRelationshipMutation($resource, $metadata, $relationshipMetadata, 'onBeforeRelReplaceToOne', $normalizedTargetId === null ? [] : [$normalizedTargetId]);
 
         if ($normalizedTargetId === null) {
             $em = $this->getEntityManagerFor($resource::class);
@@ -317,6 +318,9 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $relationshipMetadata = $this->requireRelationshipMetadata($metadata, $relationship);
         $targetClass = $this->determineTargetClass($relationshipMetadata, $this->getClassMetadata($resource), $propertyPath);
 
+        $normalizedIds = $this->normalizeTargetIds($relationshipMetadata, $targetList);
+        $this->beforeRelationshipMutation($resource, $metadata, $relationshipMetadata, 'onBeforeRelReplaceToMany', $normalizedIds);
+
         $collection = $this->accessor->getValue($resource, $propertyPath);
 
         if (!$collection instanceof Collection) {
@@ -325,7 +329,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
 
         $collection->clear();
 
-        foreach ($this->normalizeTargetIds($relationshipMetadata, $targetList) as $targetId) {
+        foreach ($normalizedIds as $targetId) {
             $relatedEntity = $this->findRelatedEntity($targetClass, $targetId);
             $collection->add($relatedEntity);
         }
@@ -344,13 +348,16 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $relationshipMetadata = $this->requireRelationshipMetadata($metadata, $relationship);
         $targetClass = $this->determineTargetClass($relationshipMetadata, $this->getClassMetadata($resource), $propertyPath);
 
+        $normalizedIds = $this->normalizeTargetIds($relationshipMetadata, $targetList);
+        $this->beforeRelationshipMutation($resource, $metadata, $relationshipMetadata, 'onBeforeRelAddToMany', $normalizedIds);
+
         $collection = $this->accessor->getValue($resource, $propertyPath);
 
         if (!$collection instanceof Collection) {
             throw new \RuntimeException(sprintf('Property "%s" is not a Doctrine Collection', $propertyPath));
         }
 
-        foreach ($this->normalizeTargetIds($relationshipMetadata, $targetList) as $targetId) {
+        foreach ($normalizedIds as $targetId) {
             $relatedEntity = $this->findRelatedEntity($targetClass, $targetId);
 
             if (!$collection->contains($relatedEntity)) {
@@ -372,18 +379,44 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $relationshipMetadata = $this->requireRelationshipMetadata($metadata, $relationship);
         $targetClass = $this->determineTargetClass($relationshipMetadata, $this->getClassMetadata($resource), $propertyPath);
 
+        $normalizedIds = $this->normalizeTargetIds($relationshipMetadata, $targetList);
+        $this->beforeRelationshipMutation($resource, $metadata, $relationshipMetadata, 'onBeforeRelRemoveFromToMany', $normalizedIds);
+
         $collection = $this->accessor->getValue($resource, $propertyPath);
 
         if (!$collection instanceof Collection) {
             throw new \RuntimeException(sprintf('Property "%s" is not a Doctrine Collection', $propertyPath));
         }
 
-        foreach ($this->normalizeTargetIds($relationshipMetadata, $targetList) as $targetId) {
+        foreach ($normalizedIds as $targetId) {
             $relatedEntity = $this->findRelatedEntity($targetClass, $targetId);
             $collection->removeElement($relatedEntity);
         }
 
         $this->flushManager->scheduleFlush($resource::class);
+    }
+
+    /** @param list<string> $ids */
+    private function beforeRelationshipMutation(object $resource, ResourceMetadata $metadata, RelationshipMetadata $relationship, string $method, array $ids): void
+    {
+        $request = $this->requests?->getCurrentRequest();
+        $context = $request === null ? null : \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($metadata->type);
+        if ($context === null || $context->relationshipHooks() === []) {
+            return;
+        }
+        $type = $relationship->targetType ?? ($relationship->targetClass === null ? null : $this->registry->getByClass($relationship->targetClass)?->type);
+        if ($type === null) {
+            throw new \LogicException('Relationship hooks require a resolved target resource type.');
+        }
+        $targets = array_map(static fn (string $id): ResourceIdentifier => new ResourceIdentifier($type, $id), $ids);
+        $ownerId = $this->extractId($resource);
+        foreach ($context->relationshipHooks() as $hook) {
+            if ($method === 'onBeforeRelReplaceToOne') {
+                $hook->onBeforeRelReplaceToOne($context, $metadata->type, $ownerId, $relationship->name, $targets[0] ?? null);
+            } else {
+                $hook->{$method}($context, $metadata->type, $ownerId, $relationship->name, $targets);
+            }
+        }
     }
 
     // ==================== Private helpers ====================

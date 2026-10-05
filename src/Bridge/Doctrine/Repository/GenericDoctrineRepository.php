@@ -49,13 +49,22 @@ class GenericDoctrineRepository implements ResourceRepository
         private readonly SortHandlerRegistry $sortHandlers,
         private readonly ReadMapperInterface $readMapper,
         private readonly string $collectionSortPolicy = 'legacy',
+        private readonly ?\Symfony\Component\HttpFoundation\RequestStack $requests = null,
     ) {
     }
 
     public function findCollection(string $type, Criteria $criteria): Slice
     {
         $metadata = $this->registry->getByType($type);
-        $definition = $metadata->getDefinition();
+        $request = $this->requests?->getCurrentRequest();
+        $context = $request === null ? null : \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
+        $criteria = clone $criteria;
+        if ($context !== null) {
+            foreach ($context->readHooks() as $hook) {
+                $hook->onBeforeFindCollection($context, $type, $criteria);
+            }
+        }
+        $definition = $metadata->getDefinition($context);
         $entityClass = $metadata->dataClass;
         $em = $this->getEntityManagerFor($entityClass);
         $roots = $em->createQueryBuilder()->select('e')->from($entityClass, 'e');
@@ -127,7 +136,15 @@ class GenericDoctrineRepository implements ResourceRepository
     public function findOne(string $type, string $id, Criteria $criteria): ?object
     {
         $metadata = $this->registry->getByType($type);
-        $definition = $metadata->getDefinition();
+        $request = $this->requests?->getCurrentRequest();
+        $context = $request === null ? null : \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
+        $criteria = clone $criteria;
+        if ($context !== null) {
+            foreach ($context->readHooks() as $hook) {
+                $hook->onBeforeFindOne($context, $type, $id, $criteria);
+            }
+        }
+        $definition = $metadata->getDefinition($context);
         /** @var class-string $entityClass */
         $entityClass = $metadata->dataClass;
         $em = $this->getEntityManagerFor($entityClass);
@@ -141,6 +158,7 @@ class GenericDoctrineRepository implements ResourceRepository
                 ->where('e.' . $idField . ' = :id')
                 ->setParameter('id', $id, $classMetadata->getTypeOfField($idField));
 
+            $this->applyCriteriaFilter($qb, $criteria, $metadata, $em);
             \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineReadProjection::apply($qb, $definition);
             foreach ($criteria->customConditions as $condition) {
                 $condition($qb);
@@ -152,9 +170,10 @@ class GenericDoctrineRepository implements ResourceRepository
             return $row === null ? null : $this->readMapper->toView($row, $definition, $criteria);
         }
 
-        if ($criteria->customConditions !== []) {
+        if ($criteria->customConditions !== [] || $criteria->filter !== null) {
             $identifier = $em->getClassMetadata($entityClass)->getSingleIdentifierFieldName();
             $qb = $em->createQueryBuilder()->select('e')->from($entityClass, 'e')->where('e.' . $identifier . ' = :id')->setParameter('id', $id);
+            $this->applyCriteriaFilter($qb, $criteria, $metadata, $em);
             foreach ($criteria->customConditions as $condition) {
                 $condition($qb);
             }
@@ -164,6 +183,14 @@ class GenericDoctrineRepository implements ResourceRepository
         }
 
         return $entity === null ? null : $this->readMapper->toView($entity, $definition, $criteria);
+    }
+
+    private function applyCriteriaFilter(QueryBuilder $query, Criteria $criteria, ResourceMetadata $metadata, EntityManagerInterface $em): void
+    {
+        if ($criteria->filter !== null) {
+            $this->applyCustomFilters($query, $criteria->filter);
+            $this->filterCompiler->apply($query, $criteria->filter, $em->getConnection()->getDatabasePlatform(), $metadata);
+        }
     }
 
     /**

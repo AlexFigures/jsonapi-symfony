@@ -30,9 +30,20 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::REQUEST => ['onKernelRequest', 512],
+            KernelEvents::CONTROLLER => ['onKernelController', -16],
             KernelEvents::RESPONSE => ['onKernelResponse', -512],
         ];
+    }
+
+    public function onKernelController(\Symfony\Component\HttpKernel\Event\ControllerEvent $event): void
+    {
+        if (!$event->isMainRequest() || !$this->strictContentNegotiation) {
+            return;
+        }
+        $request = $event->getRequest();
+        $policy = $this->policyProvider->getPolicy($request);
+        $this->assertContentType($request, $policy);
+        $this->assertAcceptHeader($request, $policy);
     }
 
     public function onKernelRequest(RequestEvent $event): void

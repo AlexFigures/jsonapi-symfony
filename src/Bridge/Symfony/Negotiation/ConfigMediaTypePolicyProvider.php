@@ -41,6 +41,10 @@ final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInte
             }
         }
 
+        $nativeType = $request->attributes->get('_jsonapi_native_media_type');
+        if (is_string($nativeType)) {
+            return new MediaTypePolicy(['*'], $nativeType === 'text/html' ? [$nativeType] : [$nativeType, 'application/json'], $nativeType, false);
+        }
         return $this->defaultPolicy;
     }
 

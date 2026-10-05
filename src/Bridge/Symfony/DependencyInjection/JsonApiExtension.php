@@ -58,6 +58,7 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.errors.locale', $config['errors']['locale']);
         $container->setParameter('jsonapi.cache', $config['cache']);
         $container->setParameter('jsonapi.limits', $config['limits']);
+        $container->setParameter('jsonapi.relationship_max_identifiers', $config['limits']['relationship_max_identifiers']);
         $container->setParameter('jsonapi.filter_max_depth', $config['limits']['filter_max_depth']);
         $container->setParameter('jsonapi.performance', $config['performance']);
         $container->setParameter('jsonapi.performance.doctrine.collection_sort_policy', $config['performance']['doctrine']['collection_sort_policy']);
@@ -76,6 +77,7 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.profiles.rel_counts', $config['profiles']['rel_counts']);
         $container->setParameter('jsonapi.dx', $config['dx']);
         $container->setParameter('jsonapi.docs.generator', $config['docs']['generator']);
+        $container->setParameter('jsonapi.docs.generator.json_schema', $config['docs']['generator']['json_schema']);
         $container->setParameter('jsonapi.docs.generator.openapi', $config['docs']['generator']['openapi']);
         $container->setParameter('jsonapi.docs.ui', $config['docs']['ui']);
         $container->setParameter('jsonapi.release', $config['release']);
@@ -129,6 +131,11 @@ final class JsonApiExtension extends Extension
      */
     private function configureDataLayer(ContainerBuilder $container, array $config): void
     {
+        if ($config['provider'] === 'custom') {
+            // Doctrine serializer/flush hooks must not enlist the ORM in a custom provider.
+            $container->removeDefinition(\AlexFigures\Symfony\Bridge\Symfony\EventListener\WriteListener::class);
+            $container->removeDefinition(\AlexFigures\Symfony\Bridge\Serializer\Normalizer\JsonApiRelationshipDenormalizer::class);
+        }
         if ($config['provider'] === 'doctrine') {
             $container->setAlias(\AlexFigures\Symfony\Contract\Data\RepresentationPreloaderInterface::class, \AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader::class);
             $container->setAlias(\AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface::class, \AlexFigures\Symfony\Bridge\Doctrine\Concurrency\DoctrineWriteConcurrencyGuard::class);

@@ -39,6 +39,7 @@
     "roave/backward-compatibility-check": "^8.23",
     "spatie/phpunit-snapshot-assertions": "^5.2",
     "symfony/cache": "^7.3",
+    "symfony/framework-bundle": "^7.1",
     "symfony/phpunit-bridge": "^7.1",
     "symfony/var-exporter": "^7.1"
   },

@@ -175,7 +175,9 @@ final class CustomRouteContextFactory
     private function parseQueryCriteria(string $resourceType, Request $request): Criteria
     {
         try {
-            return $this->queryParser->parse($resourceType, $request);
+            // Application parameters belong to the custom handler; JSON:API members stay strict.
+            $query = array_intersect_key($request->query->all(), array_flip(['filter', 'sort', 'page', 'fields', 'include']));
+            return $this->queryParser->parse($resourceType, $request->duplicate(query: $query));
         } catch (Throwable $e) {
             // QueryParser already throws proper JSON:API exceptions, just re-throw
             throw $e;

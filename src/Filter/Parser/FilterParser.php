@@ -20,7 +20,7 @@ use AlexFigures\Symfony\Filter\Ast\NullCheck;
  */
 final readonly class FilterParser
 {
-    public function __construct(private int $maxDepth = 8)
+    public function __construct(private int $maxDepth = 8, private ?\AlexFigures\Symfony\Filter\Operator\Registry $operators = null)
     {
     }
     /** Check logical depth before PHP's max_input_nesting_level can silently discard filter keys. */
@@ -200,11 +200,19 @@ final readonly class FilterParser
 
                 $this->normalizeValues($values);
                 return [new Between($field, $values[0], $values[1])];
+            case 'null':
+            case 'nnull':
             case 'isnull':
                 if (!is_scalar($value) || !in_array(strtolower((string) $value), ['true', 'false', '1', '0', 'yes', 'no', ''], true)) {
                     throw new \InvalidArgumentException('isnull expects a boolean operand.');
                 }
-                return [new NullCheck($field, $this->toBool($value))];
+                return [new NullCheck($field, $operator === 'nnull' ? !$this->toBool($value) : $this->toBool($value))];
+        }
+
+        if ($this->operators?->has($operator)) {
+            $this->normalizeValues($value);
+            $values = $this->operators->get($operator)->normalizeValues($value);
+            return [new Comparison($field, $operator, $this->normalizeValues($values))];
         }
 
         throw new \InvalidArgumentException(sprintf('Unsupported operator "%s".', $operator));

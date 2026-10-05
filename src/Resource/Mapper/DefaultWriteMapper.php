@@ -9,6 +9,10 @@ use AlexFigures\Symfony\Resource\Write\WriteContext;
 
 final class DefaultWriteMapper implements WriteMapperInterface
 {
+    public function __construct(private readonly ?\Symfony\Component\PropertyAccess\PropertyAccessorInterface $accessor = null)
+    {
+    }
+
     public function instantiate(ResourceDefinition $definition, object $requestDto, WriteContext $context): object
     {
         $class = $definition->dataClass;
@@ -20,7 +24,9 @@ final class DefaultWriteMapper implements WriteMapperInterface
     {
         foreach (get_object_vars($requestDto) as $property => $value) {
             $property = (string) $property;
-            if (property_exists($entity, $property)) {
+            if ($this->accessor !== null && $this->accessor->isWritable($entity, $property)) {
+                $this->accessor->setValue($entity, $property, $value);
+            } elseif (property_exists($entity, $property)) {
                 $entity->{$property} = $value;
             }
         }

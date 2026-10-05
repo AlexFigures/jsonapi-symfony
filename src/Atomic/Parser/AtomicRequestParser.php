@@ -92,6 +92,11 @@ final class AtomicRequestParser
                 ]);
             }
 
+            if (!$this->config->lidInResourceAndIdentifier) {
+                $this->rejectLids($operation['ref'] ?? null, $pointer . '/ref');
+                $this->rejectLids($data, $pointer . '/data');
+            }
+
             $meta = $operation['meta'] ?? [];
             if (array_key_exists('meta', $operation) && is_array($meta) && array_is_list($meta)) {
                 throw new BadRequestException('Meta must be an object.', [$this->errors->invalidPointer($pointer . '/meta', 'Meta must be an object.')]);
@@ -146,6 +151,27 @@ final class AtomicRequestParser
 
         /** @var array<string, mixed> $decoded */
         return $decoded;
+    }
+
+    /** Reject local identifiers only in resource/identifier documents, not attributes or metadata. */
+    private function rejectLids(mixed $data, string $pointer): void
+    {
+        if (!is_array($data)) {
+            return;
+        }
+        if (array_key_exists('lid', $data)) {
+            throw new BadRequestException('Local identifiers are disabled.', [$this->errors->invalidPointer($pointer . '/lid', 'Local identifiers are disabled by configuration.')]);
+        }
+        if (array_is_list($data)) {
+            foreach ($data as $index => $identifier) {
+                $this->rejectLids($identifier, $pointer . '/' . $index);
+            }
+        }
+        foreach (($data['relationships'] ?? []) as $name => $relationship) {
+            if (is_array($relationship)) {
+                $this->rejectLids($relationship['data'] ?? null, $pointer . '/relationships/' . $name . '/data');
+            }
+        }
     }
 
     private function parseRef(mixed $value, string $pointer): Ref

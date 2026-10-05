@@ -45,38 +45,22 @@ final class SurrogateKeyBuilder
      */
     public function build(Request $request): array
     {
-        $route = $request->attributes->get('_route');
         $type = $request->attributes->get('type');
-        $id = $request->attributes->get('id');
-        $relationship = $request->attributes->get('relationship');
-
-        $route = is_string($route) ? $route : '';
-        $type = is_string($type) ? $type : '';
-        $id = is_scalar($id) ? (string) $id : '';
-        $relationship = is_scalar($relationship) ? (string) $relationship : '';
-
-        if ($route === 'jsonapi.collection') {
-            return $type === '' ? [] : [$this->format($this->collectionFormat, $type, $id, $relationship)];
+        if (!is_string($type) || $type === '') {
+            return [];
         }
-
-        if ($route === 'jsonapi.resource' || $route === 'jsonapi.related' || str_contains($route, 'relationship')) {
-            $keys = [];
-            if ($type !== '') {
-                $keys[] = $this->format($this->collectionFormat, $type, $id, $relationship);
-            }
-
-            if ($type !== '' && $id !== '') {
-                $keys[] = $this->format($this->resourceFormat, $type, $id, $relationship);
-            }
-
-            if ($relationship !== '' && $type !== '' && $id !== '') {
+        $rawId = $request->attributes->get('id');
+        $id = is_scalar($rawId) ? (string) $rawId : '';
+        $rawRelationship = $request->attributes->get('relationship', $request->attributes->get('rel'));
+        $relationship = is_scalar($rawRelationship) ? (string) $rawRelationship : '';
+        $keys = [$this->format($this->collectionFormat, $type, $id, $relationship)];
+        if ($id !== '') {
+            $keys[] = $this->format($this->resourceFormat, $type, $id, $relationship);
+            if ($relationship !== '') {
                 $keys[] = $this->format($this->relationshipFormat, $type, $id, $relationship);
             }
-
-            return array_values(array_unique($keys));
         }
-
-        return [];
+        return array_values(array_unique($keys));
     }
 
     private function format(string $format, string $type, string $id, string $relationship): string

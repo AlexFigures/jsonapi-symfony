@@ -23,13 +23,14 @@ use Symfony\Component\HttpFoundation\Request;
  * - Use ?filter[onlyTrashed]=true to show only soft-deleted items
  *
  * @phpstan-type SoftDeleteQueryConfig array{
+ *     field?: string, strategy?: string, default_visibility?: string, query_flags?: array{with_deleted?: string, only_deleted?: string},
  *     deletedAtField?: string,
  *     withTrashedParam?: string,
  *     onlyTrashedParam?: string,
  *     ...
  * }
  */
-final readonly class SoftDeleteQueryHook implements QueryHook
+final readonly class SoftDeleteQueryHook implements QueryHook, \AlexFigures\Symfony\Profile\Hook\FilterParameterProviderInterface
 {
     /**
      * @param SoftDeleteQueryConfig $config
@@ -39,40 +40,44 @@ final readonly class SoftDeleteQueryHook implements QueryHook
     ) {
     }
 
+    /** @return list<string> */
+    public function filterParameters(): array
+    {
+        return [$this->config['query_flags']['with_deleted'] ?? $this->config['withTrashedParam'] ?? 'withTrashed', $this->config['query_flags']['only_deleted'] ?? $this->config['onlyTrashedParam'] ?? 'onlyTrashed'];
+    }
+
     public function onParseQuery(ProfileContext $context, Request $request, Criteria $criteria): void
     {
-        $withTrashedParam = $this->config['withTrashedParam'] ?? 'withTrashed';
-        $onlyTrashedParam = $this->config['onlyTrashedParam'] ?? 'onlyTrashed';
-
-        // Check query parameters
-        $filterParams = $request->query->all('filter');
-        $withTrashed = $filterParams[$withTrashedParam] ?? false;
-        $onlyTrashed = $filterParams[$onlyTrashedParam] ?? false;
-
-        // If withTrashed is true, don't add any filter (show all)
-        if ($withTrashed === 'true' || $withTrashed === '1' || $withTrashed === true) {
+        [$with, $only] = $this->filterParameters();
+        $flags = $request->query->all('filter');
+        foreach ([$with, $only] as $flag) {
+            if (array_key_exists($flag, $flags) && !in_array($flags[$flag], [true, false, 1, 0, 'true', 'false', '1', '0'], true)) {
+                throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Soft-delete flags require a boolean value.', [new \AlexFigures\Symfony\Http\Error\ErrorObject(id: null, aboutLink: null, status: '400', code: 'invalid-parameter', title: 'Invalid Parameter', detail: 'Soft-delete flags require a boolean value.', source: new \AlexFigures\Symfony\Http\Error\ErrorSource(parameter: 'filter[' . $flag . ']'))]);
+            }
+        }
+        $visibility = $this->config['default_visibility'] ?? 'exclude';
+        if (in_array($flags[$only] ?? false, [true, 1, 'true', '1'], true)) {
+            $visibility = 'only';
+        } elseif (in_array($flags[$with] ?? false, [true, 1, 'true', '1'], true)) {
+            $visibility = 'include';
+        }
+        if ($visibility === 'include') {
             return;
         }
-
-        // Capture context and config for use in closure
         $attributeReader = $context->attributeReader();
-        $configDeletedAtField = $this->config['deletedAtField'] ?? 'deletedAt';
-
-        // If onlyTrashed is true, show only deleted items
-        if ($onlyTrashed === 'true' || $onlyTrashed === '1' || $onlyTrashed === true) {
-            $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $qb) use ($attributeReader, $configDeletedAtField): void {
-                $entityClass = $qb->getRootEntities()[0];
-                $deletedAtField = self::resolveDeletedAtField($attributeReader, $entityClass, $configDeletedAtField);
-                $qb->andWhere($qb->expr()->isNotNull('e.' . $deletedAtField));
-            };
-            return;
-        }
-
-        // Default: exclude soft-deleted items
-        $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $qb) use ($attributeReader, $configDeletedAtField): void {
+        $configField = $this->config['field'] ?? $this->config['deletedAtField'] ?? 'deletedAt';
+        $boolean = ($this->config['strategy'] ?? 'timestamp') === 'boolean';
+        $deleted = $visibility === 'only';
+        $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $qb) use ($attributeReader, $configField, $boolean, $deleted): void {
             $entityClass = $qb->getRootEntities()[0];
-            $deletedAtField = self::resolveDeletedAtField($attributeReader, $entityClass, $configDeletedAtField);
-            $qb->andWhere($qb->expr()->isNull('e.' . $deletedAtField));
+            $field = self::resolveDeletedAtField($attributeReader, $entityClass, $configField);
+            $path = $qb->getRootAliases()[0] . '.' . $field;
+            if ($boolean) {
+                $parameter = 'jsonapi_soft_deleted_' . count($qb->getParameters());
+                $qb->andWhere($path . ' = :' . $parameter)->setParameter($parameter, $deleted, \Doctrine\DBAL\Types\Types::BOOLEAN);
+            } else {
+                $qb->andWhere($deleted ? $qb->expr()->isNotNull($path) : $qb->expr()->isNull($path));
+            }
         };
     }
 
@@ -85,7 +90,7 @@ final readonly class SoftDeleteQueryHook implements QueryHook
     {
         // Try to read from attribute first
         $attribute = $attributeReader->getAttribute($entityClass, SoftDeletable::class);
-        if ($attribute instanceof SoftDeletable) {
+        if ($attribute instanceof SoftDeletable && ($attribute->deletedAtField !== 'deletedAt' || $configField === 'deletedAt')) {
             return $attribute->deletedAtField;
         }
 

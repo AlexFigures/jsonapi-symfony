@@ -855,3 +855,13 @@ services:
 ### Planned relationship reads
 
 `jsonapi.relationships.unplanned_read_policy` accepts `legacy` (default) or `reject`. Strict mode rejects computed reads without a bounded provider plan. Native endpoints paginate in SQL through the configured repository; includes/linkage honor the repository's target scope. Register a `RelationshipBatchReaderInterface` for computed representation relationships and declare document-hook requirements with `RelationshipFetchRequirementsHookInterface`. See [relationship graph reads](../architecture/relationship-graph-reads.md) for budgets, scope requirements and the limitations of legacy fallback.
+
+### Effective profile and documentation settings before RC
+
+The built-in soft-delete profile now applies `field`, `strategy` (`timestamp` or `boolean`), `default_visibility` (`exclude`, `include`, `only`), `delete_semantics` (`soft` or `hard`) and the `query_flags.with_deleted` / `query_flags.only_deleted` names. Flags use `filter[<configured-name>]=true`; they are consumed only while the profile is active and require boolean operands. Active `delete_semantics: soft` keeps the row and updates its deletion marker inside the existing operation transaction. Explicitly select `hard` to remove it physically. See [the detailed soft-delete contract](../architecture/rc-extension-gaps.md#soft-deletion).
+
+`limits.relationship_max_identifiers` also applies to standalone linkage endpoints. It rejects oversized output instead of silently truncating it. Custom readers must honor their passed pagination. `atomic.lid.accept_in_resource_and_identifier: false` rejects local identifiers during parsing, including refs and nested linkage.
+
+`docs.generator.json_schema.enabled` registers `docs.generator.json_schema.route` independently of OpenAPI enablement. It returns JSON Schema 2020-12 with shared resource definitions; `include_profiles` controls profile URI annotations. Generated OpenAPI/UI/schema routes accept their native MIME types unless an explicit application media channel overrides that policy. OpenAPI pagination uses the configured pagination sizes, and its operations follow each resource's `operations` declaration.
+
+Profile services may require constructor DI. Configured/autowired services are validated after construction; run the registered `jsonapi:validate-profiles` command for an explicit diagnostic. Doctrine read hooks receive cloned criteria before repository queries; relationship hooks run before linkage changes. The complete regression mapping and extension-provider limitations are in [the RC gap report](../architecture/rc-extension-gaps.md).

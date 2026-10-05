@@ -24,6 +24,7 @@ use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
  * - Adds soft delete metadata to documents
  *
  * @phpstan-type SoftDeleteConfig array{
+ *     field?: string, strategy?: string, default_visibility?: string, delete_semantics?: string, query_flags?: array{with_deleted?: string, only_deleted?: string},
  *     documentation?: string,
  *     deletedAtField?: string,
  *     deletedByField?: string,
@@ -41,6 +42,12 @@ final class SoftDeleteProfile implements ProfileInterface
      */
     public function __construct(private readonly array $config = [])
     {
+    }
+
+    /** @return SoftDeleteConfig */
+    public function configuration(): array
+    {
+        return $this->config;
     }
 
     public function uri(): string
@@ -72,9 +79,9 @@ final class SoftDeleteProfile implements ProfileInterface
         return new ProfileRequirements(
             attribute: SoftDeletable::class,
             fields: [
-                'deletedAt' => new FieldRequirement(
-                    type: \DateTimeImmutable::class,
-                    nullable: true,
+                ($this->config['field'] ?? $this->config['deletedAtField'] ?? 'deletedAt') => new FieldRequirement(
+                    type: ($this->config['strategy'] ?? 'timestamp') === 'boolean' ? 'bool' : \DateTimeImmutable::class,
+                    nullable: ($this->config['strategy'] ?? 'timestamp') !== 'boolean',
                     optional: false,
                     description: 'Timestamp when entity was soft-deleted'
                 ),

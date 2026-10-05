@@ -35,7 +35,7 @@ final class ValidateProfilesCommand extends Command
     public function __construct(
         private readonly ProfileRegistry $profileRegistry,
         private readonly ResourceRegistryInterface $resourceRegistry,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly ?EntityManagerInterface $entityManager,
         private readonly ParameterBagInterface $params,
     ) {
         parent::__construct();
@@ -66,10 +66,9 @@ final class ValidateProfilesCommand extends Command
         }
 
         // Create validator and validate
-        $validator = new ProfileValidator(
-            $this->entityManager,
-            new AttributeReader()
-        );
+        $validator = $this->entityManager === null
+            ? new \AlexFigures\Symfony\Profile\Validation\ReflectionProfileValidator()
+            : new ProfileValidator($this->entityManager, new AttributeReader());
 
         $result = $validator->validate($profilesByUri, $resourceTypes, $enabledProfiles);
 
@@ -124,7 +123,7 @@ final class ValidateProfilesCommand extends Command
     {
         $resourceTypes = [];
         foreach ($this->resourceRegistry->all() as $metadata) {
-            $resourceTypes[$metadata->type] = $metadata->class;
+            $resourceTypes[$metadata->type] = $metadata->dataClass;
         }
         return $resourceTypes;
     }

@@ -53,6 +53,19 @@ class SoftDeletableArticle
     #[Groups(['soft_article:read'])]
     private ?string $deletedBy = null;
 
+    #[ORM\Column(type: 'boolean')]
+    private bool $deleted = false;
+
+    public function isDeletedFlag(): bool
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(bool $deleted): void
+    {
+        $this->deleted = $deleted;
+    }
+
     public function __construct()
     {
         $this->id = Uuid::v4()->toRfc4122();
