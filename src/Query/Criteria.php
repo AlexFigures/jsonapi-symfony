@@ -32,6 +32,9 @@ final class Criteria
 
     public Pagination $pagination;
 
+    /** Identifier projection for graph reads; repositories may return ordinary models as a fallback. */
+    public bool $identifiersOnly = false;
+
     /**
      * Custom QueryBuilder conditions for advanced filtering.
      *

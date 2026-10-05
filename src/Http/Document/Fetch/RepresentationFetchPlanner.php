@@ -22,7 +22,16 @@ final readonly class RepresentationFetchPlanner
     public function edges(ResourceMetadata $metadata, Criteria $criteria, array $tree, ?ProfileContext $context): array
     {
         $counts = [];
+        $hookReads = [];
         foreach ($context?->forType($metadata->type)->documentHooks() ?? [] as $hook) {
+            if ($hook instanceof \AlexFigures\Symfony\Profile\Hook\RelationshipFetchRequirementsHookInterface) {
+                foreach ($hook->relationshipReads($metadata) as $name => $requirement) {
+                    if (!isset($metadata->relationships[$name])) {
+                        throw new \LogicException('Hook fetch plan refers to an unknown relationship: ' . $name);
+                    }
+                    $hookReads[$name][$requirement] = true;
+                }
+            }
             if ($hook instanceof FetchPlanHookInterface) {
                 $counts = array_merge($counts, $hook->relationshipCounts($metadata));
             }
@@ -42,7 +51,13 @@ final readonly class RepresentationFetchPlanner
             };
             /** @var array<string, mixed>|null $children */
             $children = isset($tree[$name]) && is_array($tree[$name]) ? $tree[$name] : null;
-            $count = $visible && in_array($name, $counts, true);
+            if (isset($hookReads[$name]['identifiers'])) {
+                $linkage = true;
+            }
+            if (isset($hookReads[$name]['models'])) {
+                $children ??= [];
+            }
+            $count = ($visible && in_array($name, $counts, true)) || isset($hookReads[$name]['count']);
             if ($linkage || $children !== null || $count) {
                 $edges[] = new RelationshipFetch($relationship, $linkage, $children, $count);
             }

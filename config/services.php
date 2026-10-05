@@ -207,6 +207,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->set(ProfileRegistry::class)
         ->args([
             tagged_iterator('jsonapi.profile'),
+            '%jsonapi.discovered_resources%', '%jsonapi.profiles.enabled_by_default%', '%jsonapi.profiles.per_type%',
         ])
     ;
 
@@ -691,6 +692,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->args([
             service('doctrine'),
             service(PropertyAccessorInterface::class),
+            service('serializer.mapping.class_metadata_factory')->nullOnInvalid(),
         ])
     ;
 
@@ -721,7 +723,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services->set(\AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader::class)->args([
         service('doctrine'), service(ResourceRegistryInterface::class), service(PropertyAccessorInterface::class),
         service(\AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface::class),
-        service(\AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner::class), service(ErrorMapper::class), '%jsonapi.limits%',
+        service(\AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner::class), service(ErrorMapper::class), '%jsonapi.limits%', service(ResourceRepository::class), service(QueryParser::class), tagged_iterator('jsonapi.relationship_batch_reader'), '%jsonapi.relationships.unplanned_read_policy%',
     ]);
 
     // ResourceRepositoryLocator - dispatches to custom TypedResourceRepository or falls back to GenericDoctrineRepository
@@ -807,6 +809,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(PropertyAccessorInterface::class),
             service(FlushManager::class),
             service(ResourceRepository::class),
+            service(QueryParser::class), service(\Symfony\Component\HttpFoundation\RequestStack::class)->nullOnInvalid(), '%jsonapi.relationships.unplanned_read_policy%',
         ])
     ;
 

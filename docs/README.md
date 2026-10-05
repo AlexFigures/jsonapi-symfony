@@ -164,3 +164,5 @@ MIT License - See [LICENSE](../LICENSE) for details.
 - [Implemented read-path and remaining release blockers](architecture/read-path-stabilization.md)
 - [Upgrade toward 1.0 (draft)](../UPGRADE-1.0.md)
 - [Stable 1.0 roadmap and independent release gates](architecture/stable-1.0-roadmap.md)
+
+- [Relationship graph scopes and extension costs](architecture/relationship-graph-reads.md)

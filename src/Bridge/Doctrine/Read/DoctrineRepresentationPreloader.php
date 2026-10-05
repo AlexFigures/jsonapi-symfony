@@ -25,7 +25,9 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 /** @internal Bounded breadth-first loading; no service-level request state or collection fetch joins. */
 final readonly class DoctrineRepresentationPreloader implements RepresentationPreloaderInterface
 {
-    /** @param array<string, int> $limits */
+    /** @param array<string, int> $limits
+     * @param iterable<\AlexFigures\Symfony\Contract\Data\RelationshipBatchReaderInterface> $batchReaders
+     */
     public function __construct(
         private ManagerRegistry $managers,
         private ResourceRegistryInterface $registry,
@@ -34,6 +36,10 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
         private RepresentationFetchPlanner $planner,
         private ErrorMapper $errors,
         private array $limits,
+        private ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null,
+        private ?\AlexFigures\Symfony\Http\Request\QueryParser $parser = null,
+        private iterable $batchReaders = [],
+        private string $unplannedReadPolicy = 'legacy',
     ) {
     }
 
@@ -84,7 +90,69 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                     $class = $em->getClassMetadata($class->getAssociationTargetClass($segment));
                 }
                 if (!$supported) {
-                    continue; // Computed application relationships retain the existing property reader.
+                    $reader = null;
+                    foreach ($this->batchReaders as $candidate) {
+                        if ($candidate->supports($ownerType, $edge->relationship->name)) {
+                            $reader = $candidate;
+                            break;
+                        }
+                    }
+                    if ($reader === null || $edge->relationship->targetType === null) {
+                        if ($this->unplannedReadPolicy === 'reject') {
+                            throw new BadRequestException(sprintf('Relationship "%s.%s" has no bounded fetch plan. Register a RelationshipBatchReaderInterface or omit it from the representation.', $ownerType, $edge->relationship->name));
+                        }
+                        continue;
+                    }
+                    $targetType = $edge->relationship->targetType;
+                    $name = $edge->relationship->name;
+                    $identifierLimit = $isRead ? ($this->limits['relationship_max_identifiers'] ?? 10000) : 0;
+                    $includeLimit = $isRead ? ($this->limits['included_max_resources'] ?? 1000) : 0;
+                    $requirements = new \AlexFigures\Symfony\Query\Fetch\RelationshipReadRequirements($ownerType, $name, $targetType, $ownerIds, $edge->linkage, $edge->includeChildren !== null, $edge->count, $identifierLimit > 0 ? $identifierLimit - $linkageCount : null, $includeLimit > 0 ? $includeLimit - $includedCount : null, array_map('strval', array_keys($known[$targetType] ?? [])));
+                    $batch = $reader->read($requirements, $this->parser?->parseGraph($targetType, $request) ?? new Criteria(), $request);
+                    $related = [];
+                    foreach ($ownerIds as $ownerId) {
+                        $identifiers = $batch->identifiers($ownerType, $ownerId, $name);
+                        if ($identifiers === null) {
+                            throw new \LogicException('Batch reader must supply linkage for every owner, including empty relationships.');
+                        }
+                        $linkageCount += count($identifiers);
+                        if ($identifierLimit > 0 && $linkageCount > $identifierLimit) {
+                            throw new BadRequestException('Batch reader exceeded identifier budget.');
+                        }
+                        $map->put($ownerType, $ownerId, $name, $identifiers);
+                        if ($edge->count) {
+                            $count = $batch->count($ownerType, $ownerId, $name);
+                            if ($count === null) {
+                                throw new \LogicException('Batch reader must supply declared relationship counts.');
+                            }
+                            $map->putCount($ownerType, $ownerId, $name, $count);
+                        }
+                        foreach ($identifiers as $identifier) {
+                            if ($identifier['type'] !== $targetType) {
+                                throw new \LogicException('Batch reader returned an unexpected resource type.');
+                            }
+                            if ($edge->includeChildren === null) {
+                                continue;
+                            }
+                            $model = $batch->model($targetType, $identifier['id']);
+                            if ($model === null) {
+                                throw new \LogicException('Batch reader must supply models for requested includes.');
+                            }
+                            if (!isset($known[$targetType][$identifier['id']])) {
+                                $known[$targetType][$identifier['id']] = true;
+                                ++$includedCount;
+                                if ($includeLimit > 0 && $includedCount > $includeLimit) {
+                                    throw new BadRequestException('Too many included resources.', [$this->errors->includedResourcesLimit($includeLimit)]);
+                                }
+                            }
+                            $map->remember($targetType, $identifier['id'], $model);
+                            $related[$identifier['id']] = $model;
+                        }
+                    }
+                    if ($edge->includeChildren !== null) {
+                        $queue[] = [$targetType, array_values($related), $edge->includeChildren];
+                    }
+                    continue;
                 }
                 $target = $edge->relationship->targetType !== null
                     ? $this->registry->getByType($edge->relationship->targetType)
@@ -95,13 +163,48 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                 if ($this->managers->getManagerForClass($target->dataClass) !== $em) {
                     throw new \LogicException('Doctrine relationship loading requires the same entity manager for both ends.');
                 }
+                $visibleIds = null;
+                if ($this->repository !== null) {
+                    $scoped = $this->parser?->parseGraph($target->type, $request) ?? new Criteria();
+                    $includeLimit = $isRead ? ($this->limits['included_max_resources'] ?? 1000) : 0;
+                    $identifierLimit = $isRead ? ($this->limits['relationship_max_identifiers'] ?? 10000) : 0;
+                    $fetchSize = $edge->includeChildren !== null && $includeLimit > 0
+                        ? $includeLimit - $includedCount + count($known[$target->type] ?? []) + 1
+                        : ($identifierLimit > 0 ? $identifierLimit - $linkageCount + 1 : 256);
+                    $visibleIds = [];
+                    $page = 1;
+                    do {
+                        $scoped->pagination = new \AlexFigures\Symfony\Query\Pagination($page++, max(1, $fetchSize));
+                        $scoped->identifiersOnly = true;
+                        $membership = (new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\DoctrineRelationshipQueryFactory($this->managers, $this->registry))->select($ownerType, $edge->relationship->name, $ownerIds, $scoped);
+                        if ($membership === null) {
+                            throw new \LogicException('Mapped graph relationship could not be queried.');
+                        }
+                        $slice = $this->repository->findCollection($target->type, $membership[1]);
+                        foreach ($slice->items as $item) {
+                            $visibleIds[] = $item instanceof \AlexFigures\Symfony\Contract\Data\ResourceIdentifier ? $item->id : $this->id($target, $item);
+                        }
+                        if ($edge->includeChildren !== null && $includeLimit > 0 && $slice->totalItems > $fetchSize - 1) {
+                            throw new BadRequestException('Too many included resources.', [$this->errors->includedResourcesLimit($includeLimit)]);
+                        }
+                        if (($edge->linkage || $edge->includeChildren !== null || $edge->count) && $identifierLimit > 0 && count($visibleIds) > $identifierLimit - $linkageCount) {
+                            throw new BadRequestException('Relationship identifier budget exceeded.', [$this->errors->invalidParameter('fields', 'Relationship identifier budget exceeded.', code: \AlexFigures\Symfony\Http\Error\ErrorCodes::RELATIONSHIP_IDENTIFIERS_LIMIT)]);
+                        }
+                        if ($slice->items === [] && count($visibleIds) < $slice->totalItems) {
+                            break; // A concurrent delete can invalidate a count before its page is fetched.
+                        }
+                    } while (count($visibleIds) < $slice->totalItems);
+                    if ($edge->count && !$edge->linkage && $edge->includeChildren === null) {
+                        $linkageCount += count($visibleIds);
+                    }
+                }
                 $targetField = $class->getSingleIdentifierFieldName();
                 $name = $edge->relationship->name;
                 $newIds = [];
                 if ($edge->includeChildren !== null) {
                     // DISTINCT target IDs only: bound output before hydrating even one target model.
                     foreach (array_chunk($ownerIds, 256) as $chunk) {
-                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk);
+                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk, $target, $visibleIds);
                         $query->select('DISTINCT ' . $alias . '.' . $targetField . ' AS target_id')->andWhere($alias . '.' . $targetField . ' IS NOT NULL');
                         $excluded = array_map('strval', array_keys($known[$target->type] ?? []));
                         if ($excluded !== []) {
@@ -124,8 +227,11 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                     }
                 }
                 if ($edge->count) {
+                    foreach ($ownerIds as $ownerId) {
+                        $map->putCount($ownerType, $ownerId, $name, 0);
+                    }
                     foreach (array_chunk($ownerIds, 256) as $chunk) {
-                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk);
+                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk, $target, $visibleIds);
                         $ownerField = $em->getClassMetadata($metadata->dataClass)->getSingleIdentifierFieldName();
                         // LEFT JOIN includes owners without targets (COUNT returns zero).
                         $query->select('source.' . $ownerField . ' AS owner_id', 'COUNT(DISTINCT ' . $alias . '.' . $targetField . ') AS related_count')->groupBy('source.' . $ownerField);
@@ -137,7 +243,7 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                 if ($edge->linkage || $edge->includeChildren !== null) {
                     $missing = array_values(array_filter($ownerIds, static fn (string $id): bool => $map->identifiers($ownerType, $id, $name) === null));
                     foreach (array_chunk($missing, 256) as $chunk) {
-                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk);
+                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk, $target, $visibleIds);
                         $ownerField = $em->getClassMetadata($metadata->dataClass)->getSingleIdentifierFieldName();
                         $query->select('DISTINCT source.' . $ownerField . ' AS owner_id', $alias . '.' . $targetField . ' AS target_id');
                         $query->andWhere($alias . '.' . $targetField . ' IS NOT NULL');
@@ -195,9 +301,10 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
     }
 
     /** @param list<string> $ids
+     * @param  list<string>|null           $visibleIds
      * @return array{QueryBuilder, string}
      */
-    private function edgeQuery(EntityManagerInterface $em, ResourceMetadata $owner, string $path, array $ids): array
+    private function edgeQuery(EntityManagerInterface $em, ResourceMetadata $owner, string $path, array $ids, ResourceMetadata $target, ?array $visibleIds = null): array
     {
         $query = $em->createQueryBuilder()->from($owner->dataClass, 'source');
         $alias = 'source';
@@ -209,6 +316,15 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
         $ownerField = $em->getClassMetadata($owner->dataClass)->getSingleIdentifierFieldName();
         $query->where('source.' . $ownerField . ' IN (:owners)');
         IdentifierParameters::bind($query, $em, $owner->dataClass, 'owners', $ids);
+        if ($visibleIds !== null) {
+            $field = $em->getClassMetadata($target->dataClass)->getSingleIdentifierFieldName();
+            if ($visibleIds === []) {
+                $query->andWhere('1 = 0');
+            } else {
+                $query->andWhere($alias . '.' . $field . ' IN (:graph_visible)');
+                IdentifierParameters::bind($query, $em, $target->dataClass, 'graph_visible', $visibleIds);
+            }
+        }
         return [$query, $alias];
     }
 

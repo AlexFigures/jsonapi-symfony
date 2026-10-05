@@ -59,6 +59,7 @@ final class SerializerEntityInstantiator
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
         private readonly PropertyAccessorInterface $accessor,
+        ?\Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface $metadataFactory = null,
     ) {
         // Create a PropertyInfoExtractor to resolve types
         // Rely only on ReflectionExtractor (no phpdocumentor/reflection-docblock required)
@@ -73,7 +74,7 @@ final class SerializerEntityInstantiator
         );
 
         // Create ClassMetadataFactory for strict attribute validation
-        $classMetadataFactory = new ClassMetadataFactory(new AttributeLoader());
+        $classMetadataFactory = $metadataFactory ?? new ClassMetadataFactory(new AttributeLoader());
 
         // Build an ObjectNormalizer with constructor support
         $normalizer = new ObjectNormalizer(

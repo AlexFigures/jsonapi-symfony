@@ -24,7 +24,7 @@
 | 12. Documentation sync | Installation, resources/CRUD, relationships, query options, errors, Atomic, caching, profiles, topology, providers, performance/limits and known limitations. | Docs describe the executable frozen contract and match the example consumer. |
 | 13. RC | Release `1.0.0-rc.1`; fix bugs, docs, compatibility and accidental API problems. | No major feature additions during RC; repair flawed contracts before final even if RC BC is needed. |
 
-The same working branch now implements the native Doctrine fetch plan, distinct-root pagination, bounded includes/linkage and grouped profile counts. Dedicated relationship endpoints and application-specific fallback paths still require work before the read contract can be frozen. See [read-path stabilization](read-path-stabilization.md). Filter protection is already part of this correctness pass. External torture expectations remain unchanged during bundle development.
+The same working branch now implements the native Doctrine fetch plan, distinct-root pagination, bounded includes/linkage and grouped profile counts. Native relationship endpoints now use scoped SQL target pagination. Computed relationship batching and hook fetch declarations are implemented; strict fallback is configurable. Arbitrary attribute getters and undeclared application SQL still have no automatic cost guarantee. See [read-path stabilization](read-path-stabilization.md). Filter protection is already part of this correctness pass. External torture expectations remain unchanged during bundle development.
 
 ## Independent result classification
 

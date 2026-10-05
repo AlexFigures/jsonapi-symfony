@@ -56,8 +56,10 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $this->em->clear();
     }
 
-    /** @param array<string, int> $limits */
-    private function builder(string $mode = 'always', array $limits = []): DocumentBuilder
+    /** @param array<string, int> $limits
+     * @param list<\AlexFigures\Symfony\Contract\Data\RelationshipBatchReaderInterface> $batchReaders
+     */
+    private function builder(string $mode = 'always', array $limits = [], ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null, array $batchReaders = [], string $unplanned = 'legacy'): DocumentBuilder
     {
         $routes = new RouteCollection();
         foreach (['articles' => ['author', 'tags'], 'authors' => ['articles'], 'tags' => [], 'articles-with-special-tags' => ['author', 'tags', 'specialTags'], 'special-tags' => []] as $type => $relationships) {
@@ -70,7 +72,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         }
         $errors = new ErrorMapper(new ErrorBuilder(false));
         $limits += ['included_max_resources' => 250, 'relationship_max_identifiers' => 10000];
-        $preloader = new DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new RepresentationFetchPlanner($mode), $errors, $limits);
+        $preloader = new DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new RepresentationFetchPlanner($mode), $errors, $limits, $repository, null, $batchReaders, $unplanned);
         return new DocumentBuilder($this->registry, $this->accessor, new LinkGenerator(new UrlGenerator($routes, new RequestContext())), $mode, new LimitsEnforcer($errors, new RequestComplexityScorer(), $limits), $preloader);
     }
 
@@ -429,6 +431,259 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
             new DefaultReadMapper(),
             $policy
         );
+    }
+
+    public function testRelationshipPagesAndLinkageRemainInSql(): void
+    {
+        $this->seedGraph(30);
+        $this->em->createQuery('UPDATE ' . Article::class . ' a SET a.author = :owner')->setParameter('owner', 'author-0000')->execute();
+        $this->em->clear();
+        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
+        $owner = $this->em->find(Author::class, 'author-0000');
+        self::assertNotNull($owner);
+        $related = $handler->getRelatedCollection('authors', 'author-0000', 'articles', new Criteria(new Pagination(2, 20)));
+        self::assertCount(10, $related->items);
+        self::assertSame(30, $related->totalItems);
+        self::assertSame('article-0020', $related->items[0]->getId());
+        $this->em->clear();
+        $ids = $handler->getToManyIds('authors', 'author-0000', 'articles', new Pagination(2, 20));
+        self::assertSame(30, $ids->totalItems);
+        self::assertCount(10, $ids->ids);
+        self::assertSame('article-0020', $ids->ids[0]);
+        foreach ($this->em->getUnitOfWork()->getIdentityMap() as $class => $models) {
+            self::assertNotSame(Article::class, $class, 'Scalar linkage must not hydrate articles.');
+        }
+    }
+
+    public function testRepositoryScopeAppliesBeforeGraphReadsAndPagination(): void
+    {
+        $this->seedGraph(30);
+        $this->em->createQuery('UPDATE ' . Article::class . ' a SET a.author = :owner')->setParameter('owner', 'author-0000')->execute();
+        $this->em->clear();
+        $scoped = new class ($this->repository) implements \AlexFigures\Symfony\Contract\Data\ResourceRepository {
+            public function __construct(private \AlexFigures\Symfony\Contract\Data\ResourceRepository $inner)
+            {
+            }
+            public function findCollection(string $type, Criteria $criteria): \AlexFigures\Symfony\Contract\Data\Slice
+            {
+                $criteria = clone $criteria;
+                if ($type === 'articles') {
+                    $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $query): void {
+                        $query->innerJoin($query->getRootAliases()[0] . '.author', 'scope_owner')->andWhere('scope_owner.id = :scopeOwner')->setParameter('scopeOwner', 'author-0000');
+                        $query->andWhere($query->getRootAliases()[0] . '.id >= :visible')->setParameter('visible', 'article-0020');
+                    };
+                }
+                return $this->inner->findCollection($type, $criteria);
+            }
+            public function findOne(string $type, string $id, Criteria $criteria): ?object
+            {
+                return $this->inner->findOne($type, $id, $criteria);
+            }
+            public function findRelated(string $type, string $relationship, array $identifiers): iterable
+            {
+                return $this->inner->findRelated($type, $relationship, $identifiers);
+            }
+        };
+        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $scoped);
+        $page = $handler->getRelatedCollection('authors', 'author-0000', 'articles', new Criteria(new Pagination(1, 5)));
+        self::assertSame(10, $page->totalItems);
+        self::assertSame('article-0020', $page->items[0]->getId());
+        $ids = $handler->getToManyIds('authors', 'author-0000', 'articles', new Pagination(1, 5));
+        self::assertSame(10, $ids->totalItems);
+        self::assertSame('article-0020', $ids->ids[0]);
+        $criteria = new Criteria();
+        $criteria->include = ['articles'];
+        $owner = $this->em->find(Author::class, 'author-0000');
+        self::assertNotNull($owner);
+        $document = $this->builder('always', [], $scoped)->buildResource('authors', $owner, $criteria, Request::create('/api/authors/author-0000?include=articles'));
+        self::assertCount(10, $document['data']['relationships']['articles']['data']);
+        self::assertSame('article-0020', $document['data']['relationships']['articles']['data'][0]['id']);
+        $articles = array_filter($document['included'], static fn (array $row): bool => $row['type'] === 'articles');
+        self::assertCount(10, $articles);
+        foreach ($articles as $article) {
+            self::assertGreaterThanOrEqual('article-0020', $article['id']);
+        }
+    }
+
+    public function testStrictFallbackRejectsComputedRelationshipBeforeCollectionAccess(): void
+    {
+        $this->seedGraph(1);
+        $this->registry->getByType('articles')->relationships['tags']->propertyPath = 'computedTags';
+        $model = $this->repository->findOne('articles', 'article-0000', new Criteria());
+        self::assertInstanceOf(Article::class, $model);
+        self::assertInstanceOf(PersistentCollection::class, $model->getTags());
+        try {
+            $this->builder('always', [], null, [], 'reject')->buildResource('articles', $model, new Criteria(), Request::create('/api/articles/article-0000'));
+            self::fail('Unplanned getter must not run.');
+        } catch (BadRequestException $error) {
+            self::assertStringContainsString('no bounded fetch plan', $error->getMessage());
+            self::assertFalse($model->getTags()->isInitialized());
+        }
+    }
+
+    public function testComputedRelationshipLoadsOneBatchAndReceivesBudgets(): void
+    {
+        $this->seedGraph(20);
+        $this->registry->getByType('articles')->relationships['tags']->propertyPath = 'computedTags';
+        $reader = new class ($this->repository) implements \AlexFigures\Symfony\Contract\Data\RelationshipBatchReaderInterface {
+            public int $calls = 0;
+            public function __construct(private \AlexFigures\Symfony\Contract\Data\ResourceRepository $repository)
+            {
+            }
+            public function supports(string $type, string $relationship): bool
+            {
+                return $type === 'articles' && $relationship === 'tags';
+            }
+            public function read(\AlexFigures\Symfony\Query\Fetch\RelationshipReadRequirements $requirements, Criteria $criteria, Request $request): \AlexFigures\Symfony\Query\Fetch\RelationshipReadMap
+            {
+                ++$this->calls;
+                if ($requirements->remainingIncluded !== 3) {
+                    throw new \LogicException('Expected the declared model budget.');
+                }
+                $criteria->pagination = new Pagination(1, $requirements->remainingIncluded + 1);
+                $slice = $this->repository->findCollection('tags', $criteria);
+                if ($slice->totalItems > $requirements->remainingIncluded) {
+                    throw new BadRequestException('Probe exceeded budget before hydration of more targets.');
+                }
+                $map = new \AlexFigures\Symfony\Query\Fetch\RelationshipReadMap();
+                foreach ($requirements->ownerIds as $ownerId) {
+                    $ids = [];
+                    foreach ($slice->items as $tag) {
+                        if (!$tag instanceof Tag) {
+                            throw new \LogicException('Expected tag.');
+                        }
+                        $ids[] = ['type' => 'tags', 'id' => $tag->getId()];
+                        $map->remember('tags', $tag->getId(), $tag);
+                    }
+                    $map->put('articles', $ownerId, 'tags', $ids);
+                }
+                return $map;
+            }
+        };
+        $criteria = new Criteria(new Pagination(1, 20));
+        $criteria->include = ['tags'];
+        $slice = $this->repository->findCollection('articles', $criteria);
+        $document = $this->builder('when_included', ['included_max_resources' => 3], null, [$reader], 'reject')->buildCollection('articles', $slice->items, $criteria, $slice, Request::create('/api/articles?include=tags'));
+        self::assertSame(1, $reader->calls);
+        self::assertCount(3, $document['included']);
+        foreach ($slice->items as $model) {
+            self::assertInstanceOf(Article::class, $model);
+            self::assertInstanceOf(PersistentCollection::class, $model->getTags());
+            self::assertFalse($model->getTags()->isInitialized());
+        }
+    }
+
+    public function testDocumentHookDeclaresAndConsumesBatchModelsWithoutIncludingThem(): void
+    {
+        $this->seedGraph(20);
+        $hook = new class () implements \AlexFigures\Symfony\Profile\Hook\DocumentHook, \AlexFigures\Symfony\Profile\Hook\RelationshipFetchRequirementsHookInterface {
+            public int $calls = 0;
+            public function relationshipReads(\AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata): array
+            {
+                return $metadata->type === 'articles' ? ['tags' => 'models'] : [];
+            }
+            public function onTopLevelLinks(ProfileContext $context, array &$links, Request $request): void
+            {
+            }
+            public function onTopLevelMeta(ProfileContext $context, array &$meta): void
+            {
+            }
+            public function onResourceRelationships(ProfileContext $context, \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata, array &$relationshipsPayload, object $model): void
+            {
+                if (!$model instanceof Article) {
+                    return;
+                }
+                if (count($context->relationshipReads?->related('articles', $model->getId(), 'tags') ?? []) !== 3) {
+                    throw new \LogicException('Required batch models missing.');
+                }
+                ++$this->calls;
+            }
+        };
+        $profile = new \AlexFigures\Symfony\Tests\Util\FakeProfile('https://example.test/fetch', [$hook]);
+        $request = Request::create('/api/articles');
+        ProfileContext::store($request, new ProfileContext([$profile->uri() => $profile], []));
+        $criteria = new Criteria(new Pagination(1, 20));
+        $slice = $this->repository->findCollection('articles', $criteria);
+        $log = new DebugStack();
+        $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+        $document = $this->builder('never')->buildCollection('articles', $slice->items, $criteria, $slice, $request);
+        self::assertSame(20, $hook->calls);
+        self::assertArrayNotHasKey('included', $document);
+        self::assertLessThanOrEqual(3, count($log->queries));
+    }
+
+    public function testRelatedFiltersAndSortingApplyBeforeRootPagination(): void
+    {
+        $this->seedGraph(30);
+        $this->em->createQuery('UPDATE ' . Article::class . ' a SET a.author = :owner')->setParameter('owner', 'author-0000')->execute();
+        $this->em->clear();
+        $criteria = new Criteria(new Pagination(2, 5));
+        $criteria->filter = new Comparison('id', 'in', array_map(static fn (int $i): string => sprintf('article-%04d', $i), range(15, 29)));
+        $criteria->sort = [new Sorting('id', true)];
+        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
+        $slice = $handler->getRelatedCollection('authors', 'author-0000', 'articles', $criteria);
+        self::assertSame(15, $slice->totalItems);
+        self::assertSame(['article-0024', 'article-0023', 'article-0022', 'article-0021', 'article-0020'], array_map(static fn (object $model): string => $model instanceof Article ? $model->getId() : '', $slice->items));
+        $metadata = $this->registry->getByType('articles');
+        $metadata->readProjection = \AlexFigures\Symfony\Resource\Definition\ReadProjection::DTO;
+        $metadata->viewClass = \AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto::class;
+        $metadata->fieldMap = ['id' => 'e.id', 'title' => 'e.title', 'content' => 'e.content', 'createdAt' => 'e.createdAt'];
+        $dto = $handler->getRelatedCollection('authors', 'author-0000', 'articles', $criteria);
+        self::assertSame(15, $dto->totalItems);
+        self::assertInstanceOf(\AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto::class, $dto->items[0]);
+        self::assertSame('article-0024', $dto->items[0]->id);
+    }
+
+    public function testGraphQueryHooksUseTargetTypeAndRetainRequestIdentity(): void
+    {
+        $this->seedGraph(1);
+        $errors = new ErrorMapper(new ErrorBuilder(false));
+        $parser = new \AlexFigures\Symfony\Http\Request\QueryParser($this->registry, new \AlexFigures\Symfony\Http\Request\PaginationConfig(), new \AlexFigures\Symfony\Http\Request\SortingWhitelist($this->registry), new \AlexFigures\Symfony\Http\Request\FilteringWhitelist($this->registry, $errors), $errors, new \AlexFigures\Symfony\Filter\Parser\FilterParser());
+        $hook = new class () implements \AlexFigures\Symfony\Profile\Hook\QueryHook {
+            public function onParseQuery(ProfileContext $context, Request $request, Criteria $criteria): void
+            {
+                if ($request->attributes->get('type') === 'articles') {
+                    if ($request->headers->get('X-Identity') !== 'limited') {
+                        throw new \LogicException('Identity lost.');
+                    }
+                    $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $query): void {
+                        $query->andWhere('1 = 0');
+                    };
+                }
+            }
+        };
+        $profile = new \AlexFigures\Symfony\Tests\Util\FakeProfile('https://example.test/scope', [$hook]);
+        $request = Request::create('/api/authors/author-0000/relationships/articles?filter[unknown]=bad');
+        $request->attributes->set('type', 'authors');
+        $request->headers->set('X-Identity', 'limited');
+        ProfileContext::store($request, new ProfileContext([$profile->uri() => $profile]));
+        $stack = new \Symfony\Component\HttpFoundation\RequestStack();
+        $stack->push($request);
+        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository, $parser, $stack);
+        self::assertSame([], $handler->getToManyIds('authors', 'author-0000', 'articles')->ids);
+        self::assertSame('authors', $request->attributes->get('type'));
+        $criteria = new Criteria();
+        $criteria->include = ['articles'];
+        $owner = $this->em->find(Author::class, 'author-0000');
+        self::assertNotNull($owner);
+        $loader = new DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new RepresentationFetchPlanner('always'), $errors, [], $this->repository, $parser);
+        $reads = $loader->preload('authors', [$owner], $criteria, $request);
+        self::assertSame([], $reads->identifiers('authors', 'author-0000', 'articles'));
+        self::assertSame([], $reads->related('authors', 'author-0000', 'articles'));
+    }
+
+    public function testRelationshipEndpointRetainsMappedOrderBy(): void
+    {
+        $this->seedGraph(1, 3);
+        $association = $this->em->getClassMetadata(Article::class)->getAssociationMapping('tags');
+        $association->orderBy = ['name' => 'DESC'];
+        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
+        $slice = $handler->getRelatedCollection('articles', 'article-0000', 'tags', new Criteria(new Pagination(1, 2)));
+        self::assertInstanceOf(Tag::class, $slice->items[0]);
+        self::assertSame('Tag 2', $slice->items[0]->getName());
+        $ids = $handler->getToManyIds('articles', 'article-0000', 'tags', new Pagination(2, 2));
+        self::assertSame(['tag-0000'], $ids->ids);
+        self::assertSame(3, $ids->totalItems);
     }
 
 }

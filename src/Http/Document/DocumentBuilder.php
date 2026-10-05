@@ -113,7 +113,7 @@ final class DocumentBuilder
      *     data: array{
      *         type: string,
      *         id: string,
-     *         links: array<string, string>,
+     *         links?: array<string, string>,
      *         attributes: array<string, mixed>|stdClass,
      *         relationships?: array<string, array<string, mixed>>
      *     },
@@ -169,7 +169,7 @@ final class DocumentBuilder
      * @return array{
      *     type: string,
      *     id: string,
-     *     links: array<string, string>,
+     *     links?: array<string, string>,
      *     attributes: array<string, mixed>|stdClass,
      *     relationships?: array<string, array<string, mixed>>
      * }
@@ -184,10 +184,11 @@ final class DocumentBuilder
         $resource = [
             'type' => $type,
             'id' => $id,
-            'links' => [
-                'self' => $this->links->resourceSelf($type, $id),
-            ],
         ];
+
+        if (in_array(\AlexFigures\Symfony\Resource\Definition\ResourceOperation::SHOW, $metadata->allowedOperations, true)) {
+            $resource['links'] = ['self' => $this->links->resourceSelf($type, $id)];
+        }
 
         $resource['attributes'] = $attributes === [] ? new stdClass() : $attributes;
 

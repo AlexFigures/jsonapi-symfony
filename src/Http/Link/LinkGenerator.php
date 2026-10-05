@@ -58,15 +58,15 @@ final class LinkGenerator
         $number = $pagination->number;
         $totalPages = max(1, (int) ceil($total / max($size, 1)));
 
-        $links['first'] = $this->generateCollectionUrl($type, 1, $size, $query);
-        $links['last'] = $this->generateCollectionUrl($type, $totalPages, $size, $query);
+        $links['first'] = $this->generateCollectionUrl($type, 1, $size, $query, $request);
+        $links['last'] = $this->generateCollectionUrl($type, $totalPages, $size, $query, $request);
 
         if ($number > 1) {
-            $links['prev'] = $this->generateCollectionUrl($type, max(1, $number - 1), $size, $query);
+            $links['prev'] = $this->generateCollectionUrl($type, max(1, $number - 1), $size, $query, $request);
         }
 
         if ($number < $totalPages) {
-            $links['next'] = $this->generateCollectionUrl($type, min($totalPages, $number + 1), $size, $query);
+            $links['next'] = $this->generateCollectionUrl($type, min($totalPages, $number + 1), $size, $query, $request);
         }
 
         return $links;
@@ -75,7 +75,7 @@ final class LinkGenerator
     /**
      * @param array<string, mixed> $query
      */
-    private function generateCollectionUrl(string $type, int $number, int $size, array $query): string
+    private function generateCollectionUrl(string $type, int $number, int $size, array $query, Request $request): string
     {
         if (!isset($query['page']) || !is_array($query['page'])) {
             $query['page'] = [];
@@ -83,6 +83,10 @@ final class LinkGenerator
 
         $query['page']['number'] = $number;
         $query['page']['size'] = $size;
+
+        if ($request->attributes->getBoolean('_jsonapi_relationship_collection')) {
+            return $request->getUriForPath($request->getPathInfo()) . '?' . http_build_query($query);
+        }
 
         return $this->urls->generate(
             "jsonapi.{$type}.index",

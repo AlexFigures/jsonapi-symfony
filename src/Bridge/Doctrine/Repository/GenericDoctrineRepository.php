@@ -67,6 +67,27 @@ class GenericDoctrineRepository implements ResourceRepository
             $condition($roots);
         }
         $this->applySorting($roots, $criteria->sort, $metadata);
+        if ($criteria->identifiersOnly) {
+            $field = $em->getClassMetadata($entityClass)->getSingleIdentifierFieldName();
+            $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
+            if ($roots->getDQLPart('join') !== []) {
+                // Doctrine output walkers require an entity result mapping. Hydrate only the bounded page.
+                [$page, $total] = (new \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineRootPaginator())->paginate($roots, $offset, $criteria->pagination->size);
+                $ids = array_map(fn (object $entity): ResourceIdentifier => new ResourceIdentifier($type, (string) $this->identifierMapKey($em->getClassMetadata($entityClass)->getFieldValue($entity, $field))), $page);
+            } else {
+                $count = clone $roots;
+                $count->select('COUNT(DISTINCT e.' . $field . ')')->resetDQLPart('orderBy')->setFirstResult(0)->setMaxResults(null);
+                $total = (int) $count->getQuery()->getSingleScalarResult();
+                $roots->select('e.' . $field . ' AS jsonapi_identifier')->setFirstResult($offset)->setMaxResults($criteria->pagination->size);
+                $ids = [];
+                /** @var list<array{jsonapi_identifier: string|int|Stringable}> $rows */
+                $rows = $roots->getQuery()->getScalarResult();
+                foreach ($rows as $row) {
+                    $ids[] = new ResourceIdentifier($type, (string) $row['jsonapi_identifier']);
+                }
+            }
+            return new Slice($ids, $criteria->pagination->number, $criteria->pagination->size, $total);
+        }
         [$entities, $total] = (new \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineRootPaginator())->paginate(
             $roots,
             ($criteria->pagination->number - 1) * $criteria->pagination->size,

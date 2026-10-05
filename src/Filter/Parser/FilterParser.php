@@ -23,6 +23,23 @@ final readonly class FilterParser
     public function __construct(private int $maxDepth = 8)
     {
     }
+    /** Check logical depth before PHP's max_input_nesting_level can silently discard filter keys. */
+    public function validateQueryString(string $query): void
+    {
+        if ($this->maxDepth <= 0) {
+            return;
+        }
+        foreach (explode('&', $query) as $pair) {
+            $key = urldecode(explode('=', $pair, 2)[0]);
+            if (!str_starts_with($key, 'filter[')) {
+                continue;
+            }
+            if (preg_match_all('/\[(?:and|or)\]/', $key) >= $this->maxDepth) {
+                throw new \InvalidArgumentException('Maximum filter depth exceeded.');
+            }
+        }
+    }
+
     /**
      * @param array<array-key, mixed> $rawFilters
      */

@@ -1,0 +1,6 @@
+AlexFigures\Symfony\Tests\Unit\Bridge\Doctrine\Instantiator\Fixtures\YamlWriteModel:
+    attributes:
+        title:
+            groups: [write]
+        protectedValue:
+            groups: [read]

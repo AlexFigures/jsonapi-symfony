@@ -180,5 +180,17 @@ final class LinkGeneratorTest extends TestCase
         $pagination = new Pagination(number: 1, size: 10);
 
         $linkGenerator->collectionPagination('articles', $pagination, 10, $request);
+    }    public function testRelatedPaginationRetainsMembershipAndClientQuery(): void
+    {
+        $generator = $this->createMock(UrlGeneratorInterface::class);
+        $generator->expects(self::never())->method('generate');
+        $request = Request::create('https://example.test/api/authors/one/articles?filter[title]=visible&page[size]=5');
+        $request->attributes->set('_jsonapi_relationship_collection', true);
+        $links = (new LinkGenerator($generator))->collectionPagination('articles', new Pagination(1, 5), 12, $request);
+        self::assertStringStartsWith('https://example.test/api/authors/one/articles?', $links['next']);
+        parse_str((string) parse_url($links['next'], \PHP_URL_QUERY), $query);
+        self::assertSame('visible', $query['filter']['title']);
+        self::assertSame('2', $query['page']['number']);
     }
+
 }

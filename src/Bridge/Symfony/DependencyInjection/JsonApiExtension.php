@@ -26,6 +26,11 @@ final class JsonApiExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
+        if (!$container->hasParameter('jsonapi.discovered_resources')) {
+            $container->setParameter('jsonapi.discovered_resources', []);
+        }
+        $container->setParameter('jsonapi.relationships.unplanned_read_policy', $config['relationships']['unplanned_read_policy']);
+
         $container->setParameter('jsonapi.strict_content_negotiation', $config['strict_content_negotiation']);
 
         $mediaTypes = $config['media_types'];
@@ -110,6 +115,8 @@ final class JsonApiExtension extends Extension
                 $definition->addTag('jsonapi.resource', ['type' => $attribute->type]);
             }
         );
+
+        $container->registerForAutoconfiguration(\AlexFigures\Symfony\Contract\Data\RelationshipBatchReaderInterface::class)->addTag('jsonapi.relationship_batch_reader');
 
         $container->registerForAutoconfiguration(ProfileInterface::class)
             ->addTag('jsonapi.profile');

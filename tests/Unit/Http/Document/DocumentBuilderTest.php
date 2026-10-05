@@ -25,6 +25,19 @@ use Symfony\Component\Routing\RequestContext;
 #[CoversClass(DocumentBuilder::class)]
 final class DocumentBuilderTest extends TestCase
 {
+    public function testCustomActionResourceWithoutShowOmitsSelfLink(): void
+    {
+        $metadata = new ResourceMetadata('statistics', \stdClass::class, ['count' => new AttributeMetadata('count')], [], allowedOperations: []);
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('getByType')->willReturn($metadata);
+        $urls = $this->createMock(UrlGeneratorInterface::class);
+        $urls->expects(self::never())->method('generate');
+        $builder = new DocumentBuilder($registry, PropertyAccess::createPropertyAccessor(), new LinkGenerator($urls));
+        $document = $builder->buildResource('statistics', (object) ['id' => '1', 'count' => 4], new Criteria(), Request::create('/authors/1/statistics'));
+        self::assertSame(4, $document['data']['attributes']['count']);
+        self::assertArrayNotHasKey('links', $document['data']);
+    }
+
     public function testDocumentHooksAugmentDocuments(): void
     {
         $articleMetadata = new ResourceMetadata(

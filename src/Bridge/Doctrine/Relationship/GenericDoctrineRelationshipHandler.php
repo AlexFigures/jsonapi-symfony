@@ -45,6 +45,9 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         private readonly PropertyAccessorInterface $accessor,
         private readonly FlushManager $flushManager,
         private readonly ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null,
+        private readonly ?\AlexFigures\Symfony\Http\Request\QueryParser $queryParser = null,
+        private readonly ?\Symfony\Component\HttpFoundation\RequestStack $requests = null,
+        private readonly string $unplannedReadPolicy = 'legacy',
     ) {
     }
 
@@ -52,7 +55,28 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
 
     public function getToOneId(string|object $type, string $idOrRel, ?string $rel = null): ?string
     {
+        if (is_string($type) && $this->repository !== null) {
+            $visibleOwner = $this->repository->findOne($type, $idOrRel, $this->graphCriteria($type));
+            if ($visibleOwner === null) {
+                throw new NotFoundException('Relationship owner not found.');
+            }
+        }
         [$resource, $metadata, $relationship] = $this->resolveResourceContext($type, $idOrRel, $rel);
+        if ($this->repository !== null) {
+            $query = (new DoctrineRelationshipQueryFactory($this->managerRegistry, $this->registry))->select($metadata->type, $relationship, [$this->extractId($resource)], new Criteria(new Pagination(1, 1)));
+            if ($query !== null) {
+                [$targetMetadata, $selected] = $query;
+                $scope = $this->graphCriteria($targetMetadata->type);
+                $selected->customConditions = array_merge($scope->customConditions, $selected->customConditions);
+                $selected->identifiersOnly = true;
+                $slice = $this->repository->findCollection($targetMetadata->type, $selected);
+                $model = $slice->items[0] ?? null;
+                return $model === null ? null : ($model instanceof ResourceIdentifier ? $model->id : $this->viewIdentifier($targetMetadata, $model));
+            }
+        }
+        if ($this->unplannedReadPolicy === 'reject') {
+            throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
+        }
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
 
         $related = $this->accessor->getValue($resource, $propertyPath);
@@ -65,12 +89,42 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             throw new RuntimeException(sprintf('Relationship "%s" on resource "%s" must resolve to an object or null.', $relationship, $metadata->type));
         }
 
+        if ($this->repository !== null) {
+            $targetType = $metadata->relationships[$relationship]->targetType;
+            if ($targetType === null) {
+                throw new \LogicException('Computed relationship requires a target resource type.');
+            }
+            $slice = $this->fallbackCollection($targetType, [$this->extractId($related)], $this->graphCriteria($targetType), true);
+            $model = $slice->items[0] ?? null;
+            return $model === null ? null : ($model instanceof ResourceIdentifier ? $model->id : $this->viewIdentifier($this->registry->getByType($targetType), $model));
+        }
+
         return $this->extractId($related);
     }
 
     public function getToManyIds(string|object $type, string $idOrRel, ?string $rel = null, ?Pagination $pagination = null): SliceIds
     {
+        if (is_string($type) && $this->repository !== null) {
+            $visibleOwner = $this->repository->findOne($type, $idOrRel, $this->graphCriteria($type));
+            if ($visibleOwner === null) {
+                throw new NotFoundException('Relationship owner not found.');
+            }
+        }
         [$resource, $metadata, $relationship] = $this->resolveResourceContext($type, $idOrRel, $rel);
+        if ($this->repository !== null) {
+            $query = (new DoctrineRelationshipQueryFactory($this->managerRegistry, $this->registry))->select($metadata->type, $relationship, [$this->extractId($resource)], new Criteria($pagination ?? new Pagination(1, 10)));
+            if ($query !== null) {
+                [$targetMetadata, $selected] = $query;
+                $scope = $this->graphCriteria($targetMetadata->type);
+                $selected->customConditions = array_merge($scope->customConditions, $selected->customConditions);
+                $selected->identifiersOnly = true;
+                $slice = $this->repository->findCollection($targetMetadata->type, $selected);
+                return new SliceIds(array_map(fn (object $model): string => $model instanceof ResourceIdentifier ? $model->id : $this->viewIdentifier($targetMetadata, $model), $slice->items), $slice->pageNumber, $slice->pageSize, $slice->totalItems);
+            }
+        }
+        if ($this->unplannedReadPolicy === 'reject') {
+            throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
+        }
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
         $pagination ??= new Pagination(1, 10);
 
@@ -93,6 +147,18 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             $ids[] = $this->extractId($item);
         }
 
+        if ($this->repository !== null) {
+            $target = $metadata->relationships[$relationship]->targetType;
+            if ($target === null) {
+                throw new \LogicException('Computed relationship requires a target resource type.');
+            }
+            $selected = $this->graphCriteria($target);
+            $selected->pagination = $pagination;
+            $slice = $this->fallbackCollection($target, $ids, $selected, true);
+            $targetMetadata = $this->registry->getByType($target);
+            return new SliceIds(array_map(fn (object $model): string => $model instanceof ResourceIdentifier ? $model->id : $this->viewIdentifier($targetMetadata, $model), $slice->items), $slice->pageNumber, $slice->pageSize, $slice->totalItems);
+        }
+
         $total = count($ids);
 
         // Apply pagination
@@ -104,7 +170,26 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
 
     public function getRelatedResource(string|object $type, string $idOrRel, ?string $rel = null): ?object
     {
+        if (is_string($type) && $this->repository !== null) {
+            $visibleOwner = $this->repository->findOne($type, $idOrRel, $this->graphCriteria($type));
+            if ($visibleOwner === null) {
+                throw new NotFoundException('Relationship owner not found.');
+            }
+        }
         [$resource, $metadata, $relationship] = $this->resolveResourceContext($type, $idOrRel, $rel);
+        if ($this->repository !== null) {
+            $query = (new DoctrineRelationshipQueryFactory($this->managerRegistry, $this->registry))->select($metadata->type, $relationship, [$this->extractId($resource)], new Criteria(new Pagination(1, 1)));
+            if ($query !== null) {
+                [$targetMetadata, $selected] = $query;
+                $scope = $this->graphCriteria($targetMetadata->type);
+                $selected->customConditions = array_merge($scope->customConditions, $selected->customConditions);
+                $slice = $this->repository->findCollection($targetMetadata->type, $selected);
+                return $slice->items[0] ?? null;
+            }
+        }
+        if ($this->unplannedReadPolicy === 'reject') {
+            throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
+        }
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
 
         $value = $this->accessor->getValue($resource, $propertyPath);
@@ -117,12 +202,38 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             throw new RuntimeException(sprintf('Relationship "%s" on resource "%s" must resolve to an object or null.', $relationship, $metadata->type));
         }
 
+        if ($this->repository !== null) {
+            $targetType = $metadata->relationships[$relationship]->targetType;
+            if ($targetType === null) {
+                throw new \LogicException('Computed relationship requires a target resource type.');
+            }
+            return $this->fallbackCollection($targetType, [$this->extractId($value)], $this->graphCriteria($targetType))->items[0] ?? null;
+        }
+
         return $value;
     }
 
     public function getRelatedCollection(string|object $type, string $idOrRel, ?string $rel = null, ?Criteria $criteria = null): Slice
     {
+        if (is_string($type) && $this->repository !== null) {
+            $visibleOwner = $this->repository->findOne($type, $idOrRel, $this->graphCriteria($type));
+            if ($visibleOwner === null) {
+                throw new NotFoundException('Relationship owner not found.');
+            }
+        }
         [$resource, $metadata, $relationship] = $this->resolveResourceContext($type, $idOrRel, $rel);
+        if ($this->repository !== null) {
+            $query = (new DoctrineRelationshipQueryFactory($this->managerRegistry, $this->registry))->select($metadata->type, $relationship, [$this->extractId($resource)], $criteria ?? new Criteria());
+            if ($query !== null) {
+                [$targetMetadata, $selected] = $query;
+
+                $slice = $this->repository->findCollection($targetMetadata->type, $selected);
+                return $slice;
+            }
+        }
+        if ($this->unplannedReadPolicy === 'reject') {
+            throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
+        }
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
         $criteria ??= new Criteria();
 
@@ -140,18 +251,21 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         }
 
         $objects = $this->ensureObjectList($items, 'related collection items');
-        if ($criteria->customConditions !== [] && $this->repository !== null) {
+        if ($this->repository !== null) {
             $targetType = $metadata->relationships[$relationship]->targetType;
             if ($targetType !== null) {
                 $ids = array_map(fn (object $item): string => $this->extractId($item), $objects);
-                $identifier = $this->registry->getByType($targetType)->idPropertyPath ?? 'id';
+                $targetMetadata = $this->registry->getByType($targetType);
+                $targetEm = $this->getEntityManagerFor($targetMetadata->dataClass);
+                $identifier = $targetEm->getClassMetadata($targetMetadata->dataClass)->getSingleIdentifierFieldName();
                 $selected = clone $criteria;
-                $selected->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $qb) use ($ids, $identifier): void {
+                $selected->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $qb) use ($ids, $identifier, $targetMetadata, $targetEm): void {
                     if ($ids === []) {
                         $qb->andWhere('1 = 0');
                         return;
                     }
-                    $qb->andWhere('e.' . $identifier . ' IN (:relationshipIds)')->setParameter('relationshipIds', $ids);
+                    $qb->andWhere($qb->getRootAliases()[0] . '.' . $identifier . ' IN (:relationshipIds)');
+                    \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierParameters::bind($qb, $targetEm, $targetMetadata->dataClass, 'relationshipIds', $ids);
                 };
                 return $this->repository->findCollection($targetType, $selected);
             }
@@ -274,6 +388,34 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
 
     // ==================== Private helpers ====================
 
+    /** @param list<string> $ids */
+    private function fallbackCollection(string $targetType, array $ids, Criteria $criteria, bool $identifiers = false): Slice
+    {
+        if ($this->repository === null) {
+            throw new \LogicException('Scoped fallback requires a repository.');
+        }
+        $metadata = $this->registry->getByType($targetType);
+        $em = $this->getEntityManagerFor($metadata->dataClass);
+        $field = $em->getClassMetadata($metadata->dataClass)->getSingleIdentifierFieldName();
+        $selected = clone $criteria;
+        $selected->identifiersOnly = $identifiers;
+        $selected->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $query) use ($ids, $field, $metadata, $em): void {
+            if ($ids === []) {
+                $query->andWhere('1 = 0');
+                return;
+            }
+            $query->andWhere($query->getRootAliases()[0] . '.' . $field . ' IN (:fallback_ids)');
+            \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierParameters::bind($query, $em, $metadata->dataClass, 'fallback_ids', $ids);
+        };
+        return $this->repository->findCollection($targetType, $selected);
+    }
+
+    private function graphCriteria(string $type): Criteria
+    {
+        $request = $this->requests?->getCurrentRequest();
+        return $request !== null && $this->queryParser !== null ? $this->queryParser->parseGraph($type, $request) : new Criteria();
+    }
+
     private function findResource(string $type, string $id): object
     {
         $metadata = $this->registry->getByType($type);
@@ -289,6 +431,15 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         }
 
         return $entity;
+    }
+
+    private function viewIdentifier(ResourceMetadata $metadata, object $model): string
+    {
+        $id = $this->accessor->getValue($model, $metadata->idPropertyPath ?? 'id');
+        if (!is_scalar($id) && !$id instanceof Stringable) {
+            throw new \LogicException('Resource identifier must be scalar or Stringable.');
+        }
+        return (string) $id;
     }
 
     private function extractId(object $entity): string

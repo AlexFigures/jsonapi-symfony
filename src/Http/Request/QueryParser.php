@@ -34,6 +34,11 @@ final class QueryParser
 
     public function parse(string $type, Request $request): Criteria
     {
+        try {
+            $this->filterParser->validateQueryString($request->server->getString('QUERY_STRING'));
+        } catch (\InvalidArgumentException $exception) {
+            $this->throwBadRequest($this->errors->invalidParameter('filter', $exception->getMessage()));
+        }
         // Validate that only known query parameters are present
         $this->validateQueryParameters($request);
 
@@ -54,6 +59,15 @@ final class QueryParser
         $this->limits?->enforce($type, $criteria);
 
         return $criteria;
+    }
+
+    /** Graph scopes use target hooks, without inheriting the root resource's filter/sort/page. */
+    public function parseGraph(string $type, Request $request): Criteria
+    {
+        $graph = $request->duplicate(query: [], attributes: array_replace($request->attributes->all(), ['type' => $type, '_jsonapi_graph_read' => true]));
+        // Passing server to duplicate() rebuilds headers and loses middleware-added identity.
+        $graph->server->set('QUERY_STRING', '');
+        return $this->parse($type, $graph);
     }
 
     private function parsePagination(Request $request): Pagination

@@ -32,6 +32,25 @@ final class SerializerEntityInstantiatorTest extends TestCase
         $this->instantiator = new SerializerEntityInstantiator($this->managerRegistry, $this->accessor);
     }
 
+    public function testYamlGroupsControlConstructorAndUpdateDenormalization(): void
+    {
+        $class = \AlexFigures\Symfony\Tests\Unit\Bridge\Doctrine\Instantiator\Fixtures\YamlWriteModel::class;
+        $factory = new \Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory(new \Symfony\Component\Serializer\Mapping\Loader\YamlFileLoader(__DIR__ . '/Fixtures/serializer.yaml'));
+        $instantiator = new SerializerEntityInstantiator($this->managerRegistry, $this->accessor, $factory);
+        $metadata = new ResourceMetadata(type: 'yaml-models', class: $class, attributes: ['headline' => new AttributeMetadata('headline', 'title')], relationships: [], denormalizationContext: ['groups' => ['write']]);
+        $entity = $instantiator->instantiate($class, $metadata, new ChangeSet(['headline' => 'Created']))['entity'];
+        self::assertInstanceOf($class, $entity);
+        self::assertSame('Created', $entity->title);
+        $instantiator->denormalizer()->denormalize(['title' => 'Updated'], $class, null, ['groups' => ['write'], 'object_to_populate' => $entity, 'allow_extra_attributes' => false]);
+        self::assertSame('Updated', $entity->title);
+        try {
+            $instantiator->denormalizer()->denormalize(['protectedValue' => 'leak'], $class, null, ['groups' => ['write'], 'object_to_populate' => $entity, 'allow_extra_attributes' => false]);
+            self::fail('Read-only YAML group must be rejected.');
+        } catch (\Symfony\Component\Serializer\Exception\ExtraAttributesException) {
+            self::assertSame('original', $entity->protectedValue);
+        }
+    }
+
     public function testInstantiateWithoutConstructor(): void
     {
         $classMetadata = $this->createMock(ClassMetadata::class);

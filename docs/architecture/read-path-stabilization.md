@@ -80,17 +80,11 @@ The real two-connection `ConcurrentWritePreconditionsTest` also uses the preload
 
 ## Remaining read-path release blockers
 
-### Dedicated relationship endpoints
+### Relationship endpoints and extension declarations
 
-`GenericDoctrineRelationshipHandler::getRelatedCollection()` and `getToManyIds()` still have a legacy in-memory collection path. `DocumentBuilder` preloading cannot undo the cost incurred before it receives those models. Do not advertise every relationship endpoint as bounded yet.
+Native Doctrine relationship endpoints now use SQL membership, configured repository scopes, distinct target pagination and DTO projection. Computed representation relationships can register a batch reader; hooks can declare identifiers/models/count requirements. An explicit strict fallback policy rejects unplanned reads. See [relationship graph reads](relationship-graph-reads.md) for the implemented contract and its costs.
 
-Implement `DoctrineRelationshipQueryFactory` to resolve the owner, API alias path, target class, identifier mapping and selected manager once. For related collection reads, build an owner-membership `EXISTS`/target-ID subquery and feed the root target query through the same filter/sort/distinct-root paginator and DTO projection. Avoid loading the owner's whole collection or first materializing all related IDs. For linkage reads, use scalar target-ID selection plus a distinct count, ordered and paginated in SQL. Keep `RelationshipReader` signatures; the existing handler can delegate these native association paths to the factory and retain a documented custom/computed fallback. Test large owners, empty relationships, duplicate paths, UUIDs, filters/sort, stable pagination and counts on both databases.
-
-### Computed relationships, attribute paths and custom hooks
-
-Mapped association paths, including join-entity aliases, are batched. Computed relationships and opaque application hooks retain the original property-access behavior and can still perform arbitrary queries. Nested relationship-backed attribute getters can likewise cause application-specific reads. Automatic cost guarantees cannot cover arbitrary user code.
-
-Extend the optional fetch declaration with explicit identifier/model/scalar requirements when a concrete consumer needs them. Add planned scalar attribute reads to the map and have `DocumentBuilder::buildAttributes()` consume them. For a computed relationship, register a provider-specific batch reader rather than introspecting arbitrary getters. Preserve the generic core: neither a Doctrine query builder nor an EntityManager should appear in its requirements. Add query-count regressions for each supported declaration and diagnostics for requirements a provider cannot satisfy.
+The bounded guarantee still cannot cover arbitrary application SQL, undeclared hooks or relationship-backed attribute getters. Computed endpoints require a custom scoped/paginated reader. Legacy fallback remains selectable for compatibility and can materialize a complete collection. Broader scalar attribute fetch declarations require a concrete provider contract and corresponding tests before being promised.
 
 ### Wider provider/database verification
 
@@ -98,4 +92,4 @@ The current tests cover the installed ORM/DBAL versions and PostgreSQL/MySQL gra
 
 ## Bundle verification for this branch
 
-The complete bundle suite passed locally with **1172 tests, 6512 assertions and 6 skips**. PHPStan passed without errors. Architectural dependency checks passed with zero violations after separating pure read-map data from representation planning and internal transaction adapters. The external example application was neither changed nor executed; its independent verification is still pending. CI changes have been validated locally but have not been executed by GitHub Actions in this session.
+The initial read-path milestone passed with 1172 tests. The subsequent relationship/graph pass passed the complete local bundle suite with **1195 tests, 6771 assertions and 6 skips**, plus PHPStan, architectural dependency checks and CS Fixer. See [graph verification](relationship-graph-reads.md#verification). The external example application was neither changed nor executed; independent verification remains pending. CI has not been executed remotely in this session.

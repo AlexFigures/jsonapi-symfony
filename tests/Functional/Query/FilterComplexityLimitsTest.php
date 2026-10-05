@@ -91,6 +91,24 @@ final class FilterComplexityLimitsTest extends JsonApiTestCase
         $this->limitedParser(['complexity_budget' => 27])->parse('generated-records', Request::create('/', parameters: ['filter' => ['name' => ['in' => ['a', 'b', 'c']]] ]));
     }
 
+    public function testRawDepthIsRejectedEvenWhenPhpDiscardsParsedFilter(): void
+    {
+        $filter = ['name' => 'a'];
+        for ($level = 0; $level < 40; ++$level) {
+            $filter = ['and' => [$filter]];
+        }
+        $request = Request::create('/');
+        $request->server->set('QUERY_STRING', http_build_query(['filter' => $filter]));
+        // Model the empty query bag produced by max_input_nesting_level overflow.
+        self::assertSame([], $request->query->all());
+        try {
+            $this->limitedParser([])->parse('generated-records', $request);
+            self::fail('Truncated filter must not become an unfiltered read.');
+        } catch (BadRequestException $error) {
+            self::assertSame('filter', $error->getErrors()[0]->source?->parameter);
+        }
+    }
+
     private function filterRegistry(): \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface
     {
         return new \AlexFigures\Symfony\Resource\Registry\ResourceRegistry([\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\GeneratedRecord::class]);

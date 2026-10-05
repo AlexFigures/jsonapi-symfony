@@ -87,3 +87,13 @@ Dedicated relationship endpoints still have a legacy collection-reading path and
 ## Pending final migration audit
 
 Before final 1.0, append every approved namespace/interface/service-alias move, constructor/named attribute argument change, configuration default change and removed/deprecated behavior. Review public exceptions/events/hooks/value objects and error code/title/source semantics. Declare only the platform matrix actually exercised in CI. Freeze and RC follow independent consumer confirmation; this draft does not substitute for it.
+
+## Graph scopes and extension read plans
+
+**Before:** Native relationship reads/includes could bypass repository decorators; computed getters and hooks could implicitly initialize whole ORM collections. Deep filters discarded by PHP could turn into unfiltered reads. Standalone write serialization ignored Symfony's YAML metadata; required-DI profiles failed compile-time lookup.
+
+**After:** Graph reads dispatch through the configured repository. Native related pages use SQL membership and target pagination; simple linkage uses identifiers, joined linkage hydrates only its page. Raw depth is checked before parsed-filter lookup. Write serialization uses the configured metadata factory; DI profile requirements are validated after service construction. Resources without SHOW omit their resource self link.
+
+**Why:** Scopes must survive every transport path, and read costs require an explicit provider plan.
+
+**Migration:** Review repository decorators for optional `Criteria::identifiersOnly` results, implement bounded/scoped computed readers, declare hook reads, then opt into `relationships.unplanned_read_policy: reject`. Keep `legacy` only where application-specific getters have an understood cost. Computed endpoints need a custom `TypedRelationshipReader`. Do not rely on a self link for resources that expose no SHOW route. See [graph read contract](docs/architecture/relationship-graph-reads.md).

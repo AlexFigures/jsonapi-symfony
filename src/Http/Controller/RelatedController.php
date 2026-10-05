@@ -46,6 +46,7 @@ final class RelatedController
         }
 
         if ($relationship->toMany) {
+            $request->attributes->set('_jsonapi_relationship_collection', true);
             $targetType = $relationship->targetType ?? $rel;
             $criteria = $this->parser->parse($targetType, $request);
             $slice = $this->reader->getRelatedCollection($type, $id, $rel, $criteria);

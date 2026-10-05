@@ -851,3 +851,7 @@ services:
 
 **Last Updated**: 2025-10-07
 
+
+### Planned relationship reads
+
+`jsonapi.relationships.unplanned_read_policy` accepts `legacy` (default) or `reject`. Strict mode rejects computed reads without a bounded provider plan. Native endpoints paginate in SQL through the configured repository; includes/linkage honor the repository's target scope. Register a `RelationshipBatchReaderInterface` for computed representation relationships and declare document-hook requirements with `RelationshipFetchRequirementsHookInterface`. See [relationship graph reads](../architecture/relationship-graph-reads.md) for budgets, scope requirements and the limitations of legacy fallback.
