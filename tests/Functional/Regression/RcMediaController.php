@@ -9,6 +9,15 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class RcMediaController
 {
+    public function version(string $version): Response
+    {
+        $response = new Response('{"data":null}', headers: ['Content-Type' => 'application/vnd.api+json']);
+        if ($version !== 'absent') {
+            $response->headers->set('X-Resource-Version', $version);
+        }
+        return $response;
+    }
+
     #[\AlexFigures\Symfony\Docs\Attribute\OpenApiEndpoint(
         summary: 'Example endpoint',
         requestBody: new \AlexFigures\Symfony\Docs\Attribute\OpenApiRequestBody('application/json', ['type' => 'object']),

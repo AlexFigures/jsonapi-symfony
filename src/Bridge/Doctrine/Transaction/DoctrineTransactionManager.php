@@ -10,14 +10,35 @@ use AlexFigures\Symfony\Http\Exception\UnsupportedTransactionBoundaryException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
-class DoctrineTransactionManager implements ScopedTransactionManagerInterface
+class DoctrineTransactionManager implements ScopedTransactionManagerInterface, \AlexFigures\Symfony\Contract\Tx\ResourceWriteTransactionManagerInterface
 {
     private ?EntityManagerInterface $active = null;
 
+    /** @param iterable<\AlexFigures\Symfony\Contract\Data\ResourcePersister> $persisters */
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
         private readonly FlushManager $flushManager,
+        private readonly iterable $persisters = [],
     ) {
+    }
+
+    public function transactionalWriteFor(string $type, string $dataClass, callable $callback): mixed
+    {
+        $manager = $this->managerRegistry->getManagerForClass($dataClass);
+        if ($manager instanceof EntityManagerInterface) {
+            return $this->run($manager, $callback);
+        }
+        foreach ($this->persisters as $persister) {
+            if ($persister instanceof \AlexFigures\Symfony\Contract\Data\TypedResourcePersister && $persister->supports($type)) {
+                if ($this->active !== null) {
+                    throw new UnsupportedTransactionBoundaryException();
+                }
+                // A non-ORM legacy persister owns its single-write persistence guarantees.
+                // Never enlist an unrelated ORM manager on its behalf.
+                return $callback();
+            }
+        }
+        throw new \LogicException(sprintf('No Doctrine ORM entity manager or typed persister registered for resource "%s" (%s).', $type, $dataClass));
     }
 
     /** Legacy callers without resource context use only the default manager. */

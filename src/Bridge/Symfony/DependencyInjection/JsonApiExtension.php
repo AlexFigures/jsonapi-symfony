@@ -104,6 +104,10 @@ final class JsonApiExtension extends Extension
             }
         }
 
+        if ($config['cache']['etag']['strategy'] === 'version') {
+            $container->setAlias(\AlexFigures\Symfony\Http\Cache\EtagGeneratorInterface::class, \AlexFigures\Symfony\Http\Cache\VersionEtagGenerator::class);
+        }
+
         // Configure data layer aliases AFTER loading services.php
         // This will override the default Null implementations
         $this->configureDataLayer($container, $config['data_layer']);
@@ -119,6 +123,8 @@ final class JsonApiExtension extends Extension
         );
 
         $container->registerForAutoconfiguration(\AlexFigures\Symfony\Contract\Data\RelationshipBatchReaderInterface::class)->addTag('jsonapi.relationship_batch_reader');
+
+        $container->registerForAutoconfiguration(\AlexFigures\Symfony\Contract\Data\TypedResourcePersister::class)->addTag('jsonapi.persister');
 
         $container->registerForAutoconfiguration(ProfileInterface::class)
             ->addTag('jsonapi.profile');
@@ -151,7 +157,7 @@ final class JsonApiExtension extends Extension
 
             $container->setAlias(
                 'AlexFigures\Symfony\Contract\Data\ResourceProcessor',
-                'AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor'
+                \AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class
             )->setPublic(false);
 
             $container->setAlias(
@@ -174,6 +180,8 @@ final class JsonApiExtension extends Extension
                 'AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker'
             )->setPublic(false);
         } elseif ($config['provider'] === 'custom') {
+            $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->setArgument(1, new \Symfony\Component\DependencyInjection\Reference($config['processor'] ?? 'jsonapi.null_resource_processor'));
+            $container->setAlias(\AlexFigures\Symfony\Contract\Data\ResourceProcessor::class, \AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class);
             // Use custom implementations
             if ($config['repository'] !== null) {
                 $container->setAlias(
@@ -182,12 +190,7 @@ final class JsonApiExtension extends Extension
                 )->setPublic(false);
             }
 
-            if ($config['processor'] !== null) {
-                $container->setAlias(
-                    'AlexFigures\Symfony\Contract\Data\ResourceProcessor',
-                    $config['processor']
-                )->setPublic(false);
-            }
+
 
             if ($config['relationship_reader'] !== null) {
                 $container->setAlias(

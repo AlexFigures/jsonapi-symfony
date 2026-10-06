@@ -44,6 +44,30 @@ final class DoctrineTransactionManagerTest extends TestCase
         self::assertFalse($flush->isFlushScheduled());
     }
 
+    public function testNonOrmTypedWriteDoesNotEnlistUnrelatedManagerAndAtomicRejectsIt(): void
+    {
+        $unrelated = $this->createMock(EntityManagerInterface::class);
+        foreach (['beginTransaction', 'flush', 'commit', 'rollback', 'close'] as $method) {
+            $unrelated->expects(self::never())->method($method);
+        }
+        $class = \AlexFigures\Symfony\Tests\Functional\Regression\Fixtures\RcMemory::class;
+        $registry = new TestManagerRegistry(['default' => $unrelated], [$class => 'unmapped']);
+        $persister = $this->createMock(\AlexFigures\Symfony\Contract\Data\TypedResourcePersister::class);
+        $persister->method('supports')->willReturnCallback(static fn (string $type): bool => $type === 'rc-memory');
+        $model = new $class('typed', 'Title');
+        $persister->expects(self::once())->method('create')->willReturn($model);
+        $transactions = new DoctrineTransactionManager($registry, new FlushManager($registry), [$persister]);
+        self::assertSame($model, $transactions->transactionalWriteFor('rc-memory', $class, static fn (): object => $persister->create('rc-memory', new \AlexFigures\Symfony\Contract\Data\ChangeSet())));
+        $atomic = new AtomicTransaction($transactions, new ResourceRegistry([$class]));
+        $operation = new Operation('add', new Ref('rc-memory', null, null, null), null, ['type' => 'rc-memory', 'attributes' => ['title' => 'Title']], [], '/atomic:operations/0');
+        try {
+            $atomic->run(static fn () => self::fail('A custom persister has no declared Doctrine Atomic boundary.'), [$operation]);
+            self::fail('Atomic preflight must reject unknown persistence boundaries.');
+        } catch (UnsupportedTransactionBoundaryException $error) {
+            self::assertSame(409, $error->getStatusCode());
+        }
+    }
+
     #[DataProvider('connections')]
     public function testAtomicPreflightRejectsIndependentManagersBeforeCallback(bool $sharedConnection): void
     {

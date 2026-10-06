@@ -24,6 +24,7 @@ use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
  *
  * @phpstan-type AuditTrailConfig array{
  *     documentation?: string,
+ *     created_at?: string, updated_at?: string, created_by?: string|null, updated_by?: string|null, expose_in_meta?: bool,
  *     createdAtField?: string,
  *     createdByField?: string,
  *     updatedAtField?: string,
@@ -38,8 +39,22 @@ final class AuditTrailProfile implements ProfileInterface
     /**
      * @param AuditTrailConfig $config
      */
-    public function __construct(private readonly array $config = [])
+    public function __construct(private array $config = [])
     {
+    }
+
+    /** @internal
+     * @param AuditTrailConfig $config Bundle settings; explicit service settings take precedence.
+     */
+    public function configure(array $config): void
+    {
+        $own = $this->config;
+        foreach (['createdAtField' => 'created_at', 'updatedAtField' => 'updated_at', 'createdByField' => 'created_by', 'updatedByField' => 'updated_by'] as $legacy => $canonical) {
+            if (isset($own[$legacy]) && !array_key_exists($canonical, $own)) {
+                $own[$canonical] = $own[$legacy];
+            }
+        }
+        $this->config = array_replace($config, $own);
     }
 
     public function uri(): string
@@ -62,7 +77,7 @@ final class AuditTrailProfile implements ProfileInterface
     public function hooks(): iterable
     {
         yield new AuditTrailWriteHook($this->config);
-        yield new AuditTrailDocumentHook();
+        yield new AuditTrailDocumentHook($this->config);
     }
 
     public function requirements(): ProfileRequirements

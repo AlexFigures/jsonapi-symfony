@@ -127,7 +127,7 @@ final class ProfileNegotiator
         $profiles = $this->resolveProfiles($activeUris);
         $perTypeProfiles = [];
         foreach ($this->perType as $type => $uris) {
-            $resolved = $this->resolveProfiles($uris);
+            $resolved = $this->resolveProfiles(array_values(array_diff($uris, $disabled)));
             if ($resolved !== []) {
                 /** @var list<ProfileInterface> $profilesForType */
                 $profilesForType = array_values($resolved);

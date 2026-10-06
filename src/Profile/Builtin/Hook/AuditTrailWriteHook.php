@@ -106,14 +106,14 @@ final readonly class AuditTrailWriteHook implements WriteHook
         // Fallback to config
         if ($operation === 'create') {
             return [
-                $this->config['createdAtField'] ?? 'createdAt',
-                $this->config['createdByField'] ?? 'createdBy',
+                $this->config['created_at'] ?? $this->config['createdAtField'] ?? 'createdAt',
+                $this->config['created_by'] ?? $this->config['createdByField'] ?? 'createdBy',
             ];
         }
 
         return [
-            $this->config['updatedAtField'] ?? 'updatedAt',
-            $this->config['updatedByField'] ?? 'updatedBy',
+            $this->config['updated_at'] ?? $this->config['updatedAtField'] ?? 'updatedAt',
+            $this->config['updated_by'] ?? $this->config['updatedByField'] ?? 'updatedBy',
         ];
     }
 }

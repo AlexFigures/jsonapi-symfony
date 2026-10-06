@@ -64,7 +64,7 @@ final class DataLayerConfigurationTest extends TestCase
 
         $processorAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceProcessor');
         $this->assertSame(
-            'AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor',
+            'AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator',
             (string) $processorAlias
         );
 
@@ -136,7 +136,8 @@ final class DataLayerConfigurationTest extends TestCase
         $this->assertSame('App\Custom\Repository', (string) $repositoryAlias);
 
         $processorAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceProcessor');
-        $this->assertSame('App\Custom\Processor', (string) $processorAlias);
+        $this->assertSame(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class, (string) $processorAlias);
+        self::assertSame('App\Custom\Processor', (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->getArgument(1));
 
         $relationshipAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader');
         $this->assertSame('App\Custom\RelationshipReader', (string) $relationshipAlias);
@@ -175,7 +176,8 @@ final class DataLayerConfigurationTest extends TestCase
 
         // They should point to Null implementations (not overridden)
         $processorAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\ResourceProcessor');
-        $this->assertSame('jsonapi.null_resource_processor', (string) $processorAlias);
+        $this->assertSame(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class, (string) $processorAlias);
+        self::assertSame('jsonapi.null_resource_processor', (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->getArgument(1));
     }
 
     public function testDataLayerParameterIsStored(): void

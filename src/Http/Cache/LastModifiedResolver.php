@@ -10,12 +10,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 final readonly class LastModifiedResolver
 {
-    /** @param array{last_modified?: array{resource_field?: string, per_type?: array<string, string>}} $config */
+    /** @param array{last_modified?: array{resource_field?: string, per_type?: array<string, string>, collections_max_of?: bool}} $config */
     public function __construct(private array $config = [])
     {
     }
 
-    public function resolve(Request $request, Response $response): DateTimeImmutable
+    public function resolve(Request $request, Response $response): ?DateTimeImmutable
     {
         $header = $response->headers->get('Last-Modified');
         if ($header !== null) {
@@ -27,6 +27,10 @@ final readonly class LastModifiedResolver
 
         $type = $request->attributes->get('_jsonapi_model_type');
         $settings = $this->config['last_modified'] ?? [];
+        $route = $request->attributes->get('_route');
+        if (($settings['collections_max_of'] ?? true) === false && ($request->attributes->getBoolean('_jsonapi_collection') || (is_string($route) && str_ends_with($route, '.index')) || $request->attributes->get('_route') === 'jsonapi.collection')) {
+            return null;
+        }
         $field = (is_string($type) ? ($settings['per_type'][$type] ?? null) : null) ?? $settings['resource_field'] ?? 'updatedAt';
         $models = $request->attributes->get('_jsonapi_models', []);
         $accessor = \Symfony\Component\PropertyAccess\PropertyAccess::createPropertyAccessor();

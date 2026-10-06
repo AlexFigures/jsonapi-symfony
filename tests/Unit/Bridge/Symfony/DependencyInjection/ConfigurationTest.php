@@ -10,6 +10,18 @@ use Symfony\Component\Config\Definition\Processor;
 
 final class ConfigurationTest extends TestCase
 {
+    public function testResourceTypeKeysKeepTheirPublicKebabCaseSpelling(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'profiles' => ['per_type' => ['feature-memos' => ['urn:jsonapi:profile:audit-trail']]],
+            'write' => ['client_generated_ids' => ['feature-memos' => true]],
+            'cache' => ['last_modified' => ['per_type' => ['feature-memos' => 'modifiedAt']]],
+        ]]);
+        self::assertSame(['feature-memos' => ['urn:jsonapi:profile:audit-trail']], $config['profiles']['per_type']);
+        self::assertSame(['feature-memos' => true], $config['write']['client_generated_ids']);
+        self::assertSame(['feature-memos' => 'modifiedAt'], $config['cache']['last_modified']['per_type']);
+    }
+
     public function testFilterLimitsHaveSafeDefaultsAndCanBeDisabled(): void
     {
         $limits = $this->process()['limits'];

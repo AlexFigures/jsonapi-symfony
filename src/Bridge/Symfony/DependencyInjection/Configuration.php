@@ -103,7 +103,7 @@ final class Configuration implements ConfigurationInterface
 
         $writeChildren->booleanNode('allow_relationship_writes')->defaultFalse()->end();
         /** @var ArrayNodeDefinition $clientGeneratedIds */
-        $clientGeneratedIds = $writeChildren->arrayNode('client_generated_ids')->useAttributeAsKey('type');
+        $clientGeneratedIds = $writeChildren->arrayNode('client_generated_ids')->normalizeKeys(false)->useAttributeAsKey('type');
         $clientGeneratedIds->booleanPrototype()->end();
         $clientGeneratedIds->defaultValue([]);
         $clientGeneratedIds->end();
@@ -162,7 +162,7 @@ final class Configuration implements ConfigurationInterface
 
         /** @var ArrayNodeDefinition $perTypeRoot */
         $perTypeRoot = $profilesChildren->arrayNode('per_type');
-        $perTypeRoot->useAttributeAsKey('type');
+        $perTypeRoot->normalizeKeys(false)->useAttributeAsKey('type');
         /** @var ArrayNodeDefinition $perType */
         $perType = $perTypeRoot->arrayPrototype();
         $perType->scalarPrototype()->end();
@@ -272,7 +272,7 @@ final class Configuration implements ConfigurationInterface
         $lastModifiedChildren->scalarNode('resource_field')->defaultValue('updatedAt')->end();
         /** @var ArrayNodeDefinition $perTypeOverrides */
         $perTypeOverrides = $lastModifiedChildren->arrayNode('per_type');
-        $perTypeOverrides->useAttributeAsKey('type');
+        $perTypeOverrides->normalizeKeys(false)->useAttributeAsKey('type');
         $perTypeOverrides->scalarPrototype()->end();
         $perTypeOverrides->defaultValue([]);
         $perTypeOverrides->end();

@@ -1,0 +1,27 @@
+<?php
+
+declare(strict_types=1);
+
+namespace AlexFigures\Symfony\Tests\Functional\Regression\Fixtures;
+
+use AlexFigures\Symfony\Contract\Data\ChangeSet;
+use AlexFigures\Symfony\Contract\Data\TypedResourcePersister;
+
+final class RcTypedPersister implements TypedResourcePersister
+{
+    public function supports(string $type): bool
+    {
+        return $type === 'rc-memory';
+    }
+    public function create(string $type, ChangeSet $changes, ?string $clientId = null): object
+    {
+        return new RcMemory($clientId ?? 'typed', 'Typed: ' . $changes->attributes['title']);
+    }
+    public function update(string $type, string $id, ChangeSet $changes): object
+    {
+        return new RcMemory($id, 'Updated: ' . $changes->attributes['title']);
+    }
+    public function delete(string $type, string $id): void
+    {
+    }
+}

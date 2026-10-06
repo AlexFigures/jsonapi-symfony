@@ -13,6 +13,102 @@ use Symfony\Component\HttpFoundation\Request;
 
 final class RcContainerContractTest extends TestCase
 {
+    public function testPerTypeAuditDefaultsKeepConstructorDiAndBundleConfiguration(): void
+    {
+        $kernel = new RcKernel('rc8', false);
+        try {
+            $kernel->boot();
+            $container = $kernel->getContainer()->get('test.service_container');
+            $negotiator = $container->get(\AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator::class);
+            $request = Request::create('/api/rc-memory', 'POST');
+            $request->attributes->set('type', 'rc-memory');
+            $context = $negotiator->negotiate($request)->forType('rc-memory');
+            $changes = new \AlexFigures\Symfony\Contract\Data\ChangeSet();
+            foreach ($context->writeHooks() as $hook) {
+                $hook->onBeforeCreate($context, 'rc-memory', $changes);
+            }
+            self::assertSame('constructor-di@example.test', $changes->attributes['createdBy']);
+            self::assertInstanceOf(\DateTimeImmutable::class, $changes->attributes['createdAt']);
+            $response = $kernel->handle(Request::create('/api/rc-memory/stored', server: ['HTTP_ACCEPT' => 'application/vnd.api+json']), catch: false);
+            $document = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+            self::assertArrayNotHasKey('meta', $document['data'], 'expose_in_meta=false must survive a profile service overriding its constructor config.');
+            self::assertStringContainsString('urn:jsonapi:profile:audit-trail', $response->headers->get('Content-Type'));
+        } finally {
+            $kernel->shutdown();
+        }
+    }
+
+    public function testVersionStrategyUsesHeaderAndDoesNotFallBackToHash(): void
+    {
+        $kernel = new RcKernel('rc8', false);
+        try {
+            foreach (['7' => '"7"', 'absent' => null] as $version => $etag) {
+                $response = $kernel->handle(Request::create('/version/' . $version, server: ['HTTP_ACCEPT' => 'application/vnd.api+json']), catch: false);
+                self::assertSame(200, $response->getStatusCode());
+                self::assertSame($etag, $response->headers->get('ETag'));
+            }
+        } finally {
+            $kernel->shutdown();
+        }
+    }
+
+    public function testCollectionLastModifiedDisabledInCompiledContainer(): void
+    {
+        $kernel = new RcKernel('rc8', false);
+        try {
+            $item = $kernel->handle(Request::create('/api/rc-memory/stored', server: ['HTTP_ACCEPT' => 'application/vnd.api+json']), catch: false);
+            self::assertSame(200, $item->getStatusCode());
+            self::assertNotNull($item->headers->get('Last-Modified'));
+            $collection = $kernel->handle(Request::create('/api/rc-memory', server: ['HTTP_ACCEPT' => 'application/vnd.api+json']), catch: false);
+            self::assertSame(200, $collection->getStatusCode());
+            self::assertNull($collection->headers->get('Last-Modified'));
+        } finally {
+            $kernel->shutdown();
+        }
+    }
+
+    #[DataProvider('typedProviderModes')]
+    public function testGeneratedWritesUseAutoconfiguredLegacyTypedPersister(string $environment): void
+    {
+        $kernel = new RcKernel($environment, false);
+        try {
+            foreach (['POST' => 'Typed: Command', 'PATCH' => 'Updated: Command'] as $method => $title) {
+                $data = ['type' => 'rc-memory', 'attributes' => ['title' => 'Command']];
+                if ($method === 'PATCH') {
+                    $data['id'] = 'typed';
+                }
+                $path = $method === 'POST' ? '/api/rc-memory' : '/api/rc-memory/typed';
+                $response = $kernel->handle(Request::create($path, $method, server: ['CONTENT_TYPE' => 'application/vnd.api+json', 'HTTP_ACCEPT' => 'application/vnd.api+json'], content: json_encode(['data' => $data], \JSON_THROW_ON_ERROR)), catch: false);
+                self::assertSame($method === 'POST' ? 201 : 200, $response->getStatusCode(), $response->getContent());
+                $document = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+                self::assertSame($title, $document['data']['attributes']['title']);
+            }
+            $response = $kernel->handle(Request::create('/api/rc-memory/typed', 'DELETE', server: ['CONTENT_TYPE' => 'application/vnd.api+json', 'HTTP_ACCEPT' => 'application/vnd.api+json']), catch: false);
+            self::assertSame(204, $response->getStatusCode());
+        } finally {
+            $kernel->shutdown();
+        }
+    }
+
+    public static function typedProviderModes(): iterable
+    {
+        yield 'custom provider' => ['rc8'];
+        yield 'Doctrine provider with non-ORM typed resources' => ['doctrine_typed'];
+    }
+
+    public function testDoctrineAtomicDoesNotPretendToProtectCustomPersister(): void
+    {
+        $kernel = new RcKernel('doctrine_typed', false);
+        try {
+            $response = $kernel->handle(Request::create('/api/operations', 'POST', server: ['CONTENT_TYPE' => 'application/vnd.api+json;ext="https://jsonapi.org/ext/atomic"', 'HTTP_ACCEPT' => 'application/vnd.api+json;ext="https://jsonapi.org/ext/atomic"'], content: json_encode(['atomic:operations' => [['op' => 'add', 'data' => ['type' => 'rc-memory', 'attributes' => ['title' => 'Command']]]]], \JSON_THROW_ON_ERROR)));
+            self::assertSame(409, $response->getStatusCode(), $response->getContent());
+            $document = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+            self::assertSame('unsupported-transaction-boundary', $document['errors'][0]['code']);
+        } finally {
+            $kernel->shutdown();
+        }
+    }
+
     #[DataProvider('nativeRoutes')]
     public function testConfiguredRoutesNegotiateAfterRouterAndControllerAttributes(string $path, string $accept, string $mime): void
     {

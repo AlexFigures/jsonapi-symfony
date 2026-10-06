@@ -47,13 +47,14 @@ final class AttributeAutoconfigurationTest extends TestCase
         // Load with default configuration (provider defaults to 'doctrine')
         $extension->load([], $container);
 
-        // Verify that ResourceProcessor is aliased to ValidatingDoctrineProcessor
+        // Typed dispatch wraps the unchanged Doctrine fallback.
         self::assertTrue($container->hasAlias(ResourceProcessor::class));
         $alias = $container->getAlias(ResourceProcessor::class);
         self::assertSame(
-            'AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor',
+            \AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class,
             (string) $alias
         );
+        self::assertSame(\AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor::class, (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->getArgument(1));
     }
 
     public function testCustomProviderAliasesResourceProcessor(): void
@@ -77,10 +78,11 @@ final class AttributeAutoconfigurationTest extends TestCase
             ],
         ], $container);
 
-        // Verify that ResourceProcessor is aliased to the custom processor
+        // Typed dispatch wraps the configured custom fallback.
         self::assertTrue($container->hasAlias(ResourceProcessor::class));
         $alias = $container->getAlias(ResourceProcessor::class);
-        self::assertSame('my_custom_processor', (string) $alias);
+        self::assertSame(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class, (string) $alias);
+        self::assertSame('my_custom_processor', (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->getArgument(1));
     }
 }
 

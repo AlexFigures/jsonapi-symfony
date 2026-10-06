@@ -62,7 +62,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     private function builder(string $mode = 'always', array $limits = [], ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null, array $batchReaders = [], string $unplanned = 'legacy'): DocumentBuilder
     {
         $routes = new RouteCollection();
-        foreach (['articles' => ['author', 'tags'], 'authors' => ['articles'], 'tags' => [], 'articles-with-special-tags' => ['author', 'tags', 'specialTags'], 'special-tags' => []] as $type => $relationships) {
+        foreach (['articles' => ['author', 'tags', 'secondaryAuthor', 'parentAuthor', 'secondaryTags', 'tertiaryTags'], 'authors' => ['articles', 'otherArticles', 'recentArticles', 'archivedArticles'], 'tags' => [], 'articles-with-special-tags' => ['author', 'tags', 'specialTags'], 'special-tags' => []] as $type => $relationships) {
             $routes->add('jsonapi.' . $type . '.index', new Route('/api/' . $type));
             $routes->add('jsonapi.' . $type . '.show', new Route('/api/' . $type . '/{id}'));
             foreach ($relationships as $relationship) {
@@ -74,6 +74,24 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $limits += ['included_max_resources' => 250, 'relationship_max_identifiers' => 10000];
         $preloader = new DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new RepresentationFetchPlanner($mode), $errors, $limits, $repository, null, $batchReaders, $unplanned);
         return new DocumentBuilder($this->registry, $this->accessor, new LinkGenerator(new UrlGenerator($routes, new RequestContext())), $mode, new LimitsEnforcer($errors, new RequestComplexityScorer(), $limits), $preloader);
+    }
+
+    private function expandNativeGraph(): void
+    {
+        $root = $this->registry->getByType('articles');
+        foreach (['secondaryAuthor' => 'author', 'parentAuthor' => 'author', 'secondaryTags' => 'tags', 'tertiaryTags' => 'tags'] as $name => $path) {
+            $relationship = clone $root->relationships[$path];
+            $relationship->name = $name;
+            $relationship->propertyPath = $path;
+            $root->relationships[$name] = $relationship;
+        }
+        $authors = $this->registry->getByType('authors');
+        foreach (['otherArticles', 'recentArticles', 'archivedArticles'] as $name) {
+            $relationship = clone $authors->relationships['articles'];
+            $relationship->name = $name;
+            $relationship->propertyPath = 'articles';
+            $authors->relationships[$name] = $relationship;
+        }
     }
 
     /** @return iterable<string, array{list<string>, bool}> */
@@ -90,6 +108,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     public function testQueryShapeDoesNotGrowWithRootPageSize(array $includes, bool $sparse): void
     {
         $this->seedGraph();
+        $this->expandNativeGraph();
         $counts = [];
         foreach ([5, 20] as $size) {
             $this->em->clear();
@@ -101,7 +120,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
                 $criteria->fields['articles'] = ['title'];
             }
             $slice = $this->repository->findCollection('articles', $criteria);
-            $document = $this->builder()->buildCollection('articles', $slice->items, $criteria, $slice, Request::create('/api/articles'));
+            $document = $this->builder(repository: new \AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceRepositoryLocator([], $this->repository))->buildCollection('articles', $slice->items, $criteria, $slice, Request::create('/api/articles'));
             self::assertCount($size, $document['data']);
             self::assertSame(25, $document['meta']['total']);
             $counts[] = count($log->queries);
@@ -118,9 +137,93 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
             }
         }
         self::assertSame($counts[0], $counts[1], 'SQL count must depend on graph shape, not root count.');
-        self::assertLessThanOrEqual(20, $counts[1]);
+        $budget = match ($includes) {
+            [] => 12, ['author'] => 18, ['tags'] => 24, default => 32,
+        };
+        self::assertLessThanOrEqual($budget, $counts[1]);
         if ($sparse) {
             self::assertSame(2, $counts[1]);
+        }
+    }
+
+    public function testRelatedCollectionRepresentationStaysWithinQueryBudget(): void
+    {
+        $this->seedGraph(25);
+        $this->expandNativeGraph();
+        $this->em->createQuery('UPDATE ' . Article::class . ' a SET a.author = :owner')->setParameter('owner', 'author-0000')->execute();
+        $this->em->clear();
+        $log = new DebugStack();
+        $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+        $criteria = new Criteria(new Pagination(1, 20));
+        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
+        $slice = $handler->getRelatedCollection('authors', 'author-0000', 'articles', $criteria);
+        $document = $this->builder(repository: $this->repository)->buildCollection('articles', $slice->items, $criteria, $slice, Request::create('/api/authors/author-0000/articles'));
+        self::assertCount(20, $document['data']);
+        self::assertLessThanOrEqual(15, count($log->queries));
+    }
+
+    public function testNativeGraphReadHookScopeIsEmbeddedWithoutVisibilityQueries(): void
+    {
+        $this->seedGraph(20);
+        $hook = new class () implements \AlexFigures\Symfony\Profile\Hook\ReadHook {
+            public function onBeforeFindCollection(ProfileContext $context, string $type, Criteria $criteria): void
+            {
+                if ($type === 'tags') {
+                    $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $query): void {
+                        $query->andWhere('e.id = :visible')->setParameter('visible', 'tag-0000');
+                    };
+                }
+            }
+            public function onBeforeFindOne(ProfileContext $context, string $type, string $id, Criteria $criteria): void
+            {
+            }
+        };
+        $profile = new \AlexFigures\Symfony\Tests\Util\FakeProfile('urn:scope', [$hook]);
+        $request = Request::create('/api/articles?include=tags');
+        ProfileContext::store($request, new ProfileContext([], ['tags' => [$profile]]));
+        $stack = new \Symfony\Component\HttpFoundation\RequestStack();
+        $stack->push($request);
+        $filters = new \AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry();
+        $repository = new \AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository($this->managerRegistry, $this->registry, new \AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler(new \AlexFigures\Symfony\Filter\Operator\Registry(), $filters), $filters, new \AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry(), new DefaultReadMapper(), requests: $stack);
+        $criteria = new Criteria(new Pagination(1, 20));
+        $criteria->include = ['tags'];
+        $log = new DebugStack();
+        $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+        $slice = $repository->findCollection('articles', $criteria);
+        $document = $this->builder(repository: $repository)->buildCollection('articles', $slice->items, $criteria, $slice, $request);
+        self::assertCount(1, $document['included']);
+        self::assertSame('tag-0000', $document['included'][0]['id']);
+        foreach ($document['data'] as $resource) {
+            self::assertSame([['type' => 'tags', 'id' => 'tag-0000']], $resource['relationships']['tags']['data']);
+        }
+        self::assertLessThanOrEqual(8, count($log->queries));
+    }
+
+    public function testInheritedNativeCapabilityNeverBypassesSubclassVisibility(): void
+    {
+        $this->seedGraph(5);
+        $filters = new \AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry();
+        $repository = new class ($this->managerRegistry, $this->registry, new \AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler(new \AlexFigures\Symfony\Filter\Operator\Registry(), $filters), $filters, new \AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry(), new DefaultReadMapper()) extends \AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository {
+            public function findCollection(string $type, Criteria $criteria): \AlexFigures\Symfony\Contract\Data\Slice
+            {
+                $criteria = clone $criteria;
+                if ($type === 'tags') {
+                    $criteria->customConditions[] = static function (\Doctrine\ORM\QueryBuilder $query): void {
+                        $query->andWhere('e.id = :visible')->setParameter('visible', 'tag-0000');
+                    };
+                }
+                return parent::findCollection($type, $criteria);
+            }
+        };
+        self::assertNull($repository->collectionQuery('tags', new Criteria()));
+        $criteria = new Criteria();
+        $criteria->include = ['tags'];
+        $slice = $repository->findCollection('articles', $criteria);
+        $document = $this->builder(repository: $repository)->buildCollection('articles', $slice->items, $criteria, $slice, Request::create('/api/articles?include=tags'));
+        self::assertCount(1, $document['included']);
+        self::assertSame('tag-0000', $document['included'][0]['id']);
+        foreach ($document['data'] as $resource) {
+            self::assertSame([['type' => 'tags', 'id' => 'tag-0000']], $resource['relationships']['tags']['data']);
         }
     }
 

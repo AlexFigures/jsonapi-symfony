@@ -865,3 +865,33 @@ The built-in soft-delete profile now applies `field`, `strategy` (`timestamp` or
 `docs.generator.json_schema.enabled` registers `docs.generator.json_schema.route` independently of OpenAPI enablement. It returns JSON Schema 2020-12 with shared resource definitions; `include_profiles` controls profile URI annotations. Generated OpenAPI/UI/schema routes accept their native MIME types unless an explicit application media channel overrides that policy. OpenAPI pagination uses the configured pagination sizes, and its operations follow each resource's `operations` declaration.
 
 Profile services may require constructor DI. Configured/autowired services are validated after construction; run the registered `jsonapi:validate-profiles` command for an explicit diagnostic. Doctrine read hooks receive cloned criteria before repository queries; relationship hooks run before linkage changes. The complete regression mapping and extension-provider limitations are in [the RC gap report](../architecture/rc-extension-gaps.md).
+
+### Resource-type map keys and effective RC policies
+
+Map keys are literal JSON:API resource names. Use `feature-memos`, not `feature_memos`, when configuring a kebab-case type:
+
+```yaml
+jsonapi:
+    profiles:
+        per_type:
+            feature-memos: ['urn:jsonapi:profile:audit-trail']
+        audit_trail:
+            created_by: createdBy
+            updated_by: updatedBy
+            expose_in_meta: true
+    cache:
+        etag:
+            strategy: version
+        last_modified:
+            collections_max_of: false
+            per_type:
+                feature-memos: modifiedAt
+```
+
+`per_type` activates write hooks without explicit profile negotiation. It does not activate the profile globally for unrelated resource types. Audit scalar/date values appear in `data.meta.audit` when enabled. Explicit AuditTrailProfile service settings, including a constructor-injected user provider, take precedence over bundle settings; bundle settings otherwise survive the service override.
+
+`strategy: version` reads `X-Resource-Version` from the current response. Missing version data produces no bundle-generated ETag; there is no automatic hash fallback. Applications enabling write preconditions must provide a current version for write validation too. `collections_max_of: false` prevents automatic Last-Modified for collection documents, including related collection representations. Item validators and explicit application Last-Modified headers remain supported.
+
+The documented `jsonapi.persister` tag now dispatches typed persisters for generated writes. Types without a matching persister use the default or configured processor. A registered non-ORM persister can coexist with the Doctrine provider for single-resource writes without opening an unrelated ORM transaction. Its validation, hooks and persistence are application-owned. Built-in Doctrine Atomic execution still requires one declared ORM manager/connection boundary.
+
+See [the final RC gap report](../architecture/rc-final-eight-gaps.md) for SQL regression budgets and extension requirements.

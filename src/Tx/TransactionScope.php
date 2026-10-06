@@ -12,6 +12,18 @@ use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
 final class TransactionScope
 {
     /** @template T
+     * @param  callable():T $callback
+     * @return T
+     */
+    public static function write(TransactionManager $transactions, ResourceRegistryInterface $resources, string $type, callable $callback): mixed
+    {
+        if ($transactions instanceof \AlexFigures\Symfony\Contract\Tx\ResourceWriteTransactionManagerInterface) {
+            return $transactions->transactionalWriteFor($type, $resources->getByType($type)->dataClass, $callback);
+        }
+        return self::run($transactions, $resources, [$type], $callback);
+    }
+
+    /** @template T
      * @param  list<string> $types
      * @param  callable():T $callback
      * @return T

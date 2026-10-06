@@ -58,7 +58,7 @@ final class UpdateResourceController
         $input = $this->validator->validateAndExtract($type, $id, $payload, 'PATCH');
 
         try {
-            $model = \AlexFigures\Symfony\Tx\TransactionScope::run($this->transaction, $this->registry, [$type], function () use ($type, $id, $input) {
+            $model = \AlexFigures\Symfony\Tx\TransactionScope::write($this->transaction, $this->registry, $type, function () use ($type, $id, $input) {
                 // Create ChangeSet with both attributes and relationships
                 // The processor will handle applying both before validation
                 $changes = $this->changes->fromInput(

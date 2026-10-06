@@ -39,18 +39,21 @@ use Stringable;
  * - Root-resource pagination independent of joined row counts
  * Representation relationship loading is delegated to the optional preloader.
  */
-class GenericDoctrineRepository implements ResourceRepository
+class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineCollectionQueryProviderInterface
 {
+    private readonly DoctrineFilterCompiler $filterCompiler;
+
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
-        private readonly DoctrineFilterCompiler $filterCompiler,
-        private readonly FilterHandlerRegistry $filterHandlers,
+        DoctrineFilterCompiler $filterCompiler,
+        FilterHandlerRegistry $filterHandlers,
         private readonly SortHandlerRegistry $sortHandlers,
         private readonly ReadMapperInterface $readMapper,
         private readonly string $collectionSortPolicy = 'legacy',
         private readonly ?\Symfony\Component\HttpFoundation\RequestStack $requests = null,
     ) {
+        $this->filterCompiler = $filterCompiler->withHandlers($filterHandlers);
     }
 
     public function findCollection(string $type, Criteria $criteria): Slice
@@ -67,15 +70,7 @@ class GenericDoctrineRepository implements ResourceRepository
         $definition = $metadata->getDefinition($context);
         $entityClass = $metadata->dataClass;
         $em = $this->getEntityManagerFor($entityClass);
-        $roots = $em->createQueryBuilder()->select('e')->from($entityClass, 'e');
-        if ($criteria->filter !== null) {
-            $this->applyCustomFilters($roots, $criteria->filter);
-            $this->filterCompiler->apply($roots, $criteria->filter, $em->getConnection()->getDatabasePlatform(), $metadata);
-        }
-        foreach ($criteria->customConditions as $condition) {
-            $condition($roots);
-        }
-        $this->applySorting($roots, $criteria->sort, $metadata);
+        $roots = $this->buildCollectionQuery($metadata, $criteria, $em);
         if ($criteria->identifiersOnly) {
             $field = $em->getClassMetadata($entityClass)->getSingleIdentifierFieldName();
             $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
@@ -133,6 +128,36 @@ class GenericDoctrineRepository implements ResourceRepository
         return new Slice($items, $criteria->pagination->number, $criteria->pagination->size, $total);
     }
 
+    public function collectionQuery(string $type, Criteria $criteria): ?QueryBuilder
+    {
+        // Inherited capabilities must never bypass visibility added by an existing subclass.
+        if ((new \ReflectionMethod($this, 'findCollection'))->getDeclaringClass()->getName() !== self::class
+            && (new \ReflectionMethod($this, 'collectionQuery'))->getDeclaringClass()->getName() === self::class) {
+            return null;
+        }
+        $metadata = $this->registry->getByType($type);
+        $criteria = clone $criteria;
+        $request = $this->requests?->getCurrentRequest();
+        $context = $request === null ? null : \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
+        if ($context !== null) {
+            foreach ($context->readHooks() as $hook) {
+                $hook->onBeforeFindCollection($context, $type, $criteria);
+            }
+        }
+        return $this->buildCollectionQuery($metadata, $criteria, $this->getEntityManagerFor($metadata->dataClass));
+    }
+
+    private function buildCollectionQuery(ResourceMetadata $metadata, Criteria $criteria, EntityManagerInterface $em): QueryBuilder
+    {
+        $query = $em->createQueryBuilder()->select('e')->from($metadata->dataClass, 'e');
+        $this->applyCriteriaFilter($query, $criteria, $metadata, $em);
+        foreach ($criteria->customConditions as $condition) {
+            $condition($query);
+        }
+        $this->applySorting($query, $criteria->sort, $metadata);
+        return $query;
+    }
+
     public function findOne(string $type, string $id, Criteria $criteria): ?object
     {
         $metadata = $this->registry->getByType($type);
@@ -188,7 +213,6 @@ class GenericDoctrineRepository implements ResourceRepository
     private function applyCriteriaFilter(QueryBuilder $query, Criteria $criteria, ResourceMetadata $metadata, EntityManagerInterface $em): void
     {
         if ($criteria->filter !== null) {
-            $this->applyCustomFilters($query, $criteria->filter);
             $this->filterCompiler->apply($query, $criteria->filter, $em->getConnection()->getDatabasePlatform(), $metadata);
         }
     }
@@ -370,41 +394,4 @@ class GenericDoctrineRepository implements ResourceRepository
         throw new RuntimeException('Resource identifiers must be integers, strings or Stringable objects.');
     }
 
-    /**
-     * Apply custom filter handlers to the query builder.
-     *
-     * This method recursively walks the filter AST and applies custom handlers
-     * for fields that have them registered. Custom handlers are applied before
-     * the standard filter compilation.
-     */
-    private function applyCustomFilters(QueryBuilder $qb, Node $filterNode): void
-    {
-        if ($filterNode instanceof Comparison) {
-            $handler = $this->filterHandlers->findHandler($filterNode->fieldPath, $filterNode->operator);
-            if ($handler !== null) {
-                $handler->handle($filterNode->fieldPath, $filterNode->operator, $filterNode->values, $qb);
-            }
-        } elseif ($filterNode instanceof NullCheck) {
-            $operator = $filterNode->isNull ? 'null' : 'nnull';
-            $handler = $this->filterHandlers->findHandler($filterNode->fieldPath, $operator);
-            if ($handler !== null) {
-                $handler->handle($filterNode->fieldPath, $operator, [], $qb);
-            }
-        } elseif ($filterNode instanceof Between) {
-            $handler = $this->filterHandlers->findHandler($filterNode->fieldPath, 'between');
-            if ($handler !== null) {
-                $handler->handle($filterNode->fieldPath, 'between', [$filterNode->from, $filterNode->to], $qb);
-            }
-        } elseif ($filterNode instanceof Conjunction) {
-            foreach ($filterNode->children as $child) {
-                $this->applyCustomFilters($qb, $child);
-            }
-        } elseif ($filterNode instanceof Disjunction) {
-            foreach ($filterNode->children as $child) {
-                $this->applyCustomFilters($qb, $child);
-            }
-        } elseif ($filterNode instanceof Group) {
-            $this->applyCustomFilters($qb, $filterNode->expression);
-        }
-    }
 }

@@ -41,7 +41,8 @@ final class ResourceRepositoryLocator implements ResourceRepository
         return $this->getRepositoryForType($type)->findRelated($type, $relationship, $identifiers);
     }
 
-    private function getRepositoryForType(string $type): ResourceRepository
+    /** @internal Select once before using optional provider capabilities. */
+    public function getRepositoryForType(string $type): ResourceRepository
     {
         foreach ($this->repositories as $repository) {
             if ($repository instanceof TypedResourceRepository && $repository->supports($type)) {

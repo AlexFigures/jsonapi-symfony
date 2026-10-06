@@ -180,7 +180,7 @@ final class CachePreconditionsSubscriber implements EventSubscriberInterface
         return is_string($route) && ($route === 'jsonapi.collection' || str_ends_with($route, '.index'));
     }
 
-    private function resolveLastModified(Request $request, Response $response): DateTimeImmutable
+    private function resolveLastModified(Request $request, Response $response): ?DateTimeImmutable
     {
         return $this->lastModified->resolve($request, $response);
     }

@@ -164,7 +164,14 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                     throw new \LogicException('Doctrine relationship loading requires the same entity manager for both ends.');
                 }
                 $visibleIds = null;
-                if ($this->repository !== null) {
+                $visibility = null;
+                $provider = $this->repository instanceof \AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceRepositoryLocator ? $this->repository->getRepositoryForType($target->type) : $this->repository;
+                if ($provider instanceof \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineCollectionQueryProviderInterface) {
+                    $scoped = $this->parser?->parseGraph($target->type, $request) ?? new Criteria();
+                    $visibility = $provider->collectionQuery($target->type, $scoped);
+                    $visibility?->select(($visibility->getRootAliases()[0] ?? 'e') . '.' . $class->getSingleIdentifierFieldName())->resetDQLPart('orderBy');
+                }
+                if ($visibility === null && $this->repository !== null) {
                     $scoped = $this->parser?->parseGraph($target->type, $request) ?? new Criteria();
                     $includeLimit = $isRead ? ($this->limits['included_max_resources'] ?? 1000) : 0;
                     $identifierLimit = $isRead ? ($this->limits['relationship_max_identifiers'] ?? 10000) : 0;
@@ -204,7 +211,7 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                 if ($edge->includeChildren !== null) {
                     // DISTINCT target IDs only: bound output before hydrating even one target model.
                     foreach (array_chunk($ownerIds, 256) as $chunk) {
-                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk, $target, $visibleIds);
+                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk, $target, $visibleIds, $visibility);
                         $query->select('DISTINCT ' . $alias . '.' . $targetField . ' AS target_id')->andWhere($alias . '.' . $targetField . ' IS NOT NULL');
                         $excluded = array_map('strval', array_keys($known[$target->type] ?? []));
                         if ($excluded !== []) {
@@ -231,7 +238,7 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                         $map->putCount($ownerType, $ownerId, $name, 0);
                     }
                     foreach (array_chunk($ownerIds, 256) as $chunk) {
-                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk, $target, $visibleIds);
+                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk, $target, $visibleIds, $visibility);
                         $ownerField = $em->getClassMetadata($metadata->dataClass)->getSingleIdentifierFieldName();
                         // LEFT JOIN includes owners without targets (COUNT returns zero).
                         $query->select('source.' . $ownerField . ' AS owner_id', 'COUNT(DISTINCT ' . $alias . '.' . $targetField . ') AS related_count')->groupBy('source.' . $ownerField);
@@ -243,7 +250,7 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                 if ($edge->linkage || $edge->includeChildren !== null) {
                     $missing = array_values(array_filter($ownerIds, static fn (string $id): bool => $map->identifiers($ownerType, $id, $name) === null));
                     foreach (array_chunk($missing, 256) as $chunk) {
-                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk, $target, $visibleIds);
+                        [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk, $target, $visibleIds, $visibility);
                         $ownerField = $em->getClassMetadata($metadata->dataClass)->getSingleIdentifierFieldName();
                         $query->select('DISTINCT source.' . $ownerField . ' AS owner_id', $alias . '.' . $targetField . ' AS target_id');
                         $query->andWhere($alias . '.' . $targetField . ' IS NOT NULL');
@@ -304,7 +311,7 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
      * @param  list<string>|null           $visibleIds
      * @return array{QueryBuilder, string}
      */
-    private function edgeQuery(EntityManagerInterface $em, ResourceMetadata $owner, string $path, array $ids, ResourceMetadata $target, ?array $visibleIds = null): array
+    private function edgeQuery(EntityManagerInterface $em, ResourceMetadata $owner, string $path, array $ids, ResourceMetadata $target, ?array $visibleIds = null, ?QueryBuilder $visibility = null): array
     {
         $query = $em->createQueryBuilder()->from($owner->dataClass, 'source');
         $alias = 'source';
@@ -316,6 +323,21 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
         $ownerField = $em->getClassMetadata($owner->dataClass)->getSingleIdentifierFieldName();
         $query->where('source.' . $ownerField . ' IN (:owners)');
         IdentifierParameters::bind($query, $em, $owner->dataClass, 'owners', $ids);
+        if ($visibility !== null) {
+            $field = $em->getClassMetadata($target->dataClass)->getSingleIdentifierFieldName();
+            $dql = $visibility->getDQL();
+            $renamed = [];
+            foreach ($visibility->getParameters() as $parameter) {
+                $name = 'graph_scope_' . $parameter->getName();
+                $renamed[(string) $parameter->getName()] = $name;
+                /** @var \Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType|int|string|null $parameterType */
+                $parameterType = $parameter->getType();
+                $query->setParameter($name, $parameter->getValue(), $parameterType);
+            }
+            $dql = \AlexFigures\Symfony\Bridge\Doctrine\Query\DqlRewriter::rewrite($dql, parameters: $renamed);
+            // Scope stays inside every bounded identifier/count query; no separate unbounded ID list.
+            $query->andWhere($alias . '.' . $field . ' IN (' . $dql . ')');
+        }
         if ($visibleIds !== null) {
             $field = $em->getClassMetadata($target->dataClass)->getSingleIdentifierFieldName();
             if ($visibleIds === []) {

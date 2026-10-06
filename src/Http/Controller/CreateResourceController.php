@@ -68,7 +68,7 @@ final class CreateResourceController
         }
 
         try {
-            $model = \AlexFigures\Symfony\Tx\TransactionScope::run($this->transaction, $this->registry, [$type], function () use ($type, $input) {
+            $model = \AlexFigures\Symfony\Tx\TransactionScope::write($this->transaction, $this->registry, $type, function () use ($type, $input) {
                 // Create ChangeSet with both attributes and relationships
                 // The processor will handle applying both before validation
                 $changes = $this->changes->fromInput(

@@ -22,7 +22,7 @@ final readonly class DoctrineTransactionBoundaryResolver
         foreach (array_unique($dataClasses) as $class) {
             $manager = $this->registry->getManagerForClass($class);
             if (!$manager instanceof EntityManagerInterface) {
-                throw new \LogicException(sprintf('No Doctrine ORM entity manager registered for class "%s".', $class));
+                throw new UnsupportedTransactionBoundaryException();
             }
             if ($boundary !== null && ($boundary->getConnection() !== $manager->getConnection() || $boundary !== $manager)) {
                 throw new UnsupportedTransactionBoundaryException();

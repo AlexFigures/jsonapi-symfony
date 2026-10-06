@@ -126,14 +126,91 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         $routes = (new \AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
         $links = new \AlexFigures\Symfony\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
         $builder = new \AlexFigures\Symfony\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links);
-        // This DTO exposes a subset of Article's API attributes; select that shared field in both representations.
+        // An ordinary GET must honor the DTO shape without requiring sparse fields.
         $representation = new Criteria();
-        $representation->fields = ['articles' => ['title']];
         $document = $builder->buildResource('articles', $view, $representation, $stack->getCurrentRequest());
         self::assertSame('Original content', $document['data']['attributes']['title']);
-        self::assertSame('Original content', $repository->findCollection('articles', new Criteria())->items[0]->title);
+        self::assertArrayNotHasKey('status', $document['data']['attributes']);
+        $slice = $repository->findCollection('articles', new Criteria());
+        $collection = $builder->buildCollection('articles', $slice->items, new Criteria(), $slice, $stack->getCurrentRequest());
+        self::assertSame('Original content', $collection['data'][0]['attributes']['title']);
+        $representation->fields = ['articles' => ['title']];
+        self::assertSame(['title' => 'Original content'], $builder->buildResource('articles', $view, $representation, $stack->getCurrentRequest())['data']['attributes']);
         $stack->pop();
         self::assertInstanceOf(Article::class, $repository->findOne('articles', 'root', new Criteria()));
+    }
+
+    public function testPerTypeAuditHooksWithoutNegotiationPersistAndExposeResourceMeta(): void
+    {
+        $profile = new \AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile(['userProvider' => static fn (): string => 'editor@example.test']);
+        $profile->configure(['created_by' => 'createdBy', 'updated_by' => 'updatedBy', 'expose_in_meta' => true]);
+        $negotiator = new \AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator(new \AlexFigures\Symfony\Profile\ProfileRegistry([$profile]), perType: ['auditable-products' => [$profile->uri()]]);
+        $request = Request::create('/api/auditable-products', 'POST');
+        $request->attributes->set('type', 'auditable-products');
+        ProfileContext::store($request, $negotiator->negotiate($request));
+        self::assertFalse(ProfileContext::fromRequest($request)->has($profile->uri()), 'A per-type profile must not become global.');
+        $stack = new RequestStack();
+        $stack->push($request);
+        $processor = new ValidatingDoctrineProcessor($this->managerRegistry, $this->registry, $this->accessor, $this->validator, $this->violationMapper, new SerializerEntityInstantiator($this->managerRegistry, $this->accessor), new RelationshipResolver($this->managerRegistry, $this->registry, $this->accessor), $this->flushManager, new ProfileWriteHooks($stack, $this->accessor));
+        $product = $processor->processCreate('auditable-products', new ChangeSet(['name' => 'Audited', 'price' => '1.00']));
+        $id = $product->getId();
+        $this->flushManager->flush();
+        $this->em->clear();
+        $product = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\AuditableProduct::class, $id);
+        self::assertSame('editor@example.test', $product->getCreatedBy());
+        $routes = (new \AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
+        $links = new \AlexFigures\Symfony\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
+        $builder = new \AlexFigures\Symfony\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links);
+        $document = $builder->buildResource('auditable-products', $product, new Criteria(), $request);
+        self::assertSame('editor@example.test', $document['data']['meta']['audit']['createdBy']);
+        self::assertSame($product->getCreatedAt()->format(\DateTimeInterface::ATOM), $document['data']['meta']['audit']['createdAt']);
+        $profile->configure(['expose_in_meta' => false]);
+        // Explicit service config takes precedence; a separate disabled profile verifies suppression.
+        $disabled = new \AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile(['expose_in_meta' => false]);
+        ProfileContext::store($request, new ProfileContext([], ['auditable-products' => [$disabled]]));
+        self::assertArrayNotHasKey('meta', $builder->buildResource('auditable-products', $product, new Criteria(), $request)['data']);
+    }
+
+    public function testCustomSearchRetainsBooleanAstCompositionAndIndependentParameters(): void
+    {
+        foreach (['alpha', 'beta', 'gamma'] as $title) {
+            $article = (new Article())->setId($title)->setTitle($title)->setContent('Body');
+            $this->em->persist($article);
+        }
+        $this->em->flush();
+        $handler = new class () implements \AlexFigures\Symfony\Filter\Handler\FilterHandlerInterface {
+            public function supports(string $field, string $operator): bool
+            {
+                return $field === 'search';
+            }
+            public function getPriority(): int
+            {
+                return 0;
+            }
+            public function handle(string $field, string $operator, array $values, object $queryBuilder): void
+            {
+                if ($operator === 'joined') {
+                    $queryBuilder->innerJoin('e.author', 'searched_author')->andWhere('searched_author.name LIKE :search')->setParameter('search', $values[0] . '%');
+                } else {
+                    $queryBuilder->andWhere('e.title LIKE :search')->setParameter('search', $values[0] . '%');
+                }
+            }
+        };
+        $handlers = new FilterHandlerRegistry([$handler]);
+        $repository = new GenericDoctrineRepository($this->managerRegistry, $this->registry, new DoctrineFilterCompiler(new Registry([new \AlexFigures\Symfony\Filter\Operator\EqualOperator()]), $handlers), $handlers, new SortHandlerRegistry(), new DefaultReadMapper());
+        $criteria = new Criteria();
+        $criteria->filter = new \AlexFigures\Symfony\Filter\Ast\Group(new \AlexFigures\Symfony\Filter\Ast\Disjunction([new \AlexFigures\Symfony\Filter\Ast\Comparison('search', 'eq', ['alpha']), new \AlexFigures\Symfony\Filter\Ast\Comparison('id', 'eq', ['beta'])]));
+        self::assertSame(['alpha', 'beta'], array_map(static fn (Article $article): string => $article->getId(), $repository->findCollection('articles', $criteria)->items));
+        $criteria->filter = new \AlexFigures\Symfony\Filter\Ast\Conjunction([new \AlexFigures\Symfony\Filter\Ast\Disjunction([new \AlexFigures\Symfony\Filter\Ast\Comparison('search', 'eq', ['alpha']), new \AlexFigures\Symfony\Filter\Ast\Comparison('search', 'eq', ['beta'])]), new \AlexFigures\Symfony\Filter\Ast\Comparison('id', 'eq', ['beta'])]);
+        self::assertSame(['beta'], array_map(static fn (Article $article): string => $article->getId(), $repository->findCollection('articles', $criteria)->items));
+        self::assertNotNull($repository->findOne('articles', 'beta', $criteria));
+        self::assertNull($repository->findOne('articles', 'gamma', $criteria));
+        $author = (new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author())->setId('author')->setName('Alice')->setEmail('alice@example.test');
+        $this->em->persist($author);
+        $this->em->find(Article::class, 'alpha')->setAuthor($author);
+        $this->em->flush();
+        $criteria->filter = new \AlexFigures\Symfony\Filter\Ast\Disjunction([new \AlexFigures\Symfony\Filter\Ast\Comparison('search', 'joined', ['Alice']), new \AlexFigures\Symfony\Filter\Ast\Comparison('id', 'eq', ['beta'])]);
+        self::assertSame(['alpha', 'beta'], array_map(static fn (Article $article): string => $article->getId(), $repository->findCollection('articles', $criteria)->items), 'The inner join in the search branch must not discard beta, which has no author.');
     }
 
     #[DataProvider('relationshipMutations')]

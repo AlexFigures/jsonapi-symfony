@@ -739,6 +739,11 @@ return static function (ContainerConfigurator $configurator): void {
         service(\AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner::class), service(ErrorMapper::class), '%jsonapi.limits%', service(ResourceRepository::class), service(QueryParser::class), tagged_iterator('jsonapi.relationship_batch_reader'), '%jsonapi.relationships.unplanned_read_policy%',
     ]);
 
+    $services->set(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->args([
+        tagged_iterator('jsonapi.persister'),
+        service(\AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor::class),
+    ]);
+
     // ResourceRepositoryLocator - dispatches to custom TypedResourceRepository or falls back to GenericDoctrineRepository
     $services
         ->set(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceRepositoryLocator::class)
@@ -841,6 +846,7 @@ return static function (ContainerConfigurator $configurator): void {
         ->args([
             service('doctrine'),
             service(FlushManager::class),
+            tagged_iterator('jsonapi.persister'),
         ])
     ;
 

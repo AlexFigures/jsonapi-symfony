@@ -43,6 +43,7 @@ final class DocumentBuilder
      */
     public function buildCollection(string $type, array $models, Criteria $criteria, Slice $slice, Request $request): array
     {
+        $request->attributes->set('_jsonapi_collection', true);
         $request->attributes->set('_jsonapi_models', $models);
         $request->attributes->set('_jsonapi_model_type', $type);
         $data = [];
@@ -115,7 +116,8 @@ final class DocumentBuilder
      *         id: string,
      *         links?: array<string, string>,
      *         attributes: array<string, mixed>|stdClass,
-     *         relationships?: array<string, array<string, mixed>>
+     *         relationships?: array<string, array<string, mixed>>,
+     *     meta?: array<string, mixed>
      *     },
      *     meta?: array<string, mixed>,
      *     included?: list<array<string, mixed>>
@@ -123,6 +125,7 @@ final class DocumentBuilder
      */
     public function buildResource(string $type, object $model, Criteria $criteria, Request $request): array
     {
+        $request->attributes->set('_jsonapi_collection', false);
         $request->attributes->set('_jsonapi_models', [$model]);
         $request->attributes->set('_jsonapi_model_type', $type);
         $includeTree = $this->buildIncludeTree($criteria);
@@ -171,14 +174,15 @@ final class DocumentBuilder
      *     id: string,
      *     links?: array<string, string>,
      *     attributes: array<string, mixed>|stdClass,
-     *     relationships?: array<string, array<string, mixed>>
+     *     relationships?: array<string, array<string, mixed>>,
+     *     meta?: array<string, mixed>
      * }
      */
     private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null, array $activeIncludeTree = [], ?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $reads = null): array
     {
         $metadata = $this->registry->getByType($type);
         $fields = $criteria->fields[$type] ?? null;
-        $attributes = $this->buildAttributes($metadata, $model, $fields);
+        $attributes = $this->buildAttributes($metadata, $model, $fields, $context);
         $id = $this->resolveId($metadata, $model);
 
         $resource = [
@@ -197,6 +201,19 @@ final class DocumentBuilder
             $resource['relationships'] = $relationships;
         }
 
+        if ($context !== null) {
+            $resourceMeta = [];
+            $typedContext = $context->forType($type);
+            foreach ($typedContext->documentHooks() as $hook) {
+                if ($hook instanceof \AlexFigures\Symfony\Profile\Hook\ResourceMetaHookInterface) {
+                    $hook->onResourceMeta($typedContext, $metadata, $resourceMeta, $model);
+                }
+            }
+            if ($resourceMeta !== []) {
+                $resource['meta'] = $resourceMeta;
+            }
+        }
+
         return $resource;
     }
 
@@ -205,17 +222,27 @@ final class DocumentBuilder
      *
      * @return array<string, mixed>
      */
-    private function buildAttributes(ResourceMetadata $metadata, object $model, ?array $fields): array
+    private function buildAttributes(ResourceMetadata $metadata, object $model, ?array $fields, ?ProfileContext $context = null): array
     {
         $attributes = [];
         $restrict = $fields !== null;
         $normalizationGroups = $metadata->getNormalizationGroups();
+        $definition = $metadata->getDefinition($context?->forType($metadata->type));
+        $projected = $definition->readProjection === \AlexFigures\Symfony\Resource\Definition\ReadProjection::DTO && is_a($model, $definition->getEffectiveViewClass());
 
         /** @var AttributeMetadata $attribute */
         foreach ($metadata->attributes as $name => $attribute) {
+            $path = $attribute->propertyPath ?? $name;
+            if ($projected) {
+                // API visibility remains metadata-owned; DTO fields define the available representation.
+                $path = $this->accessor->isReadable($model, $name) ? $name : $path;
+                if (!$this->accessor->isReadable($model, $path)) {
+                    continue;
+                }
+            }
             // Check if attribute is in normalization groups (if groups are defined)
             if (!empty($normalizationGroups)) {
-                $propertyPath = $attribute->propertyPath ?? $name;
+                $propertyPath = $path;
                 if (!$this->isAttributeInGroups($model, $propertyPath, $normalizationGroups)) {
                     continue;
                 }
@@ -225,7 +252,7 @@ final class DocumentBuilder
                 continue;
             }
 
-            $value = $this->accessor->getValue($model, $attribute->propertyPath ?? $name);
+            $value = $this->accessor->getValue($model, $path);
             $attributes[$name] = $this->normalizeAttributeValue($value);
         }
 

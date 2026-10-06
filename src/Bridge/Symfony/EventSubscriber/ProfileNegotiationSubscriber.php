@@ -49,6 +49,10 @@ final class ProfileNegotiationSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $type = $request->attributes->get('type');
+        if (is_string($type)) {
+            $context = $context->forType($type);
+        }
         $response = $event->getResponse();
 
         if ($this->negotiator->shouldEmitLinkHeader()) {

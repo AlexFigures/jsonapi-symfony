@@ -12,7 +12,7 @@ final class UnsupportedTransactionBoundaryException extends JsonApiHttpException
 {
     public function __construct()
     {
-        $detail = 'This operation spans unsupported transaction boundaries. The built-in Doctrine provider requires one EntityManager and one connection per transaction.';
+        $detail = 'This operation cannot execute within one supported transaction boundary. The built-in Doctrine provider requires one EntityManager and one connection per transaction.';
         parent::__construct(409, $detail, errors: [new ErrorObject(
             null,
             null,

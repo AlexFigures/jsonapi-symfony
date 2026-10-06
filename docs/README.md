@@ -167,3 +167,5 @@ MIT License - See [LICENSE](../LICENSE) for details.
 
 - [Relationship graph scopes and extension costs](architecture/relationship-graph-reads.md)
 - [RC extension/configuration gaps and regression contracts](architecture/rc-extension-gaps.md)
+
+- [Final eight RC consumer gaps](architecture/rc-final-eight-gaps.md) — implementation evidence, read budgets and provider guarantees.
