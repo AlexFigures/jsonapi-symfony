@@ -101,6 +101,26 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                         if ($this->unplannedReadPolicy === 'reject') {
                             throw new BadRequestException(sprintf('Relationship "%s.%s" has no bounded fetch plan. Register a RelationshipBatchReaderInterface or omit it from the representation.', $ownerType, $edge->relationship->name));
                         }
+                        // A DTO may intentionally omit computed persistence getters. Legacy access
+                        // uses bounded owner hydration without replacing the negotiated representation.
+                        $missing = [];
+                        $definition = $metadata->getDefinition($context?->forType($ownerType));
+                        foreach ($owners as $owner) {
+                            $id = $this->id($metadata, $owner);
+                            if ($definition->readProjection === ReadProjection::DTO && is_a($owner, $definition->getEffectiveViewClass()) && !is_a($owner, $metadata->dataClass) && !$this->accessor->isReadable($owner, $path) && $map->source($ownerType, $id) === null) {
+                                $missing[] = $id;
+                            }
+                        }
+                        foreach (array_chunk($missing, 256) as $chunk) {
+                            $ownerField = $em->getClassMetadata($metadata->dataClass)->getSingleIdentifierFieldName();
+                            $query = $em->createQueryBuilder()->select('source')->from($metadata->dataClass, 'source')->where('source.' . $ownerField . ' IN (:owners)');
+                            IdentifierParameters::bind($query, $em, $metadata->dataClass, 'owners', $chunk);
+                            /** @var list<object> $sources */
+                            $sources = $query->getQuery()->getResult();
+                            foreach ($sources as $source) {
+                                $map->rememberSource($ownerType, $this->id($metadata, $source), $source);
+                            }
+                        }
                         continue;
                     }
                     $targetType = $edge->relationship->targetType;

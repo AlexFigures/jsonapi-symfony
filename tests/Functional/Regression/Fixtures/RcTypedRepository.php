@@ -12,16 +12,16 @@ final class RcTypedRepository implements TypedResourceRepository
 {
     public function supports(string $type): bool
     {
-        return $type === 'rc-memory';
+        return in_array($type, ['rc-memory', 'rc-routed'], true);
     }
 
     public function findCollection(string $type, Criteria $criteria): Slice
     {
-        return new Slice([new RcMemory('stored', 'Stored')], 1, 20, 1);
+        return new Slice([$this->findOne($type, 'stored', $criteria)], 1, 20, 1);
     }
     public function findOne(string $type, string $id, Criteria $criteria): ?object
     {
-        return new RcMemory($id, 'Stored');
+        return $type === 'rc-routed' ? new RcRoutedMemory($id, 'Routed') : new RcMemory($id, 'Stored');
     }
     public function findRelated(string $type, string $relationship, array $identifiers): iterable
     {

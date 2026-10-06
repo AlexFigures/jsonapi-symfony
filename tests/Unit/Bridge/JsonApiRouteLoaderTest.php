@@ -14,6 +14,25 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(JsonApiRouteLoader::class)]
 final class JsonApiRouteLoaderTest extends TestCase
 {
+    public function testResourcePrefixAppliesToEveryGeneratedRoute(): void
+    {
+        foreach ([[null, '/global'], ['/reference/', '/reference'], ['/', ''], ['', '']] as [$resourcePrefix, $expected]) {
+            $registry = $this->createMock(ResourceRegistryInterface::class);
+            $registry->method('all')->willReturn([new ResourceMetadata(
+                type: 'articles',
+                class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+                attributes: [],
+                relationships: ['tags' => new RelationshipMetadata('tags', true, 'tags')],
+                routePrefix: $resourcePrefix,
+            )]);
+            $routes = (new JsonApiRouteLoader($registry, '/global/', true))->load('.', 'jsonapi');
+            foreach ($routes as $route) {
+                self::assertStringStartsWith($expected . '/articles', $route->getPath());
+            }
+            self::assertSame($expected . '/articles/{id}/tags', $routes->get('jsonapi.articles.related.tags')->getPath());
+        }
+    }
+
     public function testGeneratesCollectionRoutes(): void
     {
         $registry = $this->createMock(ResourceRegistryInterface::class);

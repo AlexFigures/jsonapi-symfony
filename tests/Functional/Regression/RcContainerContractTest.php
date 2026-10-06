@@ -13,6 +13,28 @@ use Symfony\Component\HttpFoundation\Request;
 
 final class RcContainerContractTest extends TestCase
 {
+    public function testResourcePrefixControlsHttpRoutesAndRepresentationLinks(): void
+    {
+        $kernel = new RcKernel('route_prefix', false);
+        try {
+            foreach (['/reference/rc-routed/stored', '/reference/rc-routed'] as $url) {
+                $response = $kernel->handle(Request::create($url, server: ['HTTP_ACCEPT' => 'application/vnd.api+json']), catch: false);
+                self::assertSame(200, $response->getStatusCode());
+                $doc = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+                $resource = isset($doc['data'][0]) ? $doc['data'][0] : $doc['data'];
+                self::assertSame('Routed', $resource['attributes']['title']);
+                self::assertSame('/reference/rc-routed/stored', parse_url($resource['links']['self'], \PHP_URL_PATH));
+                if (isset($doc['links']['first'])) {
+                    self::assertSame('/reference/rc-routed', parse_url($doc['links']['first'], \PHP_URL_PATH));
+                }
+            }
+            self::assertSame(404, $kernel->handle(Request::create('/api/rc-routed/stored'))->getStatusCode());
+            self::assertSame(200, $kernel->handle(Request::create('/api/rc-memory/stored', server: ['HTTP_ACCEPT' => 'application/vnd.api+json']), catch: false)->getStatusCode());
+        } finally {
+            $kernel->shutdown();
+        }
+    }
+
     public function testPerTypeAuditDefaultsKeepConstructorDiAndBundleConfiguration(): void
     {
         $kernel = new RcKernel('rc8', false);

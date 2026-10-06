@@ -13,6 +13,18 @@ final class RelationshipReadMap
     private array $models = [];
     /** @var array<string, int> */
     private array $counts = [];
+    /** @var array<string, object> Persistence owners for legacy computed getters, never representation replacements. */
+    private array $sources = [];
+
+    public function rememberSource(string $type, string $id, object $model): void
+    {
+        $this->sources[$this->key($type, $id)] = $model;
+    }
+
+    public function source(string $type, string $id): ?object
+    {
+        return $this->sources[$this->key($type, $id)] ?? null;
+    }
 
     /** @param list<array{type: string, id: string}> $identifiers */
     public function put(string $type, string $id, string $relationship, array $identifiers): void

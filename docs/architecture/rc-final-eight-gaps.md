@@ -2,6 +2,8 @@
 
 This pass changes only `jsonapi-symfony` on `fix/acceptance-gaps`. The external example application is not modified or executed. Bundle regressions establish the implementation contract; independent consumer verification remains required before declaring the reported external gaps resolved.
 
+> Follow-up consumer findings: computed DTO relationships under always-linkage and opaque repository-decorator query cost were not covered by this initial pass. See the [follow-up report](rc-route-version-decorator-gaps.md); external gap resolution remains independently pending.
+
 ## Changes and executable evidence
 
 | Gap | Root cause and implementation | Bundle regression |

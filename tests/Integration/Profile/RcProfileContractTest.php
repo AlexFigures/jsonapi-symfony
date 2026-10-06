@@ -140,6 +140,69 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         self::assertInstanceOf(Article::class, $repository->findOne('articles', 'root', new Criteria()));
     }
 
+    public function testVersionedDtoWithComputedLinkageAcrossHttpReadControllers(): void
+    {
+        $article = $this->article();
+        $author = (new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author())->setId('owner')->setName('Owner')->setEmail('owner@example.test');
+        $article->setAuthor($author);
+        $this->em->persist($author);
+        $this->em->flush();
+        $metadata = $this->registry->getByType('articles');
+        $metadata->relationships['computedTags'] = new \AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata('computedTags', true, 'tags');
+        $this->registry->getByType('authors')->relationships['firstArticle'] = new \AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata('firstArticle', false, 'articles');
+        $metadata->versionResolver = new class () implements VersionResolverInterface {
+            public function resolve(ProfileContext $context): VersionDefinition
+            {
+                return $context->has('urn:alternate') ? new VersionDefinition(ArticleViewDto::class, [], ReadProjection::DTO, ['id' => 'e.id', 'title' => 'e.content', 'content' => 'e.title'], []) : new VersionDefinition(null, [], ReadProjection::ENTITY, [], []);
+            }
+        };
+        $stack = $this->stack(new FakeProfile('urn:alternate'));
+        $repository = $this->contextualRepository($stack);
+        $errors = new \AlexFigures\Symfony\Http\Error\ErrorMapper(new \AlexFigures\Symfony\Http\Error\ErrorBuilder(false));
+        $parser = new QueryParser($this->registry, new PaginationConfig(), new SortingWhitelist($this->registry), new FilteringWhitelist($this->registry, $errors), $errors, new \AlexFigures\Symfony\Filter\Parser\FilterParser());
+        $routes = (new \AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
+        $links = new \AlexFigures\Symfony\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
+        $preloader = new \AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new \AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner('always'), $errors, [], $repository, $parser);
+        $builder = new \AlexFigures\Symfony\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links, 'always', preloader: $preloader);
+        $factory = new \AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory();
+        $policy = new \AlexFigures\Symfony\Http\Controller\Support\OperationValidator($errors);
+        $item = new \AlexFigures\Symfony\Http\Controller\ResourceController($this->registry, $policy, $factory, $repository, $parser, $builder, $errors);
+        $collection = new \AlexFigures\Symfony\Http\Controller\CollectionController($this->registry, $policy, $factory, $repository, $parser, $builder);
+        $reader = new GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, requests: $stack, repository: $repository);
+        $related = new \AlexFigures\Symfony\Http\Controller\RelatedController($this->registry, $reader, $parser, $builder, $errors, $repository);
+        foreach (['show', 'index', 'related', 'related-to-one'] as $channel) {
+            $this->em->clear();
+            $request = $stack->getCurrentRequest();
+            $response = match ($channel) {
+                'show' => $item($request, 'articles', 'root'),
+                'index' => $collection($request, 'articles'),
+                'related-to-one' => $related($request, 'authors', 'owner', 'firstArticle'),
+                default => $related($request, 'authors', 'owner', 'articles'),
+            };
+            self::assertSame(200, $response->getStatusCode());
+            $doc = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+            $resource = in_array($channel, ['show', 'related-to-one'], true) ? $doc['data'] : $doc['data'][0];
+            self::assertSame('Original content', $resource['attributes']['title']);
+            self::assertSame('root', $resource['id']);
+            self::assertArrayNotHasKey('status', $resource['attributes']);
+            self::assertSame([['type' => 'tags', 'id' => 'tag']], $resource['relationships']['computedTags']['data']);
+            self::assertSame([['type' => 'tags', 'id' => 'tag']], $resource['relationships']['tags']['data']);
+        }
+        $view = $repository->findOne('articles', 'root', new Criteria());
+        $reads = $preloader->preload('articles', [$view], new Criteria(), $stack->getCurrentRequest());
+        self::assertSame($view, $reads->model('articles', 'root'), 'Persistence fallback must never replace the DTO representation.');
+        self::assertInstanceOf(Article::class, $reads->source('articles', 'root'));
+        $strict = new \AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new \AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner('always'), $errors, [], $repository, $parser, unplannedReadPolicy: 'reject');
+        try {
+            $strict->preload('articles', [$view], new Criteria(), $stack->getCurrentRequest());
+            self::fail('Strict policy must continue rejecting unplanned computed getters.');
+        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $exception) {
+            self::assertStringContainsString('computedTags', $exception->getMessage());
+        }
+        $stack->pop();
+        self::assertInstanceOf(Article::class, $repository->findOne('articles', 'root', new Criteria()));
+    }
+
     public function testPerTypeAuditHooksWithoutNegotiationPersistAndExposeResourceMeta(): void
     {
         $profile = new \AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile(['userProvider' => static fn (): string => 'editor@example.test']);

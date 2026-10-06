@@ -89,6 +89,12 @@ class Article
     #[Relationship(toMany: true, targetType: 'tags', linkingPolicy: RelationshipLinkingPolicy::VERIFY)]
     private Collection $tags;
 
+    /** @return Collection<int, Tag> */
+    public function getComputedTags(): Collection
+    {
+        return $this->tags;
+    }
+
     public function __construct()
     {
         $this->id = Uuid::v4()->toRfc4122();

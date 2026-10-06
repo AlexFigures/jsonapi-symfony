@@ -52,6 +52,12 @@ class Author
     #[Relationship(toMany: true, inverse: 'author', targetType: 'articles', linkingPolicy: RelationshipLinkingPolicy::VERIFY)]
     private Collection $articles;
 
+    public function getFirstArticle(): ?Article
+    {
+        $first = $this->articles->first();
+        return $first instanceof Article ? $first : null;
+    }
+
     public function __construct()
     {
         $this->id = Uuid::v4()->toRfc4122();

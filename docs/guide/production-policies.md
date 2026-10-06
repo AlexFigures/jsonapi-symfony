@@ -22,7 +22,7 @@ With `cache.etag.strategy: version`, applications supply `X-Resource-Version`. N
 
 The native Doctrine read path selects distinct roots before representation hydration, then loads required relationships in batches. The fetch plan considers sparse fields, linkage, includes and declared profile needs. Query count depends on graph shape and batch chunks rather than one query per root; it is not a universal fixed SQL count.
 
-Repository visibility remains part of native edge queries. A subclass overriding `findCollection()` does not automatically opt into the base query projection; custom projection must preserve its complete visibility semantics. Otherwise the bounded scoped fallback applies.
+Repository visibility remains part of native edge queries. A subclass overriding `findCollection()` does not automatically opt into the base query projection; custom projection must preserve its complete visibility semantics. Otherwise the bounded scoped fallback applies. Repository decorators must explicitly preserve the query capability with the same outer policy to retain native absolute SQL budgets; opaque wrappers use the safe, more expensive fallback.
 
 To-many sort paths have ambiguous ordering unless a handler defines aggregate semantics. Review the strict collection-sort policy before exposing them. Legacy behavior remains configurable during stabilization; the final default is not frozen.
 
@@ -53,6 +53,8 @@ Included identities are budgeted before hydration. Linkage has a separate identi
 ## Custom/computed relationships and hooks
 
 Computed relationships should implement bounded batch reading through `RelationshipBatchReaderInterface`; endpoint readers must also enforce target scope and pagination. Hooks that need identifiers, models or counts should declare fetch requirements through the relevant optional hook interfaces. The strict `reject` policy detects unplanned relationship access instead of triggering a lazy full-collection fallback.
+
+A negotiated DTO may omit persistence computed getters. In legacy mode, the Doctrine preloader batch-loads the selected persistence owners as separate getter sources; it keeps DTO attribute values and honors readable DTO getters. Strict rejection and explicit batch readers remain the production alternatives.
 
 Legacy getters and undeclared application SQL have no automatic query-cost guarantee. The bundle cannot bound an arbitrary callback that loads an entire graph internally. Applications must supply batch loaders, honor budgets and test their own query shape. See [extension contracts](../api/public-api.md) and [relationship graph design](../architecture/relationship-graph-reads.md).
 

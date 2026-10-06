@@ -146,6 +146,52 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         }
     }
 
+    #[DataProvider('graphShapes')]
+    public function testDecoratorQueryPlanningPreservesScopeAndGraphBudgets(array $includes, bool $sparse): void
+    {
+        $this->seedGraph();
+        $this->expandNativeGraph();
+        foreach ([true, false] as $projectQueries) {
+            $provider = new ScopedRepositoryDecorator($this->repository, $projectQueries);
+            $counts = [];
+            foreach ([5, 20] as $size) {
+                $this->em->clear();
+                $log = new DebugStack();
+                $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+                $criteria = new Criteria(new Pagination(1, $size));
+                $criteria->include = $includes;
+                if ($sparse) {
+                    $criteria->fields['articles'] = ['title'];
+                }
+                $slice = $provider->findCollection('articles', $criteria);
+                $document = $this->builder(repository: $provider)->buildCollection('articles', $slice->items, $criteria, $slice, Request::create('/api/articles'));
+                self::assertCount($size, $document['data']);
+                foreach ($document['data'] as $resource) {
+                    foreach ($resource['relationships']['tags']['data'] ?? [] as $identifier) {
+                        self::assertNotSame('tag-0001', $identifier['id']);
+                    }
+                }
+                foreach ($document['included'] ?? [] as $resource) {
+                    self::assertFalse($resource['type'] === 'tags' && $resource['id'] === 'tag-0001', 'Decorator scope must apply to included targets.');
+                }
+                $counts[] = count($log->queries);
+            }
+            self::assertSame($counts[0], $counts[1], 'Both native planning and scoped fallback must avoid per-root SQL growth.');
+            if ($projectQueries) {
+                $budget = match ($includes) {
+                    [] => 12, ['author'] => 18, ['tags'] => 24, default => 32,
+                };
+                self::assertLessThanOrEqual($budget, $counts[1]);
+                if (!$sparse) {
+                    self::assertContains('tags', $provider->plannedTypes);
+                }
+                $plannedCount = $counts[1];
+            } elseif (!$sparse) {
+                self::assertGreaterThan($plannedCount, $counts[1], 'Opaque decorator fallback is safe but adds scope discovery queries.');
+            }
+        }
+    }
+
     public function testRelatedCollectionRepresentationStaysWithinQueryBudget(): void
     {
         $this->seedGraph(25);

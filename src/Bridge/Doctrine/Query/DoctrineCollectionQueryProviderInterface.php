@@ -7,7 +7,12 @@ namespace AlexFigures\Symfony\Bridge\Doctrine\Query;
 use AlexFigures\Symfony\Query\Criteria;
 use Doctrine\ORM\QueryBuilder;
 
-/** @internal Builds the complete collection visibility predicate without executing SQL. Return null when visibility cannot safely be projected. */
+/**
+ * @internal Builds complete collection visibility without SQL. Return null when it cannot safely be projected.
+ *
+ * Decorators must opt in explicitly and preserve all checks, filters and target scope in this path.
+ * Forwarding an inner query while omitting outer policies is unsafe. Opaque decorators retain scoped fallback.
+ */
 interface DoctrineCollectionQueryProviderInterface
 {
     public function collectionQuery(string $type, Criteria $criteria): ?QueryBuilder;

@@ -16,7 +16,7 @@ Status: preparation in progress. No release or public API freeze is declared her
 
 ## Runtime evidence gate
 
-Record bundle commit, example commit, commands, environment, result artifacts and remaining classifications for each run. A historical report or green local suite is not independent evidence. The last bundle fix report is [the final eight gaps](../architecture/rc-final-eight-gaps.md); its consumer confirmation remains separate.
+Record bundle commit, example commit, commands, environment, result artifacts and remaining classifications for each run. A historical report or green local suite is not independent evidence. The latest [prefix/DTO/decorator report](../architecture/rc-route-version-decorator-gaps.md) supplements the [eight-gap pass](../architecture/rc-final-eight-gaps.md). Prefix and DTO fixes have new bundle regressions; consumer confirmation and the decorator performance integration remain pending.
 
 | Contract | Bundle evidence to inspect | Independent evidence |
 | --- | --- | --- |

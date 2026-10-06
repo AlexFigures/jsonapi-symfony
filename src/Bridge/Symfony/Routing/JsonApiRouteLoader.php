@@ -77,7 +77,7 @@ final class JsonApiRouteLoader extends Loader
         foreach ($this->registry->all() as $metadata) {
             $this->metadataValidator?->validate($metadata);
             $resourceType = $metadata->type;
-            $prefix = rtrim($this->routePrefix, '/');
+            $prefix = rtrim($metadata->routePrefix ?? $this->routePrefix, '/');
             $allowedOperations = $metadata->allowedOperations;
 
             // Collection routes - only if INDEX operation is allowed

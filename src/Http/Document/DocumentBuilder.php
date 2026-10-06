@@ -320,7 +320,8 @@ final class DocumentBuilder
 
             if ($this->shouldIncludeRelationshipData($criteria, $metadata->type, $name, $activeIncludeTree)) {
                 $cached = $reads?->identifiers($metadata->type, $id, $name);
-                $linkage = $cached === null ? $this->resolveRelationshipLinkage($relationship, $model) : ($relationship->toMany ? $cached : ($cached[0] ?? null));
+                $source = $this->relationshipSource($relationship, $model, $reads?->source($metadata->type, $id));
+                $linkage = $cached === null ? $this->resolveRelationshipLinkage($relationship, $source) : ($relationship->toMany ? $cached : ($cached[0] ?? null));
                 $data['data'] = $linkage;
             }
 
@@ -370,6 +371,13 @@ final class DocumentBuilder
         }
 
         return false;
+    }
+
+    private function relationshipSource(RelationshipMetadata $relationship, object $model, ?object $source): object
+    {
+        $path = $relationship->aliasPath ?? $relationship->propertyPath ?? $relationship->name;
+        $root = explode('.', $path)[0];
+        return $source !== null && !$this->accessor->isReadable($model, $root) ? $source : $model;
     }
 
     /**
@@ -456,7 +464,8 @@ final class DocumentBuilder
             $relationship = $metadata->relationships[$relationshipName];
             // Resolve propertyPath aliases (e.g., "articleSpecialTags.specialTag")
             $cached = $reads?->related($type, $this->resolveId($metadata, $model), $relationshipName);
-            $related = $cached ?? $this->resolvePropertyPath($model, $relationship);
+            $source = $this->relationshipSource($relationship, $model, $reads?->source($type, $this->resolveId($metadata, $model)));
+            $related = $cached ?? $this->resolvePropertyPath($source, $relationship);
 
             if ($related === null) {
                 continue;

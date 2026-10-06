@@ -26,7 +26,8 @@ These documents explain implementation and regression coverage; they do not cert
 - [Support contract draft](architecture/support-contract-1.0-draft.md).
 - [Read-path stabilization](architecture/read-path-stabilization.md).
 - [Relationship scopes and extension costs](architecture/relationship-graph-reads.md).
-- [Latest eight consumer gaps](architecture/rc-final-eight-gaps.md).
+- [Latest prefix/DTO/decorator findings](architecture/rc-route-version-decorator-gaps.md).
+- [Earlier eight consumer gaps](architecture/rc-final-eight-gaps.md).
 - [Earlier extension gaps](architecture/rc-extension-gaps.md).
 - [Correctness pass](architecture/acceptance-second-pass.md).
 - [Roadmap](architecture/stable-1.0-roadmap.md).

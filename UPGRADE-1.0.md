@@ -119,3 +119,13 @@ Before final 1.0, append every approved namespace/interface/service-alias move, 
 **Migration:** use actual kebab-case resource names in `profiles.per_type`, `cache.last_modified.per_type` and `write.client_generated_ids`. Keep legacy typed persisters tagged `jsonapi.persister`, or enable interface autoconfiguration; unhandled types use the configured/default processor. A non-ORM persister owns single-write persistence and hooks; configure a suitable transaction manager for custom Atomic. Existing TransactionManager signatures are unchanged; ResourceWriteTransactionManagerInterface is an optional capability. Filter handlers must supply a WHERE predicate, with optional joins; use repository/query hooks for pagination, sorting or projections. Applications using version validators must supply `X-Resource-Version` for the current representation. Existing Doctrine subclasses overriding `findCollection` retain their scoped fallback automatically. To opt into native query projection, explicitly override `collectionQuery` with the same visibility rules; returning null also requests the fallback.
 
 The native representation preloader now embeds the collection scope predicate in its bounded relationship queries instead of executing separate visible-ID count/page queries. It keeps independent include/linkage budgets and distinct-root pagination. See [the final eight-gap report](docs/architecture/rc-final-eight-gaps.md) for tests, SQL budgets and provider limitations. External consumer confirmation remains a separate release gate.
+
+## Resource prefixes and DTO relationship sources
+
+**Before:** resource routePrefix was retained in metadata but ignored by generated routes. A negotiated DTO missing persistence computed getters could fail under always-linkage.
+
+**After:** generated routes and their links use the resource prefix override. Legacy DTO computed reads use separately batched persistence owners while attributes remain DTO-backed; strict unplanned-read rejection is unchanged.
+
+**Why:** route declarations must match published URLs and choosing a representation must not require entity-only getters on that DTO.
+
+**Migration:** use the declared resource URL and update clients relying on the accidental global URL. Use explicit computed batch readers for predictable production costs. Repository decorators should preserve their full scope when opting into Doctrine query planning; an opaque wrapper retains scoped fallback and its extra SQL cost. See the [follow-up report](docs/architecture/rc-route-version-decorator-gaps.md).
