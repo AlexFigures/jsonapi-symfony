@@ -1,171 +1,34 @@
-# JsonApiBundle - Documentation
+# Documentation
 
-This directory contains comprehensive documentation for JsonApiBundle.
+The application entry point is the [developer path](guide/developer-path.md). It connects setup, normal API use and extension choices without requiring implementation reports.
 
----
+## Application documentation
 
-## 📋 Table of Contents
+- [Developer path](guide/developer-path.md): install, expose a resource, query and write it.
+- [Guide index](guide/README.md): focused references and recipes.
+- [Production policies](guide/production-policies.md): transactions, concurrency, bounded reads and application responsibilities.
+- [Configuration](guide/configuration.md): current defaults and pending reference sections.
+- [Extension contracts](api/public-api.md): current contracts and candidate public surface.
+- [Upgrade to 1.0](../UPGRADE-1.0.md): migration draft, updated as decisions become final.
 
-1. [User Documentation](#user-documentation) - Getting started, guides, and examples
-2. [API Reference](#api-reference) - Public API and upgrade guides
-3. [Quality Assurance](#quality-assurance) - Conformance, architecture, and security
-4. [Examples](#examples) - Code examples and implementations
+## Release and contribution
 
----
+- [Release checklist](release/checklist.md): what can proceed now and what depends on external evidence.
+- [Compatibility evidence](release/compatibility.md): Composer constraints, actual CI jobs and pending matrix work.
+- [API audit](release/public-api-audit.md): inventory generation and freeze review.
+- [Documentation maintenance](release/documentation-policy.md) and [documentation TODO](release/documentation-todo.md).
+- [Testing](../TESTING.md), [contributing](../CONTRIBUTING.md) and [conformance evidence preparation](conformance/spec-coverage.md).
 
-## 📚 User Documentation
+## Implementation evidence
 
-### [Developer Guide](guide/README.md)
+These documents explain implementation and regression coverage; they do not certify a release:
 
-Complete developer documentation with tutorials and guides.
+- [Support contract draft](architecture/support-contract-1.0-draft.md).
+- [Read-path stabilization](architecture/read-path-stabilization.md).
+- [Relationship scopes and extension costs](architecture/relationship-graph-reads.md).
+- [Latest eight consumer gaps](architecture/rc-final-eight-gaps.md).
+- [Earlier extension gaps](architecture/rc-extension-gaps.md).
+- [Correctness pass](architecture/acceptance-second-pass.md).
+- [Roadmap](architecture/stable-1.0-roadmap.md).
 
-**Quick Links**:
-- **[Getting Started](guide/getting-started.md)** - Your first JSON:API in 5 minutes
-- **[Configuration](guide/configuration.md)** - Complete configuration reference
-- **[Doctrine Integration](guide/integration-doctrine.md)** - Production-ready data layer
-- **[Advanced Features](guide/advanced-features.md)** - Profiles, hooks, events, caching
-- **[Examples & Recipes](guide/examples.md)** - Real-world code examples
-- **[Troubleshooting](guide/troubleshooting.md)** - Common issues and solutions
-
-
-
----
-
-## 📖 API Reference
-
-### [Public API Documentation](api/public-api.md)
-
-Stable API reference with backward compatibility guarantees.
-
-### [Backward Compatibility Policy](api/bc-policy.md)
-
-Versioning strategy and BC guarantees.
-
-### [Upgrade Guide](api/upgrade-guide.md)
-
-Migration guide for version upgrades.
-
----
-
-## 🔍 Examples
-
-### [Code Examples](examples/README.md)
-
-Real-world implementations and patterns.
-
-**Available Examples**:
-- Custom handlers and filters
-- Geospatial distance filtering
-- Full-text search implementation
-- Relevance sorting
-- Sortable fields configuration
-
----
-
-## 🔧 Quality Assurance
-
-### Specification Conformance
-
-#### [Specification Coverage Matrix](conformance/spec-coverage.md)
-
-Comprehensive mapping of JSON:API 1.1 requirements to test cases.
-
-**Key Metrics**:
-- ✅ **97.8% Coverage** (132/135 requirements)
-- ✅ **100% MUST** requirements covered
-- ✅ **98.5% SHOULD** requirements covered
-
-#### [Test Gap Analysis](conformance/gaps.md)
-
-Identified gaps and remediation plan.
-
-**Status**: ✅ **Excellent** - Only 3 minor gaps
-
-### Architecture & Design
-
-#### [Architecture Review](architecture/review.md)
-
-Layered architecture, extensibility, and BC policy.
-
-**Status**: ✅ **9.5/10** - Excellent architecture
-
-**Key Features**:
-- ✅ Clean layering (Deptrac: 0 violations)
-- ✅ Well-defined public API (`Contract\*` namespace)
-- ✅ Powerful extensibility (profiles, operators, adapters)
-- ✅ Type-safe (PHPStan Level 8)
-
-### Security
-
-#### [Security Checklist](security/checklist.md)
-
-Comprehensive security audit and best practices.
-
-**Status**: ✅ **9/10** - Excellent security posture
-
-**Key Protections**:
-- ✅ SQL injection protected (DQL parameterization)
-- ✅ DoS protection (complexity limits)
-- ✅ Strict input validation
-- ✅ Safe error handling (no info leakage)
-
-### Performance & Reliability
-
-#### [Memory & Performance Report](reliability/memory-perf-report.md)
-
-Memory leak detection and performance profiling.
-
-**Status**: ⚠️ **Partial** - Infrastructure exists, needs real controller integration
-
----
-
-## 🚀 Getting Started
-
-Ready to build your first JSON:API? Start with our [Getting Started Guide](guide/getting-started.md)!
-
-### Quick Links
-
-- **[Installation & Setup](guide/getting-started.md#installation)** - Get up and running in 5 minutes
-- **[Configuration](guide/configuration.md)** - Configure for your needs
-- **[Doctrine Integration](guide/integration-doctrine.md)** - Production-ready data layer
-- **[Troubleshooting](guide/troubleshooting.md)** - Common issues and solutions
-
----
-
-## 📚 Additional Resources
-
-- **[JSON:API 1.1 Specification](https://jsonapi.org/format/1.1/)** - Official specification
-- **[RFC 6906 - Profile Parameter](https://www.rfc-editor.org/rfc/rfc6906)** - Profile extension
-- **[Atomic Operations Extension](https://jsonapi.org/ext/atomic/)** - Batch operations
-
----
-
-## 🤝 Contributing
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for contribution guidelines.
-
-For security issues, see [SECURITY.md](../SECURITY.md).
-
----
-
-## 📄 License
-
-MIT License - See [LICENSE](../LICENSE) for details.
-
----
-
-**Last Updated**: 2025-10-07
-**Status**: ✅ Complete
-
-
-## Stabilization toward 1.0
-
-- [Correctness pass and regression report](architecture/acceptance-second-pass.md)
-- [Implemented read-path and remaining release blockers](architecture/read-path-stabilization.md)
-- [Upgrade toward 1.0 (draft)](../UPGRADE-1.0.md)
-- [Stable 1.0 roadmap and independent release gates](architecture/stable-1.0-roadmap.md)
-
-- [Relationship graph scopes and extension costs](architecture/relationship-graph-reads.md)
-- [RC extension/configuration gaps and regression contracts](architecture/rc-extension-gaps.md)
-
-- [Final eight RC consumer gaps](architecture/rc-final-eight-gaps.md) — implementation evidence, read budgets and provider guarantees.
+Obsolete guides, sample implementations and historical integration reports have been removed. Current unfinished topics are tracked as TODOs. Independent example-app verification remains outside this repository's development run.

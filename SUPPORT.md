@@ -5,7 +5,7 @@ We want every team integrating JsonApiBundle to have a smooth experience. Please
 ## 📚 Self-Service
 - Review the [documentation index](docs/guide/README.md) for tutorials, configuration reference, and troubleshooting.
 - Consult the [specification coverage matrix](docs/conformance/spec-coverage.md) to understand current compliance.
-- Check the [Production Readiness checklist](docs/PRODUCTION_READY.md) before going live.
+- Check the [production policies](docs/guide/production-policies.md) before going live.
 
 ## 💬 Questions & Discussions
 - Use [GitHub Discussions](https://github.com/AlexFigures/jsonapi-symfony/discussions/new?category=questions) for implementation questions, architecture advice, or sharing ideas.

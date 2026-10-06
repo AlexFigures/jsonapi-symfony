@@ -6,6 +6,29 @@ on:
   pull_request:
 
 jobs:
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up documentation tooling
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Check maintained documentation links
+        run: make docs-check
+
+      - name: Generate advisory API inventory
+        run: make api-inventory
+
+      - name: Upload API inventory for freeze review
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-api-inventory
+          path: reports/public-api-inventory.json
+          if-no-files-found: error
+
   tests:
     runs-on: ubuntu-latest
     strategy:

@@ -2,6 +2,7 @@
 .PHONY: docker-up docker-down docker-test docker-shell
 .PHONY: stan cs-fix rector install mutation deptrac bc-check stress-mem stress-perf qa-full
 
+PYTHON ?= python3
 COMPOSER ?= composer
 PHP ?= php
 DOCKER_COMPOSE ?= docker compose -f docker-compose.test.yml
@@ -83,3 +84,11 @@ stress: vendor/autoload.php
 
 qa-full: test stan mutation deptrac bc-check
 	@echo "✅ All QA checks passed!"
+
+# Documentation preparation does not require Composer or integration databases.
+.PHONY: docs-check api-inventory
+docs-check:
+	$(PYTHON) scripts/check-doc-links.py
+
+api-inventory:
+	$(PYTHON) scripts/public-api-inventory.py

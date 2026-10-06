@@ -11,3 +11,9 @@ infection.log
 # IDE
 /.idea/
 /.vscode/
+
+# Generated QA artifacts (historical Markdown reports stay tracked)
+/.deptrac.cache
+/reports/*.xml
+/reports/public-api-inventory.json
+/scripts/__pycache__/
