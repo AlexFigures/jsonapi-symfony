@@ -140,12 +140,22 @@ The native representation preloader now embeds the collection scope predicate in
 
 **Migration:** review previously inert settings before deploying. For shared data/view classes register a primary resource or use distinct classes; select projections explicitly by type. Register typed endpoint readers/updaters through autoconfiguration or their relationship tags; custom implementations own their scope/hooks and bounded fetching. Keep batch readers separate from endpoint readers. Public RelationshipReadMap, RelationshipReadRequirements, CustomRouteMetadata and the Doctrine query-plan capability retain their namespaces. Decorators must explicitly preserve all guards/scope in collectionQuery or return null.
 
-## Deprecated config-only options
+## Removed config-only options (breaking change)
 
 **Before:** `dx.*`, `errors.locale` and several Doctrine performance options parsed without changing runtime behavior.
 
-**After:** explicit use emits deprecation diagnostics. Parsing/defaults remain compatible, but these settings are not supported features: `enable_query_cache`, `query_cache_pool`, `enable_second_level_cache`, `hydrate_partial_by_fields`, `default_fetch`.
+**After:** the entire `jsonapi.dx` section, `jsonapi.errors.locale`, and `jsonapi.performance.doctrine` keys `enable_query_cache`, `query_cache_pool`, `enable_second_level_cache`, `hydrate_partial_by_fields`, `default_fetch` are removed. They now fail configuration validation as unrecognized options. Container parameters `jsonapi.dx` and `jsonapi.errors.locale` are also removed.
 
 **Why:** accepted configuration must not imply an unimplemented production guarantee.
 
 **Migration:** remove those nodes. Configure Doctrine caches/fetch behavior in the application, and supply application localization/tooling directly. Keep the implemented `performance.head_enabled` and `performance.doctrine.collection_sort_policy` options as needed.
+
+## Relationship authorization and error type links
+
+**Before:** standalone relationship endpoints had no dedicated access-policy extension, and error objects only supported `links.about`.
+
+**After:** applications may bind `RelationshipAuthorizerInterface` to authorize each `RelationshipOperation`. Denied endpoint reads/writes return JSON:API 403 before provider work; write authorization precedes validator reads and concurrency protection. `ErrorObject` and ErrorBuilder methods accept an optional trailing `typeLink`; immutable error copies preserve it. The fluent error-response builder exposes `withTypeLink()`.
+
+**Why:** application access policies and optional JSON:API error members need explicit, tested extension points.
+
+**Migration:** no authorizer preserves current endpoint behavior. Register the interface alias to enable application policy; keep it side-effect free because writes with preconditions may evaluate it twice. This endpoint policy does not replace Atomic, resource-body or graph-wide scope checks. Use named `typeLink` or `withTypeLink()` for `errors[].links.type`; existing about links and top-level `withLinks()` retain their meanings.

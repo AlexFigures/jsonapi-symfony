@@ -40,6 +40,16 @@ final class DataLayerConfigurationTest extends TestCase
         self::assertSame('legacy', $container->getParameter('jsonapi.performance.doctrine.collection_sort_policy'));
     }
 
+    public function testRemovedConfigurationParametersAreNotPublished(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+        (new JsonApiExtension())->load([], $container);
+        self::assertFalse($container->hasParameter('jsonapi.dx'));
+        self::assertFalse($container->hasParameter('jsonapi.errors.locale'));
+        self::assertSame(['doctrine' => ['collection_sort_policy' => 'legacy'], 'head_enabled' => true], $container->getParameter('jsonapi.performance'));
+    }
+
     public function testDefaultDoctrineProvider(): void
     {
         $container = new ContainerBuilder();

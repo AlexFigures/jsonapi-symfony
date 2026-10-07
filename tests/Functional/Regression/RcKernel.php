@@ -28,7 +28,7 @@ final class RcKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return '/tmp/jsonapi-rc9-kernel-' . getmypid() . '/' . $this->environment;
+        return '/tmp/jsonapi-rc11-kernel-' . getmypid() . '/' . $this->environment;
     }
     public function getLogDir(): string
     {
@@ -55,16 +55,34 @@ final class RcKernel extends Kernel
                 'media_types' => ['default' => ['request' => ['allowed' => ['application/json']], 'response' => ['default' => 'application/json', 'negotiable' => ['application/json', 'application/vnd.api+json']]]],
             ]);
         }
-        if ($this->environment === 'typed_relationships') {
+        if (in_array($this->environment, ['typed_relationships', 'tagged_relationships', 'authorized_relationships'], true)) {
             $container->extension('jsonapi', ['write' => ['allow_relationship_writes' => true]]);
+        }
+        if ($this->environment === 'authorized_relationships') {
+            $container->extension('jsonapi', ['cache' => ['conditional' => ['require_if_match_on_write' => true]]]);
         }
         if ($this->environment === 'head_disabled') {
             $container->extension('jsonapi', ['performance' => ['head_enabled' => false], 'strict_content_negotiation' => false]);
         }
         $services = $container->services();
+        if ($this->environment === 'error_links') {
+            $services->alias('test.error_response_factory', \AlexFigures\Symfony\Http\Response\JsonApiResponseFactory::class)->public();
+        }
         $services->set(RcExistenceChecker::class);
         $services->alias(\AlexFigures\Symfony\Contract\Data\ExistenceChecker::class, RcExistenceChecker::class);
-        $services->set(RcTypedRelationshipHandler::class)->autoconfigure()->public();
+        $relationshipHandler = $services->set(RcTypedRelationshipHandler::class)->public();
+        if ($this->environment === 'tagged_relationships') {
+            $relationshipHandler->tag('jsonapi.relationship_reader')->tag('jsonapi.relationship_updater');
+        } else {
+            $relationshipHandler->autoconfigure();
+        }
+        if ($this->environment === 'authorized_relationships') {
+            $services->set(RcRelationshipAuthorizer::class);
+            $services->alias(\AlexFigures\Symfony\Http\Authorization\RelationshipAuthorizerInterface::class, RcRelationshipAuthorizer::class);
+            $services->set(RcRelationshipTransaction::class)->public();
+            $services->alias(\AlexFigures\Symfony\Contract\Tx\TransactionManager::class, RcRelationshipTransaction::class);
+            $services->alias(\AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface::class, RcRelationshipTransaction::class);
+        }
         $services->set(RcTaggedResource::class)->tag('jsonapi.resource', ['type' => 'rc-tagged']);
         if ($this->environment === 'doctrine_typed') {
             $services->set('doctrine', \AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry::class)->args([[]]);

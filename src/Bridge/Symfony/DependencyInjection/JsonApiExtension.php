@@ -55,7 +55,6 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.errors.expose_debug_meta', $config['errors']['expose_debug_meta']);
         $container->setParameter('jsonapi.errors.add_correlation_id', $config['errors']['add_correlation_id']);
         $container->setParameter('jsonapi.errors.default_title_map', $config['errors']['default_title_map']);
-        $container->setParameter('jsonapi.errors.locale', $config['errors']['locale']);
         $container->setParameter('jsonapi.cache', $config['cache']);
         $container->setParameter('jsonapi.limits', $config['limits']);
         $container->setParameter('jsonapi.relationship_max_identifiers', $config['limits']['relationship_max_identifiers']);
@@ -76,7 +75,6 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.profiles.soft_delete', $config['profiles']['soft_delete']);
         $container->setParameter('jsonapi.profiles.audit_trail', $config['profiles']['audit_trail']);
         $container->setParameter('jsonapi.profiles.rel_counts', $config['profiles']['rel_counts']);
-        $container->setParameter('jsonapi.dx', $config['dx']);
         $container->setParameter('jsonapi.docs.generator', $config['docs']['generator']);
         $container->setParameter('jsonapi.docs.generator.json_schema', $config['docs']['generator']['json_schema']);
         $container->setParameter('jsonapi.docs.generator.openapi', $config['docs']['generator']['openapi']);

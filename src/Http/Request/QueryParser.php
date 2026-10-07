@@ -162,6 +162,7 @@ final class QueryParser
                     detail: $error->detail,
                     source: new ErrorSource(parameter: sprintf('fields[%s]', $resourceType)),
                     meta: $error->meta,
+                    typeLink: $error->typeLink,
                 );
                 $this->throwBadRequest($error);
             }

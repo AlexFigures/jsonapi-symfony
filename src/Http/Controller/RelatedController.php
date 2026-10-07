@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace AlexFigures\Symfony\Http\Controller;
 
 use AlexFigures\Symfony\Contract\Data\RelationshipReader;
+use AlexFigures\Symfony\Http\Authorization\RelationshipAccessChecker;
+use AlexFigures\Symfony\Http\Authorization\RelationshipOperation;
 use AlexFigures\Symfony\Http\Document\DocumentBuilder;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
@@ -28,6 +30,7 @@ final class RelatedController
         private readonly DocumentBuilder $document,
         private readonly ErrorMapper $errors,
         private readonly ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null,
+        private readonly ?RelationshipAccessChecker $access = null,
     ) {
     }
 
@@ -45,6 +48,8 @@ final class RelatedController
         if (!$relationship instanceof RelationshipMetadata) {
             throw new NotFoundException(sprintf('Relationship "%s" not found on resource "%s".', $rel, $type));
         }
+
+        $this->access?->assertGranted($request, $type, $id, $rel, RelationshipOperation::READ_RELATED);
 
         if ($relationship->toMany) {
             $request->attributes->set('_jsonapi_relationship_collection', true);

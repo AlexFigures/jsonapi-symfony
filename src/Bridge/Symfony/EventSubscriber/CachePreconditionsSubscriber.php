@@ -61,6 +61,19 @@ final class CachePreconditionsSubscriber implements EventSubscriberInterface
 
     public function onKernelController(\Symfony\Component\HttpKernel\Event\ControllerEvent $event): void
     {
+        if ($this->shouldEvaluate($event->getRequest(), $event->getController(), $event->isMainRequest())) {
+            $controller = $event->getController();
+            $handler = is_array($controller) ? $controller[0] : $controller;
+            if ($handler instanceof \AlexFigures\Symfony\Http\Controller\RelationshipWriteController) {
+                $request = $event->getRequest();
+                $type = $request->attributes->get('type');
+                $id = $request->attributes->get('id');
+                $rel = $request->attributes->get('rel', $request->attributes->get('relationship'));
+                if (is_string($type) && is_string($id) && is_string($rel)) {
+                    $handler->assertAccess($request, $type, $id, $rel);
+                }
+            }
+        }
         if ($this->concurrency !== null) {
             return;
         }

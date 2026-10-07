@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Http\Controller;
 
+use AlexFigures\Symfony\Http\Authorization\RelationshipAccessChecker;
+use AlexFigures\Symfony\Http\Authorization\RelationshipOperation;
 use AlexFigures\Symfony\Http\Error\ErrorMapper;
 use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
@@ -22,6 +24,7 @@ final class RelationshipGetController
         private readonly ResourceRegistryInterface $registry,
         private readonly ErrorMapper $errors,
         private readonly ?\AlexFigures\Symfony\Http\Link\LinkGenerator $links = null,
+        private readonly ?RelationshipAccessChecker $access = null,
     ) {
     }
 
@@ -29,6 +32,8 @@ final class RelationshipGetController
     {
         $metadata = $this->registry->getByType($type);
         $this->assertOperationAllowed(ResourceOperation::SHOW, $metadata->allowedOperations);
+
+        $this->access?->assertGranted($request, $type, $id, $rel, RelationshipOperation::READ_LINKAGE);
 
         return $this->currentRepresentation($request, $type, $id, $rel);
     }

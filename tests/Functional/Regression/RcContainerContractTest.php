@@ -116,9 +116,10 @@ final class RcContainerContractTest extends TestCase
         }
     }
 
-    public function testAutoconfiguredTypedRelationshipsHandleGeneratedEndpoints(): void
+    #[DataProvider('relationshipProviderModes')]
+    public function testTypedRelationshipReaderHandlesGeneratedEndpoints(string $environment): void
     {
-        $kernel = new RcKernel('typed_relationships', false);
+        $kernel = new RcKernel($environment, false);
         try {
             foreach (['one', 'many'] as $rel) {
                 $response = $kernel->handle(Request::create('/api/rc-tagged/stored/relationships/' . $rel), catch: false);
@@ -130,16 +131,34 @@ final class RcContainerContractTest extends TestCase
                 $doc = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
                 self::assertSame('Typed relation', ($rel === 'one' ? $doc['data'] : $doc['data'][0])['attributes']['title']);
             }
-            foreach (['PATCH' => 'one', 'POST' => 'many', 'DELETE' => 'many'] as $method => $rel) {
-                $target = ['type' => 'rc-memory', 'id' => 'stored'];
-                $response = $kernel->handle(Request::create('/api/rc-tagged/stored/relationships/' . $rel, $method, server: ['CONTENT_TYPE' => 'application/vnd.api+json'], content: json_encode(['data' => $rel === 'one' ? $target : [$target]], \JSON_THROW_ON_ERROR)), catch: false);
-                self::assertSame(200, $response->getStatusCode());
-            }
-            $handler = $kernel->getContainer()->get('test.service_container')->get(RcTypedRelationshipHandler::class);
-            self::assertSame(['replace-one', 'add-many', 'remove-many'], $handler->writes);
         } finally {
             $kernel->shutdown();
         }
+    }
+
+    #[DataProvider('relationshipProviderModes')]
+    public function testTypedRelationshipUpdaterHandlesGeneratedEndpoints(string $environment): void
+    {
+        $kernel = new RcKernel($environment, false);
+        try {
+            foreach ([['PATCH', 'one'], ['PATCH', 'many'], ['POST', 'many'], ['DELETE', 'many']] as [$method, $rel]) {
+                $target = ['type' => 'rc-memory', 'id' => 'stored'];
+                $response = $kernel->handle(Request::create('/api/rc-tagged/stored/relationships/' . $rel, $method, server: ['CONTENT_TYPE' => 'application/vnd.api+json'], content: json_encode(['data' => $rel === 'one' ? $target : [$target]], \JSON_THROW_ON_ERROR)), catch: false);
+                self::assertSame(200, $response->getStatusCode());
+                $doc = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+                self::assertSame($rel === 'one' ? $target : [$target], $doc['data']);
+            }
+            $handler = $kernel->getContainer()->get('test.service_container')->get(RcTypedRelationshipHandler::class);
+            self::assertSame(['replace-one', 'replace-many', 'add-many', 'remove-many'], $handler->writes);
+        } finally {
+            $kernel->shutdown();
+        }
+    }
+
+    public static function relationshipProviderModes(): iterable
+    {
+        yield 'typed interface autoconfiguration' => ['typed_relationships'];
+        yield 'explicit service tags without autoconfiguration' => ['tagged_relationships'];
     }
 
     public function testResourcePrefixControlsHttpRoutesAndRepresentationLinks(): void

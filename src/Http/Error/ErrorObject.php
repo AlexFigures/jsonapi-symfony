@@ -18,6 +18,7 @@ final class ErrorObject
         public readonly ?string $detail,
         public readonly ?ErrorSource $source,
         public readonly array $meta = [],
+        public readonly ?string $typeLink = null,
     ) {
     }
 
@@ -27,7 +28,7 @@ final class ErrorObject
             return $this;
         }
 
-        return new self($id, $this->aboutLink, $this->status, $this->code, $this->title, $this->detail, $this->source, $this->meta);
+        return new self($id, $this->aboutLink, $this->status, $this->code, $this->title, $this->detail, $this->source, $this->meta, $this->typeLink);
     }
 
     /**
@@ -48,6 +49,7 @@ final class ErrorObject
             $this->detail,
             $this->source,
             array_replace($this->meta, $meta),
+            $this->typeLink,
         );
     }
 
@@ -57,7 +59,15 @@ final class ErrorObject
             return $this;
         }
 
-        return new self($this->id, $link, $this->status, $this->code, $this->title, $this->detail, $this->source, $this->meta);
+        return new self($this->id, $link, $this->status, $this->code, $this->title, $this->detail, $this->source, $this->meta, $this->typeLink);
+    }
+
+    public function withTypeLink(?string $link): self
+    {
+        if ($link === $this->typeLink) {
+            return $this;
+        }
+        return new self($this->id, $this->aboutLink, $this->status, $this->code, $this->title, $this->detail, $this->source, $this->meta, $link);
     }
 
     /**
@@ -76,6 +86,10 @@ final class ErrorObject
 
         if ($this->aboutLink !== null) {
             $data['links'] = ['about' => $this->aboutLink];
+        }
+
+        if ($this->typeLink !== null) {
+            $data['links']['type'] = $this->typeLink;
         }
 
         if ($this->title !== null) {

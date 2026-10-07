@@ -17,24 +17,30 @@ final class RcTypedRelationshipHandler implements TypedRelationshipReader, Typed
 {
     /** @var list<string> */
     public array $writes = [];
+    /** @var list<string> */
+    public array $reads = [];
     public function supports(string $type): bool
     {
         return $type === 'rc-tagged';
     }
     public function getToOneId(string $type, string $id, string $rel): ?string
     {
+        $this->reads[] = 'linkage-one';
         return 'stored';
     }
     public function getToManyIds(string $type, string $id, string $rel, Pagination $pagination): SliceIds
     {
+        $this->reads[] = 'linkage-many';
         return new SliceIds(['stored'], $pagination->number, $pagination->size, 1);
     }
     public function getRelatedResource(string $type, string $id, string $rel): ?object
     {
+        $this->reads[] = 'related-one';
         return new RcMemory('stored', 'Typed relation');
     }
     public function getRelatedCollection(string $type, string $id, string $rel, Criteria $criteria): Slice
     {
+        $this->reads[] = 'related-many';
         return new Slice([$this->getRelatedResource($type, $id, $rel)], $criteria->pagination->number, $criteria->pagination->size, 1);
     }
     public function replaceToOne(string $type, string $id, string $rel, ?ResourceIdentifier $target): void

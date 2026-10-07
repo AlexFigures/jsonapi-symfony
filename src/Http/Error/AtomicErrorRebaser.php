@@ -17,7 +17,7 @@ final class AtomicErrorRebaser
             if ($source?->pointer !== null && !str_starts_with($source->pointer, '/atomic:operations')) {
                 $source = new ErrorSource(($batch ? $prefix : $prefix . $source->pointer), $source->parameter, $source->header);
             }
-            $errors[] = new ErrorObject($error->id, $error->aboutLink, $error->status, $error->code, $error->title, $error->detail, $source, $error->meta);
+            $errors[] = new ErrorObject($error->id, $error->aboutLink, $error->status, $error->code, $error->title, $error->detail, $source, $error->meta, $error->typeLink);
         }
         return $exception->withErrors($errors);
     }

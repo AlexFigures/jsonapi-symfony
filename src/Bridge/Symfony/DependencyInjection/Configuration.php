@@ -122,13 +122,11 @@ final class Configuration implements ConfigurationInterface
         $errorsChildren->booleanNode('expose_debug_meta')->defaultFalse()->end();
         $errorsChildren->booleanNode('add_correlation_id')->defaultTrue()->end();
         $errorsChildren->booleanNode('default_title_map')->defaultTrue()->end();
-        $errorsChildren->scalarNode('locale')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->defaultNull()->end();
         $errors->end();
 
         $this->addCacheSection($children);
         $this->addLimitsSection($children);
         $this->addPerformanceSection($children);
-        $this->addDxSection($children);
         $this->addDocsSection($children);
         $this->addReleaseSection($children);
         $atomic = $children->arrayNode('atomic')->addDefaultsIfNotSet();
@@ -340,56 +338,10 @@ final class Configuration implements ConfigurationInterface
         $performanceChildren = $performance->children();
         $doctrine = $performanceChildren->arrayNode('doctrine')->addDefaultsIfNotSet();
         $doctrineChildren = $doctrine->children();
-        $doctrineChildren->booleanNode('enable_query_cache')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->defaultTrue()->end();
-        $doctrineChildren->scalarNode('query_cache_pool')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->defaultValue('cache.app')->end();
-        $doctrineChildren->booleanNode('enable_second_level_cache')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->defaultFalse()->end();
-        $doctrineChildren->booleanNode('hydrate_partial_by_fields')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->defaultTrue()->end();
         $doctrineChildren->enumNode('collection_sort_policy')->values(['reject', 'legacy'])->defaultValue('legacy')->end();
-        $doctrineChildren->enumNode('default_fetch')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->values(['lazy', 'eager', 'extra_lazy'])->defaultValue('lazy')->end();
         $doctrine->end();
         $performanceChildren->booleanNode('head_enabled')->defaultTrue()->end();
         $performance->end();
-    }
-
-    private function addDxSection(NodeBuilder $root): void
-    {
-        $dx = $root->arrayNode('dx')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->addDefaultsIfNotSet();
-        $dxChildren = $dx->children();
-
-        $dxChildren->booleanNode('dev_toolbar')->defaultTrue()->end();
-
-        $sandbox = $dxChildren->arrayNode('sandbox')->addDefaultsIfNotSet();
-        $sandboxChildren = $sandbox->children();
-        $sandboxChildren->booleanNode('enabled')->defaultTrue()->end();
-        $sandboxChildren->scalarNode('route')->defaultValue('/_jsonapi/sandbox')->end();
-        $sandbox->end();
-
-        $doctor = $dxChildren->arrayNode('doctor')->addDefaultsIfNotSet();
-        $doctorChildren = $doctor->children();
-        $doctorChildren->booleanNode('enabled')->defaultTrue()->end();
-        /** @var ArrayNodeDefinition $rules */
-        $rules = $doctorChildren->arrayNode('rules');
-        $rules->scalarPrototype()->end();
-        $rules->defaultValue([
-            'negotiation.vary.accept',
-            'errors.listener.registered',
-            'profiles.per_type.known',
-            'filters.whitelist.coverage',
-            'pagination.cursor.sort_key.stable',
-        ]);
-        $rules->end();
-        $doctor->end();
-
-        $maker = $dxChildren->arrayNode('maker')->addDefaultsIfNotSet();
-        $makerChildren = $maker->children();
-        $defaults = $makerChildren->arrayNode('defaults')->addDefaultsIfNotSet();
-        $defaultsChildren = $defaults->children();
-        $defaultsChildren->scalarNode('namespace')->defaultValue('App\\JsonApi')->end();
-        $defaultsChildren->scalarNode('resource_type_prefix')->defaultValue('')->end();
-        $defaults->end();
-        $maker->end();
-
-        $dx->end();
     }
 
     private function addDocsSection(NodeBuilder $root): void

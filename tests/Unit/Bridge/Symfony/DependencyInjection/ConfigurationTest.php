@@ -48,63 +48,30 @@ final class ConfigurationTest extends TestCase
         }
     }
 
-    public function testInactiveOptionsEmitExplicitDeprecationsOnlyWhenConfigured(): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('removedOptions')]
+    public function testRemovedOptionsFailConfiguration(array $input, string $path, string $name): void
     {
-        $messages = [];
-        set_error_handler(static function (int $severity, string $message) use (&$messages): bool {
-            if ($severity === \E_USER_DEPRECATED) {
-                $messages[] = $message;
-                return true;
-            }
-            return false;
-        });
-        try {
-            (new Processor())->processConfiguration(new Configuration(), [[]]);
-            self::assertSame([], $messages);
-            (new Processor())->processConfiguration(new Configuration(), [[
-                'dx' => ['dev_toolbar' => true],
-                'errors' => ['locale' => 'ru'],
-                'performance' => ['doctrine' => ['enable_query_cache' => false, 'query_cache_pool' => 'app.cache', 'enable_second_level_cache' => true, 'hydrate_partial_by_fields' => false, 'default_fetch' => 'eager']],
-            ]]);
-            self::assertCount(7, $messages);
-            foreach ($messages as $message) {
-                self::assertStringContainsString('has no runtime implementation', $message);
-            }
-        } finally {
-            restore_error_handler();
+        $this->expectException(\Symfony\Component\Config\Definition\Exception\InvalidConfigurationException::class);
+        $this->expectExceptionMessage('Unrecognized option "' . $name . '" under "' . $path . '"');
+        $this->process([$input]);
+    }
+
+    public static function removedOptions(): iterable
+    {
+        yield 'dx section' => [['dx' => ['dev_toolbar' => true]], 'jsonapi', 'dx'];
+        yield 'error locale' => [['errors' => ['locale' => 'ru']], 'jsonapi.errors', 'locale'];
+        foreach (['enable_query_cache' => false, 'query_cache_pool' => 'cache.app', 'enable_second_level_cache' => true, 'hydrate_partial_by_fields' => false, 'default_fetch' => 'eager'] as $name => $value) {
+            yield $name => [['performance' => ['doctrine' => [$name => $value]]], 'jsonapi.performance.doctrine', $name];
         }
     }
 
-    public function testDxSectionDefaults(): void
+    public function testRemovedOptionsAreAbsentFromDefaults(): void
     {
         $config = $this->process();
-
-        self::assertSame(
-            [
-                'dev_toolbar' => true,
-                'sandbox' => [
-                    'enabled' => true,
-                    'route' => '/_jsonapi/sandbox',
-                ],
-                'doctor' => [
-                    'enabled' => true,
-                    'rules' => [
-                        'negotiation.vary.accept',
-                        'errors.listener.registered',
-                        'profiles.per_type.known',
-                        'filters.whitelist.coverage',
-                        'pagination.cursor.sort_key.stable',
-                    ],
-                ],
-                'maker' => [
-                    'defaults' => [
-                        'namespace' => 'App\\JsonApi',
-                        'resource_type_prefix' => '',
-                    ],
-                ],
-            ],
-            $config['dx']
-        );
+        self::assertArrayNotHasKey('dx', $config);
+        self::assertArrayNotHasKey('locale', $config['errors']);
+        self::assertSame(['collection_sort_policy' => 'legacy'], $config['performance']['doctrine']);
+        self::assertTrue($config['performance']['head_enabled']);
     }
 
     public function testDocsSectionDefaults(): void

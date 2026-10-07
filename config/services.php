@@ -545,6 +545,10 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('controller.service_arguments')
     ;
 
+    $services->set(\AlexFigures\Symfony\Http\Authorization\RelationshipAccessChecker::class)->args([
+        service(\AlexFigures\Symfony\Http\Authorization\RelationshipAuthorizerInterface::class)->nullOnInvalid(),
+    ]);
+
     $services
         ->set(RelatedController::class)
         ->autowire()

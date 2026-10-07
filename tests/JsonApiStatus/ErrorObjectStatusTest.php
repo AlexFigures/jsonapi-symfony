@@ -44,9 +44,14 @@ final class ErrorObjectStatusTest extends JsonApiTestCase
         self::assertSame('https://example.org/problems/missing-resource', $errors[0]['links']['about']);
     }
 
-    public function testErrorTypeLinkIsNotImplemented(): void
+    public function testErrorTypeLinkSurvivesExceptionResponseEnrichment(): void
     {
-        self::markTestSkipped('ErrorObject does not yet expose the optional links.type member.');
+        $error = (new \AlexFigures\Symfony\Http\Error\ErrorBuilder(true))->create('404', 'not-found', typeLink: 'https://example.org/problem-types/not-found');
+        $errors = $this->captureErrors(Request::create('/api/articles/missing'), static function () use ($error): void {
+            throw new NotFoundException('Missing resource.', [$error]);
+        }, 404);
+        self::assertSame('https://example.org/problem-types/not-found', $errors[0]['links']['type']);
+        self::assertArrayNotHasKey('about', $errors[0]['links']);
     }
 
     /**

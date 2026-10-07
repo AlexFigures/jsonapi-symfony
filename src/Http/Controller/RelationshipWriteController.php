@@ -7,6 +7,8 @@ namespace AlexFigures\Symfony\Http\Controller;
 use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
 use AlexFigures\Symfony\Contract\Tx\TransactionManager;
 use AlexFigures\Symfony\Events\RelationshipChangedEvent;
+use AlexFigures\Symfony\Http\Authorization\RelationshipAccessChecker;
+use AlexFigures\Symfony\Http\Authorization\RelationshipOperation;
 use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
 use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
 use AlexFigures\Symfony\Http\Negotiation\MediaType;
@@ -35,6 +37,7 @@ final class RelationshipWriteController
         private readonly TransactionManager $transaction,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly ResourceRegistryInterface $registry,
+        private readonly ?RelationshipAccessChecker $access = null,
     ) {
     }
 
@@ -42,6 +45,8 @@ final class RelationshipWriteController
     {
         $metadata = $this->registry->getByType($type);
         $this->operationValidator->assertAllowed(ResourceOperation::UPDATE, $metadata->allowedOperations);
+
+        $this->assertAccess($request, $type, $id, $rel);
 
         $payload = $this->requestDecoder->decode($request);
         /** @var array{kind: 'to-one'|'to-many', data: null|array{type: string, id: string}|list<array{type: string, id: string}>} $validated */
@@ -95,6 +100,18 @@ final class RelationshipWriteController
             JsonResponse::HTTP_OK,
             ['Content-Type' => MediaType::JSON_API],
         );
+    }
+
+    /** @internal Also used before write precondition reads. */
+    public function assertAccess(Request $request, string $type, string $id, string $rel): void
+    {
+        $operation = match ($request->getMethod()) {
+            'PATCH' => RelationshipOperation::REPLACE,
+            'POST' => RelationshipOperation::ADD,
+            'DELETE' => RelationshipOperation::REMOVE,
+            default => throw new RuntimeException('Unsupported HTTP method'),
+        };
+        $this->access?->assertGranted($request, $type, $id, $rel, $operation);
     }
 
 }

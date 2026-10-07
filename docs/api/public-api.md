@@ -16,6 +16,10 @@ This is an index of current extension points, not a frozen 1.0 declaration. Sour
 
 Use [data-layer configuration](../guide/data-layer-configuration.md) to configure a provider. Typed persister services are selected by `supports(type)`; the legacy adapter does not automatically give an unmapped provider Doctrine transactions. A custom processor/provider must preserve its own validation, persistence and concurrency semantics.
 
+## Relationship authorization
+
+[RelationshipAuthorizerInterface](../../src/Http/Authorization/RelationshipAuthorizerInterface.php) and [RelationshipOperation](../../src/Http/Authorization/RelationshipOperation.php) are public endpoint extension points. Bind the interface to an application service to authorize linkage reads, related reads, replace, add and remove independently. See [production policies](../guide/production-policies.md#relationship-endpoint-authorization) for scope and execution order. Policies must be side-effect free; no configured authorizer preserves existing access behavior.
+
 ## Transactions and concurrency
 
 [TransactionManager](../../src/Contract/Tx/TransactionManager.php) remains the base contract. Optional [ScopedTransactionManagerInterface](../../src/Contract/Tx/ScopedTransactionManagerInterface.php) and [ResourceWriteTransactionManagerInterface](../../src/Contract/Tx/ResourceWriteTransactionManagerInterface.php) distinguish batch scope from a single write. [WriteConcurrencyGuardInterface](../../src/Contract/Data/WriteConcurrencyGuardInterface.php) supplies persistence-specific protection.
@@ -46,4 +50,4 @@ TypedRelationshipReader and TypedRelationshipUpdater now dispatch endpoint opera
 
 RelationshipReadMap, RelationshipReadRequirements and CustomRouteMetadata are public extension DTOs in their current namespaces. ResourceMetadata implements ResourceMetadataInterface::getType; this small identity interface is not a substitute for the complete ResourceMetadata expected by a custom registry.
 
-See the [contract regression evidence](../architecture/rc-public-contract-gaps.md) for configuration deprecations, typed dispatch and independently pending consumer confirmation.
+See the [contract regression evidence](../architecture/rc-public-contract-gaps.md) for removed configuration options, typed dispatch and independently pending consumer confirmation.

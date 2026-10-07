@@ -203,6 +203,13 @@ final class OpenApiSpecGenerator
                         'type' => 'string',
                         'description' => 'A unique identifier for this particular occurrence of the problem',
                     ],
+                    'links' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'about' => ['type' => 'string', 'format' => 'uri-reference', 'description' => 'Details of this particular error occurrence'],
+                            'type' => ['type' => 'string', 'format' => 'uri-reference', 'description' => 'Description of this class of errors'],
+                        ],
+                    ],
                     'status' => [
                         'type' => 'string',
                         'description' => 'The HTTP status code applicable to this problem',

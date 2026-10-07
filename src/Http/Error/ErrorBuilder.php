@@ -22,6 +22,7 @@ final class ErrorBuilder
         ?ErrorSource $source = null,
         array $meta = [],
         ?string $aboutLink = null,
+        ?string $typeLink = null,
     ): ErrorObject {
         return new ErrorObject(
             id: null,
@@ -32,6 +33,7 @@ final class ErrorBuilder
             detail: $detail,
             source: $source,
             meta: $meta,
+            typeLink: $typeLink,
         );
     }
 
@@ -46,8 +48,9 @@ final class ErrorBuilder
         string $pointer,
         array $meta = [],
         ?string $aboutLink = null,
+        ?string $typeLink = null,
     ): ErrorObject {
-        return $this->create($status, $code, $title, $detail, new ErrorSource(pointer: $pointer), $meta, $aboutLink);
+        return $this->create($status, $code, $title, $detail, new ErrorSource(pointer: $pointer), $meta, $aboutLink, $typeLink);
     }
 
     /**
@@ -61,8 +64,9 @@ final class ErrorBuilder
         string $parameter,
         array $meta = [],
         ?string $aboutLink = null,
+        ?string $typeLink = null,
     ): ErrorObject {
-        return $this->create($status, $code, $title, $detail, new ErrorSource(parameter: $parameter), $meta, $aboutLink);
+        return $this->create($status, $code, $title, $detail, new ErrorSource(parameter: $parameter), $meta, $aboutLink, $typeLink);
     }
 
     /**
@@ -76,8 +80,9 @@ final class ErrorBuilder
         string $header,
         array $meta = [],
         ?string $aboutLink = null,
+        ?string $typeLink = null,
     ): ErrorObject {
-        return $this->create($status, $code, $title, $detail, new ErrorSource(header: $header), $meta, $aboutLink);
+        return $this->create($status, $code, $title, $detail, new ErrorSource(header: $header), $meta, $aboutLink, $typeLink);
     }
 
     private function resolveTitle(?string $title, string $code): ?string

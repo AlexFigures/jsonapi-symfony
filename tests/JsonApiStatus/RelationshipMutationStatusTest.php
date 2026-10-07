@@ -40,9 +40,25 @@ final class RelationshipMutationStatusTest extends JsonApiTestCase
         self::assertSame([], $document['data']);
     }
 
-    public function testRelationshipOperationForbiddenIsNotApplicable(): void
+    public function testRelationshipOperationForbiddenReturnsJsonApi403BeforeMutation(): void
     {
-        self::markTestSkipped('Bundle does not currently expose per-relationship authorization returning 403.');
+        $kernel = new \AlexFigures\Symfony\Tests\Functional\Regression\RcKernel('authorized_relationships', false);
+        try {
+            $request = $this->jsonRequest('PATCH', '/api/rc-tagged/stored/relationships/one', ['data' => ['type' => 'rc-memory', 'id' => 'stored']]);
+            $request->headers->set('If-Match', '*');
+            $response = $kernel->handle($request);
+            self::assertSame(403, $response->getStatusCode());
+            $error = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR)['errors'][0];
+            self::assertSame('403', $error['status']);
+            self::assertSame('forbidden', $error['code']);
+            self::assertSame('Forbidden', $error['title']);
+            $services = $kernel->getContainer()->get('test.service_container');
+            self::assertSame([], $services->get(\AlexFigures\Symfony\Tests\Functional\Regression\RcTypedRelationshipHandler::class)->writes);
+            self::assertSame([], $services->get(\AlexFigures\Symfony\Tests\Functional\Regression\RcTypedRelationshipHandler::class)->reads);
+            self::assertSame(0, $services->get(\AlexFigures\Symfony\Tests\Functional\Regression\RcRelationshipTransaction::class)->calls);
+        } finally {
+            $kernel->shutdown();
+        }
     }
 
     public function testRelationshipAsyncAcceptedIsNotApplicable(): void

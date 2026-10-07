@@ -63,3 +63,21 @@ Legacy getters and undeclared application SQL have no automatic query-cost guara
 Applications own authorization, tenant scope, indexes, database routing, custom persistence, external services and topology. The bundle integrates with ManagerRegistry routing and primary/replica setups; it does not implement replication management, replica-lag compensation across independent GETs, sharding, a tenant framework or global deadlock retry.
 
 Unsupported composite Doctrine identifiers fail during discovery. Integer, UUID and natural string IDs use the single-identifier path. Audit/cache/profile semantics and validation should be tested at the application's HTTP boundary before enabling them in production.
+
+## Relationship endpoint authorization
+
+Bind `AlexFigures\Symfony\Http\Authorization\RelationshipAuthorizerInterface` to an application service. Its `isGranted(Request $request, string $type, string $id, string $relationship, RelationshipOperation $operation): bool` receives the source resource identity, relationship name, request and operation. The application can delegate to its own voters or permission service; the bundle does not require Symfony Security.
+
+```yaml
+# config/services.yaml
+services:
+    App\JsonApi\RelationshipAuthorizer: ~
+    AlexFigures\Symfony\Http\Authorization\RelationshipAuthorizerInterface:
+        alias: App\JsonApi\RelationshipAuthorizer
+```
+
+The public enum distinguishes `READ_LINKAGE` (GET/HEAD of `/relationships/{rel}`), `READ_RELATED` (GET/HEAD of `/{rel}`), `REPLACE` (PATCH), `ADD` (POST), and `REMOVE` (DELETE). A false result produces a JSON:API 403 with code `forbidden` and title `Forbidden`. Denied writes never call the updater, acquire concurrency protection, open the operation's transaction or emit a relationship-changed event. Authorization runs before write validator reads, including requests missing If-Match. Successful writes may evaluate the policy again inside concurrency protection; policies must be side-effect free and must not mutate state.
+
+This policy covers standalone generated relationship endpoints, including typed providers. Resource-body relationship changes, Atomic Operations, collection linkage and included resources retain their existing provider/profile authorization responsibilities. It is not a graph-wide visibility filter or an automatic tenant policy. The internal validator representation read after an authorized write does not require a separate `READ_LINKAGE` grant. Applications may permit mutation without permitting a standalone linkage GET.
+
+Without an application authorizer, endpoint behavior is unchanged. For manually constructed controllers, inject the configured RelationshipAccessChecker; Symfony services receive it automatically.
