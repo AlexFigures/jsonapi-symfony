@@ -8,7 +8,7 @@ use AlexFigures\Symfony\Query\Criteria;
 use Doctrine\ORM\QueryBuilder;
 
 /**
- * @internal Builds complete collection visibility without SQL. Return null when it cannot safely be projected.
+ * @api Builds complete collection visibility without SQL. Return null when it cannot safely be projected.
  *
  * Decorators must opt in explicitly and preserve all checks, filters and target scope in this path.
  * Forwarding an inner query while omitting outer policies is unsafe. Opaque decorators retain scoped fallback.

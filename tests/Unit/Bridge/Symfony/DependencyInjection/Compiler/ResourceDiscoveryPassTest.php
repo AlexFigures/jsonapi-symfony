@@ -25,6 +25,24 @@ final class ResourceDiscoveryPassTest extends TestCase
         $this->assertFalse($container->hasParameter('jsonapi.discovered_custom_routes'));
     }
 
+    public function testTaggedResourceWorksWithoutDirectoryDiscovery(): void
+    {
+        $container = new ContainerBuilder();
+        $class = \AlexFigures\Symfony\Tests\Unit\Regression\Fixtures\PrimaryResource::class;
+        $container->register('application.resource', $class)->addTag('jsonapi.resource', ['type' => 'primary']);
+        (new ResourceDiscoveryPass())->process($container);
+        self::assertSame(['primary' => $class], $container->getParameter('jsonapi.discovered_resources'));
+    }
+
+    public function testTaggedResourceTypeMismatchFailsDiscovery(): void
+    {
+        $container = new ContainerBuilder();
+        $container->register('application.resource', \AlexFigures\Symfony\Tests\Unit\Regression\Fixtures\PrimaryResource::class)->addTag('jsonapi.resource', ['type' => 'other']);
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('Resource type mismatch for tagged service');
+        (new ResourceDiscoveryPass())->process($container);
+    }
+
     public function testProcessWithResourcePaths(): void
     {
         $container = new ContainerBuilder();

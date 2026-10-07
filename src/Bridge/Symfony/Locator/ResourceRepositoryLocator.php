@@ -10,6 +10,8 @@ use AlexFigures\Symfony\Contract\Data\TypedResourceRepository;
 use AlexFigures\Symfony\Query\Criteria;
 
 /**
+ * @api Type selection is supported for repository decorators using optional capabilities.
+ *
  * Locator for finding suitable Repository by resource type.
  *
  * Collects all registered repositories via tagged_iterator
@@ -41,7 +43,7 @@ final class ResourceRepositoryLocator implements ResourceRepository
         return $this->getRepositoryForType($type)->findRelated($type, $relationship, $identifiers);
     }
 
-    /** @internal Select once before using optional provider capabilities. */
+    /** @api Select the authoritative provider before using optional capabilities. */
     public function getRepositoryForType(string $type): ResourceRepository
     {
         foreach ($this->repositories as $repository) {

@@ -28,7 +28,7 @@ final class RcKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return '/tmp/jsonapi-rc8f-kernel-' . getmypid() . '/' . $this->environment;
+        return '/tmp/jsonapi-rc9-kernel-' . getmypid() . '/' . $this->environment;
     }
     public function getLogDir(): string
     {
@@ -50,7 +50,22 @@ final class RcKernel extends Kernel
                 'by_attribute' => ['scope' => ['attribute' => '^html$'], 'response' => ['default' => 'text/html', 'negotiable' => ['text/html']]],
             ]],
         ]);
+        if (in_array($this->environment, ['media_default', 'media_legacy'], true)) {
+            $container->extension('jsonapi', $this->environment === 'media_legacy' ? ['media_type' => 'application/json'] : [
+                'media_types' => ['default' => ['request' => ['allowed' => ['application/json']], 'response' => ['default' => 'application/json', 'negotiable' => ['application/json', 'application/vnd.api+json']]]],
+            ]);
+        }
+        if ($this->environment === 'typed_relationships') {
+            $container->extension('jsonapi', ['write' => ['allow_relationship_writes' => true]]);
+        }
+        if ($this->environment === 'head_disabled') {
+            $container->extension('jsonapi', ['performance' => ['head_enabled' => false], 'strict_content_negotiation' => false]);
+        }
         $services = $container->services();
+        $services->set(RcExistenceChecker::class);
+        $services->alias(\AlexFigures\Symfony\Contract\Data\ExistenceChecker::class, RcExistenceChecker::class);
+        $services->set(RcTypedRelationshipHandler::class)->autoconfigure()->public();
+        $services->set(RcTaggedResource::class)->tag('jsonapi.resource', ['type' => 'rc-tagged']);
         if ($this->environment === 'doctrine_typed') {
             $services->set('doctrine', \AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry::class)->args([[]]);
         }

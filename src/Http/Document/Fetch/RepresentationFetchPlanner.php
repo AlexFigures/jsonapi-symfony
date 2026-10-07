@@ -33,7 +33,8 @@ final readonly class RepresentationFetchPlanner
                 }
             }
             if ($hook instanceof FetchPlanHookInterface) {
-                $counts = array_merge($counts, $hook->relationshipCounts($metadata));
+                $typedContext = $context?->forType($metadata->type);
+                $counts = array_merge($counts, $typedContext !== null && $hook instanceof \AlexFigures\Symfony\Profile\Hook\ContextualFetchPlanHookInterface ? $hook->relationshipCountsForContext($metadata, $typedContext) : $hook->relationshipCounts($metadata));
             }
         }
         $fields = $criteria->fields[$metadata->type] ?? null;

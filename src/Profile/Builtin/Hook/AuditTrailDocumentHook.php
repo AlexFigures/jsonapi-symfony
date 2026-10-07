@@ -24,10 +24,10 @@ final readonly class AuditTrailDocumentHook implements DocumentHook, \AlexFigure
         }
         $attribute = $context->attributeReader()->getAttribute($metadata->dataClass, \AlexFigures\Symfony\Profile\Attribute\Auditable::class);
         $fields = [
-            'createdAt' => $this->config['created_at'] ?? $this->config['createdAtField'] ?? ($attribute->createdAtField ?? 'createdAt'),
-            'updatedAt' => $this->config['updated_at'] ?? $this->config['updatedAtField'] ?? ($attribute->updatedAtField ?? 'updatedAt'),
-            'createdBy' => $this->config['created_by'] ?? $this->config['createdByField'] ?? ($attribute->createdByField ?? 'createdBy'),
-            'updatedBy' => $this->config['updated_by'] ?? $this->config['updatedByField'] ?? ($attribute->updatedByField ?? 'updatedBy'),
+            'createdAt' => $attribute->createdAtField ?? $this->config['created_at'] ?? $this->config['createdAtField'] ?? 'createdAt',
+            'updatedAt' => $attribute->updatedAtField ?? $this->config['updated_at'] ?? $this->config['updatedAtField'] ?? 'updatedAt',
+            'createdBy' => $attribute->createdByField ?? $this->config['created_by'] ?? $this->config['createdByField'] ?? 'createdBy',
+            'updatedBy' => $attribute->updatedByField ?? $this->config['updated_by'] ?? $this->config['updatedByField'] ?? 'updatedBy',
         ];
         $accessor = \Symfony\Component\PropertyAccess\PropertyAccess::createPropertyAccessor();
         $audit = [];

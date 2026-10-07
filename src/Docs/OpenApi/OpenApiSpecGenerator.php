@@ -657,10 +657,7 @@ final class OpenApiSpecGenerator
      */
     private function buildIdentifierSchema(ResourceMetadata $metadata): array
     {
-        $required = ['type'];
-        if ($metadata->exposeId) {
-            $required[] = 'id';
-        }
+        $required = ['type', 'id'];
 
         return [
             'type' => 'object',
@@ -672,7 +669,7 @@ final class OpenApiSpecGenerator
                 ],
                 'id' => [
                     'type' => 'string',
-                    'nullable' => !$metadata->exposeId,
+                    'nullable' => false,
                 ],
             ],
             'additionalProperties' => false,
@@ -701,10 +698,7 @@ final class OpenApiSpecGenerator
             $relationships[$relationship->name] = $this->relationshipSchema($relationship);
         }
 
-        $required = ['type', 'attributes'];
-        if ($metadata->exposeId) {
-            $required[] = 'id';
-        }
+        $required = ['type', 'attributes', 'id'];
 
         return [
             'type' => 'object',
@@ -716,7 +710,7 @@ final class OpenApiSpecGenerator
                 ],
                 'id' => [
                     'type' => 'string',
-                    'nullable' => !$metadata->exposeId,
+                    'nullable' => false,
                 ],
                 'attributes' => [
                     'type' => 'object',

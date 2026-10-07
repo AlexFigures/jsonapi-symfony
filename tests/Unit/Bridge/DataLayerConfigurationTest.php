@@ -70,9 +70,12 @@ final class DataLayerConfigurationTest extends TestCase
 
         $relationshipAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader');
         $this->assertSame(
-            'AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler',
+            \AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipReaderLocator::class,
             (string) $relationshipAlias
         );
+
+        self::assertSame(\AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler::class, (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipReaderLocator::class)->getArgument(1));
+        self::assertSame(\AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler::class, (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipUpdaterLocator::class)->getArgument(1));
 
         $transactionAlias = $container->getAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager');
         $this->assertSame(
@@ -140,7 +143,8 @@ final class DataLayerConfigurationTest extends TestCase
         self::assertSame('App\Custom\Processor', (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->getArgument(1));
 
         $relationshipAlias = $container->getAlias('AlexFigures\Symfony\Contract\Data\RelationshipReader');
-        $this->assertSame('App\Custom\RelationshipReader', (string) $relationshipAlias);
+        $this->assertSame(\AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipReaderLocator::class, (string) $relationshipAlias);
+        self::assertSame('App\Custom\RelationshipReader', (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipReaderLocator::class)->getArgument(1));
 
         $transactionAlias = $container->getAlias('AlexFigures\Symfony\Contract\Tx\TransactionManager');
         $this->assertSame('App\Custom\TransactionManager', (string) $transactionAlias);

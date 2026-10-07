@@ -28,14 +28,36 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
 {
     public function process(ContainerBuilder $container): void
     {
-        if (!$container->hasParameter('jsonapi.resource_paths')) {
+        if (!$container->hasParameter('jsonapi.resource_paths') && $container->findTaggedServiceIds('jsonapi.resource') === []) {
             return;
         }
 
         /** @var list<string> $resourcePaths */
-        $resourcePaths = $container->getParameter('jsonapi.resource_paths');
+        $resourcePaths = $container->hasParameter('jsonapi.resource_paths') ? $container->getParameter('jsonapi.resource_paths') : [];
 
         $discoveredResources = $this->discoverResources($resourcePaths, $container);
+        foreach ($container->findTaggedServiceIds('jsonapi.resource') as $id => $tags) {
+            $definition = $container->findDefinition($id);
+            $class = $container->getParameterBag()->resolveValue($definition->getClass() ?? $id);
+            if (!is_string($class) || !class_exists($class)) {
+                throw new LogicException(sprintf('Tagged JSON:API resource service "%s" must declare a loadable resource class.', $id));
+            }
+            $attributes = (new ReflectionClass($class))->getAttributes(JsonApiResource::class);
+            if ($attributes === []) {
+                throw new LogicException(sprintf('Tagged JSON:API resource "%s" must have #[JsonApiResource].', $class));
+            }
+            $resource = $attributes[0]->newInstance();
+            foreach ($tags as $tag) {
+                if (isset($tag['type']) && $tag['type'] !== $resource->type) {
+                    throw new LogicException(sprintf('Resource type mismatch for tagged service "%s".', $id));
+                }
+            }
+            if (isset($discoveredResources[$resource->type]) && $discoveredResources[$resource->type] !== $class) {
+                throw new LogicException(sprintf('Duplicate resource type "%s" in tagged service "%s".', $resource->type, $id));
+            }
+            $discoveredResources[$resource->type] = $class;
+        }
+
         $discoveredCustomRoutes = $this->discoverCustomRoutes($resourcePaths, $container);
 
         // Store discovered resources as a parameter

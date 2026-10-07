@@ -23,6 +23,7 @@ final class RequestDecoder
 {
     public function __construct(
         private readonly ErrorMapper $errors,
+        private readonly ?\AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface $policyProvider = null,
     ) {
     }
 
@@ -58,10 +59,12 @@ final class RequestDecoder
         $candidates = \AlexFigures\Symfony\Http\Negotiation\ParsedMediaType::parse($contentType);
         $normalized = count($candidates) === 1 ? $candidates[0]->name : '';
 
-        if (MediaType::JSON_API !== $normalized) {
+        $policy = $this->policyProvider?->getPolicy($request);
+        $allowed = $policy->allowedRequestTypes ?? [MediaType::JSON_API];
+        if ($normalized === '' || ($allowed !== ['*'] && !in_array($normalized, $allowed, true))) {
             throw new UnsupportedMediaTypeException(
                 $contentType,
-                'JSON:API requires the "application/vnd.api+json" media type.'
+                'The request media type is not allowed by the configured JSON:API endpoint policy.'
             );
         }
     }

@@ -18,6 +18,7 @@ final class OptionsController
 {
     public function __construct(
         private readonly ResourceRegistryInterface $registry,
+        private readonly bool $headEnabled = true,
     ) {
     }
 
@@ -40,7 +41,7 @@ final class OptionsController
 
         // Always include OPTIONS itself
         $allowedMethods[] = 'OPTIONS';
-        $allowedMethods = array_values(array_unique($allowedMethods));
+        $allowedMethods = array_values(array_unique($this->filterMethods($allowedMethods)));
         sort($allowedMethods);
 
         return new Response(
@@ -70,7 +71,7 @@ final class OptionsController
 
         // Always include OPTIONS itself
         $allowedMethods[] = 'OPTIONS';
-        $allowedMethods = array_values(array_unique($allowedMethods));
+        $allowedMethods = array_values(array_unique($this->filterMethods($allowedMethods)));
         sort($allowedMethods);
 
         return new Response(
@@ -98,7 +99,7 @@ final class OptionsController
 
         // Always include OPTIONS itself
         $allowedMethods[] = 'OPTIONS';
-        $allowedMethods = array_values(array_unique($allowedMethods));
+        $allowedMethods = array_values(array_unique($this->filterMethods($allowedMethods)));
         sort($allowedMethods);
 
         return new Response(
@@ -139,7 +140,7 @@ final class OptionsController
 
         // Always include OPTIONS itself
         $allowedMethods[] = 'OPTIONS';
-        $allowedMethods = array_values(array_unique($allowedMethods));
+        $allowedMethods = array_values(array_unique($this->filterMethods($allowedMethods)));
         sort($allowedMethods);
 
         return new Response(
@@ -167,7 +168,7 @@ final class OptionsController
             }
         }
 
-        return array_values(array_unique($methods));
+        return array_values(array_unique($this->filterMethods($methods)));
     }
 
     /**
@@ -185,4 +186,12 @@ final class OptionsController
 
         return false;
     }
+    /** @param list<string> $methods
+     * @return list<string>
+     */
+    private function filterMethods(array $methods): array
+    {
+        return $this->headEnabled ? $methods : array_values(array_diff($methods, ['HEAD']));
+    }
+
 }

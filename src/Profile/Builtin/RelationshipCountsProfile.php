@@ -32,6 +32,7 @@ use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
  *
  * @phpstan-type RelationshipCountsConfig array{
  *     documentation?: string,
+ *     relationship_meta_key?: string, compute_in_related_endpoints?: bool,
  *     includeRelationships?: list<string>,
  *     excludeRelationships?: list<string>
  * }

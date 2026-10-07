@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Query\Fetch;
 
-/** @internal Request-local results. Never installs partial ORM collections. */
+/** @api Request-local results. Never installs partial ORM collections. */
 final class RelationshipReadMap
 {
     /** @var array<string, list<array{type: string, id: string}>> */

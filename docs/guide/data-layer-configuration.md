@@ -18,6 +18,8 @@ The IDs must refer to application services implementing the corresponding contra
 
 Typed repositories and persisters select resource types through `supports(type)`. Typed persisters are autoconfigured or tagged `jsonapi.persister`. A matching persister takes precedence over the configured processor fallback; unrelated types keep that fallback. Custom non-ORM writes own validation, persistence and concurrency semantics. They are not automatically supported in Doctrine Atomic batches.
 
+Typed endpoint readers/updaters implement `TypedRelationshipReader` / `TypedRelationshipUpdater` and select the source resource type through `supports(type)`. Autoconfiguration applies the `jsonapi.relationship_reader` / `jsonapi.relationship_updater` tags. Tagged priority controls the first matching service; unmatched types retain the configured/native fallback. This endpoint dispatch does not automatically run application hooks or infer a representation fetch plan.
+
 For computed relationships, supply a bounded `RelationshipBatchReaderInterface` implementation for representation reads and a scoped paginated reader for endpoints. Generic providers cannot inherit Doctrine SQL-cost guarantees without equivalent bounded work.
 
 [Doctrine integration](integration-doctrine.md) · [production boundaries](production-policies.md).

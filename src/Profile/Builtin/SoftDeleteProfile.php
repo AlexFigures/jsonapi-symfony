@@ -71,7 +71,7 @@ final class SoftDeleteProfile implements ProfileInterface
     {
         yield new SoftDeleteQueryHook($this->config);
         yield new SoftDeleteWriteHook();
-        yield new SoftDeleteDocumentHook();
+        yield new SoftDeleteDocumentHook($this->config);
     }
 
     public function requirements(): ProfileRequirements

@@ -277,6 +277,7 @@ return static function (ContainerConfigurator $configurator): void {
     $services->set(RequestDecoder::class)
         ->args([
             service(ErrorMapper::class),
+            service(\AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface::class),
         ])
     ;
 
@@ -503,6 +504,7 @@ return static function (ContainerConfigurator $configurator): void {
 
     $services
         ->set(\AlexFigures\Symfony\Http\Controller\OptionsController::class)
+        ->arg('$headEnabled', '%jsonapi.performance.head_enabled%')
         ->autowire()
         ->autoconfigure()
         ->tag('controller.service_arguments')
@@ -583,6 +585,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(\AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry::class),
             null,
             '%jsonapi.docs.generator.json_schema%',
+            '%jsonapi.performance.head_enabled%',
         ])
         ->tag('routing.loader')
     ;
@@ -742,6 +745,13 @@ return static function (ContainerConfigurator $configurator): void {
     $services->set(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->args([
         tagged_iterator('jsonapi.persister'),
         service(\AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor::class),
+    ]);
+
+    $services->set(\AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipReaderLocator::class)->args([
+        tagged_iterator('jsonapi.relationship_reader'), service('jsonapi.null_relationship_reader'),
+    ]);
+    $services->set(\AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipUpdaterLocator::class)->args([
+        tagged_iterator('jsonapi.relationship_updater'), service('jsonapi.null_relationship_updater'),
     ]);
 
     // ResourceRepositoryLocator - dispatches to custom TypedResourceRepository or falls back to GenericDoctrineRepository

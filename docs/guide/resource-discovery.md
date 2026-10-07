@@ -10,4 +10,20 @@ Inspect application state with `php bin/console debug:router` and `php bin/conso
 
 Source: [resource attribute](../../src/Resource/Attribute/JsonApiResource.php), [discovery pass](../../src/Bridge/Symfony/DependencyInjection/Compiler/ResourceDiscoveryPass.php), [operation enum](../../src/Resource/Definition/ResourceOperation.php).
 
-TODO before freeze: complete route naming/custom prefix examples and discovery diagnostics from executable fixtures. See [documentation TODO](../release/documentation-todo.md).
+`JsonApiResource(routePrefix: '/reference')` overrides the global prefix for that resource's generated endpoints and document links. Null inherits the global prefix; an empty prefix puts the type directly below the URL root.
+
+Resources outside resource_paths can also be registered as services:
+
+```yaml
+services:
+    App\Api\ReferenceResource:
+        tags: ['jsonapi.resource']
+```
+
+The class must carry `JsonApiResource`. Autoconfigured resource services receive this tag automatically. Discovery uses class metadata and does not call the service constructor. The same class found in both a directory and a tag is registered once; conflicting resource types fail discovery.
+
+`ResourceRegistry::getByClass()` prefers an explicitly declared resource class over projection data/view aliases, independently of discovery order. A unique alias resolves to its resource. Multiple aliases without a primary declaration produce a configuration exception; register a primary resource or use distinct classes, then select projections by resource type.
+
+`exposeId=false` controls the synthetic id entry in sparse fieldset validation. Every transported read resource/identifier still has its JSON:API id, and its read schema requires a non-null id.
+
+TODO before freeze: complete route naming examples and the full discovery diagnostics reference. See [documentation TODO](../release/documentation-todo.md).

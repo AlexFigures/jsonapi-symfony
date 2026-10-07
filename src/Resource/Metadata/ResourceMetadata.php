@@ -14,10 +14,11 @@ use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
 use LogicException;
 
 /**
+ * @api Resource definition consumed by registries, repositories and extension hooks.
  * @psalm-type AttributeMap = array<string, AttributeMetadata>
  * @psalm-type RelationshipMap = array<string, RelationshipMetadata>
  */
-final class ResourceMetadata
+final class ResourceMetadata implements \AlexFigures\Symfony\Contract\Resource\ResourceMetadataInterface
 {
     /**
      * @var class-string
@@ -103,6 +104,11 @@ final class ResourceMetadata
         $this->writeRequests = $writeRequests;
         $this->versionResolver = $versionResolver;
         $this->allowedOperations = $allowedOperations ?? ResourceOperation::cases();
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
     }
 
     /**

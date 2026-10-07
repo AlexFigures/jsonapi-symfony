@@ -19,7 +19,7 @@ The dependency-free scanner writes `reports/public-api-inventory.json`. CI publi
 | Values and metadata | Mutability, serialization, types used by public signatures, constructor defaults | Pending |
 | Profiles/hooks | DI lifecycle, type scope, activation/defaults, fetch declarations, resource meta | Pending |
 | Filters/sorts/relationships | AST exposure, handler composition, aggregate semantics, scope and batch budgets | Pending |
-| Repository decorator query capability | Current internal Doctrine query projection, outer scope/guards, explicit forwarding and portable extension decisions | Pending |
+| Repository decorator query capability | Supported Doctrine query projection and locator type selection; outer scope/guards and null fallback required | Focused decision made; full freeze pending |
 | Cache strategies | Version source, missing validators, representation variation, precondition extension points | Pending |
 | Exceptions/events | Public throwable/event types, inheritance, properties and dispatch behavior | Pending |
 | Symfony aliases/tags | Intended service replacement points, FQCN/tag names, autoconfiguration and priority | Pending |

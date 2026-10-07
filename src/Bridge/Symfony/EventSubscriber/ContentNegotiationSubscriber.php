@@ -31,12 +31,17 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
     {
         return [
             KernelEvents::CONTROLLER => ['onKernelController', -16],
-            KernelEvents::RESPONSE => ['onKernelResponse', -512],
+            KernelEvents::RESPONSE => ['onKernelResponse', 32],
         ];
     }
 
     public function onKernelController(\Symfony\Component\HttpKernel\Event\ControllerEvent $event): void
     {
+        if ($event->isMainRequest() && $event->getRequest()->isMethod('HEAD') && $event->getRequest()->attributes->get('_jsonapi_head_enabled') === false) {
+            /** @var list<string> $allowedMethods */
+            $allowedMethods = $event->getRequest()->attributes->get('_jsonapi_allowed_methods', ['GET', 'OPTIONS']);
+            throw new \AlexFigures\Symfony\Http\Exception\MethodNotAllowedException($allowedMethods, 'HEAD is disabled for generated resource endpoints.');
+        }
         if (!$event->isMainRequest() || !$this->strictContentNegotiation) {
             return;
         }
@@ -74,6 +79,12 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         $request = $event->getRequest();
         $policy = $this->policyProvider->getPolicy($request);
 
+        if ($request->attributes->get('_jsonapi_generated_resource') === true && $response->getStatusCode() !== 204 && $response->getStatusCode() !== 304) {
+            $selected = $request->attributes->get('_jsonapi_response_media_type', $policy->defaultResponseType);
+            if (is_string($selected)) {
+                $response->headers->set('Content-Type', $selected);
+            }
+        }
         if (!$response->headers->has('Content-Type')) {
             $response->headers->set('Content-Type', $policy->defaultResponseType);
         }
@@ -107,6 +118,7 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
 
     private function assertAcceptHeader(Request $request, MediaTypePolicy $policy): void
     {
+        $request->attributes->set('_jsonapi_response_media_type', $policy->defaultResponseType);
         if ($policy->allowsAnyResponseType()) {
             return;
         }
@@ -139,11 +151,17 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
                             $excluded = true;
                         }
                     }
-                    $available = $available || !$excluded;
+                    if (!$excluded && !$available) {
+                        $request->attributes->set('_jsonapi_response_media_type', $name);
+                        $available = true;
+                    }
                 }
                 if (!$available) {
                     continue;
                 }
+            }
+            if (!str_contains($media->name, '*')) {
+                $request->attributes->set('_jsonapi_response_media_type', $media->name);
             }
             return;
         }

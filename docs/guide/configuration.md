@@ -62,3 +62,11 @@ Review `cache.headers.public` explicitly: the current default is true. An authen
 ## Pending reference work
 
 TODO before freeze: complete the node-by-node reference for media channels, Atomic/lid settings, profile configuration, docs/OpenAPI/JSON Schema, serializer contexts and performance caches. Validate all examples with Symfony Configuration, document deprecations and attach migration notes to accepted default changes. Track this in [documentation TODO](../release/documentation-todo.md).
+
+## Effective options and deprecated placeholders
+
+Generated requests and responses apply `media_types.default` request/response settings; explicit acceptable negotiation selects the response type. The legacy `media_type` alias remains deprecated but effective. `performance.head_enabled: false` rejects HEAD on generated resource endpoints, including Symfony's automatic HEAD-to-GET matching; OPTIONS stops advertising HEAD.
+
+`profiles.rel_counts.relationship_meta_key` names relationship count metadata. `compute_in_related_endpoints: false` suppresses both the count fetch requirement and its output for related representations. Resource-level relationshipPolicies default each relationship's linking policy; an explicit relationship attribute wins.
+
+The config-only `dx` section, `errors.locale`, and Doctrine options `enable_query_cache`, `query_cache_pool`, `enable_second_level_cache`, `hydrate_partial_by_fields`, `default_fetch` are deprecated. They retain parsing compatibility and emit deprecations when explicitly set, but have no runtime effect. Remove them and configure application tooling and ORM caches/fetch metadata directly. Active `head_enabled` and `collection_sort_policy` are retained.

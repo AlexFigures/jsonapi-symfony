@@ -61,6 +61,7 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.relationship_max_identifiers', $config['limits']['relationship_max_identifiers']);
         $container->setParameter('jsonapi.filter_max_depth', $config['limits']['filter_max_depth']);
         $container->setParameter('jsonapi.performance', $config['performance']);
+        $container->setParameter('jsonapi.performance.head_enabled', $config['performance']['head_enabled']);
         $container->setParameter('jsonapi.performance.doctrine.collection_sort_policy', $config['performance']['doctrine']['collection_sort_policy']);
         $container->setParameter('jsonapi.atomic.enabled', $config['atomic']['enabled']);
         $container->setParameter('jsonapi.atomic.endpoint', $config['atomic']['endpoint']);
@@ -111,6 +112,16 @@ final class JsonApiExtension extends Extension
         // Configure data layer aliases AFTER loading services.php
         // This will override the default Null implementations
         $this->configureDataLayer($container, $config['data_layer']);
+        // Keep configured/native providers as fallbacks; typed extensions override only supported types.
+        foreach ([
+            \AlexFigures\Symfony\Contract\Data\RelationshipReader::class => \AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipReaderLocator::class,
+            \AlexFigures\Symfony\Contract\Data\RelationshipUpdater::class => \AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipUpdaterLocator::class,
+        ] as $contract => $locator) {
+            $fallback = (string) $container->getAlias($contract);
+            $container->getDefinition($locator)->setArgument(1, new \Symfony\Component\DependencyInjection\Reference($fallback));
+            $container->setAlias($contract, $locator);
+        }
+
     }
 
     private function registerAutoconfiguration(ContainerBuilder $container): void
@@ -125,6 +136,8 @@ final class JsonApiExtension extends Extension
         $container->registerForAutoconfiguration(\AlexFigures\Symfony\Contract\Data\RelationshipBatchReaderInterface::class)->addTag('jsonapi.relationship_batch_reader');
 
         $container->registerForAutoconfiguration(\AlexFigures\Symfony\Contract\Data\TypedResourcePersister::class)->addTag('jsonapi.persister');
+        $container->registerForAutoconfiguration(\AlexFigures\Symfony\Contract\Data\TypedRelationshipReader::class)->addTag('jsonapi.relationship_reader');
+        $container->registerForAutoconfiguration(\AlexFigures\Symfony\Contract\Data\TypedRelationshipUpdater::class)->addTag('jsonapi.relationship_updater');
 
         $container->registerForAutoconfiguration(ProfileInterface::class)
             ->addTag('jsonapi.profile');

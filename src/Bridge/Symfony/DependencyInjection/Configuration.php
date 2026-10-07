@@ -122,7 +122,7 @@ final class Configuration implements ConfigurationInterface
         $errorsChildren->booleanNode('expose_debug_meta')->defaultFalse()->end();
         $errorsChildren->booleanNode('add_correlation_id')->defaultTrue()->end();
         $errorsChildren->booleanNode('default_title_map')->defaultTrue()->end();
-        $errorsChildren->scalarNode('locale')->defaultNull()->end();
+        $errorsChildren->scalarNode('locale')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->defaultNull()->end();
         $errors->end();
 
         $this->addCacheSection($children);
@@ -193,7 +193,7 @@ final class Configuration implements ConfigurationInterface
 
         $relationshipCounts = $profilesChildren->arrayNode('rel_counts')->addDefaultsIfNotSet();
         $relationshipCountsChildren = $relationshipCounts->children();
-        $relationshipCountsChildren->scalarNode('relationship_meta_key')->defaultValue('count')->end();
+        $relationshipCountsChildren->scalarNode('relationship_meta_key')->defaultValue('count')->cannotBeEmpty()->end();
         $relationshipCountsChildren->booleanNode('compute_in_related_endpoints')->defaultTrue()->end();
         $relationshipCounts->end();
 
@@ -340,12 +340,12 @@ final class Configuration implements ConfigurationInterface
         $performanceChildren = $performance->children();
         $doctrine = $performanceChildren->arrayNode('doctrine')->addDefaultsIfNotSet();
         $doctrineChildren = $doctrine->children();
-        $doctrineChildren->booleanNode('enable_query_cache')->defaultTrue()->end();
-        $doctrineChildren->scalarNode('query_cache_pool')->defaultValue('cache.app')->end();
-        $doctrineChildren->booleanNode('enable_second_level_cache')->defaultFalse()->end();
-        $doctrineChildren->booleanNode('hydrate_partial_by_fields')->defaultTrue()->end();
+        $doctrineChildren->booleanNode('enable_query_cache')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->defaultTrue()->end();
+        $doctrineChildren->scalarNode('query_cache_pool')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->defaultValue('cache.app')->end();
+        $doctrineChildren->booleanNode('enable_second_level_cache')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->defaultFalse()->end();
+        $doctrineChildren->booleanNode('hydrate_partial_by_fields')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->defaultTrue()->end();
         $doctrineChildren->enumNode('collection_sort_policy')->values(['reject', 'legacy'])->defaultValue('legacy')->end();
-        $doctrineChildren->enumNode('default_fetch')->values(['lazy', 'eager', 'extra_lazy'])->defaultValue('lazy')->end();
+        $doctrineChildren->enumNode('default_fetch')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->values(['lazy', 'eager', 'extra_lazy'])->defaultValue('lazy')->end();
         $doctrine->end();
         $performanceChildren->booleanNode('head_enabled')->defaultTrue()->end();
         $performance->end();
@@ -353,7 +353,7 @@ final class Configuration implements ConfigurationInterface
 
     private function addDxSection(NodeBuilder $root): void
     {
-        $dx = $root->arrayNode('dx')->addDefaultsIfNotSet();
+        $dx = $root->arrayNode('dx')->setDeprecated('alexfigures/symfony-jsonapi-bundle', '1.0', 'The option "%path%.%node%" has no runtime implementation. Remove it; configure this behavior in the application instead.')->addDefaultsIfNotSet();
         $dxChildren = $dx->children();
 
         $dxChildren->booleanNode('dev_toolbar')->defaultTrue()->end();

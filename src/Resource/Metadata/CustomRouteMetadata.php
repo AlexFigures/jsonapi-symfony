@@ -7,7 +7,7 @@ namespace AlexFigures\Symfony\Resource\Metadata;
 /**
  * Metadata for a custom JSON:API route.
  *
- * @internal
+ * @api
  */
 final class CustomRouteMetadata
 {

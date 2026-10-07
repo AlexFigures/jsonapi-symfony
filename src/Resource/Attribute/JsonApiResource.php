@@ -69,7 +69,7 @@ final class JsonApiResource
      * @param array<string, mixed>                     $denormalizationContext Context for deserialization (writing). Use ['groups' => ['resource:write']] to control which attributes can be modified.
      * @param string|null                              $routePrefix            Optional route prefix for this resource (defaults to global prefix)
      * @param string|null                              $description            Optional human-readable description for documentation
-     * @param bool                                     $exposeId               Whether to expose the ID in the resource document (default: true)
+     * @param bool                                     $exposeId               Whether to accept the synthetic id in sparse fieldsets; protocol identity is always present (default: true)
      * @param list<ResourceOperation>|null             $operations             Allowed operations for this resource. Null means all operations are allowed (default).
      * @param array<string, string>                    $fieldMap
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies

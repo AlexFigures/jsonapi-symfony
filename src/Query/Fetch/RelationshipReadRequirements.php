@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace AlexFigures\Symfony\Query\Fetch;
 
-/** A batch reader must bound identifier/model fetches before hydration; null budgets mean unlimited, zero means exhausted. */
+/** @api A batch reader must bound identifier/model fetches before hydration; null budgets mean unlimited, zero means exhausted. */
 final readonly class RelationshipReadRequirements
 {
     /** @param list<string> $ownerIds */

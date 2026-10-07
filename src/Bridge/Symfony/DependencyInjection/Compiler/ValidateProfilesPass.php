@@ -37,6 +37,7 @@ final class ValidateProfilesPass implements CompilerPassInterface
 
         if ($container->hasDefinition(\AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile::class)) {
             $container->getDefinition(\AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile::class)->addMethodCall('configure', ['%jsonapi.profiles.audit_trail%']);
+            $container->getDefinition(\AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile::class)->addMethodCall('setResourceRegistry', [new \Symfony\Component\DependencyInjection\Reference(\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface::class)]);
         }
         $this->hasDeferredProfiles = false;
         // Collect all profiles

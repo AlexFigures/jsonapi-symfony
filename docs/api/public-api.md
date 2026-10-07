@@ -26,7 +26,7 @@ See [production policies](../guide/production-policies.md) for the one-boundary 
 
 [RepresentationPreloaderInterface](../../src/Contract/Data/RepresentationPreloaderInterface.php) and [RelationshipBatchReaderInterface](../../src/Contract/Data/RelationshipBatchReaderInterface.php) provide optional representation planning and computed batching. [RelationshipReadRequirements](../../src/Query/Fetch/RelationshipReadRequirements.php) contains the batch reader's resource needs and remaining budgets; the reader must honor scope and bound work before hydration.
 
-[DoctrineCollectionQueryProviderInterface](../../src/Bridge/Doctrine/Query/DoctrineCollectionQueryProviderInterface.php) is explicitly internal. It enables native scoped query projection and is not a portable persistence contract. Inheriting GenericDoctrineRepository while overriding collection visibility does not automatically opt into it.
+[DoctrineCollectionQueryProviderInterface](../../src/Bridge/Doctrine/Query/DoctrineCollectionQueryProviderInterface.php) is a supported Doctrine capability for complete collection visibility queries. Decorators must run their guards and apply their scopes before forwarding; return null when a safe projection is unavailable. [ResourceRepositoryLocator::getRepositoryForType](../../src/Bridge/Symfony/Locator/ResourceRepositoryLocator.php) selects the authoritative per-type provider. Inheriting GenericDoctrineRepository while overriding collection visibility does not automatically opt into query planning.
 
 ## Profiles and hooks
 
@@ -39,3 +39,11 @@ Optional [FetchPlanHookInterface](../../src/Profile/Hook/FetchPlanHookInterface.
 Resource attributes live in [Resource/Attribute](../../src/Resource/Attribute); operation/projection enums live in [Resource/Definition](../../src/Resource/Definition). Named attribute arguments, defaults and enum values are part of the proposed consumer surface. [Custom handlers](../guide/custom-handlers.md) extend filters and sorts; filter handlers must preserve logical composition and collection sorts must define aggregate semantics.
 
 Configuration keys, service aliases/tags, console commands and HTTP error codes are additional contracts even when no PHP interface is involved. The [audit checklist](../release/public-api-audit.md) covers them. Migration decisions belong in [UPGRADE-1.0](../../UPGRADE-1.0.md).
+
+## RC contract decisions
+
+TypedRelationshipReader and TypedRelationshipUpdater now dispatch endpoint operations through `supports(sourceType)` via autoconfiguration or the `jsonapi.relationship_reader` / `jsonapi.relationship_updater` tags. The configured provider is the fallback. These do not automatically execute profile hooks for a custom provider or batch-load a computed representation; implementations must supply those semantics themselves.
+
+RelationshipReadMap, RelationshipReadRequirements and CustomRouteMetadata are public extension DTOs in their current namespaces. ResourceMetadata implements ResourceMetadataInterface::getType; this small identity interface is not a substitute for the complete ResourceMetadata expected by a custom registry.
+
+See the [contract regression evidence](../architecture/rc-public-contract-gaps.md) for configuration deprecations, typed dispatch and independently pending consumer confirmation.

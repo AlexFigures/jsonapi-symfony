@@ -203,6 +203,62 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         self::assertInstanceOf(Article::class, $repository->findOne('articles', 'root', new Criteria()));
     }
 
+    public function testRenamedAuditAttributeFieldsPersistOnCreateAndUpdate(): void
+    {
+        $actor = 'creator@example.test';
+        $profile = new \AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile(['userProvider' => static function () use (&$actor): string {
+            return $actor;
+        }], $this->registry);
+        $stack = $this->stack($profile);
+        $processor = new ValidatingDoctrineProcessor($this->managerRegistry, $this->registry, $this->accessor, $this->validator, $this->violationMapper, new SerializerEntityInstantiator($this->managerRegistry, $this->accessor), new RelationshipResolver($this->managerRegistry, $this->registry, $this->accessor), $this->flushManager, new ProfileWriteHooks($stack, $this->accessor));
+        $model = $processor->processCreate('renamed-audit', new ChangeSet(['title' => 'Created']));
+        $this->flushManager->flush();
+        $this->em->clear();
+        $model = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\RenamedAuditRecord::class, 'audit');
+        self::assertSame('creator@example.test', $model->insertedBy);
+        self::assertInstanceOf(\DateTimeImmutable::class, $model->insertedAt);
+        $createdAt = $model->insertedAt;
+        $actor = 'editor@example.test';
+        $processor->processUpdate('renamed-audit', 'audit', new ChangeSet(['title' => 'Updated']));
+        $this->flushManager->flush();
+        $this->em->clear();
+        $model = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\RenamedAuditRecord::class, 'audit');
+        self::assertSame('creator@example.test', $model->insertedBy);
+        self::assertEquals($createdAt, $model->insertedAt);
+        self::assertSame('editor@example.test', $model->changedBy);
+        self::assertInstanceOf(\DateTimeImmutable::class, $model->changedAt);
+        $meta = [];
+        $context = ProfileContext::fromRequest($stack->getCurrentRequest());
+        foreach ($context->documentHooks() as $hook) {
+            if ($hook instanceof \AlexFigures\Symfony\Profile\Hook\ResourceMetaHookInterface) {
+                $hook->onResourceMeta($context, $this->registry->getByType('renamed-audit'), $meta, $model);
+            }
+        }
+        self::assertSame('creator@example.test', $meta['audit']['createdBy']);
+        self::assertSame('editor@example.test', $meta['audit']['updatedBy']);
+    }
+
+    public function testRelatedCountPolicySuppressesCountFetchAndDocumentMeta(): void
+    {
+        $article = $this->article();
+        $errors = new \AlexFigures\Symfony\Http\Error\ErrorMapper(new \AlexFigures\Symfony\Http\Error\ErrorBuilder(false));
+        foreach ([true, false] as $enabled) {
+            $profile = new \AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile(['relationship_meta_key' => 'cardinality', 'compute_in_related_endpoints' => $enabled]);
+            $stack = $this->stack($profile);
+            $request = $stack->getCurrentRequest();
+            $request->attributes->set('_jsonapi_related_endpoint', true);
+            $repository = $this->contextualRepository($stack);
+            $preloader = new \AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new \AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner('never'), $errors, [], $repository);
+            $reads = $preloader->preload('articles', [$article], new Criteria(), $request);
+            self::assertSame($enabled ? 1 : null, $reads->count('articles', 'root', 'tags'));
+            $routes = (new \AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
+            $links = new \AlexFigures\Symfony\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
+            $builder = new \AlexFigures\Symfony\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links, 'never', preloader: $preloader);
+            $document = $builder->buildResource('articles', $article, new Criteria(), $request);
+            self::assertSame($enabled ? ['cardinality' => 1] : [], $document['data']['relationships']['tags']['meta'] ?? []);
+        }
+    }
+
     public function testPerTypeAuditHooksWithoutNegotiationPersistAndExposeResourceMeta(): void
     {
         $profile = new \AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile(['userProvider' => static fn (): string => 'editor@example.test']);

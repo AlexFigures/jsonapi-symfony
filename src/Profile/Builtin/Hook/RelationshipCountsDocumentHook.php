@@ -37,13 +37,14 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
  * }
  *
  * @phpstan-type RelationshipCountsConfig array{
+ *     relationship_meta_key?: string, compute_in_related_endpoints?: bool,
  *     includeRelationships?: list<string>,
  *     excludeRelationships?: list<string>,
  *     propertyAccessor?: PropertyAccessorInterface,
  *     ...
  * }
  */
-final readonly class RelationshipCountsDocumentHook implements DocumentHook, \AlexFigures\Symfony\Profile\Hook\FetchPlanHookInterface
+final readonly class RelationshipCountsDocumentHook implements DocumentHook, \AlexFigures\Symfony\Profile\Hook\ContextualFetchPlanHookInterface
 {
     private PropertyAccessorInterface $propertyAccessor;
 
@@ -69,6 +70,11 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook, \Al
         return $names;
     }
 
+    public function relationshipCountsForContext(ResourceMetadata $metadata, ProfileContext $context): array
+    {
+        return $context->relatedEndpoint && !($this->config['compute_in_related_endpoints'] ?? true) ? [] : $this->relationshipCounts($metadata);
+    }
+
     public function onTopLevelLinks(ProfileContext $context, array &$links, Request $request): void
     {
         // No top-level links modifications needed
@@ -80,6 +86,10 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook, \Al
         array &$relationshipsPayload,
         object $model
     ): void {
+        if ($context->relatedEndpoint && !($this->config['compute_in_related_endpoints'] ?? true)) {
+            return;
+        }
+        $key = $this->config['relationship_meta_key'] ?? 'count';
         $includeList = $this->config['includeRelationships'] ?? null;
         $excludeList = $this->config['excludeRelationships'] ?? [];
 
@@ -99,7 +109,7 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook, \Al
             $count = $context->relationshipReads?->count($metadata->type, $id, $relationshipName);
             if ($count !== null) {
                 $existing = $relationshipData['meta'] ?? [];
-                $relationshipData['meta'] = array_merge(is_array($existing) ? $existing : [], ['count' => $count]);
+                $relationshipData['meta'] = array_merge(is_array($existing) ? $existing : [], [$key => $count]);
                 continue;
             }
 
@@ -121,7 +131,7 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook, \Al
                     }
                     $relationshipData['meta'] = array_merge(
                         $existingMeta,
-                        ['count' => $value->count()]
+                        [$key => $value->count()]
                     );
                 }
             } catch (\Throwable) {

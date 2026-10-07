@@ -129,3 +129,23 @@ The native representation preloader now embeds the collection scope predicate in
 **Why:** route declarations must match published URLs and choosing a representation must not require entity-only getters on that DTO.
 
 **Migration:** use the declared resource URL and update clients relying on the accidental global URL. Use explicit computed batch readers for predictable production costs. Repository decorators should preserve their full scope when opting into Doctrine query planning; an opaque wrapper retains scoped fallback and its extra SQL cost. See the [follow-up report](docs/architecture/rc-route-version-decorator-gaps.md).
+
+## Metadata, media and profile contracts
+
+**Before:** generated writes rejected configured JSON MIME; response defaults, HEAD and count options were inert. Projection registration could replace a primary class lookup, tagged resources were omitted, and audit attributes were not consulted by the built-in profile service.
+
+**After:** generated endpoints apply request/response policy; `head_enabled=false` rejects HEAD and removes it from OPTIONS. Count keys and related-endpoint suppression apply to fetch planning and output. Attribute audit fields are resolved using dataClass, with application-provided actors. Soft-delete actor metadata reads the configured application-owned field. Tagged resource services compose with discovery. Declared primary resource classes win over unique data/view aliases, independently of registration order; ambiguous aliases without a primary produce a configuration error. Read schemas always require non-null protocol id even with exposeId=false.
+
+**Why:** public configuration and extension contracts must agree with generated transport behavior.
+
+**Migration:** review previously inert settings before deploying. For shared data/view classes register a primary resource or use distinct classes; select projections explicitly by type. Register typed endpoint readers/updaters through autoconfiguration or their relationship tags; custom implementations own their scope/hooks and bounded fetching. Keep batch readers separate from endpoint readers. Public RelationshipReadMap, RelationshipReadRequirements, CustomRouteMetadata and the Doctrine query-plan capability retain their namespaces. Decorators must explicitly preserve all guards/scope in collectionQuery or return null.
+
+## Deprecated config-only options
+
+**Before:** `dx.*`, `errors.locale` and several Doctrine performance options parsed without changing runtime behavior.
+
+**After:** explicit use emits deprecation diagnostics. Parsing/defaults remain compatible, but these settings are not supported features: `enable_query_cache`, `query_cache_pool`, `enable_second_level_cache`, `hydrate_partial_by_fields`, `default_fetch`.
+
+**Why:** accepted configuration must not imply an unimplemented production guarantee.
+
+**Migration:** remove those nodes. Configure Doctrine caches/fetch behavior in the application, and supply application localization/tooling directly. Keep the implemented `performance.head_enabled` and `performance.doctrine.collection_sort_policy` options as needed.

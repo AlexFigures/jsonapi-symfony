@@ -108,6 +108,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\GeneratedRecord::class,
             \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypedIdentifierRecord::class,
             \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\AuditableProduct::class,
+            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\RenamedAuditRecord::class,
             \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SoftDeletableArticle::class,
             \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\RequiredChild::class,
             TypeTestEntity::class,

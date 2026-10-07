@@ -91,7 +91,7 @@ final readonly class AuditTrailWriteHook implements WriteHook
     {
         // Try to get entity class from registry
         if ($this->registry !== null && $this->registry->hasType($type)) {
-            $entityClass = $this->registry->getByType($type)->class;
+            $entityClass = $this->registry->getByType($type)->dataClass;
 
             // Try to read from attribute
             $attribute = $context->attributeReader()->getAttribute($entityClass, Auditable::class);

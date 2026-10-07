@@ -48,6 +48,33 @@ final class ConfigurationTest extends TestCase
         }
     }
 
+    public function testInactiveOptionsEmitExplicitDeprecationsOnlyWhenConfigured(): void
+    {
+        $messages = [];
+        set_error_handler(static function (int $severity, string $message) use (&$messages): bool {
+            if ($severity === \E_USER_DEPRECATED) {
+                $messages[] = $message;
+                return true;
+            }
+            return false;
+        });
+        try {
+            (new Processor())->processConfiguration(new Configuration(), [[]]);
+            self::assertSame([], $messages);
+            (new Processor())->processConfiguration(new Configuration(), [[
+                'dx' => ['dev_toolbar' => true],
+                'errors' => ['locale' => 'ru'],
+                'performance' => ['doctrine' => ['enable_query_cache' => false, 'query_cache_pool' => 'app.cache', 'enable_second_level_cache' => true, 'hydrate_partial_by_fields' => false, 'default_fetch' => 'eager']],
+            ]]);
+            self::assertCount(7, $messages);
+            foreach ($messages as $message) {
+                self::assertStringContainsString('has no runtime implementation', $message);
+            }
+        } finally {
+            restore_error_handler();
+        }
+    }
+
     public function testDxSectionDefaults(): void
     {
         $config = $this->process();

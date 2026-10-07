@@ -33,6 +33,7 @@ final class RelatedController
 
     public function __invoke(Request $request, string $type, string $id, string $rel): JsonResponse
     {
+        $request->attributes->set('_jsonapi_related_endpoint', true);
         if (!$this->registry->hasType($type)) {
             throw new NotFoundException(sprintf('Resource type "%s" not found.', $type));
         }

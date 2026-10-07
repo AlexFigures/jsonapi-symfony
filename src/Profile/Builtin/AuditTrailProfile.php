@@ -39,7 +39,7 @@ final class AuditTrailProfile implements ProfileInterface
     /**
      * @param AuditTrailConfig $config
      */
-    public function __construct(private array $config = [])
+    public function __construct(private array $config = [], private ?\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry = null)
     {
     }
 
@@ -55,6 +55,12 @@ final class AuditTrailProfile implements ProfileInterface
             }
         }
         $this->config = array_replace($config, $own);
+    }
+
+    /** @internal Inject the registry also for profiles with application constructor configuration. */
+    public function setResourceRegistry(\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry): void
+    {
+        $this->registry = $registry;
     }
 
     public function uri(): string
@@ -76,7 +82,7 @@ final class AuditTrailProfile implements ProfileInterface
 
     public function hooks(): iterable
     {
-        yield new AuditTrailWriteHook($this->config);
+        yield new AuditTrailWriteHook($this->config, $this->registry);
         yield new AuditTrailDocumentHook($this->config);
     }
 

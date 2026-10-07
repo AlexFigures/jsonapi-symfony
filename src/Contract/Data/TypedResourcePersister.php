@@ -7,6 +7,7 @@ namespace AlexFigures\Symfony\Contract\Data;
 /**
  * Persister interface that supports specific resource types.
  *
+ * @api
  * Used by the tagging system to register per-type persisters.
  */
 interface TypedResourcePersister extends ResourcePersister

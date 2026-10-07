@@ -27,7 +27,7 @@ final class ContentNegotiationSubscriberTest extends TestCase
         self::assertArrayHasKey(KernelEvents::CONTROLLER, $events);
         self::assertArrayHasKey(KernelEvents::RESPONSE, $events);
         self::assertSame(['onKernelController', -16], $events[KernelEvents::CONTROLLER]);
-        self::assertSame(['onKernelResponse', -512], $events[KernelEvents::RESPONSE]);
+        self::assertSame(['onKernelResponse', 32], $events[KernelEvents::RESPONSE]);
     }
 
     public function testSkipsSubRequests(): void
