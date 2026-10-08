@@ -74,6 +74,7 @@ services:
     environment:
       # PostgreSQL
       DATABASE_URL_POSTGRES: "postgresql://jsonapi:secret@postgres:5432/jsonapi_test?serverVersion=16&charset=utf8"
+      DATABASE_URL_PGSQL: "postgresql://jsonapi:secret@postgres:5432/jsonapi_test?serverVersion=16&charset=utf8"
       # MySQL
       DATABASE_URL_MYSQL: "mysql://jsonapi:secret@mysql:3306/jsonapi_test?serverVersion=8.0"
       # MariaDB

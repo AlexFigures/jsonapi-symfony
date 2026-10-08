@@ -8,6 +8,12 @@ on:
     - cron: '0 4 * * 1'
 permissions:
   contents: read
+env:
+  DATABASE_URL_POSTGRES: postgresql://jsonapi:secret@127.0.0.1:5432/jsonapi_test
+  DATABASE_URL_PGSQL: postgresql://jsonapi:secret@127.0.0.1:5432/jsonapi_test
+  DATABASE_URL_MYSQL: mysql://jsonapi:secret@127.0.0.1:3306/jsonapi_test
+  DATABASE_URL_MARIADB: mysql://jsonapi:secret@127.0.0.1:3307/jsonapi_test
+  DATABASE_URL_SQLITE: 'sqlite:///:memory:'
 jobs:
   documentation:
     runs-on: ubuntu-latest
@@ -61,10 +67,10 @@ jobs:
       - name: Resolve actual PHP/Symfony/Doctrine combination
         run: composer update --with-all-dependencies --prefer-dist --no-progress --no-interaction ${{ matrix.dependencies == 'lowest' && '--prefer-lowest' || '' }}
       - run: php scripts/resolved-versions.php | tee resolved-versions.json
+      - name: Verify test database connections
+        run: php scripts/check-test-databases.php
       - name: Full bundle suites and zero direct deprecations
         run: vendor/bin/phpunit --fail-on-deprecation --display-deprecations --fail-on-risky --no-progress --log-junit reports/compatibility.xml
-        env:
-          DATABASE_URL_PGSQL: postgresql://jsonapi:secret@localhost:5432/jsonapi_test
       - name: Security audit
         # ORM 3.0 pulls abandoned doctrine/cache in the minimum-API lane.
         # Report that notice; security advisories remain blocking in every lane.
@@ -109,10 +115,9 @@ jobs:
         run: |
           composer update --with-all-dependencies --prefer-dist --no-progress --no-interaction
           php scripts/resolved-versions.php | tee resolved-versions.json
+          php scripts/check-test-databases.php
           vendor/bin/phpunit --fail-on-deprecation --display-deprecations --fail-on-risky --no-progress --log-junit reports/compatibility.xml
           composer audit
-        env:
-          DATABASE_URL_PGSQL: postgresql://jsonapi:secret@localhost:5432/jsonapi_test
       - name: Require stable Symfony 8.2
         if: steps.status.outputs.stable == 'true' && steps.forward.outcome != 'success'
         run: exit 1

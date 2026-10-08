@@ -19,6 +19,8 @@ Every lane had zero failures, errors, risky tests and direct deprecations, with 
 
 Strict Composer validation, security audit, PHP syntax, PHPStan with DBAL 3 and 4, deprecation scanning, CS, Deptrac, configuration drift and API inventory passed. Roave 8.23 identical-snapshot smoke passed; the stable 1.0.0 BC baseline does not exist yet. Rector dry-run was clean. Mutation testing was not run. Generated local reports were removed during repository cleanup; reproducible commands, version locks and test artifacts belong in CI evidence, not the source documentation tree.
 
+After CI exposed incomplete database environment wiring, a follow-up corrected every host DSN to TCP `127.0.0.1`, provided both PostgreSQL variable names and added a database connection preflight. Host-network integration reruns passed 505 tests on PHP 8.2/Symfony 7.4/ORM 3.0/DBAL 3.8 (4981 assertions) and PHP 8.4/Symfony 8.1/ORM 3.7.4/DBAL 4.5 (4978 assertions), with zero errors/skips/risky tests/direct deprecations. The old MySQL `localhost` DSN reproduced a connection failure; the replacement passed all connection checks. Remote CI still needs a rerun on the correction's committed SHA.
+
 ## Independent consumer
 
 The separate [example application](https://github.com/AlexFigures/example-jsonapi-bundle) verified bundle `a17ffd40a7d3a1e642a33aaf788427bb6b117fdb`: acceptance 666/666, 6806 assertions; torture 62, 4185 assertions; production subset 76 and features subset 273 pass. There were no failures/skips or open P0/P1/P2 runtime gaps on that revision.
