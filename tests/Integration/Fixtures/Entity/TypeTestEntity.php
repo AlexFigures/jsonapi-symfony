@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity;
 
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
 use DateInterval;
 use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -67,15 +67,6 @@ class TypeTestEntity
     private ?ArticleStatus $status = null;
 
     /**
-     * Test BackedEnum type in constructor (BackedEnumNormalizer).
-     * This tests ValueError handling when invalid enum value is passed to constructor.
-     */
-    #[ORM\Column(enumType: ArticleStatus::class, nullable: true)]
-    #[Attribute(name: 'constructorStatus')]
-    #[Groups(['type_test:read', 'type_test:write'])]
-    private ?ArticleStatus $constructorStatus;
-
-    /**
      * Test DateTimeImmutable type (DateTimeNormalizer).
      */
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
@@ -120,10 +111,16 @@ class TypeTestEntity
     #[Groups(['type_test:read', 'type_test:write'])]
     private ?array $metadata = null;
 
-    public function __construct(?ArticleStatus $constructorStatus = null)
-    {
+    public function __construct(/**
+     * Test BackedEnum type in constructor (BackedEnumNormalizer).
+     * This tests ValueError handling when invalid enum value is passed to constructor.
+     */
+        #[ORM\Column(enumType: ArticleStatus::class, nullable: true)]
+        #[Attribute(name: 'constructorStatus')]
+        #[Groups(['type_test:read', 'type_test:write'])]
+        private ?ArticleStatus $constructorStatus = null
+    ) {
         $this->id = Uuid::v4()->toRfc4122();
-        $this->constructorStatus = $constructorStatus;
     }
 
     public function getId(): string

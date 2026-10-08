@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Profile;
+namespace AlexFigures\JsonApi\Tests\Integration\Profile;
 
-use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
-use AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile;
-use AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile;
-use AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile;
-use AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Profile\ProfileRegistry;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
+use AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile;
+use AlexFigures\JsonApi\Profile\Builtin\RelationshipCountsProfile;
+use AlexFigures\JsonApi\Profile\Builtin\SoftDeleteProfile;
+use AlexFigures\JsonApi\Profile\Negotiation\ProfileNegotiator;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Profile\ProfileRegistry;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -106,7 +106,7 @@ final class ProfileNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         self::assertTrue($context->has(SoftDeleteProfile::URI));
 
         // Verify we can query database with profile active
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $article = $this->repository->findOne('articles', 'article-1', $criteria);
         self::assertNotNull($article);
         self::assertInstanceOf(Article::class, $article);
@@ -134,7 +134,7 @@ final class ProfileNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         self::assertTrue($context->has(AuditTrailProfile::URI));
 
         // Verify database operations work with profile
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $article = $this->repository->findOne('articles', 'article-1', $criteria);
         self::assertNotNull($article);
     }
@@ -166,7 +166,7 @@ final class ProfileNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         self::assertTrue($context->has(AuditTrailProfile::URI));
 
         // Database operations should still work
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $article = $this->repository->findOne('articles', 'article-1', $criteria);
         self::assertNotNull($article);
     }
@@ -244,7 +244,7 @@ final class ProfileNegotiationIntegrationTest extends DoctrineIntegrationTestCas
         self::assertContains(RelationshipCountsProfile::URI, $articleUris);
 
         // Database operations should work
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $articles = $this->repository->findCollection('articles', $criteria);
         self::assertNotEmpty($articles);
     }

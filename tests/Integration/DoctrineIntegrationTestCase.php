@@ -2,41 +2,41 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration;
+namespace AlexFigures\JsonApi\Tests\Integration;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use AlexFigures\Symfony\Bridge\Doctrine\Persister\GenericDoctrineProcessor;
-use AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
-use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
-use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use AlexFigures\Symfony\Filter\Operator\Registry;
-use AlexFigures\Symfony\Http\Error\CorrelationIdProvider;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Error\JsonApiExceptionListener;
-use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
-use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
-use AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Doctrine\Type\DateIntervalType;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Doctrine\Type\DateTimeZoneType;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Doctrine\Type\UuidType;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Comment;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Product;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\User;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\JsonApi\Bridge\Doctrine\Persister\GenericDoctrineProcessor;
+use AlexFigures\JsonApi\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
+use AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\JsonApi\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
+use AlexFigures\JsonApi\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Operator\Registry;
+use AlexFigures\JsonApi\Http\Error\CorrelationIdProvider;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Error\JsonApiExceptionListener;
+use AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\JsonApi\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\JsonApi\Resource\Mapper\DefaultReadMapper;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver;
+use AlexFigures\JsonApi\Tests\Fixtures\Doctrine\TestManagerRegistry;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Doctrine\Type\DateIntervalType;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Doctrine\Type\DateTimeZoneType;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Doctrine\Type\UuidType;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\CategorySynonym;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Comment;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Product;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\User;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
@@ -105,6 +105,12 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             Comment::class,
             Tag::class,
             Product::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\GeneratedRecord::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypedIdentifierRecord::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\AuditableProduct::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\RenamedAuditRecord::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\SoftDeletableArticle::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\RequiredChild::class,
             TypeTestEntity::class,
             User::class,
         ]);
@@ -113,18 +119,18 @@ abstract class DoctrineIntegrationTestCase extends TestCase
 
         // Create minimal dependencies for repository
         $operatorRegistry = new Registry([
-            new \AlexFigures\Symfony\Filter\Operator\EqualOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\NotEqualOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\LikeOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\ILikeOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\InOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\NotInOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\GreaterThanOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\LessThanOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\BetweenOperator(),
-            new \AlexFigures\Symfony\Filter\Operator\IsNullOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\EqualOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\NotEqualOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\LikeOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\ILikeOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\InOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\NotInOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\GreaterThanOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\GreaterOrEqualOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\LessThanOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\LessOrEqualOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\BetweenOperator(),
+            new \AlexFigures\JsonApi\Filter\Operator\IsNullOperator(),
         ]);
         $filterHandlerRegistry = new FilterHandlerRegistry([]);
         $filterCompiler = new DoctrineFilterCompiler($operatorRegistry, $filterHandlerRegistry);
@@ -147,7 +153,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         );
 
         // Create FlushManager
-        $this->flushManager = new FlushManager($this->managerRegistry);
+        $this->flushManager = new FlushManager($this->managerRegistry, new \AlexFigures\JsonApi\Http\Validation\DatabaseErrorMapper($this->registry, new \AlexFigures\JsonApi\Http\Error\ErrorMapper(new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(false))), $this->registry);
 
         $this->processor = new GenericDoctrineProcessor(
             $this->managerRegistry,
@@ -166,8 +172,8 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         // Provide a simplified version for tests
         $this->violationMapper = new ConstraintViolationMapper(
             $this->registry,
-            new \AlexFigures\Symfony\Http\Error\ErrorMapper(
-                new \AlexFigures\Symfony\Http\Error\ErrorBuilder(false)
+            new \AlexFigures\JsonApi\Http\Error\ErrorMapper(
+                new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(false)
             ),
         );
 
@@ -242,19 +248,31 @@ abstract class DoctrineIntegrationTestCase extends TestCase
             isDevMode: true,
         );
 
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\DoctrineConfiguration::configureLazyObjects($config);
+
         // Configure caches for metadata and queries
         $config->setMetadataCache($cache);
         $config->setQueryCache($cache);
         $config->setResultCache($cache);
 
         // Register custom DQL functions
-        $config->addCustomStringFunction('ILIKE', \AlexFigures\Symfony\Bridge\Doctrine\DQL\ILikeFunction::class);
+        $config->addCustomStringFunction('ILIKE', \AlexFigures\JsonApi\Bridge\Doctrine\DQL\ILikeFunction::class);
 
-        $connection = DriverManager::getConnection([
+        $connection = \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::create([
             'url' => $this->getDatabaseUrl(),
         ], $config);
 
-        return new EntityManager($connection, $config);
+        $em = new EntityManager($connection, $config);
+        // PostgreSQL sequence fixtures use identity generation on non-sequence platforms.
+        if (!$connection->getDatabasePlatform()->supportsSequences()) {
+            foreach ($em->getMetadataFactory()->getAllMetadata() as $metadata) {
+                if ($metadata->generatorType === \Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_SEQUENCE) {
+                    $metadata->setIdGeneratorType(\Doctrine\ORM\Mapping\ClassMetadata::GENERATOR_TYPE_IDENTITY);
+                    $metadata->setIdGenerator(new \Doctrine\ORM\Id\IdentityGenerator());
+                }
+            }
+        }
+        return $em;
     }
 
     private function createSchema(): void
@@ -336,11 +354,11 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $connection = $this->em->getConnection();
 
         // Disable foreign key checks
-        $platform = $connection->getDatabasePlatform()->getName();
+        $platform = $connection->getDatabasePlatform();
 
-        if ($platform === 'postgresql') {
+        if ($platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
             $connection->executeStatement('TRUNCATE TABLE articles, authors, tags, article_tags, categories, comments, products, type_test_entities, users RESTART IDENTITY CASCADE');
-        } elseif ($platform === 'mysql') {
+        } elseif ($platform instanceof \Doctrine\DBAL\Platforms\AbstractMySQLPlatform) {
             $connection->executeStatement('SET FOREIGN_KEY_CHECKS = 0');
             $connection->executeStatement('TRUNCATE TABLE articles');
             $connection->executeStatement('TRUNCATE TABLE authors');
@@ -391,7 +409,7 @@ abstract class DoctrineIntegrationTestCase extends TestCase
         $listener = new JsonApiExceptionListener(
             $errorMapper,
             new class ($correlationId) extends CorrelationIdProvider {
-                public function __construct(private string $id)
+                public function __construct(private readonly string $id)
                 {
                 }
 

@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Operator;
+namespace AlexFigures\JsonApi\Filter\Operator;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
+/** @internal */
 final class BetweenOperator extends AbstractOperator
 {
     public function name(): string
@@ -19,7 +20,7 @@ final class BetweenOperator extends AbstractOperator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression {
-        if (count($values) < 2) {
+        if (count($values) !== 2) {
             throw new \InvalidArgumentException('BetweenOperator requires exactly two values (min and max).');
         }
 

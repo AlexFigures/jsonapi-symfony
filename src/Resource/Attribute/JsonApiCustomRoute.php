@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Attribute;
+namespace AlexFigures\JsonApi\Resource\Attribute;
 
 use Attribute;
 
@@ -59,7 +59,7 @@ use Attribute;
  * @since 0.2.0
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
-final class JsonApiCustomRoute
+final readonly class JsonApiCustomRoute
 {
     /**
      * @param string                $name         Route name (e.g., 'articles.publish', 'users.activate')
@@ -74,16 +74,16 @@ final class JsonApiCustomRoute
      * @param int                   $priority     Route priority (higher values = higher priority, default: 0)
      */
     public function __construct(
-        public readonly string $name,
-        public readonly string $path,
-        public readonly array $methods = ['GET'],
-        public readonly ?string $handler = null,
-        public readonly ?string $controller = null,
-        public readonly ?string $resourceType = null,
-        public readonly array $defaults = [],
-        public readonly array $requirements = [],
-        public readonly ?string $description = null,
-        public readonly int $priority = 0,
+        public string $name,
+        public string $path,
+        public array $methods = ['GET'],
+        public ?string $handler = null,
+        public ?string $controller = null,
+        public ?string $resourceType = null,
+        public array $defaults = [],
+        public array $requirements = [],
+        public ?string $description = null,
+        public int $priority = 0,
     ) {
         if ($this->handler === null && $this->controller === null && $this->resourceType === null) {
             throw new \InvalidArgumentException(

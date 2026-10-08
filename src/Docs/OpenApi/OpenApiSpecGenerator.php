@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Docs\OpenApi;
+namespace AlexFigures\JsonApi\Docs\OpenApi;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\CustomRouteMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistryInterface;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use LogicException;
 
 /**
@@ -28,21 +28,24 @@ use LogicException;
  *     paths: array<string, OpenApiSchema>,
  *     components: OpenApiComponents
  * }
+ * @internal
  */
 
-final class OpenApiSpecGenerator
+final readonly class OpenApiSpecGenerator
 {
     /**
      * @param array{enabled: bool, route: string, title: string, version: string, servers: list<string>} $config
      */
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly ?CustomRouteRegistryInterface $customRouteRegistry,
-        private readonly array $config,
-        private readonly string $routePrefix,
-        private readonly string $relationshipWriteMode,
-        private readonly ?AtomicConfig $atomicConfig = null,
-        private readonly ?CustomEndpointCollector $customEndpointCollector = null,
+        private ResourceRegistryInterface $registry,
+        private ?CustomRouteRegistryInterface $customRouteRegistry,
+        private array $config,
+        private string $routePrefix,
+        private string $relationshipWriteMode,
+        private ?AtomicConfig $atomicConfig = null,
+        private ?CustomEndpointCollector $customEndpointCollector = null,
+        private ?\AlexFigures\JsonApi\Http\Request\PaginationConfig $pagination = null,
+        private ?\Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface $serializerMetadata = null,
     ) {
     }
 
@@ -55,6 +58,12 @@ final class OpenApiSpecGenerator
             throw new LogicException('OpenAPI generator is disabled.');
         }
 
+        return $this->buildDocument();
+    }
+
+    /** @return OpenApiDocument */
+    private function buildDocument(): array
+    {
         /** @var array<string, OpenApiSchema> $schemas */
         $schemas = $this->baseSchemas();
         /** @var array<string, OpenApiSchema> $paths */
@@ -73,8 +82,26 @@ final class OpenApiSpecGenerator
 
             $this->addRelationshipSchemas($metadata, $schemas);
 
-            $paths = $this->mergePaths($paths, $this->buildCollectionPaths($metadata, $names));
-            $paths = $this->mergePaths($paths, $this->buildResourcePaths($metadata, $names));
+            $resourcePaths = $this->mergePaths($this->buildCollectionPaths($metadata, $names), $this->buildResourcePaths($metadata, $names));
+            foreach ($resourcePaths as $path => &$operations) {
+                $collection = $path === $this->collectionPath($metadata);
+                foreach (['get', 'post', 'patch', 'delete'] as $method) {
+                    $operation = match ($method) {
+                        'get' => $collection ? \AlexFigures\JsonApi\Resource\Definition\ResourceOperation::INDEX : \AlexFigures\JsonApi\Resource\Definition\ResourceOperation::SHOW,
+                        'post' => \AlexFigures\JsonApi\Resource\Definition\ResourceOperation::CREATE,
+                        'patch' => \AlexFigures\JsonApi\Resource\Definition\ResourceOperation::UPDATE,
+                        'delete' => \AlexFigures\JsonApi\Resource\Definition\ResourceOperation::DELETE,
+                    };
+                    if (!in_array($operation, $metadata->allowedOperations, true)) {
+                        unset($operations[$method]);
+                    }
+                }
+                if (array_intersect(array_keys($operations), ['get', 'post', 'patch', 'delete']) === []) {
+                    unset($resourcePaths[$path]);
+                }
+            }
+            unset($operations);
+            $paths = $this->mergePaths($paths, $resourcePaths);
             $paths = $this->mergePaths($paths, $this->buildRelationshipPaths($metadata));
 
             $tag = ['name' => $metadata->type];
@@ -176,6 +203,13 @@ final class OpenApiSpecGenerator
                     'id' => [
                         'type' => 'string',
                         'description' => 'A unique identifier for this particular occurrence of the problem',
+                    ],
+                    'links' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'about' => ['type' => 'string', 'format' => 'uri-reference', 'description' => 'Details of this particular error occurrence'],
+                            'type' => ['type' => 'string', 'format' => 'uri-reference', 'description' => 'Description of this class of errors'],
+                        ],
                     ],
                     'status' => [
                         'type' => 'string',
@@ -458,6 +492,19 @@ final class OpenApiSpecGenerator
             ];
         }
 
+        foreach ($paths as $path => &$operations) {
+            if (!in_array(\AlexFigures\JsonApi\Resource\Definition\ResourceOperation::SHOW, $metadata->allowedOperations, true)) {
+                unset($operations['get']);
+            }
+            if (!in_array(\AlexFigures\JsonApi\Resource\Definition\ResourceOperation::UPDATE, $metadata->allowedOperations, true)) {
+                unset($operations['patch'], $operations['post'], $operations['delete']);
+            }
+            if (array_intersect(array_keys($operations), ['get', 'post', 'patch', 'delete']) === []) {
+                unset($paths[$path]);
+            }
+        }
+        unset($operations);
+
         return $paths;
     }
 
@@ -618,10 +665,7 @@ final class OpenApiSpecGenerator
      */
     private function buildIdentifierSchema(ResourceMetadata $metadata): array
     {
-        $required = ['type'];
-        if ($metadata->exposeId) {
-            $required[] = 'id';
-        }
+        $required = ['type', 'id'];
 
         return [
             'type' => 'object',
@@ -633,7 +677,7 @@ final class OpenApiSpecGenerator
                 ],
                 'id' => [
                     'type' => 'string',
-                    'nullable' => !$metadata->exposeId,
+                    'nullable' => false,
                 ],
             ],
             'additionalProperties' => false,
@@ -647,7 +691,14 @@ final class OpenApiSpecGenerator
     {
         $attributes = [];
         foreach ($metadata->attributes as $attribute) {
-            $attributes[$attribute->name] = $this->attributeSchema($attribute);
+            $schema = $this->attributeSchema($attribute);
+            $factory = $this->serializerMetadata ?? new \Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory(new \Symfony\Component\Serializer\Mapping\Loader\AttributeLoader());
+            $fields = $factory->getMetadataFor($metadata->dataClass)->getAttributesMetadata();
+            $field = $fields[$attribute->propertyPath ?? $attribute->name] ?? null;
+            if ($metadata->getDenormalizationGroups() !== ['Default'] && ($field === null || array_intersect($field->getGroups(), $metadata->getDenormalizationGroups()) === [])) {
+                $schema['readOnly'] = true;
+            }
+            $attributes[$attribute->name] = $schema;
         }
 
         $relationships = [];
@@ -655,10 +706,7 @@ final class OpenApiSpecGenerator
             $relationships[$relationship->name] = $this->relationshipSchema($relationship);
         }
 
-        $required = ['type', 'attributes'];
-        if ($metadata->exposeId) {
-            $required[] = 'id';
-        }
+        $required = ['type', 'attributes', 'id'];
 
         return [
             'type' => 'object',
@@ -670,7 +718,7 @@ final class OpenApiSpecGenerator
                 ],
                 'id' => [
                     'type' => 'string',
-                    'nullable' => !$metadata->exposeId,
+                    'nullable' => false,
                 ],
                 'attributes' => [
                     'type' => 'object',
@@ -748,7 +796,7 @@ final class OpenApiSpecGenerator
             $schema = $this->mapType($attribute->types[0]);
         } else {
             $schema = [
-                'oneOf' => array_map(fn (string $type) => $this->mapType($type), $attribute->types),
+                'oneOf' => array_map($this->mapType(...), $attribute->types),
             ];
         }
 
@@ -805,6 +853,67 @@ final class OpenApiSpecGenerator
         return $this->registry->getByClass($relationship->targetClass)?->type;
     }
 
+    /** @return array<string, \AlexFigures\JsonApi\Resource\Attribute\FilterableField|\AlexFigures\JsonApi\Resource\Attribute\SortableField> */
+    private function expandedFields(ResourceMetadata $metadata, bool $sort, int $depth = 0): array
+    {
+        $configs = $sort ? ($metadata->sortableFields->fields ?? []) : ($metadata->filterableFields?->getFields() ?? []);
+        $result = [];
+        foreach ($configs as $name => $field) {
+            if (!$field->inherit) {
+                $result[$name] = $field;
+                continue;
+            }
+            if ($depth >= 2) {
+                continue;
+            }
+            $relationship = $metadata->relationships[$name] ?? null;
+            $type = $relationship === null ? null : $this->resolveRelationshipTarget($relationship);
+            if ($type === null) {
+                continue;
+            }
+            foreach ($this->expandedFields($this->registry->getByType($type), $sort, $depth + 1) as $child => $childConfig) {
+                $path = $name . '.' . $child;
+                $allowed = $sort ? $metadata->sortableFields?->isAllowed($path, $this->registry, $metadata->type) : $metadata->filterableFields?->isAllowed($path, $this->registry, $metadata->type);
+                if ($allowed) {
+                    $result[$path] = $childConfig;
+                }
+            }
+        }
+        return $result;
+    }
+
+    /** Standalone JSON Schema shares the representation definitions, independent of OpenAPI enablement.
+     * @return array<string, mixed>
+     */
+    public function generateJsonSchema(): array
+    {
+        $definitions = $this->buildDocument()['components']['schemas'];
+        $rewrite = static function (mixed $value) use (&$rewrite): mixed {
+            if (is_array($value)) {
+                $value = array_map($rewrite, $value);
+                if (($value['nullable'] ?? false) === true) {
+                    unset($value['nullable']);
+                    if (isset($value['type'])) {
+                        $types = is_array($value['type']) ? array_values(array_filter($value['type'], is_string(...))) : (is_string($value['type']) ? [$value['type']] : []);
+                        $value['type'] = array_values(array_unique([...$types, 'null']));
+                        if (isset($value['enum']) && is_array($value['enum'])) {
+                            $value['enum'][] = null;
+                        }
+                    } elseif (isset($value['$ref'])) {
+                        $ref = $value['$ref'];
+                        unset($value['$ref']);
+                        $value['anyOf'] = [['$ref' => $ref], ['type' => 'null']];
+                    } elseif (isset($value['oneOf']) && is_array($value['oneOf'])) {
+                        $value['oneOf'][] = ['type' => 'null'];
+                    }
+                }
+                return $value;
+            }
+            return is_string($value) && str_starts_with($value, '#/components/schemas/') ? str_replace('#/components/schemas/', '#/$defs/', $value) : $value;
+        };
+        return ['$schema' => 'https://json-schema.org/draft/2020-12/schema', '$defs' => $rewrite($definitions)];
+    }
+
     /**
      * @return OpenApiSchema
      */
@@ -854,7 +963,7 @@ final class OpenApiSpecGenerator
     /**
      * @return OpenApiSchema
      */
-    private function relationshipDocumentSchema(ResourceMetadata $resource, RelationshipMetadata $relationship): array
+    private function relationshipDocumentSchema(RelationshipMetadata $relationship): array
     {
         $target = $this->resolveRelationshipTarget($relationship);
         $identifierRef = $target === null
@@ -892,7 +1001,7 @@ final class OpenApiSpecGenerator
     private function addRelationshipSchemas(ResourceMetadata $metadata, array &$schemas): void
     {
         foreach ($metadata->relationships as $relationship) {
-            $schemas[$this->relationshipDocumentName($metadata, $relationship)] = $this->relationshipDocumentSchema($metadata, $relationship);
+            $schemas[$this->relationshipDocumentName($metadata, $relationship)] = $this->relationshipDocumentSchema($relationship);
         }
     }
 
@@ -1199,7 +1308,7 @@ final class OpenApiSpecGenerator
                         'type' => 'array',
                         'items' => ['$ref' => '#/components/schemas/AtomicOperation'],
                         'minItems' => 1,
-                        'maxItems' => $this->atomicConfig !== null ? $this->atomicConfig->maxOperations : 100,
+                        'maxItems' => $this->atomicConfig->maxOperations ?? 100,
                         'description' => 'Array of operations to execute atomically',
                     ],
                 ],
@@ -1259,7 +1368,7 @@ final class OpenApiSpecGenerator
         // Add parameters
         if ($openApi->parameters !== []) {
             $operation['parameters'] = array_map(
-                fn ($param) => $this->buildParameterSchema($param),
+                $this->buildParameterSchema(...),
                 $openApi->parameters
             );
         }
@@ -1300,12 +1409,32 @@ final class OpenApiSpecGenerator
 
             if ($response->headers !== null) {
                 $responseSchema['headers'] = array_map(
-                    fn ($header) => $this->buildHeaderSchema($header),
+                    $this->buildHeaderSchema(...),
                     $response->headers
                 );
             }
 
             $operation['responses'][(string) $statusCode] = $responseSchema;
+        }
+
+        if ($openApi->examples !== []) {
+            $examples = [];
+            foreach ($openApi->examples as $name => $example) {
+                $examples[$name] = ['summary' => $example->summary, 'value' => $example->value];
+                if ($example->description !== null) {
+                    $examples[$name]['description'] = $example->description;
+                }
+            }
+            if ($openApi->requestBody !== null) {
+                $operation['requestBody']['content'][$openApi->requestBody->contentType]['examples'] = $examples;
+            } else {
+                foreach ($operation['responses'] as &$response) {
+                    foreach ($response['content'] ?? [] as $mime => $content) {
+                        $response['content'][$mime]['examples'] = $examples;
+                    }
+                }
+                unset($response);
+            }
         }
 
         // Add security if specified
@@ -1325,7 +1454,7 @@ final class OpenApiSpecGenerator
      *
      * @return array<string, mixed>
      */
-    private function buildParameterSchema(\AlexFigures\Symfony\Docs\Attribute\OpenApiParameter $param): array
+    private function buildParameterSchema(\AlexFigures\JsonApi\Docs\Attribute\OpenApiParameter $param): array
     {
         $schema = [
             'name' => $param->name,
@@ -1360,7 +1489,7 @@ final class OpenApiSpecGenerator
      *
      * @return array<string, mixed>
      */
-    private function buildHeaderSchema(\AlexFigures\Symfony\Docs\Attribute\OpenApiHeader $header): array
+    private function buildHeaderSchema(\AlexFigures\JsonApi\Docs\Attribute\OpenApiHeader $header): array
     {
         $schema = [
             'description' => $header->description,
@@ -1383,7 +1512,7 @@ final class OpenApiSpecGenerator
         $path = ltrim($path, '/');
         $path = str_replace(['/', '-', '_', '{', '}'], ' ', $path);
         $parts = array_filter(explode(' ', $path));
-        $parts = array_map('ucfirst', $parts);
+        $parts = array_map(ucfirst(...), $parts);
 
         return strtolower($method) . implode('', $parts);
     }
@@ -1420,14 +1549,17 @@ final class OpenApiSpecGenerator
             'schema' => [
                 'type' => 'integer',
                 'minimum' => 1,
-                'maximum' => 100,
-                'default' => 20,
+                'maximum' => $this->pagination->maxSize ?? 100,
+                'default' => $this->pagination->defaultSize ?? 20,
             ],
         ];
 
         // Filter parameters
         if ($metadata->filterableFields !== null) {
-            foreach ($metadata->filterableFields->getFields() as $fieldName => $fieldConfig) {
+            foreach ($this->expandedFields($metadata, false) as $fieldName => $fieldConfig) {
+                if (!$fieldConfig instanceof \AlexFigures\JsonApi\Resource\Attribute\FilterableField) {
+                    continue;
+                }
                 foreach ($fieldConfig->operators as $operator) {
                     $parameters[] = $this->buildFilterParameter($fieldName, $operator, $fieldConfig);
                 }
@@ -1436,7 +1568,7 @@ final class OpenApiSpecGenerator
 
         // Sort parameter
         if ($metadata->sortableFields !== null) {
-            $sortableFieldNames = $metadata->sortableFields->getAllowedFields();
+            $sortableFieldNames = array_keys($this->expandedFields($metadata, true));
             if ($sortableFieldNames !== []) {
                 $parameters[] = [
                     'name' => 'sort',
@@ -1491,7 +1623,7 @@ final class OpenApiSpecGenerator
      *
      * @return OpenApiSchema
      */
-    private function buildFilterParameter(string $fieldName, string $operator, \AlexFigures\Symfony\Resource\Attribute\FilterableField $fieldConfig): array
+    private function buildFilterParameter(string $fieldName, string $operator, \AlexFigures\JsonApi\Resource\Attribute\FilterableField $fieldConfig): array
     {
         $operatorDescriptions = [
             'eq' => 'equals',

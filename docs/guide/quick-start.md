@@ -1,418 +1,80 @@
-# Quick Start
+# Quick start
 
-This guide shows how to build a production-ready JSON:API in five minutes with CRUD operations, validation, and relationships.
-
-## Requirements
-
-- PHP 8.2+
-- Symfony 7.1+
-- Doctrine ORM 3.0+
-
-## Installation
+This path uses Symfony 7.4, PHP 8.2+, PostgreSQL and the built-in Doctrine provider. Use the same resource API on Symfony 8.x/PHP 8.4.1+, but install DBAL `^4.3` for that target.
 
 ```bash
-composer require jsonapi/symfony-jsonapi-bundle
+composer create-project symfony/skeleton:"7.4.*" my-api
+cd my-api
+composer require alexfigures/symfony-jsonapi-bundle doctrine/orm:"^3.0" doctrine/dbal:"^3.8" doctrine/doctrine-bundle doctrine/doctrine-migrations-bundle
+composer require --dev symfony/maker-bundle
 ```
 
-## Step 1: Create an Entity
+During stabilization select the available bundle development/RC constraint as explained in [installation](installation.md). Configure Doctrine's connection in the application's `.env.local` and keep that file untracked:
+
+```dotenv
+DATABASE_URL="postgresql://app:password@127.0.0.1:5432/app?serverVersion=16&charset=utf8"
+```
+
+Apply the two short configuration files from [installation](installation.md). Ensure Doctrine maps `App\Entity` using attributes; DoctrineBundle's recipe normally sets this up.
+
+A minimal mapped entity in `src/Entity/Article.php`:
 
 ```php
-// src/Entity/Article.php
+<?php
+
+declare(strict_types=1);
+
 namespace App\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute as ApiAttribute;
+use AlexFigures\JsonApi\Resource\Attribute\Id as ApiId;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
 use Doctrine\ORM\Mapping as ORM;
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Attribute\Relationship;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'articles')]
-#[JsonApiResource(type: 'articles')]
+#[JsonApiResource(
+    type: 'articles',
+    operations: [ResourceOperation::INDEX, ResourceOperation::SHOW,
+        ResourceOperation::CREATE, ResourceOperation::UPDATE, ResourceOperation::DELETE],
+)]
 class Article
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 36)]
-    #[Id]
-    #[Attribute]
-    private string $id;
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    #[ApiId]
+    private ?int $id = null;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    #[Attribute]
+    #[ORM\Column(length: 255)]
+    #[ApiAttribute]
     #[Assert\NotBlank]
-    #[Assert\Length(min: 3, max: 255)]
-    private string $title;
+    public string $title = '';
 
-    #[ORM\Column(type: 'text')]
-    #[Attribute]
-    #[Assert\NotBlank]
-    private string $content;
-
-    #[ORM\ManyToOne(targetEntity: Author::class)]
-    #[Relationship(targetType: 'authors')]
-    private ?Author $author = null;
-
-    #[ORM\ManyToMany(targetEntity: Tag::class)]
-    #[Relationship(targetType: 'tags', toMany: true)]
-    private Collection $tags;
-
-    public function __construct()
-    {
-        $this->tags = new ArrayCollection();
-    }
-
-    // Getters and setters...
-    public function getId(): string
+    public function getId(): ?int
     {
         return $this->id;
     }
-
-    public function setId(string $id): self
-    {
-        $this->id = $id;
-        return $this;
-    }
-
-    public function getTitle(): string
-    {
-        return $this->title;
-    }
-
-    public function setTitle(string $title): self
-    {
-        $this->title = $title;
-        return $this;
-    }
-
-    public function getContent(): string
-    {
-        return $this->content;
-    }
-
-    public function setContent(string $content): self
-    {
-        $this->content = $content;
-        return $this;
-    }
-
-    public function getAuthor(): ?Author
-    {
-        return $this->author;
-    }
-
-    public function setAuthor(?Author $author): self
-    {
-        $this->author = $author;
-        return $this;
-    }
-
-    public function getTags(): Collection
-    {
-        return $this->tags;
-    }
-
-    public function addTag(Tag $tag): self
-    {
-        if (!$this->tags->contains($tag)) {
-            $this->tags->add($tag);
-        }
-        return $this;
-    }
-
-    public function removeTag(Tag $tag): self
-    {
-        $this->tags->removeElement($tag);
-        return $this;
-    }
 }
 ```
 
-## Step 2: Wire Services
 
-```yaml
-# config/services.yaml
-services:
-    # Generic Doctrine implementations
-    AlexFigures\Symfony\Contract\Data\ResourceRepository:
-        alias: AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository
-
-    AlexFigures\Symfony\Contract\Data\ResourcePersister:
-        alias: AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
-
-    AlexFigures\Symfony\Contract\Data\RelationshipReader:
-        alias: AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
-
-    AlexFigures\Symfony\Contract\Data\RelationshipUpdater:
-        alias: AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler
-
-    AlexFigures\Symfony\Contract\Tx\TransactionManager:
-        alias: AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager
-```
-
-## Step 3: Enable Automatic Route Generation
-
-```yaml
-# config/routes.yaml
-jsonapi_auto:
-    resource: .
-    type: jsonapi
-```
-
-## Step 4: Configure the Bundle (optional)
-
-```yaml
-# config/packages/jsonapi.yaml
-jsonapi:
-    route_prefix: /api
-    atomic:
-        enabled: false  # Disable Atomic Operations if you don't need them
-```
-
-## You're Done! 🎉
-
-You now have a fully featured JSON:API with:
-
-### ✅ CRUD Operations
+Generate and apply a migration, then start PHP's development server:
 
 ```bash
-# List articles
-GET /api/articles
-
-# Create an article
-POST /api/articles
-Content-Type: application/vnd.api+json
-
-{
-  "data": {
-    "type": "articles",
-    "attributes": {
-      "title": "My First Article",
-      "content": "This is the content..."
-    }
-  }
-}
-
-# Fetch an article
-GET /api/articles/{id}
-
-# Update an article
-PATCH /api/articles/{id}
-Content-Type: application/vnd.api+json
-
-{
-  "data": {
-    "type": "articles",
-    "id": "{id}",
-    "attributes": {
-      "title": "Updated Title"
-    }
-  }
-}
-
-# Delete an article
-DELETE /api/articles/{id}
+php bin/console doctrine:database:create --if-not-exists
+php bin/console make:migration
+php bin/console doctrine:migrations:migrate --no-interaction
+php -S localhost:8000 -t public
 ```
-
-### ✅ Automatic Validation
 
 ```bash
-# Attempt to create an article with a short title
-POST /api/articles
-Content-Type: application/vnd.api+json
-
-{
-  "data": {
-    "type": "articles",
-    "attributes": {
-      "title": "AB",  # Too short!
-      "content": "Content"
-    }
-  }
-}
-
-# Response: 422 Unprocessable Entity
-{
-  "errors": [
-    {
-      "status": "422",
-      "code": "validation_error",
-      "title": "Validation Error",
-      "detail": "This value is too short. It should have 3 characters or more.",
-      "source": {
-        "pointer": "/data/attributes/title"
-      }
-    }
-  ]
-}
+curl -H 'Accept: application/vnd.api+json' http://localhost:8000/api/articles
+curl -X POST -H 'Accept: application/vnd.api+json' \
+  -H 'Content-Type: application/vnd.api+json' \
+  --data '{"data":{"type":"articles","attributes":{"title":"First article"}}}' \
+  http://localhost:8000/api/articles
 ```
 
-### ✅ Relationships
-
-```bash
-# Fetch article author
-GET /api/articles/{id}/relationships/author
-
-# Set the author
-PATCH /api/articles/{id}/relationships/author
-Content-Type: application/vnd.api+json
-
-{
-  "data": {
-    "type": "authors",
-    "id": "author-123"
-  }
-}
-
-# Add tags
-POST /api/articles/{id}/relationships/tags
-Content-Type: application/vnd.api+json
-
-{
-  "data": [
-    { "type": "tags", "id": "tag-1" },
-    { "type": "tags", "id": "tag-2" }
-  ]
-}
-
-# Remove a tag
-DELETE /api/articles/{id}/relationships/tags
-Content-Type: application/vnd.api+json
-
-{
-  "data": [
-    { "type": "tags", "id": "tag-1" }
-  ]
-}
-
-# Retrieve related resources
-GET /api/articles/{id}/author
-GET /api/articles/{id}/tags
-```
-
-### ✅ Pagination
-
-```bash
-GET /api/articles?page[number]=1&page[size]=10
-```
-
-### ✅ Sorting
-
-```bash
-GET /api/articles?sort=-createdAt,title
-```
-
-### ✅ Filtering
-
-```bash
-GET /api/articles?filter[title]=Symfony
-```
-
-### ✅ Sparse Fieldsets
-
-```bash
-GET /api/articles?fields[articles]=title,content
-```
-
-### ✅ Include
-
-```bash
-GET /api/articles?include=author,tags
-```
-
-## What's Next?
-
-### Customisation
-
-If you need resource-specific behaviour, implement a dedicated repository or persister:
-
-```php
-// src/JsonApi/Repository/ArticleRepository.php
-namespace App\JsonApi\Repository;
-
-use AlexFigures\Symfony\Contract\Data\TypedResourceRepository;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Slice;
-
-final class ArticleRepository implements TypedResourceRepository
-{
-    public function supports(string $type): bool
-    {
-        return $type === 'articles';
-    }
-
-    public function findCollection(string $type, Criteria $criteria): Slice
-    {
-        // Your custom logic
-        // e.g. filtering by status, eager loading, etc.
-    }
-
-    // ... remaining methods
-}
-```
-
-```yaml
-# config/services.yaml
-App\JsonApi\Repository\ArticleRepository:
-    tags:
-        - { name: 'jsonapi.repository', priority: 10 }
-
-# Generic repository for every other type
-AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository:
-    tags:
-        - { name: 'jsonapi.repository', priority: 0 }
-```
-
-### Additional Capabilities
-
-- [Automatic route generation](automatic-route-generation.md)
-- [Doctrine Integration](doctrine-integration.md)
-- [Validation](validation.md)
-- [Relationships](relationships.md)
-- [Filtering](filtering.md)
-- [Pagination](pagination.md)
-- [Sorting](sorting.md)
-- [Sparse Fieldsets](sparse-fieldsets.md)
-- [Include](include.md)
-- [Atomic Operations](atomic-operations.md)
-- [Caching](caching.md)
-- [Profiles](profiles.md)
-
-## Troubleshooting
-
-### Container fails with ServiceNotFoundException
-
-Make sure the Generic Doctrine implementations are registered in `config/services.yaml`.
-
-If you are not using Doctrine, the bundle ships NullObject implementations that work out of the box.
-
-### Validation does not run
-
-Ensure you use `ValidatingDoctrinePersister` instead of `GenericDoctrinePersister`:
-
-```yaml
-AlexFigures\Symfony\Contract\Data\ResourcePersister:
-    alias: AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrinePersister
-```
-
-### Routes are not generated
-
-1. Confirm `type: jsonapi` is set in `config/routes.yaml`.
-2. Clear the cache: `php bin/console cache:clear`.
-3. Inspect routes: `php bin/console debug:router | grep jsonapi`.
-
-## Examples
-
-Full application samples are available in the repository:
-
-- [Simple Blog](https://github.com/jsonapi/symfony-jsonapi-bundle/tree/main/examples/blog)
-- [E-commerce](https://github.com/jsonapi/symfony-jsonapi-bundle/tree/main/examples/ecommerce)
-- [Multi-tenant SaaS](https://github.com/jsonapi/symfony-jsonapi-bundle/tree/main/examples/saas)
-
-## Support
-
-- [GitHub Issues](https://github.com/jsonapi/symfony-jsonapi-bundle/issues)
-- [Discussions](https://github.com/jsonapi/symfony-jsonapi-bundle/discussions)
-- [Stack Overflow](https://stackoverflow.com/questions/tagged/jsonapi+symfony)
+The collection contains JSON:API `data`; POST returns the created resource with a stable string `id`. Read the returned resource URL to obtain its ETag before PATCH/DELETE when required preconditions are enabled. Continue with [resources](resource-discovery.md), [CRUD and validation](crud.md), and the [developer path](developer-path.md).

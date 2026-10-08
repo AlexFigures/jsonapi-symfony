@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Cache;
+namespace AlexFigures\JsonApi\Http\Cache;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-final class VersionEtagGenerator implements EtagGeneratorInterface
+/** @internal */
+final readonly class VersionEtagGenerator implements EtagGeneratorInterface
 {
     public function __construct(
-        private readonly string $headerName = 'X-Resource-Version',
+        private string $headerName = 'X-Resource-Version',
     ) {
     }
 

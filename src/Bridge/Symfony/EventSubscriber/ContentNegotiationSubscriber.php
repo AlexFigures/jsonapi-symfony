@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\EventSubscriber;
+namespace AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber;
 
-use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicy;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
+use AlexFigures\JsonApi\Http\Exception\NotAcceptableException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicy;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicyProviderInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,11 +15,13 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-final class ContentNegotiationSubscriber implements EventSubscriberInterface
+/** @internal */
+final readonly class ContentNegotiationSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly bool $strictContentNegotiation,
-        private readonly MediaTypePolicyProviderInterface $policyProvider
+        private bool $strictContentNegotiation,
+        private MediaTypePolicyProviderInterface $policyProvider,
+        private bool $atomicEnabled = false,
     ) {
     }
 
@@ -29,9 +31,25 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            KernelEvents::REQUEST => ['onKernelRequest', 512],
-            KernelEvents::RESPONSE => ['onKernelResponse', -512],
+            KernelEvents::CONTROLLER => ['onKernelController', -16],
+            KernelEvents::RESPONSE => ['onKernelResponse', 32],
         ];
+    }
+
+    public function onKernelController(\Symfony\Component\HttpKernel\Event\ControllerEvent $event): void
+    {
+        if ($event->isMainRequest() && $event->getRequest()->isMethod('HEAD') && $event->getRequest()->attributes->get('_jsonapi_head_enabled') === false) {
+            /** @var list<string> $allowedMethods */
+            $allowedMethods = $event->getRequest()->attributes->get('_jsonapi_allowed_methods', ['GET', 'OPTIONS']);
+            throw new \AlexFigures\JsonApi\Http\Exception\MethodNotAllowedException($allowedMethods, 'HEAD is disabled for generated resource endpoints.');
+        }
+        if (!$event->isMainRequest() || !$this->strictContentNegotiation) {
+            return;
+        }
+        $request = $event->getRequest();
+        $policy = $this->policyProvider->getPolicy($request);
+        $this->assertContentType($request, $policy);
+        $this->assertAcceptHeader($request, $policy);
     }
 
     public function onKernelRequest(RequestEvent $event): void
@@ -62,6 +80,12 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         $request = $event->getRequest();
         $policy = $this->policyProvider->getPolicy($request);
 
+        if ($request->attributes->get('_jsonapi_generated_resource') === true && $response->getStatusCode() !== 204 && $response->getStatusCode() !== 304) {
+            $selected = $request->attributes->get('_jsonapi_response_media_type', $policy->defaultResponseType);
+            if (is_string($selected)) {
+                $response->headers->set('Content-Type', $selected);
+            }
+        }
         if (!$response->headers->has('Content-Type')) {
             $response->headers->set('Content-Type', $policy->defaultResponseType);
         }
@@ -80,89 +104,79 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $normalized = $this->normalizeMediaType($contentType);
-
-        if (!in_array($normalized, $policy->allowedRequestTypes, true)) {
-            throw new UnsupportedMediaTypeException(
-                $contentType,
-                sprintf('The "%s" media type is not allowed for this endpoint.', $normalized)
-            );
+        $candidates = \AlexFigures\JsonApi\Http\Negotiation\ParsedMediaType::parse($contentType);
+        $media = count($candidates) === 1 ? $candidates[0] : null;
+        if ($media === null || !in_array($media->name, $policy->allowedRequestTypes, true)) {
+            throw new UnsupportedMediaTypeException($contentType, sprintf('The "%s" media type is not allowed for this endpoint.', $media->name ?? $contentType));
         }
-
-        if ($policy->enforceJsonApiParameters && $this->hasUnsupportedParameters($contentType)) {
-            throw new UnsupportedMediaTypeException(
-                $contentType,
-                'JSON:API media type must not have parameters other than "ext" or "profile".'
-            );
-        }
-
-        // Validate ext parameter values
-        if ($policy->enforceJsonApiParameters && $this->hasUnsupportedExtension($contentType)) {
-            throw new UnsupportedMediaTypeException(
-                $contentType,
-                'JSON:API media type contains unsupported extension URI in "ext" parameter.'
-            );
+        if ($policy->enforceJsonApiParameters && !$media->validJsonApi($this->supportedExtensions())) {
+            $message = array_diff(array_keys($media->parameters), ['ext', 'profile']) !== []
+                ? 'JSON:API media type must not have parameters other than "ext" or "profile".'
+                : 'JSON:API media type contains unsupported extension URI in "ext" parameter.';
+            throw new UnsupportedMediaTypeException($contentType, $message);
         }
     }
 
     private function assertAcceptHeader(Request $request, MediaTypePolicy $policy): void
     {
-        if (!$this->strictContentNegotiation || $policy->allowsAnyResponseType()) {
+        $request->attributes->set('_jsonapi_response_media_type', $policy->defaultResponseType);
+        if ($policy->allowsAnyResponseType()) {
             return;
         }
-
         $accept = $request->headers->get('Accept');
         if ($accept === null || $accept === '') {
             return;
         }
-
-        $found = false;
-        foreach (explode(',', $accept) as $part) {
-            $normalized = $this->normalizeMediaType($part);
-
-            if ($this->isAcceptable($normalized, $policy->negotiableResponseTypes)) {
-                $found = true;
-
-                if ($policy->enforceJsonApiParameters && $this->hasUnsupportedParameters($part)) {
-                    throw new NotAcceptableException(
-                        $accept,
-                        'JSON:API media type in Accept header must not have parameters other than "ext" or "profile".'
-                    );
+        $failure = sprintf('Requested representation is not available. Allowed types: %s.', implode(', ', $policy->negotiableResponseTypes));
+        $candidates = \AlexFigures\JsonApi\Http\Negotiation\ParsedMediaType::parse($accept, true);
+        foreach ($candidates as $media) {
+            if ($media->quality <= 0 || !$this->isAcceptable($media->name, $policy->negotiableResponseTypes)) {
+                continue;
+            }
+            if ($policy->enforceJsonApiParameters && $media->name === 'application/vnd.api+json'
+                && !$media->validJsonApi($this->supportedExtensions())) {
+                $failure = array_diff(array_keys($media->parameters), ['ext', 'profile']) !== []
+                    ? 'JSON:API media type in Accept header must not have parameters other than "ext" or "profile".'
+                    : 'JSON:API media type in Accept header contains unsupported extension URI in "ext" parameter.';
+                continue;
+            }
+            if (str_contains($media->name, '*')) {
+                $available = false;
+                foreach ($policy->negotiableResponseTypes as $name) {
+                    if (!$this->isAcceptable($media->name, [$name])) {
+                        continue;
+                    }
+                    $excluded = false;
+                    foreach ($candidates as $explicit) {
+                        if ($explicit->name === $name && $explicit->quality === 0.0 && $explicit->parameters === []) {
+                            $excluded = true;
+                        }
+                    }
+                    if (!$excluded && !$available) {
+                        $request->attributes->set('_jsonapi_response_media_type', $name);
+                        $available = true;
+                    }
                 }
-
-                // Validate ext parameter values
-                if ($policy->enforceJsonApiParameters && $this->hasUnsupportedExtension($part)) {
-                    throw new NotAcceptableException(
-                        $accept,
-                        'JSON:API media type in Accept header contains unsupported extension URI in "ext" parameter.'
-                    );
+                if (!$available) {
+                    continue;
                 }
             }
+            if (!str_contains($media->name, '*')) {
+                $request->attributes->set('_jsonapi_response_media_type', $media->name);
+            }
+            return;
         }
-
-        if (!$found) {
-            throw new NotAcceptableException(
-                $accept,
-                sprintf('Requested representation is not available. Allowed types: %s.', implode(', ', $policy->negotiableResponseTypes))
-            );
-        }
+        throw new NotAcceptableException($accept, $failure);
     }
 
-    private function normalizeMediaType(string $value): string
+    /** @return list<string> */
+    private function supportedExtensions(): array
     {
-        $normalized = trim(strtolower($value));
-        $semicolonPosition = strpos($normalized, ';');
-
-        if ($semicolonPosition === false) {
-            return $normalized;
-        }
-
-        return substr($normalized, 0, $semicolonPosition);
+        return $this->atomicEnabled ? ['https://jsonapi.org/ext/atomic'] : [];
     }
 
-    /**
-     * @param list<string> $allowed
-     */
+    /** @param list<string> $allowed */
+
     private function isAcceptable(string $normalized, array $allowed): bool
     {
         if (in_array($normalized, $allowed, true)) {
@@ -190,89 +204,6 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         return false;
     }
 
-    /**
-     * Check if media type has parameters other than 'ext' or 'profile'.
-     * According to JSON:API spec, only 'ext' and 'profile' parameters are allowed.
-     */
-    private function hasUnsupportedParameters(string $mediaType): bool
-    {
-        $semicolonPosition = strpos($mediaType, ';');
-
-        if ($semicolonPosition === false) {
-            return false;
-        }
-
-        // Extract parameters part
-        $parametersString = substr($mediaType, $semicolonPosition + 1);
-
-        // Parse parameters
-        $parts = array_map('trim', explode(';', $parametersString));
-
-        foreach ($parts as $part) {
-            if ($part === '') {
-                continue;
-            }
-
-            // Extract parameter name (before '=')
-            $equalPosition = strpos($part, '=');
-            if ($equalPosition === false) {
-                // Parameter without value is unsupported
-                return true;
-            }
-
-            $paramName = trim(substr($part, 0, $equalPosition));
-
-            // Only 'ext' and 'profile' are allowed
-            if ($paramName !== 'ext' && $paramName !== 'profile') {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if media type has unsupported extension URIs in 'ext' parameter.
-     * Currently, no extensions are supported, so any ext parameter value is unsupported.
-     */
-    private function hasUnsupportedExtension(string $mediaType): bool
-    {
-        $semicolonPosition = strpos($mediaType, ';');
-
-        if ($semicolonPosition === false) {
-            return false;
-        }
-
-        // Extract parameters part
-        $parametersString = substr($mediaType, $semicolonPosition + 1);
-
-        // Parse parameters
-        $parts = array_map('trim', explode(';', $parametersString));
-
-        foreach ($parts as $part) {
-            if ($part === '') {
-                continue;
-            }
-
-            // Extract parameter name (before '=')
-            $equalPosition = strpos($part, '=');
-            if ($equalPosition === false) {
-                continue;
-            }
-
-            $paramName = trim(substr($part, 0, $equalPosition));
-
-            // Check if this is an 'ext' parameter
-            if ($paramName === 'ext') {
-                // Currently, no extensions are supported
-                // Any ext parameter value is considered unsupported
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private static function addVaryAccept(Response $response): void
     {
         $response->headers->set('Vary', self::mergeVaryHeader($response, 'Accept'));
@@ -286,7 +217,7 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
             return $value;
         }
 
-        $values = array_map('trim', explode(',', $existing));
+        $values = array_map(trim(...), explode(',', $existing));
         if (!in_array($value, $values, true)) {
             $values[] = $value;
         }

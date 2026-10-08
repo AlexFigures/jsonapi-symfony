@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Invalidation;
+namespace AlexFigures\JsonApi\Invalidation;
 
+/** @api */
 interface SurrogatePurgerInterface
 {
     /**

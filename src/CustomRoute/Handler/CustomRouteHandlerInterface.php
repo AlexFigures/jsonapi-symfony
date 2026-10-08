@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\CustomRoute\Handler;
+namespace AlexFigures\JsonApi\CustomRoute\Handler;
 
-use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
-use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\JsonApi\CustomRoute\Result\CustomRouteResult;
 
 /**
  * Interface for custom route handlers.
@@ -20,8 +20,7 @@ use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
  * - Sparse fieldsets and includes support
  * - Event dispatching (ResourceChangedEvent)
  *
- * This dramatically improves developer experience by reducing boilerplate code
- * by ~78% and ensuring consistent JSON:API compliance across all custom routes.
+ * This separates application handlers from response and transaction orchestration.
  *
  * Example usage:
  * ```php

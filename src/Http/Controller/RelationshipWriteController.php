@@ -2,39 +2,43 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
-use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
-use AlexFigures\Symfony\Events\RelationshipChangedEvent;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
-use AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
-use AlexFigures\Symfony\Http\Write\RelationshipDocumentValidator;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\RelationshipUpdater;
+use AlexFigures\JsonApi\Contract\Tx\TransactionManager;
+use AlexFigures\JsonApi\Events\RelationshipChangedEvent;
+use AlexFigures\JsonApi\Http\Authorization\RelationshipAccessChecker;
+use AlexFigures\JsonApi\Http\Authorization\RelationshipOperation;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Controller\Support\RequestDecoder;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Relationship\LinkageBuilder;
+use AlexFigures\JsonApi\Http\Relationship\WriteRelationshipsResponseConfig;
+use AlexFigures\JsonApi\Http\Write\RelationshipDocumentValidator;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[Route(path: '/api/{type}/{id}/relationships/{rel}', methods: ['PATCH', 'POST', 'DELETE'], name: 'jsonapi.relationship.write')]
-final class RelationshipWriteController
+/** @internal */
+final readonly class RelationshipWriteController
 {
     public function __construct(
-        private readonly OperationValidator $operationValidator,
-        private readonly RequestDecoder $requestDecoder,
-        private readonly RelationshipDocumentValidator $validator,
-        private readonly RelationshipUpdater $updater,
-        private readonly LinkageBuilder $linkage,
-        private readonly WriteRelationshipsResponseConfig $responseConfig,
-        private readonly TransactionManager $transaction,
-        private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly ResourceRegistryInterface $registry,
+        private OperationValidator $operationValidator,
+        private RequestDecoder $requestDecoder,
+        private RelationshipDocumentValidator $validator,
+        private RelationshipUpdater $updater,
+        private LinkageBuilder $linkage,
+        private WriteRelationshipsResponseConfig $responseConfig,
+        private TransactionManager $transaction,
+        private EventDispatcherInterface $eventDispatcher,
+        private ResourceRegistryInterface $registry,
+        private ?RelationshipAccessChecker $access = null,
     ) {
     }
 
@@ -43,6 +47,8 @@ final class RelationshipWriteController
         $metadata = $this->registry->getByType($type);
         $this->operationValidator->assertAllowed(ResourceOperation::UPDATE, $metadata->allowedOperations);
 
+        $this->assertAccess($request, $type, $id, $rel);
+
         $payload = $this->requestDecoder->decode($request);
         /** @var array{kind: 'to-one'|'to-many', data: null|array{type: string, id: string}|list<array{type: string, id: string}>} $validated */
         $validated = $this->validator->validate($type, $id, $rel, $payload, $request->getMethod());
@@ -50,7 +56,7 @@ final class RelationshipWriteController
         $data = $validated['data'];
 
         // Execute relationship update within a transaction
-        $this->transaction->transactional(function () use ($request, $kind, $data, $type, $id, $rel): void {
+        \AlexFigures\JsonApi\Tx\TransactionScope::run($this->transaction, $this->registry, [$type], function () use ($request, $kind, $data, $type, $id, $rel): void {
             if ($request->isMethod('PATCH')) {
                 if ($kind === 'to-one') {
                     /** @var array{type: string, id: string}|null $data */
@@ -95,6 +101,18 @@ final class RelationshipWriteController
             JsonResponse::HTTP_OK,
             ['Content-Type' => MediaType::JSON_API],
         );
+    }
+
+    /** @internal Also used before write precondition reads. */
+    public function assertAccess(Request $request, string $type, string $id, string $rel): void
+    {
+        $operation = match ($request->getMethod()) {
+            'PATCH' => RelationshipOperation::REPLACE,
+            'POST' => RelationshipOperation::ADD,
+            'DELETE' => RelationshipOperation::REMOVE,
+            default => throw new RuntimeException('Unsupported HTTP method'),
+        };
+        $this->access?->assertGranted($request, $type, $id, $rel, $operation);
     }
 
 }

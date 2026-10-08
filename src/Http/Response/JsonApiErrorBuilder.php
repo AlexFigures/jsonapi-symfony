@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Response;
+namespace AlexFigures\JsonApi\Http\Response;
 
-use AlexFigures\Symfony\Http\Error\ErrorObject;
-use AlexFigures\Symfony\Http\Error\ErrorSource;
+use AlexFigures\JsonApi\Http\Error\ErrorObject;
+use AlexFigures\JsonApi\Http\Error\ErrorSource;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -30,6 +30,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class JsonApiErrorBuilder
 {
+    private ?string $typeLink = null;
     private ?string $code = null;
     private ?string $title = null;
     private ?ErrorSource $source = null;
@@ -139,7 +140,7 @@ final class JsonApiErrorBuilder
     }
 
     /**
-     * Add links to the error.
+     * Add document-level links. Use withTypeLink() for errors[].links.type.
      *
      * Example:
      * ```php
@@ -154,6 +155,14 @@ final class JsonApiErrorBuilder
     {
         $clone = clone $this;
         $clone->links = array_merge($this->links, $links);
+        return $clone;
+    }
+
+    /** Set errors[].links.type, describing this class of errors. */
+    public function withTypeLink(?string $link): self
+    {
+        $clone = clone $this;
+        $clone->typeLink = $link;
         return $clone;
     }
 
@@ -198,7 +207,7 @@ final class JsonApiErrorBuilder
 
         $document = [
             'jsonapi' => ['version' => '1.1'],
-            'errors' => array_map([$this, 'serializeError'], $errors),
+            'errors' => array_map($this->serializeError(...), $errors),
         ];
 
         // Add top-level links if provided
@@ -231,6 +240,7 @@ final class JsonApiErrorBuilder
             detail: $this->detail,
             source: $this->source,
             meta: $this->meta,
+            typeLink: $this->typeLink,
         );
     }
 
@@ -247,6 +257,7 @@ final class JsonApiErrorBuilder
             title: $error['title'] ?? 'Validation Failed',
             detail: $error['detail'],
             pointer: $error['pointer'],
+            typeLink: $this->typeLink,
         );
     }
 
@@ -257,43 +268,6 @@ final class JsonApiErrorBuilder
      */
     private function serializeError(ErrorObject $error): array
     {
-        $result = [
-            'status' => $error->status,
-            'code' => $error->code,
-        ];
-
-        if ($error->title !== null) {
-            $result['title'] = $error->title;
-        }
-
-        if ($error->detail !== null) {
-            $result['detail'] = $error->detail;
-        }
-
-        if ($error->source !== null) {
-            $source = [];
-            if ($error->source->pointer !== null) {
-                $source['pointer'] = $error->source->pointer;
-            }
-            if ($error->source->parameter !== null) {
-                $source['parameter'] = $error->source->parameter;
-            }
-            if ($error->source->header !== null) {
-                $source['header'] = $error->source->header;
-            }
-            if ($source !== []) {
-                $result['source'] = $source;
-            }
-        }
-
-        if ($error->meta !== []) {
-            $result['meta'] = $error->meta;
-        }
-
-        if ($error->aboutLink !== null) {
-            $result['links'] = ['about' => $error->aboutLink];
-        }
-
-        return $result;
+        return $error->toArray();
     }
 }

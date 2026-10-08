@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Resource\Relationship;
+namespace AlexFigures\JsonApi\Tests\Unit\Resource\Relationship;
 
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use PHPUnit\Framework\TestCase;

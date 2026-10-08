@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Bridge\Doctrine\Relationship;
+namespace AlexFigures\JsonApi\Tests\Integration\Bridge\Doctrine\Relationship;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
-use AlexFigures\Symfony\Contract\Data\RelationshipReader;
-use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
+use AlexFigures\JsonApi\Contract\Data\RelationshipReader;
+use AlexFigures\JsonApi\Contract\Data\RelationshipUpdater;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Category;
 
 /**
  * Integration test for GenericDoctrineRelationshipHandler.

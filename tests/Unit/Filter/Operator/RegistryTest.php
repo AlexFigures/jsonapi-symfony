@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Filter\Operator;
+namespace AlexFigures\JsonApi\Tests\Unit\Filter\Operator;
 
-use AlexFigures\Symfony\Filter\Operator\EqualOperator;
-use AlexFigures\Symfony\Filter\Operator\LikeOperator;
-use AlexFigures\Symfony\Filter\Operator\Registry;
+use AlexFigures\JsonApi\Filter\Operator\EqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\LikeOperator;
+use AlexFigures\JsonApi\Filter\Operator\Registry;
 use PHPUnit\Framework\TestCase;
 
 final class RegistryTest extends TestCase

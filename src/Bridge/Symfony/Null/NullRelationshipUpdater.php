@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Null;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Null;
 
-use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Contract\Data\RelationshipUpdater;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
 use LogicException;
 
 /**
@@ -42,7 +42,7 @@ final class NullRelationshipUpdater implements RelationshipUpdater
     {
         throw new LogicException(
             'No RelationshipUpdater implementation found. ' .
-            'To use relationship write endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipUpdater ' .
+            'To use relationship write endpoints, implement AlexFigures\JsonApi\Contract\Data\RelationshipUpdater ' .
             'and register it as a service.'
         );
     }

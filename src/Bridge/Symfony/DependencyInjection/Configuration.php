@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection;
+namespace AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection;
 
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use LogicException;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\IntegerNodeDefinition;
@@ -13,6 +13,7 @@ use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
+/** @internal */
 final class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
@@ -32,7 +33,7 @@ final class Configuration implements ConfigurationInterface
         $mediaType = $children->scalarNode('media_type');
         $mediaType
             ->defaultNull()
-            ->setDeprecated('alexfigures/symfony-jsonapi', '0.4.0', 'The "jsonapi.media_type" option is deprecated. Configure "jsonapi.media_types" instead.')
+            ->setDeprecated('alexfigures/symfony-jsonapi-bundle', '0.4.0', 'The "jsonapi.media_type" option is deprecated. Configure "jsonapi.media_types" instead.')
             ->end();
 
         /** @var ScalarNodeDefinition $routePrefix */
@@ -103,7 +104,7 @@ final class Configuration implements ConfigurationInterface
 
         $writeChildren->booleanNode('allow_relationship_writes')->defaultFalse()->end();
         /** @var ArrayNodeDefinition $clientGeneratedIds */
-        $clientGeneratedIds = $writeChildren->arrayNode('client_generated_ids')->useAttributeAsKey('type');
+        $clientGeneratedIds = $writeChildren->arrayNode('client_generated_ids')->normalizeKeys(false)->useAttributeAsKey('type');
         $clientGeneratedIds->booleanPrototype()->end();
         $clientGeneratedIds->defaultValue([]);
         $clientGeneratedIds->end();
@@ -114,6 +115,7 @@ final class Configuration implements ConfigurationInterface
 
         $relationshipsChildren->enumNode('write_response')->values(['linkage', '204'])->defaultValue('linkage')->end();
         $relationshipsChildren->enumNode('linkage_in_resource')->values(['never', 'when_included', 'always'])->defaultValue('always')->end();
+        $relationshipsChildren->enumNode('unplanned_read_policy')->values(['legacy', 'reject'])->defaultValue('legacy')->end();
         $relationships->end();
 
         $errors = $children->arrayNode('errors')->addDefaultsIfNotSet();
@@ -121,15 +123,12 @@ final class Configuration implements ConfigurationInterface
         $errorsChildren->booleanNode('expose_debug_meta')->defaultFalse()->end();
         $errorsChildren->booleanNode('add_correlation_id')->defaultTrue()->end();
         $errorsChildren->booleanNode('default_title_map')->defaultTrue()->end();
-        $errorsChildren->scalarNode('locale')->defaultNull()->end();
         $errors->end();
 
         $this->addCacheSection($children);
         $this->addLimitsSection($children);
         $this->addPerformanceSection($children);
-        $this->addDxSection($children);
         $this->addDocsSection($children);
-        $this->addReleaseSection($children);
         $atomic = $children->arrayNode('atomic')->addDefaultsIfNotSet();
         $atomicChildren = $atomic->children();
         $atomicChildren->booleanNode('enabled')->defaultFalse()->end();
@@ -161,7 +160,7 @@ final class Configuration implements ConfigurationInterface
 
         /** @var ArrayNodeDefinition $perTypeRoot */
         $perTypeRoot = $profilesChildren->arrayNode('per_type');
-        $perTypeRoot->useAttributeAsKey('type');
+        $perTypeRoot->normalizeKeys(false)->useAttributeAsKey('type');
         /** @var ArrayNodeDefinition $perType */
         $perType = $perTypeRoot->arrayPrototype();
         $perType->scalarPrototype()->end();
@@ -192,7 +191,7 @@ final class Configuration implements ConfigurationInterface
 
         $relationshipCounts = $profilesChildren->arrayNode('rel_counts')->addDefaultsIfNotSet();
         $relationshipCountsChildren = $relationshipCounts->children();
-        $relationshipCountsChildren->scalarNode('relationship_meta_key')->defaultValue('count')->end();
+        $relationshipCountsChildren->scalarNode('relationship_meta_key')->defaultValue('count')->cannotBeEmpty()->end();
         $relationshipCountsChildren->booleanNode('compute_in_related_endpoints')->defaultTrue()->end();
         $relationshipCounts->end();
 
@@ -271,7 +270,7 @@ final class Configuration implements ConfigurationInterface
         $lastModifiedChildren->scalarNode('resource_field')->defaultValue('updatedAt')->end();
         /** @var ArrayNodeDefinition $perTypeOverrides */
         $perTypeOverrides = $lastModifiedChildren->arrayNode('per_type');
-        $perTypeOverrides->useAttributeAsKey('type');
+        $perTypeOverrides->normalizeKeys(false)->useAttributeAsKey('type');
         $perTypeOverrides->scalarPrototype()->end();
         $perTypeOverrides->defaultValue([]);
         $perTypeOverrides->end();
@@ -321,10 +320,14 @@ final class Configuration implements ConfigurationInterface
         $limits = $root->arrayNode('limits')->addDefaultsIfNotSet();
         $limitsChildren = $limits->children();
         $limitsChildren->integerNode('include_max_depth')->defaultValue(3)->min(0)->end();
+        $limitsChildren->integerNode('filter_max_depth')->defaultValue(8)->min(0)->end();
+        $limitsChildren->integerNode('filter_max_nodes')->defaultValue(100)->min(0)->end();
+        $limitsChildren->integerNode('filter_max_operands')->defaultValue(200)->min(0)->end();
         $limitsChildren->integerNode('include_max_paths')->defaultValue(20)->min(0)->end();
         $limitsChildren->integerNode('fields_max_total')->defaultValue(120)->min(0)->end();
         $limitsChildren->integerNode('page_max_size')->defaultValue(100)->min(0)->end();
         $limitsChildren->integerNode('included_max_resources')->defaultValue(1000)->min(0)->end();
+        $limitsChildren->integerNode('relationship_max_identifiers')->defaultValue(10000)->min(0)->end();
         $limitsChildren->integerNode('complexity_budget')->defaultValue(200)->min(0)->end();
         $limits->end();
     }
@@ -335,55 +338,10 @@ final class Configuration implements ConfigurationInterface
         $performanceChildren = $performance->children();
         $doctrine = $performanceChildren->arrayNode('doctrine')->addDefaultsIfNotSet();
         $doctrineChildren = $doctrine->children();
-        $doctrineChildren->booleanNode('enable_query_cache')->defaultTrue()->end();
-        $doctrineChildren->scalarNode('query_cache_pool')->defaultValue('cache.app')->end();
-        $doctrineChildren->booleanNode('enable_second_level_cache')->defaultFalse()->end();
-        $doctrineChildren->booleanNode('hydrate_partial_by_fields')->defaultTrue()->end();
-        $doctrineChildren->enumNode('default_fetch')->values(['lazy', 'eager', 'extra_lazy'])->defaultValue('lazy')->end();
+        $doctrineChildren->enumNode('collection_sort_policy')->values(['reject', 'legacy'])->defaultValue('legacy')->end();
         $doctrine->end();
         $performanceChildren->booleanNode('head_enabled')->defaultTrue()->end();
         $performance->end();
-    }
-
-    private function addDxSection(NodeBuilder $root): void
-    {
-        $dx = $root->arrayNode('dx')->addDefaultsIfNotSet();
-        $dxChildren = $dx->children();
-
-        $dxChildren->booleanNode('dev_toolbar')->defaultTrue()->end();
-
-        $sandbox = $dxChildren->arrayNode('sandbox')->addDefaultsIfNotSet();
-        $sandboxChildren = $sandbox->children();
-        $sandboxChildren->booleanNode('enabled')->defaultTrue()->end();
-        $sandboxChildren->scalarNode('route')->defaultValue('/_jsonapi/sandbox')->end();
-        $sandbox->end();
-
-        $doctor = $dxChildren->arrayNode('doctor')->addDefaultsIfNotSet();
-        $doctorChildren = $doctor->children();
-        $doctorChildren->booleanNode('enabled')->defaultTrue()->end();
-        /** @var ArrayNodeDefinition $rules */
-        $rules = $doctorChildren->arrayNode('rules');
-        $rules->scalarPrototype()->end();
-        $rules->defaultValue([
-            'negotiation.vary.accept',
-            'errors.listener.registered',
-            'profiles.per_type.known',
-            'filters.whitelist.coverage',
-            'pagination.cursor.sort_key.stable',
-        ]);
-        $rules->end();
-        $doctor->end();
-
-        $maker = $dxChildren->arrayNode('maker')->addDefaultsIfNotSet();
-        $makerChildren = $maker->children();
-        $defaults = $makerChildren->arrayNode('defaults')->addDefaultsIfNotSet();
-        $defaultsChildren = $defaults->children();
-        $defaultsChildren->scalarNode('namespace')->defaultValue('App\\JsonApi')->end();
-        $defaultsChildren->scalarNode('resource_type_prefix')->defaultValue('')->end();
-        $defaults->end();
-        $maker->end();
-
-        $dx->end();
     }
 
     private function addDocsSection(NodeBuilder $root): void
@@ -424,18 +382,5 @@ final class Configuration implements ConfigurationInterface
 
         $generator->end();
         $docs->end();
-    }
-
-    private function addReleaseSection(NodeBuilder $root): void
-    {
-        $release = $root->arrayNode('release')->addDefaultsIfNotSet();
-        $releaseChildren = $release->children();
-
-        $releaseChildren->enumNode('semver')->values(['strict', 'relaxed'])->defaultValue('strict')->end();
-        $releaseChildren->scalarNode('bc_policy')->defaultValue('minor-no-break')->end();
-        $releaseChildren->scalarNode('min_php')->defaultValue('8.2')->end();
-        $releaseChildren->scalarNode('min_symfony')->defaultValue('7.1')->end();
-
-        $release->end();
     }
 }

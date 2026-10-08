@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Bridge\Symfony\EventSubscriber;
+namespace AlexFigures\JsonApi\Tests\Unit\Bridge\Symfony\EventSubscriber;
 
-use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
-use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicy;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
+use AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use AlexFigures\JsonApi\Http\Exception\NotAcceptableException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicy;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicyProviderInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,10 +24,10 @@ final class ContentNegotiationSubscriberTest extends TestCase
     {
         $events = ContentNegotiationSubscriber::getSubscribedEvents();
 
-        self::assertArrayHasKey(KernelEvents::REQUEST, $events);
+        self::assertArrayHasKey(KernelEvents::CONTROLLER, $events);
         self::assertArrayHasKey(KernelEvents::RESPONSE, $events);
-        self::assertSame(['onKernelRequest', 512], $events[KernelEvents::REQUEST]);
-        self::assertSame(['onKernelResponse', -512], $events[KernelEvents::RESPONSE]);
+        self::assertSame(['onKernelController', -16], $events[KernelEvents::CONTROLLER]);
+        self::assertSame(['onKernelResponse', 32], $events[KernelEvents::RESPONSE]);
     }
 
     public function testSkipsSubRequests(): void
@@ -142,7 +142,7 @@ final class ContentNegotiationSubscriberTest extends TestCase
     private function createSubscriber(MediaTypePolicy $policy, bool $strict = true): ContentNegotiationSubscriber
     {
         $provider = new class ($policy) implements MediaTypePolicyProviderInterface {
-            public function __construct(private MediaTypePolicy $policy)
+            public function __construct(private readonly MediaTypePolicy $policy)
             {
             }
 

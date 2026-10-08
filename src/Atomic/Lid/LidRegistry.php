@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Lid;
+namespace AlexFigures\JsonApi\Atomic\Lid;
 
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
 
+/** @internal */
 final class LidRegistry
 {
     /**

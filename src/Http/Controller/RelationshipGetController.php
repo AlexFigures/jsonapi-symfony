@@ -2,25 +2,30 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Authorization\RelationshipAccessChecker;
+use AlexFigures\JsonApi\Http\Authorization\RelationshipOperation;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\MethodNotAllowedException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Relationship\LinkageBuilder;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(path: '/api/{type}/{id}/relationships/{rel}', methods: ['GET', 'HEAD'], name: 'jsonapi.relationship.get')]
-final class RelationshipGetController
+/** @internal */
+final readonly class RelationshipGetController
 {
     public function __construct(
-        private readonly LinkageBuilder $linkage,
-        private readonly ResourceRegistryInterface $registry,
-        private readonly ErrorMapper $errors,
+        private LinkageBuilder $linkage,
+        private ResourceRegistryInterface $registry,
+        private ErrorMapper $errors,
+        private ?\AlexFigures\JsonApi\Http\Link\LinkGenerator $links = null,
+        private ?RelationshipAccessChecker $access = null,
     ) {
     }
 
@@ -29,6 +34,14 @@ final class RelationshipGetController
         $metadata = $this->registry->getByType($type);
         $this->assertOperationAllowed(ResourceOperation::SHOW, $metadata->allowedOperations);
 
+        $this->access?->assertGranted($request, $type, $id, $rel, RelationshipOperation::READ_LINKAGE);
+
+        return $this->currentRepresentation($request, $type, $id, $rel);
+    }
+
+    /** @internal Used to evaluate validators before relationship mutation. */
+    public function currentRepresentation(Request $request, string $type, string $id, string $rel): JsonResponse
+    {
         [, $data] = $this->linkage->read($type, $id, $rel, $request);
 
         $document = [
@@ -37,7 +50,11 @@ final class RelationshipGetController
             'data' => $data,
         ];
 
-        $response = new JsonResponse(
+        if ($this->links !== null) {
+            $document['links']['related'] = $this->links->relationshipRelated($type, $id, $rel);
+        }
+
+        $response = new \AlexFigures\JsonApi\Http\Controller\Support\RepresentationResponse(
             $document,
             JsonResponse::HTTP_OK,
             ['Content-Type' => MediaType::JSON_API],
@@ -45,6 +62,7 @@ final class RelationshipGetController
 
         // For HEAD requests, clear the content but keep all headers
         if ($request->isMethod('HEAD')) {
+            $response->representationContent = (string) $response->getContent();
             $response->setContent('');
         }
 

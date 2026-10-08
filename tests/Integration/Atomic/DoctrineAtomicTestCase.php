@@ -2,31 +2,31 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Atomic\Execution\AtomicTransaction;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\AddHandler;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\RelationshipOps;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\RemoveHandler;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\UpdateHandler;
-use AlexFigures\Symfony\Atomic\Execution\OperationDispatcher;
-use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
-use AlexFigures\Symfony\Atomic\Result\ResultBuilder;
-use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
-use AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker;
-use AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
-use AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Atomic\Execution\AtomicTransaction;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\AddHandler;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\RelationshipOps;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\RemoveHandler;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\UpdateHandler;
+use AlexFigures\JsonApi\Atomic\Execution\OperationDispatcher;
+use AlexFigures\JsonApi\Atomic\Parser\AtomicRequestParser;
+use AlexFigures\JsonApi\Atomic\Result\ResultBuilder;
+use AlexFigures\JsonApi\Atomic\Validation\AtomicValidator;
+use AlexFigures\JsonApi\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker;
+use AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
+use AlexFigures\JsonApi\Bridge\Symfony\Controller\AtomicController;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGenerator;
@@ -147,7 +147,7 @@ abstract class DoctrineAtomicTestCase extends DoctrineIntegrationTestCase
         $atomicValidator = new AtomicValidator($atomicConfig, $this->registry, $this->errorMapper);
 
         // Create AtomicTransaction
-        $atomicTransaction = new AtomicTransaction($this->transactionManager);
+        $atomicTransaction = new AtomicTransaction($this->transactionManager, $this->registry);
 
         // Create operation handlers
         // Use ValidatingDoctrineProcessor to support relationships
@@ -155,7 +155,8 @@ abstract class DoctrineAtomicTestCase extends DoctrineIntegrationTestCase
             $this->validatingProcessor,
             $this->changeSetFactory,
             $this->registry,
-            $this->accessor
+            $this->accessor,
+            $this->flushManager
         );
 
         $updateHandler = new UpdateHandler(
@@ -213,12 +214,12 @@ abstract class DoctrineAtomicTestCase extends DoctrineIntegrationTestCase
         $routes->add('jsonapi.relationship.write', new Route('/api/{type}/{id}/relationships/{rel}'));
 
         // Add type-specific routes
-        foreach (['articles', 'authors', 'tags', 'comments'] as $type) {
+        foreach (['articles', 'authors', 'tags', 'comments', 'generated-records'] as $type) {
             $routes->add("jsonapi.{$type}.index", new Route("/api/{$type}"));
             $routes->add("jsonapi.{$type}.show", new Route("/api/{$type}/{id}"));
 
             // Add relationship routes for all possible relationships
-            foreach (['articles', 'authors', 'tags', 'comments', 'author', 'comment'] as $rel) {
+            foreach (['articles', 'authors', 'tags', 'comments', 'author', 'comment', 'parent'] as $rel) {
                 $routes->add("jsonapi.{$type}.related.{$rel}", new Route("/api/{$type}/{id}/{$rel}"));
                 $routes->add("jsonapi.{$type}.relationships.{$rel}.show", new Route("/api/{$type}/{id}/relationships/{$rel}"));
             }

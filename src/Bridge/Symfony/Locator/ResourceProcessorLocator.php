@@ -1,0 +1,50 @@
+<?php
+
+declare(strict_types=1);
+
+namespace AlexFigures\JsonApi\Bridge\Symfony\Locator;
+
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Contract\Data\TypedResourcePersister;
+
+/** @internal Adapts the documented legacy typed persister contract to write controllers. */
+final readonly class ResourceProcessorLocator implements ResourceProcessor
+{
+    /** @param iterable<\AlexFigures\JsonApi\Contract\Data\ResourcePersister> $persisters */
+    public function __construct(private iterable $persisters, private ResourceProcessor $fallback)
+    {
+    }
+
+    public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
+    {
+        $persister = $this->persister($type);
+        return $persister?->create($type, $changes, $clientId) ?? $this->fallback->processCreate($type, $changes, $clientId);
+    }
+
+    public function processUpdate(string $type, string $id, ChangeSet $changes): object
+    {
+        $persister = $this->persister($type);
+        return $persister?->update($type, $id, $changes) ?? $this->fallback->processUpdate($type, $id, $changes);
+    }
+
+    public function processDelete(string $type, string $id): void
+    {
+        $persister = $this->persister($type);
+        if ($persister === null) {
+            $this->fallback->processDelete($type, $id);
+        } else {
+            $persister->delete($type, $id);
+        }
+    }
+
+    private function persister(string $type): ?TypedResourcePersister
+    {
+        foreach ($this->persisters as $persister) {
+            if ($persister instanceof TypedResourcePersister && $persister->supports($type)) {
+                return $persister;
+            }
+        }
+        return null;
+    }
+}

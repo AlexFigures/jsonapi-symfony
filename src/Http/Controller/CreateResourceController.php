@@ -2,50 +2,51 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
-use AlexFigures\Symfony\Events\ResourceChangedEvent;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Exception\ForbiddenException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Exception\UnprocessableEntityException;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
-use AlexFigures\Symfony\Http\Write\WriteConfig;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Contract\Tx\TransactionManager;
+use AlexFigures\JsonApi\Events\ResourceChangedEvent;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Controller\Support\RequestDecoder;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Exception\ForbiddenException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Exception\UnprocessableEntityException;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Http\Write\InputDocumentValidator;
+use AlexFigures\JsonApi\Http\Write\WriteConfig;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Exception\ValidationFailedException;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[Route(path: '/api/{type}', methods: ['POST'], name: 'jsonapi.create')]
-final class CreateResourceController
+/** @internal */
+final readonly class CreateResourceController
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly OperationValidator $operationValidator,
-        private readonly RequestDecoder $requestDecoder,
-        private readonly JsonApiResponseFactory $responseFactory,
-        private readonly InputDocumentValidator $validator,
-        private readonly ChangeSetFactory $changes,
-        private readonly ResourceProcessor $processor,
-        private readonly TransactionManager $transaction,
-        private readonly DocumentBuilder $document,
-        private readonly LinkGenerator $links,
-        private readonly WriteConfig $writeConfig,
-        private readonly ConstraintViolationMapper $violationMapper,
-        private readonly EventDispatcherInterface $eventDispatcher,
+        private ResourceRegistryInterface $registry,
+        private OperationValidator $operationValidator,
+        private RequestDecoder $requestDecoder,
+        private JsonApiResponseFactory $responseFactory,
+        private InputDocumentValidator $validator,
+        private ChangeSetFactory $changes,
+        private ResourceProcessor $processor,
+        private TransactionManager $transaction,
+        private DocumentBuilder $document,
+        private LinkGenerator $links,
+        private WriteConfig $writeConfig,
+        private ConstraintViolationMapper $violationMapper,
+        private EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -68,7 +69,7 @@ final class CreateResourceController
         }
 
         try {
-            $model = $this->transaction->transactional(function () use ($type, $input) {
+            $model = \AlexFigures\JsonApi\Tx\TransactionScope::write($this->transaction, $this->registry, $type, function () use ($type, $input) {
                 // Create ChangeSet with both attributes and relationships
                 // The processor will handle applying both before validation
                 $changes = $this->changes->fromInput(
@@ -92,6 +93,7 @@ final class CreateResourceController
             throw new UnprocessableEntityException('Validation failed.', $errors, previous: $exception);
         }
 
+        $request->attributes->set('_jsonapi_representation_flushed', true);
         /**
          * @var array{
          *     data: array{

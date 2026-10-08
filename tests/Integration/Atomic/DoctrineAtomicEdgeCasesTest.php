@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
 
 /**
  * Test F: Edge cases for atomic operations.
@@ -45,7 +45,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
             ],
         ];
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessageMatches('/Related resource.*was not found/');
 
         $this->executeAtomicRequest($operations);
@@ -75,7 +75,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
             ],
         ];
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\BadRequestException::class);
         $this->expectExceptionMessage('Unknown local identifier');
 
         $this->executeAtomicRequest($operations);
@@ -98,7 +98,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
             ],
         ];
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessage('not found');
 
         $this->executeAtomicRequest($operations);
@@ -116,7 +116,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
             ],
         ];
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessage('not found');
 
         $this->executeAtomicRequest($operations);
@@ -157,7 +157,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
         try {
             $this->executeAtomicRequest($operations);
             self::fail('Expected NotFoundException');
-        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\NotFoundException) {
             // Expected
         }
 
@@ -176,7 +176,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
     {
         $operations = [];
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\BadRequestException::class);
         $this->expectExceptionMessage('atomic:operations cannot be empty');
 
         $this->executeAtomicRequest($operations);
@@ -246,7 +246,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
                 'data' => [
                     'type' => 'articles',
                     'id' => $articleId,
-                    'attributes' => [], // Empty attributes required for update
+                    'attributes' => new \stdClass(), // JSON object for an empty partial update
                     'relationships' => [
                         'author' => [
                             'data' => null,
@@ -385,7 +385,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
         try {
             $this->executeAtomicRequest($operations);
             self::fail('Expected NotFoundException');
-        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\NotFoundException) {
             // Expected
         }
 
@@ -424,7 +424,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
             ],
         ];
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
 
         $this->executeAtomicRequest($operations);
     }
@@ -461,7 +461,7 @@ final class DoctrineAtomicEdgeCasesTest extends DoctrineAtomicTestCase
             ],
         ];
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\ConflictException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\ConflictException::class);
         $this->expectExceptionMessage('already exists');
 
         $this->executeAtomicRequest($operations);

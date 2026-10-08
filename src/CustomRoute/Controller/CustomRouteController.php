@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\CustomRoute\Controller;
+namespace AlexFigures\JsonApi\CustomRoute\Controller;
 
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
-use AlexFigures\Symfony\CustomRoute\Attribute\NoTransaction;
-use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
-use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContextFactory;
-use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
-use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerRegistry;
-use AlexFigures\Symfony\CustomRoute\Response\CustomRouteResponseBuilder;
-use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
-use AlexFigures\Symfony\Events\ResourceChangedEvent;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorCodes;
-use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Contract\Tx\TransactionManager;
+use AlexFigures\JsonApi\CustomRoute\Attribute\NoTransaction;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContextFactory;
+use AlexFigures\JsonApi\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\JsonApi\CustomRoute\Handler\CustomRouteHandlerRegistry;
+use AlexFigures\JsonApi\CustomRoute\Response\CustomRouteResponseBuilder;
+use AlexFigures\JsonApi\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\JsonApi\Events\ResourceChangedEvent;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorCodes;
+use AlexFigures\JsonApi\Http\Exception\JsonApiHttpException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\HttpFoundation\Request;
@@ -39,16 +39,16 @@ use Throwable;
  *
  * @internal
  */
-final class CustomRouteController
+final readonly class CustomRouteController
 {
     public function __construct(
-        private readonly CustomRouteHandlerRegistry $handlerRegistry,
-        private readonly CustomRouteContextFactory $contextFactory,
-        private readonly CustomRouteResponseBuilder $responseBuilder,
-        private readonly TransactionManager $transactionManager,
-        private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly ErrorBuilder $errorBuilder,
-        private readonly LoggerInterface $logger = new NullLogger(),
+        private CustomRouteHandlerRegistry $handlerRegistry,
+        private CustomRouteContextFactory $contextFactory,
+        private CustomRouteResponseBuilder $responseBuilder,
+        private TransactionManager $transactionManager,
+        private EventDispatcherInterface $eventDispatcher,
+        private ErrorBuilder $errorBuilder,
+        private LoggerInterface $logger = new NullLogger(),
     ) {
     }
 
@@ -259,27 +259,5 @@ final class CustomRouteController
             [$error],
             $e
         );
-    }
-}
-
-/**
- * Internal exception used to signal that a handler returned an error result.
- *
- * This is used to trigger transaction rollback when a handler returns an
- * error result instead of throwing an exception.
- *
- * @internal
- */
-final class HandlerReturnedErrorException extends \RuntimeException
-{
-    public function __construct(
-        private readonly CustomRouteResult $result,
-    ) {
-        parent::__construct('Handler returned an error result');
-    }
-
-    public function getResult(): CustomRouteResult
-    {
-        return $this->result;
     }
 }

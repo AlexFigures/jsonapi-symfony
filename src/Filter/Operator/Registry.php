@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Operator;
+namespace AlexFigures\JsonApi\Filter\Operator;
 
 /**
  * Simple in-memory operator registry.
+ * @internal
  */
 final class Registry
 {

@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Http\Request;
+namespace AlexFigures\JsonApi\Tests\Unit\Http\Request;
 
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Filter\Ast\Conjunction;
-use AlexFigures\Symfony\Filter\Ast\Disjunction;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Resource\Attribute\FilterableField;
-use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\Conjunction;
+use AlexFigures\JsonApi\Filter\Ast\Disjunction;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Resource\Attribute\FilterableField;
+use AlexFigures\JsonApi\Resource\Attribute\FilterableFields;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 
 final class FilteringWhitelistTest extends TestCase
@@ -42,7 +42,7 @@ final class FilteringWhitelistTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: null,
@@ -59,7 +59,7 @@ final class FilteringWhitelistTest extends TestCase
         $filterableFields = new FilterableFields(['title', 'status']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -76,7 +76,7 @@ final class FilteringWhitelistTest extends TestCase
         $filterableFields = new FilterableFields(['title', 'status']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -96,7 +96,7 @@ final class FilteringWhitelistTest extends TestCase
         $filterableFields = new FilterableFields([$titleField, 'status']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -126,7 +126,7 @@ final class FilteringWhitelistTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: null,
@@ -146,7 +146,7 @@ final class FilteringWhitelistTest extends TestCase
         $filterableFields = new FilterableFields(['title']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -167,7 +167,7 @@ final class FilteringWhitelistTest extends TestCase
         $filterableFields = new FilterableFields(['title']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -188,7 +188,7 @@ final class FilteringWhitelistTest extends TestCase
         $filterableFields = new FilterableFields([$titleField]);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -208,7 +208,7 @@ final class FilteringWhitelistTest extends TestCase
         $filterableFields = new FilterableFields(['title', 'status']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,
@@ -232,7 +232,7 @@ final class FilteringWhitelistTest extends TestCase
         $filterableFields = new FilterableFields(['title', 'content']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             filterableFields: $filterableFields,

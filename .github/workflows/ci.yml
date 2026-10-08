@@ -1,77 +1,173 @@
 name: CI
-
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * 1'
+permissions:
+  contents: read
+env:
+  DATABASE_URL_POSTGRES: postgresql://jsonapi:secret@127.0.0.1:5432/jsonapi_test
+  DATABASE_URL_PGSQL: postgresql://jsonapi:secret@127.0.0.1:5432/jsonapi_test
+  DATABASE_URL_MYSQL: mysql://jsonapi:secret@127.0.0.1:3306/jsonapi_test
+  DATABASE_URL_MARIADB: mysql://jsonapi:secret@127.0.0.1:3307/jsonapi_test
+  DATABASE_URL_SQLITE: 'sqlite:///:memory:'
 jobs:
-  tests:
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: make docs-check api-inventory
+      - uses: actions/upload-artifact@v4
+        with:
+          name: public-api-inventory
+          path: reports/public-api-inventory.json
+  compatibility:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        php-version: [ '8.4']
-
+        include:
+          - {php: '8.2', symfony: '7.4', dependencies: lowest}
+          - {php: '8.2', symfony: '7.4', dependencies: current}
+          - {php: '8.3', symfony: '7.4', dependencies: current}
+          - {php: '8.4', symfony: '7.4', dependencies: current}
+          - {php: '8.4', symfony: '8.1', dependencies: current}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: {POSTGRES_DB: jsonapi_test, POSTGRES_USER: jsonapi, POSTGRES_PASSWORD: secret}
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mysql:
+        image: mysql:8.0
+        env: {MYSQL_DATABASE: jsonapi_test, MYSQL_USER: jsonapi, MYSQL_PASSWORD: secret, MYSQL_ROOT_PASSWORD: root}
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping -h localhost" --health-interval=10s --health-timeout=5s --health-retries=10
+      mariadb:
+        image: mariadb:11
+        env: {MARIADB_DATABASE: jsonapi_test, MARIADB_USER: jsonapi, MARIADB_PASSWORD: secret, MARIADB_ROOT_PASSWORD: root}
+        ports: ['3307:3306']
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: ${{ matrix.php }}
+          extensions: pdo_pgsql, pdo_mysql, pdo_sqlite, intl, mbstring
+          tools: composer:v2
           coverage: none
-          tools: composer
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
-
-      - name: PHPStan
-        run: make stan
-
-      - name: PHPUnit
-        run: make test
-
-      - name: PHP CS Fixer (dry-run)
-        run: vendor/bin/php-cs-fixer fix --dry-run --diff
-
+      - run: composer validate --strict
+      - run: python3 scripts/prepare-compatibility.py '${{ matrix.symfony }}'
+      - name: Resolve actual PHP/Symfony/Doctrine combination
+        run: composer update --with-all-dependencies --prefer-dist --no-progress --no-interaction ${{ matrix.dependencies == 'lowest' && '--prefer-lowest' || '' }}
+      - run: php scripts/resolved-versions.php | tee resolved-versions.json
+      - name: Verify test database connections
+        run: php scripts/check-test-databases.php
+      - name: Full bundle suites and zero direct deprecations
+        run: vendor/bin/phpunit --fail-on-deprecation --display-deprecations --fail-on-risky --no-progress --log-junit reports/compatibility.xml
+      - name: Security audit
+        # ORM 3.0 pulls abandoned doctrine/cache in the minimum-API lane.
+        # Report that notice; security advisories remain blocking in every lane.
+        run: composer audit ${{ matrix.dependencies == 'lowest' && '--abandoned=report' || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compat-php${{ matrix.php }}-sf${{ matrix.symfony }}-${{ matrix.dependencies }}
+          path: |
+            resolved-versions.json
+            composer.lock
+            reports/compatibility.xml
+  symfony-next:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: {POSTGRES_DB: jsonapi_test, POSTGRES_USER: jsonapi, POSTGRES_PASSWORD: secret}
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      mysql:
+        image: mysql:8.0
+        env: {MYSQL_DATABASE: jsonapi_test, MYSQL_USER: jsonapi, MYSQL_PASSWORD: secret, MYSQL_ROOT_PASSWORD: root}
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping -h localhost" --health-interval=10s --health-timeout=5s --health-retries=10
+      mariadb:
+        image: mariadb:11
+        env: {MARIADB_DATABASE: jsonapi_test, MARIADB_USER: jsonapi, MARIADB_PASSWORD: secret, MARIADB_ROOT_PASSWORD: root}
+        ports: ['3307:3306']
+        options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: {php-version: '8.4', extensions: 'pdo_pgsql, pdo_mysql, pdo_sqlite, intl, mbstring', tools: 'composer:v2', coverage: none}
+      - run: composer validate --strict
+      - id: status
+        name: Detect whether Symfony 8.2 is released
+        run: python3 scripts/symfony-next-status.py >> "$GITHUB_OUTPUT"
+      - run: python3 scripts/prepare-compatibility.py '${{ steps.status.outputs.series }}'
+      - id: forward
+        continue-on-error: true
+        run: |
+          composer update --with-all-dependencies --prefer-dist --no-progress --no-interaction
+          php scripts/resolved-versions.php | tee resolved-versions.json
+          php scripts/check-test-databases.php
+          vendor/bin/phpunit --fail-on-deprecation --display-deprecations --fail-on-risky --no-progress --log-junit reports/compatibility.xml
+          composer audit
+      - name: Require stable Symfony 8.2
+        if: steps.status.outputs.stable == 'true' && steps.forward.outcome != 'success'
+        run: exit 1
+      - name: Surface development lane failures
+        if: steps.status.outputs.stable != 'true' && steps.forward.outcome != 'success'
+        run: echo '::warning::Symfony 8.2-dev forward compatibility failed; inspect this lane before release.'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: symfony-next-resolution
+          path: |
+            resolved-versions.json
+            composer.lock
+            reports/compatibility.xml
   quality:
     runs-on: ubuntu-latest
-    needs: tests
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup PHP 8.4
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          coverage: none
-          tools: composer
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
-
-      - name: Deptrac
-        run: make deptrac
-
-      - name: Backward compatibility check
-        if: github.event_name == 'pull_request'
+        with: {fetch-depth: 0}
+      - uses: shivammathur/setup-php@v2
+        with: {php-version: '8.4', tools: 'composer:v2', coverage: none}
+      - run: composer validate --strict
+      - run: composer install --prefer-dist --no-progress --no-interaction
+      - run: composer dump-autoload --optimize --strict-psr
+      - run: python3 scripts/php-lint.py
+      - run: php scripts/configuration-reference.php --check
+      - run: make stan deptrac
+      - run: vendor/bin/php-cs-fixer fix --dry-run --diff
+      - run: composer audit
+      - run: composer install --working-dir=tools/bc --prefer-dist --no-progress --no-interaction
+      - run: sh scripts/bc-smoke.sh
+      - name: Required BC check once 1.0.0 exists
         run: make bc-check
-        continue-on-error: true
 
-  security:
+  advisory:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          tools: composer
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-progress
-
-      - name: Security audit
-        run: composer audit
+      - uses: shivammathur/setup-php@v2
+        with: {php-version: '8.4', tools: 'composer:v2', coverage: xdebug}
+      - run: composer install --prefer-dist --no-progress --no-interaction
+      - name: Rector recommendations (advisory, no mechanical rewrite)
+        continue-on-error: true
+        run: vendor/bin/rector process --dry-run --no-progress-bar
+      - run: composer install --working-dir=tools/mutation --prefer-dist --no-progress --no-interaction
+      - name: Mutation visibility (scope excludes database integrations)
+        run: make mutation
+        env: {XDEBUG_MODE: coverage}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: mutation-report, path: infection.log}

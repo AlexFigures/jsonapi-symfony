@@ -2,47 +2,47 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Integration\Http\Controller;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use AlexFigures\Symfony\Filter\Operator\BetweenOperator;
-use AlexFigures\Symfony\Filter\Operator\EqualOperator;
-use AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\GreaterThanOperator;
-use AlexFigures\Symfony\Filter\Operator\ILikeOperator;
-use AlexFigures\Symfony\Filter\Operator\InOperator;
-use AlexFigures\Symfony\Filter\Operator\IsNullOperator;
-use AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\LessThanOperator;
-use AlexFigures\Symfony\Filter\Operator\LikeOperator;
-use AlexFigures\Symfony\Filter\Operator\NotEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\NotInOperator;
-use AlexFigures\Symfony\Filter\Operator\Registry;
-use AlexFigures\Symfony\Filter\Parser\FilterParser;
-use AlexFigures\Symfony\Http\Controller\CollectionController;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleStatus;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\JsonApi\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Operator\BetweenOperator;
+use AlexFigures\JsonApi\Filter\Operator\EqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\GreaterOrEqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\GreaterThanOperator;
+use AlexFigures\JsonApi\Filter\Operator\ILikeOperator;
+use AlexFigures\JsonApi\Filter\Operator\InOperator;
+use AlexFigures\JsonApi\Filter\Operator\IsNullOperator;
+use AlexFigures\JsonApi\Filter\Operator\LessOrEqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\LessThanOperator;
+use AlexFigures\JsonApi\Filter\Operator\LikeOperator;
+use AlexFigures\JsonApi\Filter\Operator\NotEqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\NotInOperator;
+use AlexFigures\JsonApi\Filter\Operator\Registry;
+use AlexFigures\JsonApi\Filter\Parser\FilterParser;
+use AlexFigures\JsonApi\Http\Controller\CollectionController;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Resource\Mapper\DefaultReadMapper;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ArticleStatus;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\CategorySynonym;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGenerator;
@@ -730,7 +730,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
     {
         $request = $this->createJsonApiGetRequest('GET', '/api/unknown-type');
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessage('Resource type "unknown-type" not found');
 
         ($this->controller)($request, 'unknown-type');
@@ -747,7 +747,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
     {
         $request = $this->createJsonApiGetRequest('GET', '/api/tags?page[number]=0');
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\BadRequestException::class);
 
         ($this->controller)($request, 'tags');
     }
@@ -1186,7 +1186,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         $this->em->clear();
 
         // Request collection with nested include: author.articles
-        $request = $this->createJsonApiGetRequest('GET', '/api/articles?include=author.articles');
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?include=author.articles&page[size]=1');
         $response = ($this->controller)($request, 'articles');
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
@@ -1202,7 +1202,9 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
 
         // Count articles in included (should be at least 2 - the other articles by same author)
         $includedArticles = array_filter($document['included'], fn ($item) => $item['type'] === 'articles');
-        self::assertGreaterThanOrEqual(2, count($includedArticles));
+        self::assertCount(2, $includedArticles);
+        $primaryIds = array_column($document['data'], 'id');
+        self::assertSame([], array_intersect($primaryIds, array_column($includedArticles, 'id')));
     }
 
     /**
@@ -1331,6 +1333,10 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
 
         self::assertIsArray($document['data']);
         self::assertCount(2, $document['data']);
+
+        // Identify resources independently of deterministic UUID ordering.
+        $resources = array_column($document['data'], null, 'id');
+        $document['data'] = [$resources[$article1->getId()], $resources[$article2->getId()]];
 
         // First article should have null author and empty tags array
         self::assertArrayHasKey('relationships', $document['data'][0]);
@@ -1585,7 +1591,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
 
         // Request collection with nested include: author.articles
         // This should include the author and all their articles
-        $request = $this->createJsonApiGetRequest('GET', '/api/articles?include=author.articles');
+        $request = $this->createJsonApiGetRequest('GET', '/api/articles?include=author.articles&page[size]=1');
         $response = ($this->controller)($request, 'articles');
 
         self::assertSame(Response::HTTP_OK, $response->getStatusCode());
@@ -1604,7 +1610,8 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         $articles = array_filter($document['included'], fn ($item) => $item['type'] === 'articles');
 
         self::assertCount(1, $authors); // One author
-        self::assertGreaterThanOrEqual(2, count($articles)); // At least 2 other articles by same author
+        self::assertCount(2, $articles); // Exactly the two resources outside the root page.
+        self::assertSame([], array_intersect(array_column($document['data'], 'id'), array_column($articles, 'id')));
     }
 
     /**
@@ -2356,7 +2363,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         // Try to filter by a field that doesn't exist in Author's FilterableFields
         $request = $this->createJsonApiGetRequest('GET', '/api/articles?filter[author.nonExistentField][eq]=value');
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\BadRequestException::class);
         $this->expectExceptionMessage('Filter field not allowed');
 
         ($this->controller)($request, 'articles');
@@ -2375,7 +2382,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         // Try to filter by parent.parent.parent.name (depth 3, should be rejected)
         $request = $this->createJsonApiGetRequest('GET', '/api/categories?filter[parent.parent.parent.name][eq]=test');
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\BadRequestException::class);
         $this->expectExceptionMessage('Filter field not allowed');
 
         ($this->controller)($request, 'categories');
@@ -2520,7 +2527,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'articles');
             self::fail('Expected BadRequestException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\BadRequestException $e) {
             self::assertSame(400, $e->getStatusCode());
             $errors = $e->getErrors();
             self::assertNotEmpty($errors);
@@ -2545,7 +2552,7 @@ final class CollectionControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'categories');
             self::fail('Expected BadRequestException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\BadRequestException $e) {
             self::assertSame(400, $e->getStatusCode());
             $errors = $e->getErrors();
             self::assertNotEmpty($errors);

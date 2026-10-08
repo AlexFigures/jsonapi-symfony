@@ -7,16 +7,16 @@ parameters:
     - name: Contract
       collectors:
         - type: classNameRegex
-          value: '#^AlexFigures\\Symfony\\Contract\\#'
+          value: '#^AlexFigures\\JsonApi\\Contract\\#'
     - name: Application
       collectors:
         - type: classNameRegex
-          value: '#^AlexFigures\\Symfony\\(?!(?:Contract|Query|Filter\\Ast|Http\\Exception)\\|Http\\Error\\(?:ErrorObject|ErrorSource)$).+#'
+          value: '#^AlexFigures\\JsonApi\\(?!(?:Contract|Query|Filter\\Ast|Http\\Exception)\\|Http\\Error\\(?:ErrorObject|ErrorSource|ErrorCodes|ErrorTitles)$).+#'
     # Query DTOs, filter nodes and error types are shared with the public contracts.
     - name: Shared
       collectors:
         - type: classNameRegex
-          value: '#^AlexFigures\\Symfony\\(?:Query\\|Filter\\Ast\\|Http\\Exception\\|Http\\Error\\(?:ErrorObject|ErrorSource)$)#'
+          value: '#^AlexFigures\\JsonApi\\(?:Query\\|Filter\\Ast\\|Http\\Exception\\|Http\\Error\\(?:ErrorObject|ErrorSource|ErrorCodes|ErrorTitles)$)#'
   ruleset:
     Contract:
       - Shared

@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Docs;
+namespace AlexFigures\JsonApi\Tests\Functional\Docs;
 
-use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
-use AlexFigures\Symfony\Http\Controller\OpenApiController;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry;
-use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use AlexFigures\Symfony\Tests\Fixtures\CustomRoute\PublishArticleHandler;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Tag;
+use AlexFigures\JsonApi\Docs\OpenApi\OpenApiSpecGenerator;
+use AlexFigures\JsonApi\Http\Controller\OpenApiController;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\CustomRouteMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistry;
+use AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistryInterface;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Tests\Fixtures\CustomRoute\PublishArticleHandler;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Article;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Author;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Tag;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -320,12 +320,12 @@ final class OpenApiControllerTest extends TestCase
 
         return new class ($articleMetadata, $authorMetadata, $tagMetadata) implements ResourceRegistryInterface {
             /** @var list<ResourceMetadata> */
-            private array $all;
+            private readonly array $all;
 
             public function __construct(
-                private ResourceMetadata $article,
-                private ResourceMetadata $author,
-                private ResourceMetadata $tag,
+                private readonly ResourceMetadata $article,
+                private readonly ResourceMetadata $author,
+                private readonly ResourceMetadata $tag,
             ) {
                 $this->all = [$article, $author, $tag];
             }
@@ -430,7 +430,7 @@ final class OpenApiControllerTest extends TestCase
         );
 
         $registry = new class ($blogPostMetadata) implements ResourceRegistryInterface {
-            public function __construct(private ResourceMetadata $blogPost)
+            public function __construct(private readonly ResourceMetadata $blogPost)
             {
             }
 

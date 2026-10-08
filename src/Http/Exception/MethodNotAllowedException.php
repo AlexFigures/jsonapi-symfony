@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Exception;
+namespace AlexFigures\JsonApi\Http\Exception;
 
-use AlexFigures\Symfony\Http\Error\ErrorObject;
+use AlexFigures\JsonApi\Http\Error\ErrorObject;
 
+/** @api */
 final class MethodNotAllowedException extends JsonApiHttpException
 {
     /**

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Response;
+namespace AlexFigures\JsonApi\Http\Response;
 
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use LogicException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -48,13 +48,14 @@ use Symfony\Component\HttpFoundation\Response;
  * @api This class is part of the public API and follows semantic versioning.
  * @since 0.4.0
  */
-final class JsonApiResponseFactory
+final readonly class JsonApiResponseFactory
 {
+    /** @internal Container wiring; applications use the public service/contract. */
     public function __construct(
-        private readonly DocumentBuilder $documentBuilder,
-        private readonly LinkGenerator $linkGenerator,
-        private readonly ErrorBuilder $errorBuilder,
-        private readonly ResourceRegistryInterface $registry,
+        private DocumentBuilder $documentBuilder,
+        private LinkGenerator $linkGenerator,
+        private ErrorBuilder $errorBuilder,
+        private ResourceRegistryInterface $registry,
     ) {
     }
 

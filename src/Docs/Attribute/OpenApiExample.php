@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Docs\Attribute;
+namespace AlexFigures\JsonApi\Docs\Attribute;
 
 use Attribute;
 
@@ -13,7 +13,7 @@ use Attribute;
  * @since 1.0.0
  */
 #[Attribute]
-final class OpenApiExample
+final readonly class OpenApiExample
 {
     /**
      * @param string      $summary     Short summary of the example
@@ -21,9 +21,9 @@ final class OpenApiExample
      * @param string|null $description Detailed description (optional)
      */
     public function __construct(
-        public readonly string $summary,
-        public readonly mixed $value,
-        public readonly ?string $description = null,
+        public string $summary,
+        public mixed $value,
+        public ?string $description = null,
     ) {
     }
 }

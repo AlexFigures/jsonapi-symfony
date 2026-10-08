@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Filter\Parser;
+namespace AlexFigures\JsonApi\Tests\Unit\Filter\Parser;
 
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Filter\Ast\Conjunction;
-use AlexFigures\Symfony\Filter\Ast\Disjunction;
-use AlexFigures\Symfony\Filter\Ast\NullCheck;
-use AlexFigures\Symfony\Filter\Parser\FilterParser;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\Conjunction;
+use AlexFigures\JsonApi\Filter\Ast\Disjunction;
+use AlexFigures\JsonApi\Filter\Ast\NullCheck;
+use AlexFigures\JsonApi\Filter\Parser\FilterParser;
 use PHPUnit\Framework\TestCase;
 
 final class FilterParserTest extends TestCase

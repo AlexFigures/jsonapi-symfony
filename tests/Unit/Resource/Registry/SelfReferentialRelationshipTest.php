@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Resource\Registry;
+namespace AlexFigures\JsonApi\Tests\Unit\Resource\Registry;
 
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Attribute\Relationship;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Relationship;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests that self-referential relationships (using "self" type hint) are properly resolved.
  *
- * @group unit
  */
+#[\PHPUnit\Framework\Attributes\Group('unit')]
 final class SelfReferentialRelationshipTest extends TestCase
 {
     public function testSelfReferentialRelationshipResolvesToActualClassName(): void
@@ -44,7 +44,7 @@ final class SelfReferentialRelationshipTest extends TestCase
 #[JsonApiResource(type: 'self-referential-entities')]
 class SelfReferentialEntity
 {
-    private string $id;
+    private readonly string $id;
 
     #[Relationship(toMany: false, targetType: 'self-referential-entities')]
     private ?self $parent = null;

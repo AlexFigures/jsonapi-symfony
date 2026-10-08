@@ -2,30 +2,45 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Safety;
+namespace AlexFigures\JsonApi\Http\Safety;
 
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Query\Criteria;
 
-final class LimitsEnforcer
+/** @internal */
+final readonly class LimitsEnforcer
 {
     /**
      * @param array<string, int> $config
      */
     public function __construct(
-        private readonly ErrorMapper $errors,
-        private readonly RequestComplexityScorer $scorer,
-        private readonly array $config,
+        private ErrorMapper $errors,
+        private RequestComplexityScorer $scorer,
+        private array $config,
     ) {
     }
 
     public function enforce(string $type, Criteria $criteria): void
     {
+        $this->enforceFilter($criteria->filter);
         $this->enforceIncludeLimits($criteria);
         $this->enforceFieldsLimits($criteria);
         $this->enforcePagination($criteria);
         $this->enforceComplexity($criteria);
+    }
+
+    public function enforceFilter(?\AlexFigures\JsonApi\Filter\Ast\Node $filter): void
+    {
+        $complexity = (new \AlexFigures\JsonApi\Filter\Validation\FilterComplexityAnalyzer())->analyze($filter);
+        foreach (['depth' => 8, 'nodes' => 100, 'operands' => 200] as $metric => $default) {
+            $limit = $this->config['filter_max_' . $metric] ?? $default;
+            if ($limit > 0 && $complexity->{$metric} > $limit) {
+                throw new BadRequestException('Filter complexity exceeded.', [
+                    $this->errors->invalidParameter('filter', sprintf('Filter %s cannot exceed %d (received %d).', $metric, $limit, $complexity->{$metric})),
+                ]);
+            }
+        }
     }
 
     public function assertIncludedCount(int $count): void

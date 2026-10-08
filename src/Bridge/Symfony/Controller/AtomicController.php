@@ -2,26 +2,28 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Controller;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Controller;
 
-use AlexFigures\Symfony\Atomic\Execution\OperationDispatcher;
-use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
-use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\JsonApi\Atomic\Execution\OperationDispatcher;
+use AlexFigures\JsonApi\Atomic\Parser\AtomicRequestParser;
+use AlexFigures\JsonApi\Atomic\Validation\AtomicValidator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypeNegotiator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(path: '/api/operations', methods: ['POST'], name: 'jsonapi.atomic')]
-final class AtomicController
+/** @api Supported callable for explicit Atomic route registration. */
+final readonly class AtomicController
 {
+    /** @internal Container wiring. */
     public function __construct(
-        private readonly AtomicRequestParser $parser,
-        private readonly AtomicValidator $validator,
-        private readonly OperationDispatcher $dispatcher,
-        private readonly MediaTypeNegotiator $negotiator,
+        private AtomicRequestParser $parser,
+        private AtomicValidator $validator,
+        private OperationDispatcher $dispatcher,
+        private MediaTypeNegotiator $negotiator,
     ) {
     }
 
@@ -29,8 +31,13 @@ final class AtomicController
     {
         $this->negotiator->assertAtomicExt($request);
         $operations = $this->parser->parse($request);
-        [$validated, $lids] = $this->validator->validate($operations);
-        [$resultSet, $allEmpty] = $this->dispatcher->run($validated, $lids);
+        [$validated, $lids] = $this->validator->validate($operations, $request);
+        try {
+            [$resultSet, $allEmpty] = $this->dispatcher->run($validated, $lids);
+        } catch (\AlexFigures\JsonApi\Http\Exception\JsonApiHttpException $exception) {
+            // Commit errors apply to the batch when no individual operation can be identified.
+            throw \AlexFigures\JsonApi\Http\Error\AtomicErrorRebaser::rebase($exception, '/atomic:operations', true);
+        }
 
         if ($allEmpty) {
             return new Response(null, Response::HTTP_NO_CONTENT, ['Content-Type' => MediaType::JSON_API_ATOMIC]);

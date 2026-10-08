@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin;
+namespace AlexFigures\JsonApi\Profile\Builtin;
 
-use AlexFigures\Symfony\Profile\Attribute\SoftDeletable;
-use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteDocumentHook;
-use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteQueryHook;
-use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteWriteHook;
-use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\Validation\FieldRequirement;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Profile\Attribute\SoftDeletable;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\SoftDeleteDocumentHook;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\SoftDeleteQueryHook;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\SoftDeleteWriteHook;
+use AlexFigures\JsonApi\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\Validation\FieldRequirement;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
 
 /**
  * Soft Delete Profile.
@@ -24,6 +24,7 @@ use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
  * - Adds soft delete metadata to documents
  *
  * @phpstan-type SoftDeleteConfig array{
+ *     field?: string, strategy?: string, default_visibility?: string, delete_semantics?: string, query_flags?: array{with_deleted?: string, only_deleted?: string},
  *     documentation?: string,
  *     deletedAtField?: string,
  *     deletedByField?: string,
@@ -31,16 +32,23 @@ use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
  *     onlyTrashedParam?: string,
  *     userProvider?: callable(): ?string
  * }
+ * @api
  */
-final class SoftDeleteProfile implements ProfileInterface
+final readonly class SoftDeleteProfile implements ProfileInterface
 {
     public const URI = 'urn:jsonapi:profile:soft-delete';
 
     /**
      * @param SoftDeleteConfig $config
      */
-    public function __construct(private readonly array $config = [])
+    public function __construct(private array $config = [])
     {
+    }
+
+    /** @return SoftDeleteConfig */
+    public function configuration(): array
+    {
+        return $this->config;
     }
 
     public function uri(): string
@@ -64,7 +72,7 @@ final class SoftDeleteProfile implements ProfileInterface
     {
         yield new SoftDeleteQueryHook($this->config);
         yield new SoftDeleteWriteHook();
-        yield new SoftDeleteDocumentHook();
+        yield new SoftDeleteDocumentHook($this->config);
     }
 
     public function requirements(): ProfileRequirements
@@ -72,9 +80,9 @@ final class SoftDeleteProfile implements ProfileInterface
         return new ProfileRequirements(
             attribute: SoftDeletable::class,
             fields: [
-                'deletedAt' => new FieldRequirement(
-                    type: \DateTimeImmutable::class,
-                    nullable: true,
+                ($this->config['field'] ?? $this->config['deletedAtField'] ?? 'deletedAt') => new FieldRequirement(
+                    type: ($this->config['strategy'] ?? 'timestamp') === 'boolean' ? 'bool' : \DateTimeImmutable::class,
+                    nullable: ($this->config['strategy'] ?? 'timestamp') !== 'boolean',
                     optional: false,
                     description: 'Timestamp when entity was soft-deleted'
                 ),

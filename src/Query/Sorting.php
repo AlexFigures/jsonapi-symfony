@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Query;
+namespace AlexFigures\JsonApi\Query;
 
 use InvalidArgumentException;
 
+/** @api */
 final class Sorting
 {
     public bool $desc;

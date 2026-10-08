@@ -2,29 +2,29 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\JsonApi\Tests\Fixtures\InMemory;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Http\Error\ErrorObject;
-use AlexFigures\Symfony\Http\Error\ErrorSource;
-use AlexFigures\Symfony\Http\Exception\ConflictException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Http\Error\ErrorObject;
+use AlexFigures\JsonApi\Http\Error\ErrorSource;
+use AlexFigures\JsonApi\Http\Exception\ConflictException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\Uid\Uuid;
 
-final class InMemoryPersister implements ResourceProcessor
+final readonly class InMemoryPersister implements ResourceProcessor
 {
     private PropertyAccessorInterface $accessor;
 
     public function __construct(
-        private readonly InMemoryRepository $repository,
-        private readonly ResourceRegistryInterface $registry,
-        private readonly ?InMemoryTransactionManager $transactionManager = null,
+        private InMemoryRepository $repository,
+        private ResourceRegistryInterface $registry,
+        private ?InMemoryTransactionManager $transactionManager = null,
         ?PropertyAccessorInterface $accessor = null,
     ) {
         $this->accessor = $accessor ?? PropertyAccess::createPropertyAccessor();

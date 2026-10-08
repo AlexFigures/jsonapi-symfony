@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Docs\OpenApi;
+namespace AlexFigures\JsonApi\Tests\Unit\Docs\OpenApi;
 
-use AlexFigures\Symfony\Docs\Attribute\OpenApiEndpoint;
-use AlexFigures\Symfony\Docs\Attribute\OpenApiResponse;
-use AlexFigures\Symfony\Docs\OpenApi\CustomEndpointCollector;
+use AlexFigures\JsonApi\Docs\Attribute\OpenApiEndpoint;
+use AlexFigures\JsonApi\Docs\Attribute\OpenApiResponse;
+use AlexFigures\JsonApi\Docs\OpenApi\CustomEndpointCollector;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;

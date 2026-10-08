@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional;
+namespace AlexFigures\JsonApi\Tests\Functional;
 
-use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
-use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
-use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
+use AlexFigures\JsonApi\Http\Exception\JsonApiHttpException;
+use AlexFigures\JsonApi\Http\Exception\NotAcceptableException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;

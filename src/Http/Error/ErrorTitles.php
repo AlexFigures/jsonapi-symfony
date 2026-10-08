@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
+/** @internal */
 final class ErrorTitles
 {
     /**
@@ -21,16 +22,22 @@ final class ErrorTitles
         ErrorCodes::TYPE_MISMATCH => 'Type mismatch',
         ErrorCodes::ID_MISMATCH => 'ID mismatch',
         ErrorCodes::CONFLICT => 'Conflict',
+        ErrorCodes::UNSUPPORTED_TRANSACTION_BOUNDARY => 'Unsupported transaction boundary',
         ErrorCodes::FORBIDDEN => 'Forbidden',
         ErrorCodes::RESOURCE_NOT_FOUND => 'Resource not found',
         ErrorCodes::METHOD_NOT_ALLOWED => 'Method not allowed',
         ErrorCodes::VALIDATION_ERROR => 'Validation error',
         ErrorCodes::PAGE_SIZE_TOO_LARGE => 'Page size too large',
         ErrorCodes::SORT_FIELD_NOT_ALLOWED => 'Sort field not allowed',
+        ErrorCodes::FILTER_FIELD_NOT_ALLOWED => 'Filter field not allowed',
+        ErrorCodes::FILTER_OPERATOR_NOT_ALLOWED => 'Filter operator not allowed',
+        ErrorCodes::FILTER_NOT_ALLOWED => 'Filtering not allowed',
         ErrorCodes::INVALID_HEADER => 'Invalid header',
         ErrorCodes::PRECONDITION_FAILED => 'Precondition failed',
         ErrorCodes::PRECONDITION_REQUIRED => 'Precondition required',
         ErrorCodes::REQUEST_COMPLEXITY_EXCEEDED => 'Request too complex',
+        ErrorCodes::COLLECTION_SORT_UNSUPPORTED => 'Collection sort unsupported',
+        ErrorCodes::RELATIONSHIP_IDENTIFIERS_LIMIT => 'Relationship identifier limit exceeded',
         ErrorCodes::INCLUDED_RESOURCES_LIMIT => 'Included resources limit exceeded',
         ErrorCodes::INTERNAL_SERVER_ERROR => 'Internal server error',
     ];

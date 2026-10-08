@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Doctrine\Type;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Doctrine\Type;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Types\Type;
@@ -19,7 +19,7 @@ final class UuidType extends Type
 
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
-        return $platform->getStringTypeDeclarationSQL($column);
+        return $platform->getStringTypeDeclarationSQL(array_replace($column, ['length' => 36]));
     }
 
     /**

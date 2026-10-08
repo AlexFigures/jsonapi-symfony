@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Resource;
+namespace AlexFigures\JsonApi\Tests\Integration\Resource;
 
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Definition\ReadProjection;
-use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
-use AlexFigures\Symfony\Resource\Write\WriteContext;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleCreateDto;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleUpdateDto;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Mapper\ArticleReadMapper;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Mapper\ArticleWriteMapper;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Definition\ReadProjection;
+use AlexFigures\JsonApi\Resource\Definition\ResourceDefinition;
+use AlexFigures\JsonApi\Resource\Write\WriteContext;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleCreateDto;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleUpdateDto;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleViewDto;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Mapper\ArticleReadMapper;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Mapper\ArticleWriteMapper;
 use Symfony\Component\HttpFoundation\Response;
 
 /**

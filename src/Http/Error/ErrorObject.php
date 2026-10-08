@@ -2,22 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
-final class ErrorObject
+/** @api */
+final readonly class ErrorObject
 {
     /**
      * @param array<string, mixed> $meta
      */
     public function __construct(
-        public readonly ?string $id,
-        public readonly ?string $aboutLink,
-        public readonly string $status,
-        public readonly string $code,
-        public readonly ?string $title,
-        public readonly ?string $detail,
-        public readonly ?ErrorSource $source,
-        public readonly array $meta = [],
+        public ?string $id,
+        public ?string $aboutLink,
+        public string $status,
+        public string $code,
+        public ?string $title,
+        public ?string $detail,
+        public ?ErrorSource $source,
+        public array $meta = [],
+        public ?string $typeLink = null,
     ) {
     }
 
@@ -27,7 +29,7 @@ final class ErrorObject
             return $this;
         }
 
-        return new self($id, $this->aboutLink, $this->status, $this->code, $this->title, $this->detail, $this->source, $this->meta);
+        return new self($id, $this->aboutLink, $this->status, $this->code, $this->title, $this->detail, $this->source, $this->meta, $this->typeLink);
     }
 
     /**
@@ -48,6 +50,7 @@ final class ErrorObject
             $this->detail,
             $this->source,
             array_replace($this->meta, $meta),
+            $this->typeLink,
         );
     }
 
@@ -57,7 +60,15 @@ final class ErrorObject
             return $this;
         }
 
-        return new self($this->id, $link, $this->status, $this->code, $this->title, $this->detail, $this->source, $this->meta);
+        return new self($this->id, $link, $this->status, $this->code, $this->title, $this->detail, $this->source, $this->meta, $this->typeLink);
+    }
+
+    public function withTypeLink(?string $link): self
+    {
+        if ($link === $this->typeLink) {
+            return $this;
+        }
+        return new self($this->id, $this->aboutLink, $this->status, $this->code, $this->title, $this->detail, $this->source, $this->meta, $link);
     }
 
     /**
@@ -76,6 +87,10 @@ final class ErrorObject
 
         if ($this->aboutLink !== null) {
             $data['links'] = ['about' => $this->aboutLink];
+        }
+
+        if ($this->typeLink !== null) {
+            $data['links']['type'] = $this->typeLink;
         }
 
         if ($this->title !== null) {

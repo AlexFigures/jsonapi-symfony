@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Family;
+namespace AlexFigures\JsonApi\Filter\Family;
 
-use AlexFigures\Symfony\Filter\Ast\Node;
+use AlexFigures\JsonApi\Filter\Ast\Node;
 
-final class SearchFamily implements Family
+/** @internal */
+final readonly class SearchFamily implements Family
 {
     /**
      * @param list<string> $fields
      */
     public function __construct(
-        private readonly array $fields,
+        private array $fields,
     ) {
     }
 

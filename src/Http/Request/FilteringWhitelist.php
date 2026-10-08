@@ -2,20 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Request;
+namespace AlexFigures\JsonApi\Http\Request;
 
-use AlexFigures\Symfony\Filter\Ast\Between;
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Filter\Ast\Conjunction;
-use AlexFigures\Symfony\Filter\Ast\Disjunction;
-use AlexFigures\Symfony\Filter\Ast\Group;
-use AlexFigures\Symfony\Filter\Ast\Node;
-use AlexFigures\Symfony\Filter\Ast\NullCheck;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Filter\Ast\Between;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\Conjunction;
+use AlexFigures\JsonApi\Filter\Ast\Disjunction;
+use AlexFigures\JsonApi\Filter\Ast\Group;
+use AlexFigures\JsonApi\Filter\Ast\Node;
+use AlexFigures\JsonApi\Filter\Ast\NullCheck;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 
-final class FilteringWhitelist
+/** @internal */
+final readonly class FilteringWhitelist
 {
     public function __construct(
         private ResourceRegistryInterface $registry,
@@ -97,7 +98,7 @@ final class FilteringWhitelist
      * whitelist bypass attacks. Missing node types allow attackers to use
      * disallowed fields/operators through unvalidated node types.
      */
-    private function validateNode(string $type, Node $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateNode(string $type, Node $node, \AlexFigures\JsonApi\Resource\Attribute\FilterableFields $filterableFields): void
     {
         if ($node instanceof Comparison) {
             $this->validateComparison($type, $node, $filterableFields);
@@ -115,7 +116,7 @@ final class FilteringWhitelist
             // SECURITY: Reject unknown node types to prevent future bypass attacks
             throw new BadRequestException(sprintf(
                 'Unsupported filter node type "%s" for resource type "%s".',
-                get_class($node),
+                $node::class,
                 $type
             ));
         }
@@ -124,9 +125,37 @@ final class FilteringWhitelist
     /**
      * Validate a comparison node.
      */
-    private function validateComparison(string $type, Comparison $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateComparison(string $type, Comparison $node, \AlexFigures\JsonApi\Resource\Attribute\FilterableFields $filterableFields): void
     {
         $field = $node->fieldPath;
+        $metadata = $this->registry->getByType($type);
+        $segments = explode('.', $field);
+        while (count($segments) > 1) {
+            $relationship = $metadata->relationships[array_shift($segments)] ?? null;
+            if ($relationship?->targetType === null) {
+                break;
+            }
+            $metadata = $this->registry->getByType($relationship->targetType);
+        }
+        $attribute = $metadata->attributes[$segments[0]] ?? null;
+        $types = $attribute->types ?? [];
+        if ($segments[0] === 'id') {
+            $property = $metadata->idPropertyPath ?? 'id';
+            $reflection = new \ReflectionClass($metadata->getDataClass());
+            if ($reflection->hasProperty($property)) {
+                $idType = $reflection->getProperty($property)->getType();
+                if ($idType instanceof \ReflectionNamedType) {
+                    $types[] = $idType->getName();
+                }
+            }
+        }
+        if (in_array('int', $types, true)) {
+            foreach ($node->values as $value) {
+                if (!is_int($value) && !(is_string($value) && preg_match('/^-?[0-9]+$/D', $value))) {
+                    throw new BadRequestException('Invalid integer filter operand.', [$this->errors->invalidParameter('filter', 'Expected an integer operand.')]);
+                }
+            }
+        }
 
         // Check if field is allowed (including inherited fields)
         if (!$filterableFields->isAllowed($field, $this->registry, $type)) {
@@ -142,7 +171,7 @@ final class FilteringWhitelist
     /**
      * Validate a conjunction node (AND).
      */
-    private function validateConjunction(string $type, Conjunction $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateConjunction(string $type, Conjunction $node, \AlexFigures\JsonApi\Resource\Attribute\FilterableFields $filterableFields): void
     {
         foreach ($node->children as $child) {
             $this->validateNode($type, $child, $filterableFields);
@@ -152,7 +181,7 @@ final class FilteringWhitelist
     /**
      * Validate a disjunction node (OR).
      */
-    private function validateDisjunction(string $type, Disjunction $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateDisjunction(string $type, Disjunction $node, \AlexFigures\JsonApi\Resource\Attribute\FilterableFields $filterableFields): void
     {
         foreach ($node->children as $child) {
             $this->validateNode($type, $child, $filterableFields);
@@ -162,10 +191,13 @@ final class FilteringWhitelist
     /**
      * Validate a null check node (IS NULL / IS NOT NULL).
      */
-    private function validateNullCheck(string $type, NullCheck $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateNullCheck(string $type, NullCheck $node, \AlexFigures\JsonApi\Resource\Attribute\FilterableFields $filterableFields): void
     {
         $field = $node->fieldPath;
         $operator = $node->isNull ? 'null' : 'nnull';
+        if ($filterableFields->isOperatorAllowed($field, 'isnull', $this->registry, $type)) {
+            $operator = 'isnull';
+        }
 
         // Check if field is allowed (including inherited fields)
         if (!$filterableFields->isAllowed($field, $this->registry, $type)) {
@@ -181,26 +213,15 @@ final class FilteringWhitelist
     /**
      * Validate a between node (BETWEEN comparison).
      */
-    private function validateBetween(string $type, Between $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateBetween(string $type, Between $node, \AlexFigures\JsonApi\Resource\Attribute\FilterableFields $filterableFields): void
     {
-        $field = $node->fieldPath;
-        $operator = 'between';
-
-        // Check if field is allowed (including inherited fields)
-        if (!$filterableFields->isAllowed($field, $this->registry, $type)) {
-            $this->throwFieldNotAllowed($type, $field);
-        }
-
-        // Check if operator is allowed (including inherited fields)
-        if (!$filterableFields->isOperatorAllowed($field, $operator, $this->registry, $type)) {
-            $this->throwOperatorNotAllowed($type, $field, $operator);
-        }
+        $this->validateComparison($type, new Comparison($node->fieldPath, 'between', [$node->from, $node->to]), $filterableFields);
     }
 
     /**
      * Validate a group node (parenthesized expression).
      */
-    private function validateGroup(string $type, Group $node, \AlexFigures\Symfony\Resource\Attribute\FilterableFields $filterableFields): void
+    private function validateGroup(string $type, Group $node, \AlexFigures\JsonApi\Resource\Attribute\FilterableFields $filterableFields): void
     {
         // Groups just wrap another expression, so validate the wrapped expression
         $this->validateNode($type, $node->expression, $filterableFields);

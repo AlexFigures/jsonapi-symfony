@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Attribute;
+namespace AlexFigures\JsonApi\Resource\Attribute;
 
 /**
  * Defines configuration for a single sortable field.
@@ -53,12 +53,12 @@ namespace AlexFigures\Symfony\Resource\Attribute;
  * @api This class is part of the public API and follows semantic versioning.
  * @since 0.1.0
  */
-final class SortableField
+final readonly class SortableField
 {
     /**
      * @var list<string>
      */
-    public readonly array $except;
+    public array $except;
 
     /**
      * @param string             $field         Field name that can be sorted
@@ -67,9 +67,9 @@ final class SortableField
      * @param array<int, string> $except        List of fields to exclude from inheritance
      */
     public function __construct(
-        public readonly string $field,
-        public readonly ?string $customHandler = null,
-        public readonly bool $inherit = false,
+        public string $field,
+        public ?string $customHandler = null,
+        public bool $inherit = false,
         array $except = [],
     ) {
         $this->except = array_values($except);

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Docs\Attribute;
+namespace AlexFigures\JsonApi\Docs\Attribute;
 
 use Attribute;
 
@@ -13,7 +13,7 @@ use Attribute;
  * @since 1.0.0
  */
 #[Attribute]
-final class OpenApiHeader
+final readonly class OpenApiHeader
 {
     /**
      * @param string      $description Header description
@@ -21,9 +21,9 @@ final class OpenApiHeader
      * @param string|null $format      Header format (e.g., 'date-time', 'uri')
      */
     public function __construct(
-        public readonly string $description,
-        public readonly string $type = 'string',
-        public readonly ?string $format = null,
+        public string $description,
+        public string $type = 'string',
+        public ?string $format = null,
     ) {
     }
 }

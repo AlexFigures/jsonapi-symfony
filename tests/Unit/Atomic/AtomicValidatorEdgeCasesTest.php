@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Atomic;
+namespace AlexFigures\JsonApi\Tests\Unit\Atomic;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Atomic\Ref;
-use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Atomic\Ref;
+use AlexFigures\JsonApi\Atomic\Validation\AtomicValidator;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Article;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Author;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -68,7 +68,7 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
      * Test that operation without ref or href throws error.
      * Kills mutant: AtomicValidator.php:60-61 (Identical - $ref === null check)
      */
-    public function testOperationWithoutRefOrHrefThrowsError(): void
+    public function testAddInfersTargetFromResourceObject(): void
     {
         $operation = new Operation(
             op: 'add',
@@ -79,10 +79,8 @@ final class AtomicValidatorEdgeCasesTest extends TestCase
             pointer: '/atomic:operations/0'
         );
 
-        $this->expectException(BadRequestException::class);
-        $this->expectExceptionMessage('Missing operation target');
-
-        $this->validator->validate([$operation]);
+        [$validated] = $this->validator->validate([$operation]);
+        self::assertSame('articles', $validated[0]->ref->type);
     }
 
     /**

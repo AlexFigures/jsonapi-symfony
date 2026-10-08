@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\JsonApi\Contract\Data;
 
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Query\Criteria;
 
 /**
  * Reads JSON:API resources and collections from the data layer.

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin\Hook;
+namespace AlexFigures\JsonApi\Profile\Builtin\Hook;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Profile\Attribute\Auditable;
-use AlexFigures\Symfony\Profile\Hook\WriteHook;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Profile\Attribute\Auditable;
+use AlexFigures\JsonApi\Profile\Hook\WriteHook;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 
 /**
  * Write hook for audit trail profile.
@@ -28,6 +28,7 @@ use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
  *     userProvider?: callable(): ?string,
  *     ...
  * }
+ * @internal
  */
 final readonly class AuditTrailWriteHook implements WriteHook
 {
@@ -46,9 +47,7 @@ final readonly class AuditTrailWriteHook implements WriteHook
         [$createdAtField, $createdByField] = $this->getFieldNames($context, $type, 'create');
 
         // Set createdAt if not already set
-        if (!isset($changeSet->attributes[$createdAtField])) {
-            $changeSet->attributes[$createdAtField] = new \DateTimeImmutable();
-        }
+        $changeSet->attributes[$createdAtField] ??= new \DateTimeImmutable();
 
         // Set createdBy if user provider is configured
         if (isset($this->config['userProvider']) && !isset($changeSet->attributes[$createdByField])) {
@@ -91,7 +90,7 @@ final readonly class AuditTrailWriteHook implements WriteHook
     {
         // Try to get entity class from registry
         if ($this->registry !== null && $this->registry->hasType($type)) {
-            $entityClass = $this->registry->getByType($type)->class;
+            $entityClass = $this->registry->getByType($type)->dataClass;
 
             // Try to read from attribute
             $attribute = $context->attributeReader()->getAttribute($entityClass, Auditable::class);
@@ -106,14 +105,14 @@ final readonly class AuditTrailWriteHook implements WriteHook
         // Fallback to config
         if ($operation === 'create') {
             return [
-                $this->config['createdAtField'] ?? 'createdAt',
-                $this->config['createdByField'] ?? 'createdBy',
+                $this->config['created_at'] ?? $this->config['createdAtField'] ?? 'createdAt',
+                $this->config['created_by'] ?? $this->config['createdByField'] ?? 'createdBy',
             ];
         }
 
         return [
-            $this->config['updatedAtField'] ?? 'updatedAt',
-            $this->config['updatedByField'] ?? 'updatedBy',
+            $this->config['updated_at'] ?? $this->config['updatedAtField'] ?? 'updatedAt',
+            $this->config['updated_by'] ?? $this->config['updatedByField'] ?? 'updatedBy',
         ];
     }
 }

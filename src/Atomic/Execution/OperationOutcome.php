@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Execution;
+namespace AlexFigures\JsonApi\Atomic\Execution;
 
-final class OperationOutcome
+/** @internal */
+final readonly class OperationOutcome
 {
     public function __construct(
-        public readonly bool $hasData,
-        public readonly ?string $type = null,
-        public readonly ?string $id = null,
-        public readonly ?object $model = null,
+        public bool $hasData,
+        public ?string $type = null,
+        public ?string $id = null,
+        public ?object $model = null,
     ) {
     }
 

@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Safety;
+namespace AlexFigures\JsonApi\Http\Safety;
 
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Query\Criteria;
 
+/** @internal */
 final class RequestComplexityScorer
 {
     public function score(Criteria $criteria): int
@@ -23,6 +24,10 @@ final class RequestComplexityScorer
 
         $score += count($criteria->sort) * 2;
         $score += $criteria->pagination->size;
+
+        $filter = (new \AlexFigures\JsonApi\Filter\Validation\FilterComplexityAnalyzer())->analyze($criteria->filter);
+        // Nodes and operands cost one each; relationship hops cost two.
+        $score += $filter->nodes + $filter->operands + 2 * $filter->pathHops;
 
         return $score;
     }

@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\EventSubscriber;
+namespace AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber;
 
-use AlexFigures\Symfony\Bridge\Symfony\Routing\Attribute\MediaChannel;
+use AlexFigures\JsonApi\Bridge\Symfony\Routing\Attribute\MediaChannel;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
+/** @internal */
 final class MediaChannelSubscriber implements EventSubscriberInterface
 {
     /**

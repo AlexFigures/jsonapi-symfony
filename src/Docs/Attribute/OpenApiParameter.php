@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Docs\Attribute;
+namespace AlexFigures\JsonApi\Docs\Attribute;
 
 use Attribute;
 
@@ -13,7 +13,7 @@ use Attribute;
  * @since 1.0.0
  */
 #[Attribute(Attribute::IS_REPEATABLE | Attribute::TARGET_METHOD)]
-final class OpenApiParameter
+final readonly class OpenApiParameter
 {
     /**
      * @param string                    $name        Parameter name
@@ -26,14 +26,14 @@ final class OpenApiParameter
      * @param mixed                     $example     Example value
      */
     public function __construct(
-        public readonly string $name,
-        public readonly string $in,
-        public readonly string $description = '',
-        public readonly bool $required = false,
-        public readonly string $type = 'string',
-        public readonly ?string $format = null,
-        public readonly ?array $schema = null,
-        public readonly mixed $example = null,
+        public string $name,
+        public string $in,
+        public string $description = '',
+        public bool $required = false,
+        public string $type = 'string',
+        public ?string $format = null,
+        public ?array $schema = null,
+        public mixed $example = null,
     ) {
         if (!in_array($in, ['query', 'path', 'header', 'cookie'], true)) {
             throw new \InvalidArgumentException(

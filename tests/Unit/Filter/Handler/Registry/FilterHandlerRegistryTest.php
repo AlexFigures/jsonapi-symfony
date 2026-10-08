@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Filter\Handler\Registry;
+namespace AlexFigures\JsonApi\Tests\Unit\Filter\Handler\Registry;
 
-use AlexFigures\Symfony\Filter\Handler\FilterHandlerInterface;
-use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Handler\FilterHandlerInterface;
+use AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry;
 use PHPUnit\Framework\TestCase;
 
 final class FilterHandlerRegistryTest extends TestCase

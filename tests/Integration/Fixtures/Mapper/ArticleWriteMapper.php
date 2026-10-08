@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Mapper;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Mapper;
 
-use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
-use AlexFigures\Symfony\Resource\Mapper\WriteMapperInterface;
-use AlexFigures\Symfony\Resource\Write\WriteContext;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleCreateDto;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleUpdateDto;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Resource\Definition\ResourceDefinition;
+use AlexFigures\JsonApi\Resource\Mapper\WriteMapperInterface;
+use AlexFigures\JsonApi\Resource\Write\WriteContext;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleCreateDto;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleUpdateDto;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
 
 /**
  * Maps request DTOs to Article Entity.

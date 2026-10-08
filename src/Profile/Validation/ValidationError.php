@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Validation;
+namespace AlexFigures\JsonApi\Profile\Validation;
 
 /**
  * Represents a validation error or warning for a profile requirement.
  *
  * Errors indicate critical issues that prevent the profile from working.
  * Warnings indicate potential issues that may or may not cause problems.
+ * @internal
  */
-final class ValidationError
+final readonly class ValidationError
 {
     public const SEVERITY_ERROR = 'ERROR';
     public const SEVERITY_WARNING = 'WARNING';
@@ -23,11 +24,11 @@ final class ValidationError
      * @param string|null $field        Field name that caused the error (optional)
      */
     public function __construct(
-        public readonly string $severity,
-        public readonly string $profileUri,
-        public readonly string $resourceType,
-        public readonly string $message,
-        public readonly ?string $field = null,
+        public string $severity,
+        public string $profileUri,
+        public string $resourceType,
+        public string $message,
+        public ?string $field = null,
     ) {
     }
 

@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Integration\Http\Controller;
 
-use AlexFigures\Symfony\Filter\Parser\FilterParser;
-use AlexFigures\Symfony\Http\Controller\CollectionController;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Filter\Parser\FilterParser;
+use AlexFigures\JsonApi\Http\Controller\CollectionController;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGenerator;
@@ -200,7 +200,7 @@ final class QueryParameterValidationTest extends DoctrineIntegrationTestCase
                 self::assertSame('include', $error['source']['parameter'], 'Error source SHOULD point to "include" parameter');
             }
 
-        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\BadRequestException $e) {
             // Exception thrown - verify it's correct
             self::assertSame(400, $e->getStatusCode(), 'MUST return 400 for unknown include relationship');
         }
@@ -274,7 +274,7 @@ final class QueryParameterValidationTest extends DoctrineIntegrationTestCase
                 'Error object MUST contain "title" or "detail"'
             );
 
-        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\BadRequestException $e) {
             // Exception thrown - verify it's correct
             self::assertSame(400, $e->getStatusCode(), 'MUST return 400 for invalid include path');
         }
@@ -342,7 +342,7 @@ final class QueryParameterValidationTest extends DoctrineIntegrationTestCase
                 self::assertSame('sort', $error['source']['parameter'], 'Error source SHOULD point to "sort" parameter');
             }
 
-        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\BadRequestException $e) {
             // Exception thrown - verify it's correct
             self::assertSame(400, $e->getStatusCode(), 'MUST return 400 for unsupported sort field');
         }
@@ -420,7 +420,7 @@ final class QueryParameterValidationTest extends DoctrineIntegrationTestCase
                 self::assertSame('unknownParam', $error['source']['parameter'], 'Error source SHOULD point to unknown parameter');
             }
 
-        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\BadRequestException $e) {
             // Exception thrown - verify it's correct
             self::assertSame(400, $e->getStatusCode(), 'MUST return 400 for unknown query parameter');
         }

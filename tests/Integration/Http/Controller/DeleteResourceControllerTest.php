@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Integration\Http\Controller;
 
-use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Http\Controller\DeleteResourceController;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -202,7 +202,7 @@ final class DeleteResourceControllerTest extends DoctrineIntegrationTestCase
     {
         $nonExistentId = '00000000-0000-0000-0000-000000000000';
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
 
         ($this->controller)('tags', $nonExistentId);
     }
@@ -215,7 +215,7 @@ final class DeleteResourceControllerTest extends DoctrineIntegrationTestCase
      */
     public function testErrorUnknownResourceType(): void
     {
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessage('Resource type "unknown-type" not found');
 
         ($this->controller)('unknown-type', 'some-id');
@@ -248,7 +248,7 @@ final class DeleteResourceControllerTest extends DoctrineIntegrationTestCase
         $this->em->clear();
 
         // Attempt to delete author should fail due to foreign key constraint
-        $this->expectException(\Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\ValidationException::class);
 
         ($this->controller)('authors', $authorId);
     }
@@ -275,7 +275,7 @@ final class DeleteResourceControllerTest extends DoctrineIntegrationTestCase
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
 
         // Second delete fails with 404
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
 
         ($this->controller)('tags', $tagId);
     }

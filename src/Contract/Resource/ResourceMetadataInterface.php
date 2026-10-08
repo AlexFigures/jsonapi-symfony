@@ -2,31 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Resource;
+namespace AlexFigures\JsonApi\Contract\Resource;
 
 /**
  * Provides metadata about a JSON:API resource type.
  *
- * This interface is rarely implemented directly by users. The bundle provides
- * a default implementation based on #[JsonApiResource] attributes.
- *
- * Custom implementations can be used for advanced scenarios like:
- * - Dynamic resource types
- * - Runtime resource configuration
- * - Integration with external metadata sources
- *
- * Example custom implementation:
- * ```php
- * final class DynamicResourceMetadata implements ResourceMetadataInterface
- * {
- *     public function __construct(private string $type) {}
- *
- *     public function getType(): string
- *     {
- *         return $this->type;
- *     }
- * }
- * ```
+ * Read-only resource type identity, implemented by the bundle's ResourceMetadata.
+ * It does not replace the full metadata shape required by ResourceRegistryInterface.
+ * Dynamic metadata registries must return the supported concrete ResourceMetadata.
  *
  * @api This interface is part of the public API and follows semantic versioning.
  * @since 0.1.0

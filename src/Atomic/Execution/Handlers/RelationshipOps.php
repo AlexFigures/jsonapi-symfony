@@ -2,23 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Execution\Handlers;
+namespace AlexFigures\JsonApi\Atomic\Execution\Handlers;
 
-use AlexFigures\Symfony\Atomic\Execution\OperationOutcome;
-use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Atomic\Execution\OperationOutcome;
+use AlexFigures\JsonApi\Atomic\Lid\LidRegistry;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Contract\Data\RelationshipUpdater;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 
-final class RelationshipOps
+/** @internal */
+final readonly class RelationshipOps
 {
     public function __construct(
-        private readonly RelationshipUpdater $relationships,
-        private readonly ResourceRegistryInterface $registry,
-        private readonly ErrorMapper $errors,
+        private RelationshipUpdater $relationships,
+        private ResourceRegistryInterface $registry,
+        private ErrorMapper $errors,
     ) {
     }
 

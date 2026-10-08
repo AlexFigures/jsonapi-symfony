@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Bridge;
+namespace AlexFigures\JsonApi\Tests\Unit\Bridge;
 
-use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -166,9 +166,9 @@ declare(strict_types=1);
 
 namespace {$namespace};
 
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute;
 
 #[JsonApiResource(type: '{$resourceType}')]
 final class {$className}

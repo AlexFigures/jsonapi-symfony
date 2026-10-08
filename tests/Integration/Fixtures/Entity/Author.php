@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity;
 
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
-use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Attribute\Relationship;
-use AlexFigures\Symfony\Resource\Attribute\SortableFields;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute;
+use AlexFigures\JsonApi\Resource\Attribute\FilterableFields;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Relationship;
+use AlexFigures\JsonApi\Resource\Attribute\SortableFields;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
@@ -51,6 +51,12 @@ class Author
     #[ORM\OneToMany(targetEntity: Article::class, mappedBy: 'author')]
     #[Relationship(toMany: true, inverse: 'author', targetType: 'articles', linkingPolicy: RelationshipLinkingPolicy::VERIFY)]
     private Collection $articles;
+
+    public function getFirstArticle(): ?Article
+    {
+        $first = $this->articles->first();
+        return $first instanceof Article ? $first : null;
+    }
 
     public function __construct()
     {

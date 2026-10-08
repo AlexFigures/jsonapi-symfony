@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Dto;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto;
 
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Attribute\Relationship;
-use AlexFigures\Symfony\Resource\Definition\ReadProjection;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Relationship;
+use AlexFigures\JsonApi\Resource\Definition\ReadProjection;
 use DateTimeImmutable;
 
 /**
@@ -19,22 +19,22 @@ use DateTimeImmutable;
  */
 #[JsonApiResource(
     type: 'article-dtos',
-    dataClass: \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article::class,
+    dataClass: \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article::class,
     viewClass: self::class,
     readProjection: ReadProjection::DTO,
 )]
-final class ArticleViewDto
+final readonly class ArticleViewDto
 {
     public function __construct(
         #[Id]
         #[Attribute]
-        public readonly string $id,
+        public string $id,
         #[Attribute]
-        public readonly string $title,
+        public string $title,
         #[Attribute]
-        public readonly string $content,
+        public string $content,
         #[Attribute(name: 'createdAt')]
-        public readonly ?DateTimeImmutable $createdAt = null,
+        public ?DateTimeImmutable $createdAt = null,
     ) {
     }
 }

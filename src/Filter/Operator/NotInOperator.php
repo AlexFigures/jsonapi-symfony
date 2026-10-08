@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Operator;
+namespace AlexFigures\JsonApi\Filter\Operator;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
+/** @internal */
 final class NotInOperator extends AbstractOperator
 {
     public function name(): string
@@ -20,7 +21,7 @@ final class NotInOperator extends AbstractOperator
         AbstractPlatform $platform,
     ): DoctrineExpression {
         if ($values === []) {
-            throw new \InvalidArgumentException('NotInOperator requires at least one value.');
+            return new DoctrineExpression('1 = 1', []);
         }
 
         $paramName = 'nin_' . str_replace('.', '_', uniqid('', true));

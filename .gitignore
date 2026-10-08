@@ -11,3 +11,12 @@ infection.log
 # IDE
 /.idea/
 /.vscode/
+
+# Generated QA artifacts; CI publishes evidence outside the source tree.
+/.deptrac.cache
+/reports/
+/build/
+/scripts/__pycache__/
+
+/tools/*/vendor/
+/tools/*/composer.lock

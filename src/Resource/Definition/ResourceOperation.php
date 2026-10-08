@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Definition;
+namespace AlexFigures\JsonApi\Resource\Definition;
 
 /**
  * Defines the available JSON:API resource operations.

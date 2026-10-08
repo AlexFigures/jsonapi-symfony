@@ -2,27 +2,29 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Execution\Handlers;
+namespace AlexFigures\JsonApi\Atomic\Execution\Handlers;
 
-use AlexFigures\Symfony\Atomic\Execution\OperationOutcome;
-use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Atomic\Execution\OperationOutcome;
+use AlexFigures\JsonApi\Atomic\Lid\LidRegistry;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-final class UpdateHandler
+/** @internal */
+final readonly class UpdateHandler
 {
     public function __construct(
-        private readonly ResourceProcessor $processor,
-        private readonly ChangeSetFactory $changeSet,
-        private readonly ResourceRegistryInterface $registry,
-        private readonly PropertyAccessorInterface $accessor,
-        private readonly ErrorMapper $errors,
+        private ResourceProcessor $processor,
+        private ChangeSetFactory $changeSet,
+        private ResourceRegistryInterface $registry,
+        private PropertyAccessorInterface $accessor,
+        private ErrorMapper $errors,
+        private ?\AlexFigures\JsonApi\Http\Write\InputDocumentValidator $inputValidator = null,
     ) {
     }
 
@@ -46,19 +48,29 @@ final class UpdateHandler
 
         /** @var array<string, mixed> $data */
         $id = $this->resolveIdentifier($operation, $data, $lids);
-
-        $attributes = $data['attributes'] ?? null;
-        if ($attributes === null) {
-            $attributes = [];
+        if (isset($data['id']) && $data['id'] !== $id) {
+            throw new BadRequestException('Identifier mismatch.', [$this->errors->invalidPointer('/data/id', 'The data identifier must match the target.')]);
         }
 
+        $attributes = $data['attributes'] ?? null;
+        $attributes ??= [];
+
+        if ($attributes instanceof \stdClass) {
+            $attributes = [];
+        }
         if (!is_array($attributes)) {
             throw new BadRequestException('Resource attributes must be an object.');
         }
 
         /** @var array<string, mixed> $attributes */
 
-        // Extract and resolve relationships
+        $validator = $this->inputValidator ?? new \AlexFigures\JsonApi\Http\Write\InputDocumentValidator(
+            $this->registry,
+            new \AlexFigures\JsonApi\Http\Write\WriteConfig(true),
+            new \AlexFigures\JsonApi\Http\Error\ErrorMapper(new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(true))
+        );
+        $validated = $validator->validateAndExtract($type, null, ['data' => $data], 'ATOMIC_UPDATE', true);
+        $attributes = $validated['attributes'];
         $relationships = $this->extractRelationships($data, $lids);
 
         $changes = $this->changeSet->fromInput($type, $attributes, $relationships);
@@ -85,14 +97,17 @@ final class UpdateHandler
      */
     private function extractRelationships(array $data, LidRegistry $lids): array
     {
-        if (!isset($data['relationships']) || !is_array($data['relationships'])) {
+        if (!array_key_exists('relationships', $data) || $data['relationships'] instanceof \stdClass) {
             return [];
+        }
+        if (!is_array($data['relationships']) || array_is_list($data['relationships'])) {
+            throw new BadRequestException('Relationships must be an object.');
         }
 
         $relationships = [];
         foreach ($data['relationships'] as $relName => $relData) {
             if (!is_array($relData) || !array_key_exists('data', $relData)) {
-                continue;
+                throw new BadRequestException('A relationship must contain a data member.');
             }
 
             $relationships[$relName] = [
@@ -139,6 +154,12 @@ final class UpdateHandler
      */
     private function resolveLidInIdentifier(array $identifier, LidRegistry $lids): array
     {
+        if (isset($identifier['id'], $identifier['lid'])) {
+            throw new BadRequestException('Identifiers cannot contain both id and lid.');
+        }
+        if (isset($identifier['lid']) && is_string($identifier['lid']) && $lids->has($identifier['lid']) && $lids->getType($identifier['lid']) !== ($identifier['type'] ?? null)) {
+            throw new BadRequestException('Local identifier type mismatch.');
+        }
         // If identifier has 'lid' instead of 'id', resolve it
         if (isset($identifier['lid']) && is_string($identifier['lid'])) {
             $resolvedId = $lids->resolveId($identifier['lid']);

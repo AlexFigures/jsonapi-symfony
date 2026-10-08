@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Metadata;
+namespace AlexFigures\JsonApi\Resource\Metadata;
 
 /**
  * Defines how to-many relationship updates are applied.
+ * @api
  */
 enum RelationshipSemantics: string
 {

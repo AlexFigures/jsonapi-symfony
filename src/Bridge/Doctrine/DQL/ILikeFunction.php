@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\DQL;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\DQL;
 
 use Doctrine\ORM\Query\AST\Functions\FunctionNode;
 use Doctrine\ORM\Query\AST\Node;
@@ -60,14 +60,13 @@ final class ILikeFunction extends FunctionNode
     public function getSql(SqlWalker $sqlWalker): string
     {
         $platform = $sqlWalker->getConnection()->getDatabasePlatform();
-        $platformName = $platform->getName();
 
         // Dispatch nodes to SQL, or use string directly
         $field = is_string($this->field) ? $this->field : $this->field->dispatch($sqlWalker);
         $pattern = is_string($this->pattern) ? $this->pattern : $this->pattern->dispatch($sqlWalker);
 
         // PostgreSQL supports ILIKE natively
-        if ($platformName === 'postgresql') {
+        if ($platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
             return sprintf('(%s ILIKE %s)', $field, $pattern);
         }
 

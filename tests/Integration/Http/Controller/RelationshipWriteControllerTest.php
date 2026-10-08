@@ -2,25 +2,25 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Integration\Http\Controller;
 
-use AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker;
-use AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
-use AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
-use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
-use AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
-use AlexFigures\Symfony\Http\Write\RelationshipDocumentValidator;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\JsonApi\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker;
+use AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
+use AlexFigures\JsonApi\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
+use AlexFigures\JsonApi\Http\Controller\RelationshipWriteController;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Controller\Support\RequestDecoder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Relationship\LinkageBuilder;
+use AlexFigures\JsonApi\Http\Relationship\WriteRelationshipsResponseConfig;
+use AlexFigures\JsonApi\Http\Write\RelationshipDocumentValidator;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -60,7 +60,7 @@ final class RelationshipWriteControllerTest extends DoctrineIntegrationTestCase
             $this->flushManager
         );
 
-        $paginationConfig = new \AlexFigures\Symfony\Http\Request\PaginationConfig(defaultSize: 10, maxSize: 100);
+        $paginationConfig = new \AlexFigures\JsonApi\Http\Request\PaginationConfig(defaultSize: 10, maxSize: 100);
 
         $linkageBuilder = new LinkageBuilder(
             $this->registry,

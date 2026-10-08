@@ -2,47 +2,47 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Integration\Http\Controller;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use AlexFigures\Symfony\Filter\Operator\EqualOperator;
-use AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\GreaterThanOperator;
-use AlexFigures\Symfony\Filter\Operator\ILikeOperator;
-use AlexFigures\Symfony\Filter\Operator\InOperator;
-use AlexFigures\Symfony\Filter\Operator\IsNullOperator;
-use AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\LessThanOperator;
-use AlexFigures\Symfony\Filter\Operator\LikeOperator;
-use AlexFigures\Symfony\Filter\Operator\NotEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\NotInOperator;
-use AlexFigures\Symfony\Filter\Operator\Registry;
-use AlexFigures\Symfony\Filter\Parser\FilterParser;
-use AlexFigures\Symfony\Http\Controller\CollectionController;
-use AlexFigures\Symfony\Http\Controller\ResourceController;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTags;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTagsSpecialTag;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\AuthorForSpecialTags;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SpecialTag;
-use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\JsonApi\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Operator\EqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\GreaterOrEqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\GreaterThanOperator;
+use AlexFigures\JsonApi\Filter\Operator\ILikeOperator;
+use AlexFigures\JsonApi\Filter\Operator\InOperator;
+use AlexFigures\JsonApi\Filter\Operator\IsNullOperator;
+use AlexFigures\JsonApi\Filter\Operator\LessOrEqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\LessThanOperator;
+use AlexFigures\JsonApi\Filter\Operator\LikeOperator;
+use AlexFigures\JsonApi\Filter\Operator\NotEqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\NotInOperator;
+use AlexFigures\JsonApi\Filter\Operator\Registry;
+use AlexFigures\JsonApi\Filter\Parser\FilterParser;
+use AlexFigures\JsonApi\Http\Controller\CollectionController;
+use AlexFigures\JsonApi\Http\Controller\ResourceController;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Resource\Mapper\DefaultReadMapper;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTags;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTagsSpecialTag;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\AuthorForSpecialTags;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\SpecialTag;
+use AlexFigures\JsonApi\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGenerator;
@@ -81,18 +81,18 @@ final class PropertyPathAliasTest extends DoctrineIntegrationTestCase
         parent::setUp();
 
         // Re-create registry with SpecialTag and ArticleWithSpecialTags included
-        $this->registry = new \AlexFigures\Symfony\Resource\Registry\ResourceRegistry([
+        $this->registry = new \AlexFigures\JsonApi\Resource\Registry\ResourceRegistry([
             Article::class,
             ArticleWithSpecialTags::class,  // NEW: Add ArticleWithSpecialTags for propertyPath tests
             Author::class,
             AuthorForSpecialTags::class,  // NEW: Add AuthorForSpecialTags for propertyPath tests
-            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category::class,
-            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym::class,
-            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Comment::class,
-            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag::class,
-            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Product::class,
-            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class,
-            \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\User::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Category::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\CategorySynonym::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Comment::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Product::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity::class,
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\User::class,
             SpecialTag::class,  // NEW: Add SpecialTag for propertyPath tests
         ]);
 

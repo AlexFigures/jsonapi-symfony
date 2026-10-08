@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Atomic\Execution\AtomicTransaction;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\AddHandler;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\RelationshipOps;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\RemoveHandler;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\UpdateHandler;
-use AlexFigures\Symfony\Atomic\Execution\OperationDispatcher;
-use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
-use AlexFigures\Symfony\Atomic\Result\ResultBuilder;
-use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController;
-use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Atomic\Execution\AtomicTransaction;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\AddHandler;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\RelationshipOps;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\RemoveHandler;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\UpdateHandler;
+use AlexFigures\JsonApi\Atomic\Execution\OperationDispatcher;
+use AlexFigures\JsonApi\Atomic\Parser\AtomicRequestParser;
+use AlexFigures\JsonApi\Atomic\Result\ResultBuilder;
+use AlexFigures\JsonApi\Atomic\Validation\AtomicValidator;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Bridge\Symfony\Controller\AtomicController;
+use AlexFigures\JsonApi\Contract\Data\RelationshipUpdater;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Contract\Tx\TransactionManager;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicyProviderInterface;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
@@ -78,6 +78,8 @@ return static function (ContainerConfigurator $configurator): void {
         ->set(AtomicTransaction::class)
         ->args([
             service(TransactionManager::class),
+            service(ResourceRegistryInterface::class),
+            service(\AlexFigures\JsonApi\Http\Write\InputDocumentValidator::class),
         ])
     ;
 
@@ -88,6 +90,9 @@ return static function (ContainerConfigurator $configurator): void {
             service(ChangeSetFactory::class),
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
+            service(FlushManager::class),
+            service(\AlexFigures\JsonApi\Http\Write\WriteConfig::class),
+            service(\AlexFigures\JsonApi\Http\Write\InputDocumentValidator::class),
         ])
     ;
 
@@ -99,6 +104,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(PropertyAccessorInterface::class),
             service(ErrorMapper::class),
+            service(\AlexFigures\JsonApi\Http\Write\InputDocumentValidator::class),
         ])
     ;
 
@@ -147,4 +153,3 @@ return static function (ContainerConfigurator $configurator): void {
         ->tag('controller.service_arguments')
     ;
 };
-

@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Http;
+namespace AlexFigures\JsonApi\Tests\Functional\Http;
 
-use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
-use AlexFigures\Symfony\Http\Cache\CacheKeyBuilder;
-use AlexFigures\Symfony\Http\Cache\ConditionalRequestEvaluator;
-use AlexFigures\Symfony\Http\Cache\HashEtagGenerator;
-use AlexFigures\Symfony\Http\Cache\HeadersApplier;
-use AlexFigures\Symfony\Http\Cache\LastModifiedResolver;
-use AlexFigures\Symfony\Http\Cache\SurrogateKeyBuilder;
-use AlexFigures\Symfony\Http\Exception\PreconditionFailedException;
-use AlexFigures\Symfony\Http\Exception\PreconditionRequiredException;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Tag;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
+use AlexFigures\JsonApi\Http\Cache\CacheKeyBuilder;
+use AlexFigures\JsonApi\Http\Cache\ConditionalRequestEvaluator;
+use AlexFigures\JsonApi\Http\Cache\HashEtagGenerator;
+use AlexFigures\JsonApi\Http\Cache\HeadersApplier;
+use AlexFigures\JsonApi\Http\Cache\LastModifiedResolver;
+use AlexFigures\JsonApi\Http\Cache\SurrogateKeyBuilder;
+use AlexFigures\JsonApi\Http\Exception\PreconditionFailedException;
+use AlexFigures\JsonApi\Http\Exception\PreconditionRequiredException;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Article;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Author;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Tag;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -129,8 +129,8 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
         ]));
         $request->attributes->set('_route', 'jsonapi.resource');
 
+        $this->applyCacheHeaders($request, new Response(), requireIfMatch: true);
         $response = ($this->updateController())($request, 'articles', '1');
-        $this->applyCacheHeaders($request, $response, requireIfMatch: true);
 
         self::assertSame(200, $response->getStatusCode(), 'PATCH with If-Match: * should succeed');
     }
@@ -177,8 +177,8 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
 
         $this->expectException(PreconditionRequiredException::class);
 
+        $this->applyCacheHeaders($request, new Response(), requireIfMatch: true);
         $response = ($this->updateController())($request, 'articles', '1');
-        $this->applyCacheHeaders($request, $response, requireIfMatch: true);
     }
 
     public function testDeleteWithMatchingIfMatchSucceeds(): void
@@ -304,7 +304,7 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
             self::assertSame('412', $errors[0]->status, sprintf('Expected status 412, got %s. Error detail: %s', $errors[0]->status, $errors[0]->detail ?? 'N/A'));
             self::assertStringContainsString('If-Match', $errors[0]->detail ?? '');
         } catch (\Throwable $e) {
-            self::fail(sprintf('Expected PreconditionFailedException, got %s: %s', get_class($e), $e->getMessage()));
+            self::fail(sprintf('Expected PreconditionFailedException, got %s: %s', $e::class, $e->getMessage()));
         }
     }
 
@@ -340,7 +340,7 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
 
         $cacheKeyBuilder = new CacheKeyBuilder($config);
         $etagGenerator = new HashEtagGenerator($config);
-        $lastModified = new LastModifiedResolver();
+        $lastModified = new LastModifiedResolver(['last_modified' => ['resource_field' => 'createdAt']]);
         $conditional = new ConditionalRequestEvaluator($this->errorMapper(), $config);
         $headers = new HeadersApplier($headersConfig);
         $surrogates = new SurrogateKeyBuilder();
@@ -352,7 +352,9 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
             $lastModified,
             $conditional,
             $headers,
-            $surrogates
+            $surrogates,
+            $this->resourceController(),
+            $this->relationshipGetController()
         );
 
         $event = new ResponseEvent(
@@ -362,7 +364,14 @@ final class PreconditionsOnWritesTest extends JsonApiTestCase
             $response
         );
 
-        $subscriber->onKernelResponse($event);
+        if (in_array($request->getMethod(), ['PATCH', 'DELETE'], true)) {
+            $request->attributes->set('type', 'articles');
+            $request->attributes->set('id', '1');
+            $controller = $request->isMethod('DELETE') ? $this->deleteController() : $this->updateController();
+            $subscriber->onKernelController(new \Symfony\Component\HttpKernel\Event\ControllerEvent($this->createKernel(), $controller, $request, HttpKernelInterface::MAIN_REQUEST));
+        } else {
+            $subscriber->onKernelResponse($event);
+        }
     }
 
     private function createKernel(): HttpKernelInterface

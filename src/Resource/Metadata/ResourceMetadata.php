@@ -2,22 +2,23 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Metadata;
+namespace AlexFigures\JsonApi\Resource\Metadata;
 
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
-use AlexFigures\Symfony\Resource\Definition\ReadProjection;
-use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Definition\VersionDefinition;
-use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Resource\Attribute\FilterableFields;
+use AlexFigures\JsonApi\Resource\Definition\ReadProjection;
+use AlexFigures\JsonApi\Resource\Definition\ResourceDefinition;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Definition\VersionDefinition;
+use AlexFigures\JsonApi\Resource\Definition\VersionResolverInterface;
 use LogicException;
 
 /**
+ * @api Resource definition consumed by registries, repositories and extension hooks.
  * @psalm-type AttributeMap = array<string, AttributeMetadata>
  * @psalm-type RelationshipMap = array<string, RelationshipMetadata>
  */
-final class ResourceMetadata
+final class ResourceMetadata implements \AlexFigures\JsonApi\Contract\Resource\ResourceMetadataInterface
 {
     /**
      * @var class-string
@@ -28,25 +29,6 @@ final class ResourceMetadata
      * @var class-string
      */
     public string $viewClass;
-
-    public ReadProjection $readProjection;
-
-    /**
-     * @var array<string, string>
-     */
-    public array $fieldMap;
-
-    /**
-     * @var array<string, RelationshipLinkingPolicy>
-     */
-    public array $relationshipPolicies;
-
-    /**
-     * @var array<string, class-string>
-     */
-    public array $writeRequests;
-
-    public ?VersionResolverInterface $versionResolver;
 
     /**
      * @var list<ResourceOperation>
@@ -81,28 +63,28 @@ final class ResourceMetadata
         public ?string $idPropertyPath = null,
         public ?string $routePrefix = null,
         public ?string $description = null,
-        public ?\AlexFigures\Symfony\Resource\Attribute\SortableFields $sortableFields = null,
+        public ?\AlexFigures\JsonApi\Resource\Attribute\SortableFields $sortableFields = null,
         public ?FilterableFields $filterableFields = null,
         public array $normalizationContext = [],
         public array $denormalizationContext = [],
         ?string $dataClass = null,
         ?string $viewClass = null,
-        ReadProjection $readProjection = ReadProjection::ENTITY,
-        array $fieldMap = [],
-        array $relationshipPolicies = [],
-        array $writeRequests = [],
-        ?VersionResolverInterface $versionResolver = null,
+        public ReadProjection $readProjection = ReadProjection::ENTITY,
+        public array $fieldMap = [],
+        public array $relationshipPolicies = [],
+        public array $writeRequests = [],
+        public ?VersionResolverInterface $versionResolver = null,
         ?array $allowedOperations = null,
     ) {
         $this->class = self::assertClassString($class, 'class');
         $this->dataClass = self::assertClassString($dataClass ?? $class, 'dataClass');
         $this->viewClass = self::assertClassString($viewClass ?? $class, 'viewClass');
-        $this->readProjection = $readProjection;
-        $this->fieldMap = $fieldMap;
-        $this->relationshipPolicies = $relationshipPolicies;
-        $this->writeRequests = $writeRequests;
-        $this->versionResolver = $versionResolver;
         $this->allowedOperations = $allowedOperations ?? ResourceOperation::cases();
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
     }
 
     /**
@@ -251,6 +233,14 @@ final class ResourceMetadata
         $segments = explode('.', $fieldPath);
         $firstSegment = $segments[0];
 
+        if (isset($this->attributes[$firstSegment])) {
+            $segments[0] = $this->attributes[$firstSegment]->propertyPath ?? $firstSegment;
+            return implode('.', $segments);
+        }
+        if ($firstSegment === 'id') {
+            $segments[0] = $this->idPropertyPath ?? 'id';
+            return implode('.', $segments);
+        }
         // Check if the first segment is a relationship
         if (isset($this->relationships[$firstSegment])) {
             $relationship = $this->relationships[$firstSegment];

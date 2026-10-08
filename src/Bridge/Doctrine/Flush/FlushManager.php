@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Flush;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Flush;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -26,11 +26,31 @@ final class FlushManager
 {
     private bool $flushScheduled = false;
 
+    private ?EntityManagerInterface $boundary = null;
+
+    public function restrictTo(?EntityManagerInterface $manager): void
+    {
+        foreach ($this->managersToFlush as $scheduled) {
+            if ($manager !== null && $manager !== $scheduled) {
+                throw new \AlexFigures\JsonApi\Http\Exception\UnsupportedTransactionBoundaryException();
+            }
+        }
+        $this->boundary = $manager;
+    }
+
     /** @var array<int, EntityManagerInterface> */
     private array $managersToFlush = [];
 
+    /** @var array<int, class-string> */
+    private array $classesToFlush = [];
+
+    /** @var array<int, class-string> */
+    private array $transactionClasses = [];
+
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
+        private readonly ?\AlexFigures\JsonApi\Http\Validation\DatabaseErrorMapper $errors = null,
+        private readonly ?\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $resources = null,
     ) {
     }
 
@@ -48,7 +68,12 @@ final class FlushManager
     public function scheduleFlush(string $entityClass): void
     {
         $em = $this->getEntityManagerFor($entityClass);
+        if ($this->boundary !== null && $this->boundary !== $em) {
+            throw new \AlexFigures\JsonApi\Http\Exception\UnsupportedTransactionBoundaryException();
+        }
         $this->managersToFlush[spl_object_id($em)] = $em;
+        $this->classesToFlush[spl_object_id($em)] = $entityClass;
+        $this->transactionClasses[spl_object_id($em)] = $entityClass;
         $this->flushScheduled = true;
     }
 
@@ -66,11 +91,20 @@ final class FlushManager
             return;
         }
 
-        foreach ($this->managersToFlush as $em) {
-            $em->flush();
+        foreach ($this->managersToFlush as $key => $em) {
+            try {
+                $em->flush();
+            } catch (\Doctrine\DBAL\Exception\ConstraintViolationException|\Doctrine\ORM\OptimisticLockException $exception) {
+                $type = $this->resources?->getByClass($this->classesToFlush[$key])?->type;
+                if ($type !== null && $this->errors !== null) {
+                    throw $this->errors->mapDatabaseError($type, $exception);
+                }
+                throw $exception;
+            }
         }
 
         $this->managersToFlush = [];
+        $this->classesToFlush = [];
         $this->flushScheduled = false;
     }
 
@@ -82,8 +116,21 @@ final class FlushManager
      */
     public function clear(): void
     {
+        $this->transactionClasses = [];
         $this->flushScheduled = false;
         $this->managersToFlush = [];
+        $this->classesToFlush = [];
+    }
+
+    public function mapTransactionError(\Throwable $exception): \Throwable
+    {
+        if (!$exception instanceof \Doctrine\DBAL\Exception\ConstraintViolationException
+            && !$exception instanceof \Doctrine\ORM\OptimisticLockException) {
+            return $exception;
+        }
+        $entityClass = end($this->transactionClasses);
+        $type = $entityClass === false ? null : $this->resources?->getByClass($entityClass)?->type;
+        return $type !== null && $this->errors !== null ? $this->errors->mapDatabaseError($type, $exception) : $exception;
     }
 
     /**

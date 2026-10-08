@@ -1,0 +1,121 @@
+<?php
+
+declare(strict_types=1);
+
+namespace AlexFigures\JsonApi\Tests\Functional\Query;
+
+use AlexFigures\JsonApi\Filter\Ast\Between;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\Conjunction;
+use AlexFigures\JsonApi\Filter\Ast\Disjunction;
+use AlexFigures\JsonApi\Filter\Ast\Group;
+use AlexFigures\JsonApi\Filter\Ast\NullCheck;
+use AlexFigures\JsonApi\Filter\Parser\FilterParser;
+use AlexFigures\JsonApi\Filter\Validation\FilterComplexityAnalyzer;
+use AlexFigures\JsonApi\Http\Controller\CollectionController;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Http\Safety\LimitsEnforcer;
+use AlexFigures\JsonApi\Http\Safety\RequestComplexityScorer;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use Symfony\Component\HttpFoundation\Request;
+
+final class FilterComplexityLimitsTest extends JsonApiTestCase
+{
+    public function testAllNodeKindsAndOperandCardinalityAreCounted(): void
+    {
+        $ast = new Group(new Conjunction([
+            new Between('author.age', 1, 2),
+            new NullCheck('author.name', true),
+            new Disjunction([new Comparison('name', 'in', ['a', 'b', 'c'])]),
+        ]));
+        $metrics = (new FilterComplexityAnalyzer())->analyze($ast);
+        self::assertSame(4, $metrics->depth);
+        self::assertSame(6, $metrics->nodes);
+        self::assertSame(5, $metrics->operands);
+        self::assertSame(2, $metrics->pathHops);
+        $criteria = new Criteria();
+        $criteria->filter = $ast;
+        self::assertSame($criteria->pagination->size + 15, (new RequestComplexityScorer())->score($criteria));
+    }
+
+    #[DataProvider('excessiveFilters')]
+    public function testExcessiveFiltersAreRejectedBeforeRepositoryAccess(array $filter, array $limits): void
+    {
+        $repository = $this->createMock(\AlexFigures\JsonApi\Contract\Data\ResourceRepository::class);
+        $repository->expects(self::never())->method('findCollection');
+        $controller = new CollectionController($this->filterRegistry(), new OperationValidator($this->errorMapper()), new JsonApiResponseFactory(), $repository, $this->limitedParser($limits), $this->documentBuilder());
+        try {
+            $controller(Request::create('/api/generated-records', parameters: ['filter' => $filter]), 'generated-records');
+            self::fail('Expected a filter rejection before SQL.');
+        } catch (BadRequestException $exception) {
+            self::assertSame(400, $exception->getStatusCode());
+            self::assertSame('filter', $exception->getErrors()[0]->source->parameter);
+        }
+    }
+
+    public static function excessiveFilters(): iterable
+    {
+        $deep = ['name' => 'a'];
+        for ($i = 0; $i < 40; ++$i) {
+            $deep = ['and' => [$deep]];
+        }
+        yield 'depth' => [$deep, []];
+        foreach ([100, 500, 1000] as $count) {
+            yield $count . ' leaves plus group' => [['or' => array_fill(0, $count, ['name' => 'a'])], []];
+        }
+        yield 'IN' => [['name' => ['in' => array_fill(0, 500, 'a')]], []];
+        yield 'NOT IN' => [['name' => ['nin' => array_fill(0, 500, 'a')]], []];
+        yield 'configured nodes' => [['or' => [['name' => 'a'], ['name' => 'b']]], ['filter_max_nodes' => 2]];
+        yield 'configured operands' => [['name' => ['in' => ['a', 'b']]], ['filter_max_operands' => 1]];
+    }
+
+    public function testReasonableNestedFilterAndDisabledLimits(): void
+    {
+        $filter = ['and' => [['name' => 'a'], ['or' => [['name' => 'b'], ['name' => 'c']]]]];
+        self::assertNotNull($this->limitedParser([])->parse('generated-records', Request::create('/', parameters: ['filter' => $filter]))->filter);
+        self::assertNotNull($this->limitedParser(['filter_max_depth' => 0, 'filter_max_nodes' => 0, 'filter_max_operands' => 0])->parse('generated-records', Request::create('/', parameters: ['filter' => ['name' => ['in' => array_fill(0, 500, 'a')]]]))->filter);
+    }
+
+    public function testWeightedBudgetAlsoAccountsForFilters(): void
+    {
+        $this->expectException(BadRequestException::class);
+        $this->expectExceptionMessage('Request too complex.');
+        $this->limitedParser(['complexity_budget' => 27])->parse('generated-records', Request::create('/', parameters: ['filter' => ['name' => ['in' => ['a', 'b', 'c']]] ]));
+    }
+
+    public function testRawDepthIsRejectedEvenWhenPhpDiscardsParsedFilter(): void
+    {
+        $filter = ['name' => 'a'];
+        for ($level = 0; $level < 40; ++$level) {
+            $filter = ['and' => [$filter]];
+        }
+        $request = Request::create('/');
+        $request->server->set('QUERY_STRING', http_build_query(['filter' => $filter]));
+        // Model the empty query bag produced by max_input_nesting_level overflow.
+        self::assertSame([], $request->query->all());
+        try {
+            $this->limitedParser([])->parse('generated-records', $request);
+            self::fail('Truncated filter must not become an unfiltered read.');
+        } catch (BadRequestException $error) {
+            self::assertSame('filter', $error->getErrors()[0]->source?->parameter);
+        }
+    }
+
+    private function filterRegistry(): \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface
+    {
+        return new \AlexFigures\JsonApi\Resource\Registry\ResourceRegistry([\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\GeneratedRecord::class]);
+    }
+
+    private function limitedParser(array $config): QueryParser
+    {
+        return new QueryParser($this->filterRegistry(), new PaginationConfig(), new SortingWhitelist($this->filterRegistry()), new FilteringWhitelist($this->filterRegistry(), $this->errorMapper()), $this->errorMapper(), new FilterParser($config['filter_max_depth'] ?? 8), new LimitsEnforcer($this->errorMapper(), new RequestComplexityScorer(), $config));
+    }
+}

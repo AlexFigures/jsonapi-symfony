@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Mapper;
+namespace AlexFigures\JsonApi\Resource\Mapper;
 
-use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
-use AlexFigures\Symfony\Resource\Write\WriteContext;
+use AlexFigures\JsonApi\Resource\Definition\ResourceDefinition;
+use AlexFigures\JsonApi\Resource\Write\WriteContext;
 
+/** @api */
 interface WriteMapperInterface
 {
     public function instantiate(ResourceDefinition $definition, object $requestDto, WriteContext $context): object;

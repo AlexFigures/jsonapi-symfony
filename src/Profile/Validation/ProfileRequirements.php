@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Validation;
+namespace AlexFigures\JsonApi\Profile\Validation;
 
 /**
  * Describes the requirements a profile imposes on entities.
@@ -24,8 +24,9 @@ namespace AlexFigures\Symfony\Profile\Validation;
  *     description: 'Enables soft-delete semantics for resources'
  * )
  * ```
+ * @api
  */
-final class ProfileRequirements
+final readonly class ProfileRequirements
 {
     /**
      * @param string|null                     $attribute   FQCN of required attribute (optional)
@@ -33,9 +34,9 @@ final class ProfileRequirements
      * @param string                          $description Human-readable description of the profile
      */
     public function __construct(
-        public readonly ?string $attribute = null,
-        public readonly array $fields = [],
-        public readonly string $description = '',
+        public ?string $attribute = null,
+        public array $fields = [],
+        public string $description = '',
     ) {
     }
 

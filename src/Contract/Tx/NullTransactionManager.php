@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Tx;
+namespace AlexFigures\JsonApi\Contract\Tx;
 
 /**
  * Null Object implementation of TransactionManager.
@@ -11,6 +11,7 @@ namespace AlexFigures\Symfony\Contract\Tx;
  * has not provided their own implementation.
  *
  * Executes callback without transaction.
+ * @internal
  */
 final class NullTransactionManager implements TransactionManager
 {

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Null;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Null;
 
-use AlexFigures\Symfony\Contract\Data\ExistenceChecker;
-use AlexFigures\Symfony\Http\Exception\NotImplementedException;
+use AlexFigures\JsonApi\Contract\Data\ExistenceChecker;
+use AlexFigures\JsonApi\Http\Exception\NotImplementedException;
 
 /**
  * Null Object implementation of ExistenceChecker.
@@ -14,6 +14,7 @@ use AlexFigures\Symfony\Http\Exception\NotImplementedException;
  * has not provided their own implementation.
  *
  * Throws NotImplementedException for all methods.
+ * @internal
  */
 final class NullExistenceChecker implements ExistenceChecker
 {

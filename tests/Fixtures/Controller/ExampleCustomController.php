@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\Controller;
+namespace AlexFigures\JsonApi\Tests\Fixtures\Controller;
 
-use AlexFigures\Symfony\Docs\Attribute\OpenApiEndpoint;
-use AlexFigures\Symfony\Docs\Attribute\OpenApiParameter;
-use AlexFigures\Symfony\Docs\Attribute\OpenApiRequestBody;
-use AlexFigures\Symfony\Docs\Attribute\OpenApiResponse;
+use AlexFigures\JsonApi\Docs\Attribute\OpenApiEndpoint;
+use AlexFigures\JsonApi\Docs\Attribute\OpenApiParameter;
+use AlexFigures\JsonApi\Docs\Attribute\OpenApiRequestBody;
+use AlexFigures\JsonApi\Docs\Attribute\OpenApiResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * Example controller demonstrating OpenApiEndpoint attribute usage.

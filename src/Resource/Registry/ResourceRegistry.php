@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Registry;
+namespace AlexFigures\JsonApi\Resource\Registry;
 
-use AlexFigures\Symfony\Resource\Attribute\Attribute as AttributeAttribute;
-use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Attribute\Relationship as RelationshipAttribute;
-use AlexFigures\Symfony\Resource\Attribute\SortableFields;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipSemantics;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute as AttributeAttribute;
+use AlexFigures\JsonApi\Resource\Attribute\FilterableFields;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Relationship as RelationshipAttribute;
+use AlexFigures\JsonApi\Resource\Attribute\SortableFields;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Definition\VersionResolverInterface;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipSemantics;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use LogicException;
 use ReflectionAttribute;
 use ReflectionClass;
@@ -26,6 +26,7 @@ use ReflectionNamedType;
 use ReflectionProperty;
 use ReflectionUnionType;
 
+/** @internal */
 final class ResourceRegistry implements ResourceRegistryInterface
 {
     /**
@@ -71,11 +72,23 @@ final class ResourceRegistry implements ResourceRegistryInterface
 
             $this->metadataByType[$metadata->type] = $metadata;
             $this->metadataByClass[$metadata->class] = $metadata;
-            $this->metadataByClass[$metadata->dataClass] = $metadata;
-            if ($metadata->viewClass !== $metadata->class) {
-                $this->metadataByClass[$metadata->viewClass] = $metadata;
-            }
             $this->metadata[] = $metadata;
+        }
+        // Declared resource classes take precedence over persistence/view aliases,
+        // independently of discovery order. Ambiguous aliases require an explicit type.
+        $aliases = [];
+        foreach ($this->metadata as $metadata) {
+            foreach (array_unique([$metadata->dataClass, $metadata->viewClass]) as $alias) {
+                if (!isset($this->metadataByClass[$alias])) {
+                    $aliases[$alias][$metadata->type] = $metadata;
+                }
+            }
+        }
+        foreach ($aliases as $class => $candidates) {
+            if (count($candidates) > 1) {
+                throw new LogicException(sprintf('Ambiguous resource class "%s" maps to types %s. Register a primary resource for this class or use distinct data/view classes.', $class, implode(', ', array_keys($candidates))));
+            }
+            $this->metadataByClass[$class] = reset($candidates);
         }
     }
 
@@ -148,7 +161,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
             }
 
             $attributes = $this->extractAttributes($attributes, $property, $property->getName());
-            $relationships = $this->extractRelationships($relationships, $property, $property->getName());
+            $relationships = $this->extractRelationships($relationships, $property, $property->getName(), $resource->relationshipPolicies);
         }
 
         foreach ($reflection->getMethods() as $method) {
@@ -162,7 +175,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
             }
 
             $attributes = $this->extractAttributes($attributes, $method, $propertyPath);
-            $relationships = $this->extractRelationships($relationships, $method, $propertyPath);
+            $relationships = $this->extractRelationships($relationships, $method, $propertyPath, $resource->relationshipPolicies);
         }
 
         // Extract sortable fields from SortableFields attribute
@@ -258,12 +271,13 @@ final class ResourceRegistry implements ResourceRegistryInterface
     /**
      * @template T of ReflectionMethod|ReflectionProperty
      *
-     * @param array<string, RelationshipMetadata> $relationships
-     * @param T                                   $member
+     * @param array<string, RelationshipMetadata>      $relationships
+     * @param T                                        $member
+     * @param array<string, RelationshipLinkingPolicy> $policies
      *
      * @return array<string, RelationshipMetadata>
      */
-    private function extractRelationships(array $relationships, ReflectionProperty|ReflectionMethod $member, string $propertyPath): array
+    private function extractRelationships(array $relationships, ReflectionProperty|ReflectionMethod $member, string $propertyPath, array $policies): array
     {
         foreach ($member->getAttributes(RelationshipAttribute::class, ReflectionAttribute::IS_INSTANCEOF) as $attribute) {
             /** @var RelationshipAttribute $instance */
@@ -286,7 +300,7 @@ final class ResourceRegistry implements ResourceRegistryInterface
             $targetType = $instance->targetType ?? $this->guessTargetType($targetClass);
 
             // Convert linkingPolicy from string to enum if needed
-            $linkingPolicy = RelationshipLinkingPolicy::REFERENCE; // default
+            $linkingPolicy = $policies[$name] ?? RelationshipLinkingPolicy::REFERENCE;
             if ($instance->linkingPolicy !== null) {
                 $linkingPolicy = $instance->linkingPolicy instanceof RelationshipLinkingPolicy
                     ? $instance->linkingPolicy

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Cache;
+namespace AlexFigures\JsonApi\Http\Cache;
 
 use Symfony\Component\HttpFoundation\Request;
 
@@ -10,8 +10,9 @@ use Symfony\Component\HttpFoundation\Request;
  * @phpstan-type CacheKeyConfig array{
  *     etag?: array{include_query_shape?: bool}
  * }
+ * @internal
  */
-final class CacheKeyBuilder
+final readonly class CacheKeyBuilder
 {
     /**
      * @param CacheKeyConfig $config
@@ -27,17 +28,7 @@ final class CacheKeyBuilder
 
     public function build(Request $request): string
     {
-        $route = $request->attributes->get('_route');
-        $type = $request->attributes->get('type');
-        $id = $request->attributes->get('id');
-        $relationship = $request->attributes->get('relationship');
-
-        $parts = [
-            is_string($route) && $route !== '' ? $route : 'unknown',
-            is_string($type) ? $type : '',
-            is_scalar($id) ? (string) $id : '',
-            is_scalar($relationship) ? (string) $relationship : '',
-        ];
+        $parts = [$request->getPathInfo()];
 
         if ($this->includeQueryShape) {
             $parts[] = $this->normalizeQuery($request);

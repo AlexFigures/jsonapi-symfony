@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Errors;
+namespace AlexFigures\JsonApi\Tests\Functional\Errors;
 
-use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber\ContentNegotiationSubscriber;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicyProviderInterface;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;

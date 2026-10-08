@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Parser;
+namespace AlexFigures\JsonApi\Filter\Parser;
 
-use AlexFigures\Symfony\Filter\Ast\Between;
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Filter\Ast\Conjunction;
-use AlexFigures\Symfony\Filter\Ast\Disjunction;
-use AlexFigures\Symfony\Filter\Ast\Node;
-use AlexFigures\Symfony\Filter\Ast\NullCheck;
+use AlexFigures\JsonApi\Filter\Ast\Between;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\Conjunction;
+use AlexFigures\JsonApi\Filter\Ast\Disjunction;
+use AlexFigures\JsonApi\Filter\Ast\Node;
+use AlexFigures\JsonApi\Filter\Ast\NullCheck;
 
 /**
  * Heuristic filter parser responsible for turning query parameters into an AST.
@@ -17,9 +17,30 @@ use AlexFigures\Symfony\Filter\Ast\NullCheck;
  * A dedicated grammar will arrive alongside the full Stage 5 implementation.
  * Until then the parser recognises a pragmatic subset of the JSON:API filter
  * dialect so consumers can begin exercising the downstream components.
+ * @internal
  */
-final class FilterParser
+final readonly class FilterParser
 {
+    public function __construct(private int $maxDepth = 8, private ?\AlexFigures\JsonApi\Filter\Operator\Registry $operators = null)
+    {
+    }
+    /** Check logical depth before PHP's max_input_nesting_level can silently discard filter keys. */
+    public function validateQueryString(string $query): void
+    {
+        if ($this->maxDepth <= 0) {
+            return;
+        }
+        foreach (explode('&', $query) as $pair) {
+            $key = urldecode(explode('=', $pair, 2)[0]);
+            if (!str_starts_with($key, 'filter[')) {
+                continue;
+            }
+            if (preg_match_all('/\[(?:and|or)\]/', $key) >= $this->maxDepth) {
+                throw new \InvalidArgumentException('Maximum filter depth exceeded.');
+            }
+        }
+    }
+
     /**
      * @param array<array-key, mixed> $rawFilters
      */
@@ -31,15 +52,18 @@ final class FilterParser
     /**
      * @param array<array-key, mixed> $raw
      */
-    private function parseGroup(array $raw): ?Node
+    private function parseGroup(array $raw, int $depth = 0): ?Node
     {
+        if ($this->maxDepth > 0 && $depth >= $this->maxDepth) {
+            throw new \InvalidArgumentException('Maximum filter depth exceeded.');
+        }
         $nodes = [];
 
         foreach ($raw as $key => $value) {
             if ($key === 'and') {
-                $node = $this->parseLogicalGroup($value, true);
+                $node = $this->parseLogicalGroup($value, true, $depth + 1);
             } elseif ($key === 'or') {
-                $node = $this->parseLogicalGroup($value, false);
+                $node = $this->parseLogicalGroup($value, false, $depth + 1);
             } elseif (is_string($key)) {
                 $node = $this->parseFieldComparisons($key, $value);
             } else {
@@ -62,7 +86,7 @@ final class FilterParser
         return new Conjunction($nodes);
     }
 
-    private function parseLogicalGroup(mixed $raw, bool $isAnd): ?Node
+    private function parseLogicalGroup(mixed $raw, bool $isAnd, int $depth): ?Node
     {
         if (!is_array($raw)) {
             throw new \InvalidArgumentException(sprintf('Logical group must be an array, "%s" given.', get_debug_type($raw)));
@@ -79,7 +103,7 @@ final class FilterParser
                 throw new \InvalidArgumentException(sprintf('Logical group entry at index %s must be an array, "%s" given.', (string) $index, get_debug_type($childRaw)));
             }
 
-            $node = $this->parseGroup($childRaw);
+            $node = $this->parseGroup($childRaw, $depth);
 
             if ($node !== null) {
                 $children[] = $node;
@@ -136,20 +160,23 @@ final class FilterParser
         switch ($operator) {
             case 'eq':
             case 'ne':
+            case 'neq':
             case 'lt':
             case 'lte':
             case 'gt':
             case 'gte':
             case 'like':
             case 'ilike':
-                return [new Comparison($field, $operator, $this->normalizeValues($value))];
+                $values = $this->normalizeValues($value);
+                if (count($values) !== 1) {
+                    throw new \InvalidArgumentException('Comparison operators require exactly one operand.');
+                }
+                return [new Comparison($field, $operator === 'ne' ? 'neq' : $operator, $values)];
             case 'in':
             case 'nin':
-                $values = $this->normalizeValues($value);
+                $values = $value === '' ? [] : $this->normalizeValues($value);
 
-                if ($values === []) {
-                    return [];
-                }
+
 
                 return [new Comparison($field, $operator, $values)];
             case 'between':
@@ -158,22 +185,35 @@ final class FilterParser
                 }
 
                 if ($this->isAssoc($value)) {
-                    if (!array_key_exists('from', $value) || !array_key_exists('to', $value)) {
+                    if (count($value) !== 2 || !array_key_exists('from', $value) || !array_key_exists('to', $value)) {
                         throw new \InvalidArgumentException('The "between" operator expects "from" and "to" keys.');
                     }
 
+                    $this->normalizeValues(array_values($value));
                     return [new Between($field, $value['from'], $value['to'])];
                 }
 
                 $values = array_values($value);
 
-                if (count($values) < 2) {
+                if (count($values) !== 2) {
                     throw new \InvalidArgumentException('The "between" operator expects exactly two values.');
                 }
 
+                $this->normalizeValues($values);
                 return [new Between($field, $values[0], $values[1])];
+            case 'null':
+            case 'nnull':
             case 'isnull':
-                return [new NullCheck($field, $this->toBool($value))];
+                if (!is_scalar($value) || !in_array(strtolower((string) $value), ['true', 'false', '1', '0', 'yes', 'no', ''], true)) {
+                    throw new \InvalidArgumentException('isnull expects a boolean operand.');
+                }
+                return [new NullCheck($field, $operator === 'nnull' ? !$this->toBool($value) : $this->toBool($value))];
+        }
+
+        if ($this->operators?->has($operator)) {
+            $this->normalizeValues($value);
+            $values = $this->operators->get($operator)->normalizeValues($value);
+            return [new Comparison($field, $operator, $this->normalizeValues($values))];
         }
 
         throw new \InvalidArgumentException(sprintf('Unsupported operator "%s".', $operator));
@@ -188,7 +228,16 @@ final class FilterParser
             $raw = iterator_to_array($raw, false);
         }
 
-        return is_array($raw) ? array_values($raw) : [$raw];
+        if (is_array($raw) && !array_is_list($raw)) {
+            throw new \InvalidArgumentException('Filter operands must be scalars or lists of scalars.');
+        }
+        $values = is_array($raw) ? array_values($raw) : [$raw];
+        foreach ($values as $value) {
+            if (!is_scalar($value) && $value !== null) {
+                throw new \InvalidArgumentException('Filter operands must be scalar values.');
+            }
+        }
+        return $values;
     }
 
     private function toBool(mixed $value): bool

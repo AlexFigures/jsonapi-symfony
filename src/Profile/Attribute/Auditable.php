@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Attribute;
+namespace AlexFigures\JsonApi\Profile\Attribute;
 
 use Attribute;
 
@@ -12,10 +12,11 @@ use Attribute;
  * This attribute is required by the AuditTrailProfile to configure
  * which fields are used for tracking audit information.
  *
- * @see \AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile
+ * @see \AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile
+ * @api
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-final class Auditable
+final readonly class Auditable
 {
     /**
      * @param string      $createdAtField Field name for creation timestamp (default: 'createdAt')
@@ -24,10 +25,10 @@ final class Auditable
      * @param string|null $updatedByField Field name for user who updated (optional, default: null)
      */
     public function __construct(
-        public readonly string $createdAtField = 'createdAt',
-        public readonly string $updatedAtField = 'updatedAt',
-        public readonly ?string $createdByField = null,
-        public readonly ?string $updatedByField = null,
+        public string $createdAtField = 'createdAt',
+        public string $updatedAtField = 'updatedAt',
+        public ?string $createdByField = null,
+        public ?string $updatedByField = null,
     ) {
     }
 }

@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\JsonApi\Contract\Data;
 
 /**
  * Repository interface that supports specific resource types.
  *
  * Used by the tagging system to register per-type repositories.
+ * @api
  */
 interface TypedResourceRepository extends ResourceRepository
 {

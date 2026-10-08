@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Operator;
+namespace AlexFigures\JsonApi\Filter\Operator;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
@@ -18,7 +18,7 @@ use Doctrine\DBAL\Platforms\AbstractPlatform;
  * GET /api/products?filter[name][ilike]=laptop
  * ```
  *
- * @api This operator is part of the public API and follows semantic versioning.
+ * @internal This operator is part of the public API and follows semantic versioning.
  * @since 0.4.0
  */
 final class ILikeOperator extends AbstractOperator

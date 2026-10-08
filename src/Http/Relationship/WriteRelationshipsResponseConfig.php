@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Relationship;
+namespace AlexFigures\JsonApi\Http\Relationship;
 
 use InvalidArgumentException;
 
+/** @internal */
 final class WriteRelationshipsResponseConfig
 {
     /**

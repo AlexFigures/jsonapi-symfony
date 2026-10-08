@@ -2,24 +2,25 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Validation;
+namespace AlexFigures\JsonApi\Http\Validation;
 
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Error\ErrorObject;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Error\ErrorObject;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\Serializer\Exception\ExtraAttributesException;
 use Symfony\Component\Serializer\Exception\NotNormalizableValueException;
 use Symfony\Component\Serializer\Exception\PartialDenormalizationException;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
-final class ConstraintViolationMapper
+/** @internal */
+final readonly class ConstraintViolationMapper
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly ErrorMapper $errors,
+        private ResourceRegistryInterface $registry,
+        private ErrorMapper $errors,
     ) {
     }
 
@@ -79,7 +80,7 @@ final class ConstraintViolationMapper
             $errors[] = $this->errors->validationError(
                 '/data',
                 $exception->getMessage(),
-                ['exception' => get_class($exception)]
+                ['exception' => $exception::class]
             );
         }
 
@@ -97,7 +98,9 @@ final class ConstraintViolationMapper
         $errors = [];
 
         /** @var array<int|string, \Throwable> $rawErrors */
-        $rawErrors = $exception->getErrors();
+        $rawErrors = method_exists($exception, 'getNotNormalizableValueErrors') // @phpstan-ignore function.alreadyNarrowedType (Symfony 7.4 does not expose the replacement method.)
+            ? $exception->getNotNormalizableValueErrors()
+            : $exception->getErrors();
         foreach ($rawErrors as $path => $nestedException) {
             if ($nestedException instanceof NotNormalizableValueException) {
                 // Prefer the exception's own path over the array key
@@ -111,7 +114,7 @@ final class ConstraintViolationMapper
                 $errors[] = $this->errors->validationError(
                     $pointer,
                     $nestedException->getMessage(),
-                    array_merge($meta, ['exception' => get_class($nestedException)])
+                    array_merge($meta, ['exception' => $nestedException::class])
                 );
             }
         }
@@ -199,7 +202,7 @@ final class ConstraintViolationMapper
         foreach ($exception->getExtraAttributes() as $attribute) {
             // Skip numeric attributes - these are Symfony Serializer bug artifacts
             // when COLLECT_DENORMALIZATION_ERRORS is used with ALLOW_EXTRA_ATTRIBUTES = false
-            if (is_int($attribute)) {
+            if (is_int($attribute)) { // @phpstan-ignore function.impossibleType (Older Serializer versions can emit numeric artifacts.)
                 continue;
             }
 

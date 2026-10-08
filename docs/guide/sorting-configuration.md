@@ -1,267 +1,28 @@
-# Sorting Configuration
+# Sorting
 
-This guide explains how to configure which fields are allowed for sorting in JSON:API requests.
+Declare allowed fields with `SortableFields` / `SortableField`. `sort=title,-createdAt` requests ascending title then descending creation time, when both paths are allowed. Offset pagination uses `page[number]` and `page[size]` with configured default/maximum sizes.
 
-## Overview
+Native Doctrine collection pagination selects distinct roots before representation hydration. Tests must verify unique root count, total count and stable page boundaries when filtering/sorting through associations. Includes must not change the selected root page.
 
-The JSON:API specification allows clients to request sorted results using the `sort` query parameter:
+Sorting through a to-many association has no single natural value. A custom handler should define MIN, MAX or other aggregate semantics explicitly. `performance.doctrine.collection_sort_policy: reject` rejects unsupported collection traversal; `legacy` preserves existing behavior during stabilization. The candidate retains this default explicitly.
 
-```
-GET /api/articles?sort=-createdAt,title
-```
+Source: [sort declaration](../../src/Resource/Attribute/SortableFields.php), [sort handler contract](../../src/Filter/Handler/SortHandlerInterface.php).
 
-For security and performance reasons, you should explicitly whitelist which fields can be used for sorting. This prevents:
+Page parameters, defaults and links are described in [pagination](pagination.md).
 
-- **Information disclosure** through timing attacks
-- **Performance issues** from sorting on unindexed columns
-- **Exposure of internal field names** that shouldn't be public
-
-## Configuration Method
-
-Sortable fields are configured using PHP attributes directly on entity classes:
-
-Use the `#[SortableFields]` attribute on your entity class:
+## Stable page selection
 
 ```php
-<?php
+use AlexFigures\JsonApi\Resource\Attribute\SortableFields;
+use AlexFigures\JsonApi\Resource\Attribute\SortableField;
 
-namespace App\Entity;
-
-use AlexFigures\Symfony\Resource\Attribute\{JsonApiResource, Id, Attribute, SortableFields};
-
-#[JsonApiResource(type: 'articles')]
-#[SortableFields(['title', 'createdAt', 'updatedAt', 'viewCount'])]
-class Article
-{
-    #[Id]
-    #[Attribute]
-    public string $id;
-
-    #[Attribute]
-    public string $title;
-
-    #[Attribute(writable: false)]
-    public \DateTimeImmutable $createdAt;
-
-    #[Attribute(writable: false)]
-    public \DateTimeImmutable $updatedAt;
-
-    #[Attribute]
-    public int $viewCount;
-}
+#[SortableFields(['title', 'createdAt', new SortableField('author', inherit: true)])]
 ```
 
-**Benefits:**
-- ✅ Co-located with entity definition
-- ✅ Type-safe and IDE-friendly
-- ✅ No external configuration files needed
-- ✅ Easier to maintain and refactor
-- ✅ Follows modern PHP best practices
-
-## Example
-
-```php
-<?php
-
-namespace App\Entity;
-
-use AlexFigures\Symfony\Resource\Attribute\{JsonApiResource, SortableFields};
-
-#[JsonApiResource(type: 'categories')]
-#[SortableFields(['name', 'slug', 'sortOrder', 'createdAt', 'updatedAt', 'depth'])]
-class Category
-{
-    // ... entity properties
-}
-
-#[JsonApiResource(type: 'brands')]
-#[SortableFields(['name', 'isActive', 'createdAt', 'updatedAt'])]
-class Brand
-{
-    // ... entity properties
-}
-
-#[JsonApiResource(type: 'manufacturers')]
-#[SortableFields(['name', 'isActive', 'year', 'legalEntity', 'createdAt', 'updatedAt'])]
-class Manufacturer
-{
-    // ... entity properties
-}
+```text
+GET /api/articles?sort=title,-createdAt&page[number]=2&page[size]=20
 ```
 
-## Usage Examples
+The identifier is added as an ascending tie-breaker when not already explicitly sorted. Native root selection/counting handles duplicate joined rows before hydration. Null placement follows the database platform; cross-platform identical null ordering is not promised. Custom handlers must define any required null/aggregate ordering and preserve the root tie-breaker.
 
-### Basic Sorting
-
-```bash
-# Sort by title ascending
-GET /api/articles?sort=title
-
-# Sort by createdAt descending
-GET /api/articles?sort=-createdAt
-
-# Sort by multiple fields
-GET /api/articles?sort=-createdAt,title
-```
-
-### Error Handling
-
-If a client tries to sort by a field that's not in the whitelist:
-
-```bash
-GET /api/articles?sort=internalScore
-```
-
-Response:
-
-```json
-{
-  "errors": [
-    {
-      "status": "400",
-      "title": "Bad Request",
-      "detail": "Sort field 'internalScore' is not allowed for resource type 'articles'."
-    }
-  ]
-}
-```
-
-## Best Practices
-
-### 1. Only Whitelist Indexed Fields
-
-Only allow sorting on fields that have database indexes:
-
-```php
-#[SortableFields(['createdAt', 'updatedAt', 'status'])]  // ✅ All indexed
-```
-
-Avoid:
-
-```php
-#[SortableFields(['description', 'content'])]  // ❌ Large text fields, not indexed
-```
-
-### 2. Use Consistent Field Names
-
-Use the same field names as your JSON:API attributes:
-
-```php
-#[JsonApiResource(type: 'articles')]
-#[SortableFields(['createdAt', 'updatedAt'])]  // ✅ Matches attribute names
-class Article
-{
-    #[Attribute(name: 'createdAt')]
-    public \DateTimeImmutable $createdAt;
-}
-```
-
-### 3. Consider Common Use Cases
-
-Include fields that users commonly sort by:
-
-```php
-#[SortableFields([
-    'name',        // Alphabetical sorting
-    'createdAt',   // Chronological sorting
-    'updatedAt',   // Recently modified
-    'sortOrder',   // Custom ordering
-])]
-```
-
-### 4. Document Sortable Fields
-
-Add comments to explain why certain fields are sortable:
-
-```php
-#[JsonApiResource(type: 'products')]
-#[SortableFields([
-    'name',        // Alphabetical product listing
-    'price',       // Price comparison
-    'rating',      // Best-rated products
-    'createdAt',   // New arrivals
-])]
-class Product
-{
-    // ...
-}
-```
-
-## Security Considerations
-
-### Prevent Timing Attacks
-
-Never allow sorting on sensitive fields that could reveal information through timing:
-
-```php
-// ❌ BAD - Could reveal user existence through timing
-#[SortableFields(['email', 'username'])]
-
-// ✅ GOOD - Only allow sorting on non-sensitive fields
-#[SortableFields(['displayName', 'createdAt'])]
-```
-
-### Limit Sortable Fields
-
-Don't expose all fields for sorting. Only whitelist what's necessary:
-
-```php
-// ❌ BAD - Too permissive
-#[SortableFields(['id', 'name', 'email', 'password', 'apiKey', 'internalScore'])]
-
-// ✅ GOOD - Minimal and safe
-#[SortableFields(['name', 'createdAt'])]
-```
-
-## Troubleshooting
-
-### Sorting Not Working
-
-**Problem:** Sorting parameter is ignored or returns an error.
-
-**Solution:** Check that:
-1. The field is listed in `SortableFields` attribute
-2. The field name matches the JSON:API attribute name (not the PHP property name)
-3. The entity has the `#[JsonApiResource]` attribute
-
-### Performance Issues
-
-**Problem:** Sorting is slow.
-
-**Solution:**
-1. Ensure sorted fields have database indexes
-2. Remove large text fields from sortable fields
-3. Consider adding composite indexes for common sort combinations
-
-### Migration Issues
-
-**Problem:** After migrating from YAML to attributes, sorting stopped working.
-
-**Solution:**
-1. Verify the `SortableFields` attribute is present on the entity
-2. Check that field names match exactly (case-sensitive)
-3. Clear the Symfony cache: `php bin/console cache:clear`
-
-## API Reference
-
-### SortableFields Attribute
-
-**Namespace:** `AlexFigures\Symfony\Resource\Attribute\SortableFields`
-
-**Target:** Class
-
-**Parameters:**
-- `fields` (array): List of field names that can be used for sorting
-
-**Example:**
-
-```php
-#[SortableFields(['name', 'createdAt', 'updatedAt'])]
-```
-
-## See Also
-
-- [Resource Configuration](./resource-configuration.md)
-- [Query Parameters](./query-parameters.md)
-- [Security Best Practices](../security/best-practices.md)
-
+The 1.0 candidate deliberately retains `collection_sort_policy: legacy` rather than silently changing the default. Set `reject` in production and use an explicit correlated aggregate handler for a path such as attachments.name. [Read-path regressions](../../tests/Integration/ReadPath/DoctrineReadPathTestCase.php) contain a MIN example plus PostgreSQL/MySQL count and page-boundary checks. Cursor/keyset pagination is outside 1.0.

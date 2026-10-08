@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Attribute;
+namespace AlexFigures\JsonApi\Resource\Attribute;
 
 use Attribute as PhpAttribute;
 
@@ -42,13 +42,13 @@ use Attribute as PhpAttribute;
  * @since 0.1.0
  */
 #[PhpAttribute(PhpAttribute::TARGET_PROPERTY | PhpAttribute::TARGET_METHOD)]
-final class Attribute
+final readonly class Attribute
 {
     /**
      * @param string|null $name Attribute name in JSON:API document (defaults to property/method name)
      */
     public function __construct(
-        public readonly ?string $name = null,
+        public ?string $name = null,
     ) {
     }
 }

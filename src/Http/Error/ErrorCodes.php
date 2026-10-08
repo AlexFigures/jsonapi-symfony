@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
+/** @api */
 final class ErrorCodes
 {
     public const INVALID_JSON = 'invalid-json';
@@ -17,6 +18,7 @@ final class ErrorCodes
     public const TYPE_MISMATCH = 'type-mismatch';
     public const ID_MISMATCH = 'id-mismatch';
     public const CONFLICT = 'conflict';
+    public const UNSUPPORTED_TRANSACTION_BOUNDARY = 'unsupported-transaction-boundary';
     public const FORBIDDEN = 'forbidden';
     public const RESOURCE_NOT_FOUND = 'resource-not-found';
     public const METHOD_NOT_ALLOWED = 'method-not-allowed';
@@ -30,6 +32,8 @@ final class ErrorCodes
     public const PRECONDITION_FAILED = 'precondition-failed';
     public const PRECONDITION_REQUIRED = 'precondition-required';
     public const REQUEST_COMPLEXITY_EXCEEDED = 'request-complexity-exceeded';
+    public const COLLECTION_SORT_UNSUPPORTED = 'collection-sort-unsupported';
+    public const RELATIONSHIP_IDENTIFIERS_LIMIT = 'relationship-identifiers-limit';
     public const INCLUDED_RESOURCES_LIMIT = 'included-resources-limit';
     public const INTERNAL_SERVER_ERROR = 'internal-server-error';
 }

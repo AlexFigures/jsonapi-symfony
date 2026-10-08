@@ -2,29 +2,29 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\JsonApi\Tests\Fixtures\InMemory;
 
-use AlexFigures\Symfony\Contract\Data\RelationshipReader;
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Contract\Data\SliceIds;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Pagination;
-use AlexFigures\Symfony\Query\Sorting;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\RelationshipReader;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Contract\Data\SliceIds;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Pagination;
+use AlexFigures\JsonApi\Query\Sorting;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-final class InMemoryRelationshipReader implements RelationshipReader
+final readonly class InMemoryRelationshipReader implements RelationshipReader
 {
     private PropertyAccessorInterface $accessor;
 
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly InMemoryRepository $repository,
+        private ResourceRegistryInterface $registry,
+        private InMemoryRepository $repository,
         ?PropertyAccessorInterface $accessor = null,
     ) {
         $this->accessor = $accessor ?? PropertyAccess::createPropertyAccessor();

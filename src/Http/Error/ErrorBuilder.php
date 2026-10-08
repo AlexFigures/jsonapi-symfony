@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
-final class ErrorBuilder
+/** @api */
+final readonly class ErrorBuilder
 {
     public function __construct(
-        private readonly bool $useDefaultTitleMap,
+        private bool $useDefaultTitleMap,
     ) {
     }
 
@@ -22,6 +23,7 @@ final class ErrorBuilder
         ?ErrorSource $source = null,
         array $meta = [],
         ?string $aboutLink = null,
+        ?string $typeLink = null,
     ): ErrorObject {
         return new ErrorObject(
             id: null,
@@ -32,6 +34,7 @@ final class ErrorBuilder
             detail: $detail,
             source: $source,
             meta: $meta,
+            typeLink: $typeLink,
         );
     }
 
@@ -46,8 +49,9 @@ final class ErrorBuilder
         string $pointer,
         array $meta = [],
         ?string $aboutLink = null,
+        ?string $typeLink = null,
     ): ErrorObject {
-        return $this->create($status, $code, $title, $detail, new ErrorSource(pointer: $pointer), $meta, $aboutLink);
+        return $this->create($status, $code, $title, $detail, new ErrorSource(pointer: $pointer), $meta, $aboutLink, $typeLink);
     }
 
     /**
@@ -61,8 +65,9 @@ final class ErrorBuilder
         string $parameter,
         array $meta = [],
         ?string $aboutLink = null,
+        ?string $typeLink = null,
     ): ErrorObject {
-        return $this->create($status, $code, $title, $detail, new ErrorSource(parameter: $parameter), $meta, $aboutLink);
+        return $this->create($status, $code, $title, $detail, new ErrorSource(parameter: $parameter), $meta, $aboutLink, $typeLink);
     }
 
     /**
@@ -76,8 +81,9 @@ final class ErrorBuilder
         string $header,
         array $meta = [],
         ?string $aboutLink = null,
+        ?string $typeLink = null,
     ): ErrorObject {
-        return $this->create($status, $code, $title, $detail, new ErrorSource(header: $header), $meta, $aboutLink);
+        return $this->create($status, $code, $title, $detail, new ErrorSource(header: $header), $meta, $aboutLink, $typeLink);
     }
 
     private function resolveTitle(?string $title, string $code): ?string

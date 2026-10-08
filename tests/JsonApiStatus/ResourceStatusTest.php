@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\JsonApiStatus;
+namespace AlexFigures\JsonApi\Tests\JsonApiStatus;
 
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Uid\Uuid;
 

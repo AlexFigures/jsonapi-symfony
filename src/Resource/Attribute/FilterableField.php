@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Attribute;
+namespace AlexFigures\JsonApi\Resource\Attribute;
 
 /**
  * Defines configuration for a single filterable field.
@@ -67,17 +67,17 @@ namespace AlexFigures\Symfony\Resource\Attribute;
  * @api This class is part of the public API and follows semantic versioning.
  * @since 0.1.0
  */
-final class FilterableField
+final readonly class FilterableField
 {
     /**
      * @var list<string>
      */
-    public readonly array $operators;
+    public array $operators;
 
     /**
      * @var list<string>
      */
-    public readonly array $except;
+    public array $except;
 
     /**
      * @param string             $field         Field name that can be filtered
@@ -87,13 +87,13 @@ final class FilterableField
      * @param array<int, string> $except        List of fields to exclude from inheritance
      */
     public function __construct(
-        public readonly string $field,
+        public string $field,
         array $operators = [
             'eq', 'ne', 'gt', 'gte', 'lt', 'lte',
             'like', 'ilike', 'in', 'nin', 'null', 'nnull'
         ],
-        public readonly ?string $customHandler = null,
-        public readonly bool $inherit = false,
+        public ?string $customHandler = null,
+        public bool $inherit = false,
         array $except = [],
     ) {
         $this->operators = array_values($operators);
@@ -105,7 +105,8 @@ final class FilterableField
      */
     public function isOperatorAllowed(string $operator): bool
     {
-        return in_array($operator, $this->operators, true);
+        $aliases = ['neq' => 'ne', 'ne' => 'neq', 'isnull' => 'null'];
+        return in_array($operator, $this->operators, true) || (isset($aliases[$operator]) && in_array($aliases[$operator], $this->operators, true));
     }
 
     /**

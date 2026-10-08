@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Profile;
+namespace AlexFigures\JsonApi\Tests\Integration\Profile;
 
-use AlexFigures\Symfony\Profile\Attribute\Auditable;
-use AlexFigures\Symfony\Profile\Attribute\SoftDeletable;
-use AlexFigures\Symfony\Profile\AttributeReader;
-use AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile;
-use AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile;
-use AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile;
-use AlexFigures\Symfony\Profile\Validation\ProfileValidator;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\AuditableProduct;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SoftDeletableArticle;
+use AlexFigures\JsonApi\Profile\Attribute\Auditable;
+use AlexFigures\JsonApi\Profile\Attribute\SoftDeletable;
+use AlexFigures\JsonApi\Profile\AttributeReader;
+use AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile;
+use AlexFigures\JsonApi\Profile\Builtin\RelationshipCountsProfile;
+use AlexFigures\JsonApi\Profile\Builtin\SoftDeleteProfile;
+use AlexFigures\JsonApi\Profile\Validation\ProfileValidator;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\AuditableProduct;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\SoftDeletableArticle;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 /**

@@ -2,21 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\JsonApi\Contract\Data;
 
-use AlexFigures\Symfony\Http\Exception\ConflictException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Exception\ConflictException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
 
 /**
  * Processes JSON:API resource write operations.
  *
- * This interface replaces the deprecated ResourcePersister interface.
- * The key difference is that ResourceProcessor implementations do NOT
- * call flush() - flushing is handled by WriteListener after controller execution.
- *
- * This allows Doctrine's CommitOrderCalculator to properly order entity
- * insertions based on foreign key dependencies, solving issues with
- * hierarchical entities (tree structures, parent-child relationships).
+ * The built-in Doctrine adapter schedules flushes for transaction orchestration.
+ * Custom providers own their persistence and transaction semantics.
+ * ResourcePersister and TypedResourcePersister remain supported write contracts,
+ * adapted to the processor dispatch path.
  *
  * Implement this interface to integrate with your data layer (Doctrine ORM, MongoDB, etc.)
  * for handling write operations (POST, PATCH, DELETE).
@@ -61,7 +58,8 @@ interface ResourceProcessor
      * 4. Schedule flush via FlushManager::scheduleFlush() with the entity class
      * 5. Return the created entity
      *
-     * Do NOT call EntityManager::flush() - this is handled by WriteListener.
+     * For the built-in Doctrine adapter, schedule flushes for transaction orchestration.
+     * Custom providers own their persistence/flush semantics and must honor their transaction contract.
      *
      * @param  string            $type     Resource type (e.g., 'articles')
      * @param  ChangeSet         $changes  Attribute and relationship changes to apply
@@ -80,7 +78,8 @@ interface ResourceProcessor
      * 3. Schedule flush via FlushManager::scheduleFlush() with the entity class
      * 4. Return the updated entity
      *
-     * Do NOT call EntityManager::flush() - this is handled by WriteListener.
+     * For the built-in Doctrine adapter, schedule flushes for transaction orchestration.
+     * Custom providers own their persistence/flush semantics and must honor their transaction contract.
      *
      * @param  string            $type    Resource type (e.g., 'articles')
      * @param  string            $id      Resource identifier
@@ -98,7 +97,8 @@ interface ResourceProcessor
      * 2. Call EntityManager::remove()
      * 3. Schedule flush via FlushManager::scheduleFlush() with the entity class
      *
-     * Do NOT call EntityManager::flush() - this is handled by WriteListener.
+     * For the built-in Doctrine adapter, schedule flushes for transaction orchestration.
+     * Custom providers own their persistence/flush semantics and must honor their transaction contract.
      *
      * @param  string            $type Resource type (e.g., 'articles')
      * @param  string            $id   Resource identifier

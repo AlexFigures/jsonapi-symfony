@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Instantiator;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Instantiator;
 
-use AlexFigures\Symfony\Bridge\Symfony\Serializer\TypeCoercingDenormalizer;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Bridge\Symfony\Serializer\TypeCoercingDenormalizer;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use ReflectionClass;
@@ -15,7 +15,7 @@ use RuntimeException;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
-use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
@@ -51,14 +51,16 @@ use Symfony\Component\Serializer\SerializerInterface;
  * 2. Calls Serializer::denormalize() to create the object
  * 3. Lets the serializer invoke the constructor with arguments
  * 4. Applies remaining properties through setters/property access
+ * @internal
  */
-final class SerializerEntityInstantiator
+final readonly class SerializerEntityInstantiator
 {
-    private readonly Serializer $serializer;
+    private Serializer $serializer;
 
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly PropertyAccessorInterface $accessor,
+        private ManagerRegistry $managerRegistry,
+        private PropertyAccessorInterface $accessor,
+        ?\Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactoryInterface $metadataFactory = null,
     ) {
         // Create a PropertyInfoExtractor to resolve types
         // Rely only on ReflectionExtractor (no phpdocumentor/reflection-docblock required)
@@ -73,7 +75,7 @@ final class SerializerEntityInstantiator
         );
 
         // Create ClassMetadataFactory for strict attribute validation
-        $classMetadataFactory = new ClassMetadataFactory(new AttributeLoader());
+        $classMetadataFactory = $metadataFactory ?? new ClassMetadataFactory(new AttributeLoader());
 
         // Build an ObjectNormalizer with constructor support
         $normalizer = new ObjectNormalizer(
@@ -251,7 +253,7 @@ final class SerializerEntityInstantiator
     private function findAttributeMetadata(
         ResourceMetadata $metadata,
         string $path
-    ): ?\AlexFigures\Symfony\Resource\Metadata\AttributeMetadata {
+    ): ?\AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata {
         foreach ($metadata->attributes as $attribute) {
             if ($attribute->propertyPath === $path || $attribute->name === $path) {
                 return $attribute;

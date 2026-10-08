@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\JsonApi\Contract\Data;
 
 /**
  * Checks if a JSON:API resource exists without loading it.

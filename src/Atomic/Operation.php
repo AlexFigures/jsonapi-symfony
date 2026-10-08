@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic;
+namespace AlexFigures\JsonApi\Atomic;
 
 /**
  * @internal
  */
-final class Operation
+final readonly class Operation
 {
     /**
      * @param array<string, mixed> $meta
      */
     public function __construct(
-        public readonly string $op,
-        public readonly ?Ref $ref,
-        public readonly ?string $href,
-        public readonly mixed $data,
-        public readonly array $meta,
-        public readonly string $pointer,
+        public string $op,
+        public ?Ref $ref,
+        public ?string $href,
+        public mixed $data,
+        public array $meta,
+        public string $pointer,
     ) {
     }
 

@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Validation;
+namespace AlexFigures\JsonApi\Profile\Validation;
 
 /**
  * Result of profile validation.
  *
  * Contains all errors and warnings found during validation.
  * Validation is considered successful if there are no errors (warnings are acceptable).
+ * @internal
  */
 final class ValidationResult
 {

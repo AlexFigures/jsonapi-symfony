@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\JsonApi\Tests\Fixtures\InMemory;
 
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\JsonApi\Contract\Tx\TransactionManager;
 
 final class InMemoryTransactionManager implements TransactionManager
 {

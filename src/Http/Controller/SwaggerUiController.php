@@ -2,20 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(path: '/_jsonapi/docs', name: 'jsonapi.docs.ui', methods: ['GET'])]
-final class SwaggerUiController
+/** @internal */
+final readonly class SwaggerUiController
 {
     /**
      * @param array{enabled?: bool, route: string, spec_url: string, theme: string} $config
      */
     public function __construct(
-        private readonly array $config,
+        private array $config,
     ) {
     }
 

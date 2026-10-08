@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Docs\OpenApi;
+namespace AlexFigures\JsonApi\Docs\OpenApi;
 
-use AlexFigures\Symfony\Docs\Attribute\OpenApiEndpoint;
+use AlexFigures\JsonApi\Docs\Attribute\OpenApiEndpoint;
 
 /**
  * Metadata for a custom endpoint to be included in OpenAPI spec.
  *
  * @internal
  */
-final class CustomEndpointMetadata
+final readonly class CustomEndpointMetadata
 {
     /**
      * @param string          $path    Route path
@@ -19,9 +19,9 @@ final class CustomEndpointMetadata
      * @param OpenApiEndpoint $openApi OpenAPI metadata
      */
     public function __construct(
-        public readonly string $path,
-        public readonly string $method,
-        public readonly OpenApiEndpoint $openApi,
+        public string $path,
+        public string $method,
+        public OpenApiEndpoint $openApi,
     ) {
     }
 }

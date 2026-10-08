@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Write;
+namespace AlexFigures\JsonApi\Http\Write;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 
-final class ChangeSetFactory
+/** @internal */
+final readonly class ChangeSetFactory
 {
-    public function __construct(private readonly ResourceRegistryInterface $registry)
+    public function __construct(private ResourceRegistryInterface $registry)
     {
     }
 
@@ -34,7 +35,7 @@ final class ChangeSetFactory
 
         foreach ($attributes as $name => $value) {
             if (!isset($metadata->attributes[$name])) {
-                throw new BadRequestException(sprintf('Unknown attribute "%s" for type "%s".', $name, $type));
+                throw new BadRequestException(sprintf('Unknown attribute "%s" for type "%s".', $name, $type), [new \AlexFigures\JsonApi\Http\Error\ErrorObject(null, null, '400', 'unknown-attribute', 'Unknown Attribute', 'Unknown attribute.', new \AlexFigures\JsonApi\Http\Error\ErrorSource(pointer: '/data/attributes/' . $name))]);
             }
 
             /** @var AttributeMetadata $attribute */
@@ -46,24 +47,4 @@ final class ChangeSetFactory
         return new ChangeSet($mappedAttributes, $relationships);
     }
 
-    /**
-     * Creates a ChangeSet from attributes only (legacy method).
-     *
-     * @deprecated Use fromInput() instead to populate both attributes and relationships.
-     *             This method will be removed in version 2.0.
-     *
-     * @param  string               $type       Resource type
-     * @param  array<string, mixed> $attributes Attribute name => value map
-     * @return ChangeSet
-     * @throws BadRequestException  If unknown attributes are provided
-     */
-    public function fromAttributes(string $type, array $attributes): ChangeSet
-    {
-        trigger_error(
-            'ChangeSetFactory::fromAttributes() is deprecated. Use fromInput() instead to populate both attributes and relationships.',
-            \E_USER_DEPRECATED
-        );
-
-        return $this->fromInput($type, $attributes, []);
-    }
 }

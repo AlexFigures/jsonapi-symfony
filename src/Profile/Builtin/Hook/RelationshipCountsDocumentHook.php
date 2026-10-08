@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin\Hook;
+namespace AlexFigures\JsonApi\Profile\Builtin\Hook;
 
-use AlexFigures\Symfony\Profile\Hook\DocumentHook;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Profile\Hook\DocumentHook;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -37,13 +37,15 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
  * }
  *
  * @phpstan-type RelationshipCountsConfig array{
+ *     relationship_meta_key?: string, compute_in_related_endpoints?: bool,
  *     includeRelationships?: list<string>,
  *     excludeRelationships?: list<string>,
  *     propertyAccessor?: PropertyAccessorInterface,
  *     ...
  * }
+ * @internal
  */
-final readonly class RelationshipCountsDocumentHook implements DocumentHook
+final readonly class RelationshipCountsDocumentHook implements DocumentHook, \AlexFigures\JsonApi\Profile\Hook\ContextualFetchPlanHookInterface
 {
     private PropertyAccessorInterface $propertyAccessor;
 
@@ -54,6 +56,24 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook
         private array $config = []
     ) {
         $this->propertyAccessor = $config['propertyAccessor'] ?? PropertyAccess::createPropertyAccessor();
+    }
+
+    public function relationshipCounts(ResourceMetadata $metadata): array
+    {
+        $names = [];
+        foreach ($metadata->relationships as $name => $relationship) {
+            if ($relationship->toMany
+                && (!isset($this->config['includeRelationships']) || in_array($name, $this->config['includeRelationships'], true))
+                && !in_array($name, $this->config['excludeRelationships'] ?? [], true)) {
+                $names[] = $name;
+            }
+        }
+        return $names;
+    }
+
+    public function relationshipCountsForContext(ResourceMetadata $metadata, ProfileContext $context): array
+    {
+        return $context->relatedEndpoint && !($this->config['compute_in_related_endpoints'] ?? true) ? [] : $this->relationshipCounts($metadata);
     }
 
     public function onTopLevelLinks(ProfileContext $context, array &$links, Request $request): void
@@ -67,6 +87,10 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook
         array &$relationshipsPayload,
         object $model
     ): void {
+        if ($context->relatedEndpoint && !($this->config['compute_in_related_endpoints'] ?? true)) {
+            return;
+        }
+        $key = $this->config['relationship_meta_key'] ?? 'count';
         $includeList = $this->config['includeRelationships'] ?? null;
         $excludeList = $this->config['excludeRelationships'] ?? [];
 
@@ -78,6 +102,15 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook
 
             // Skip if in exclude list
             if (in_array($relationshipName, $excludeList, true)) {
+                continue;
+            }
+
+            $identifier = $context->relationshipReads === null ? null : $this->propertyAccessor->getValue($model, $metadata->idPropertyPath ?? 'id');
+            $id = is_scalar($identifier) || $identifier instanceof \Stringable ? (string) $identifier : '';
+            $count = $context->relationshipReads?->count($metadata->type, $id, $relationshipName);
+            if ($count !== null) {
+                $existing = $relationshipData['meta'] ?? [];
+                $relationshipData['meta'] = array_merge(is_array($existing) ? $existing : [], [$key => $count]);
                 continue;
             }
 
@@ -99,7 +132,7 @@ final readonly class RelationshipCountsDocumentHook implements DocumentHook
                     }
                     $relationshipData['meta'] = array_merge(
                         $existingMeta,
-                        ['count' => $value->count()]
+                        [$key => $value->count()]
                     );
                 }
             } catch (\Throwable) {

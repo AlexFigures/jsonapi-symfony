@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Ast;
+namespace AlexFigures\JsonApi\Filter\Ast;
 
 /**
  * Represents an AND node combining child filters.
+ * @api
  */
-final class Conjunction implements Node
+final readonly class Conjunction implements Node
 {
     /**
      * @param list<Node> $children
      */
     public function __construct(
-        public readonly array $children,
+        public array $children,
     ) {
     }
 }

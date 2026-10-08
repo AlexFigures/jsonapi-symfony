@@ -2,29 +2,53 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin\Hook;
+namespace AlexFigures\JsonApi\Profile\Builtin\Hook;
 
-use AlexFigures\Symfony\Profile\Hook\DocumentHook;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Profile\Hook\DocumentHook;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use Symfony\Component\HttpFoundation\Request;
 
-/**
- * Document hook for audit trail profile.
- *
- * Adds audit trail metadata to resource documents.
- *
- * Usage:
- * - Adds createdAt, createdBy, updatedAt, updatedBy to resource meta
- * - Only includes fields that exist on the entity
- * - Formats timestamps as ISO 8601
- *
- * Note: Currently this hook is a placeholder. Audit trail metadata
- * should be exposed through resource attributes or meta in the serialization layer.
- * This hook can be extended to add top-level meta information about audit trail.
+/** Adds configured, readable audit fields without loading relationships.
+ * @internal
  */
-final readonly class AuditTrailDocumentHook implements DocumentHook
+final readonly class AuditTrailDocumentHook implements DocumentHook, \AlexFigures\JsonApi\Profile\Hook\ResourceMetaHookInterface
 {
+    /** @param array<string, mixed> $config */
+    public function __construct(private array $config = [])
+    {
+    }
+
+    public function onResourceMeta(ProfileContext $context, ResourceMetadata $metadata, array &$meta, object $model): void
+    {
+        if (!($this->config['expose_in_meta'] ?? true)) {
+            return;
+        }
+        $attribute = $context->attributeReader()->getAttribute($metadata->dataClass, \AlexFigures\JsonApi\Profile\Attribute\Auditable::class);
+        $fields = [
+            'createdAt' => $attribute->createdAtField ?? $this->config['created_at'] ?? $this->config['createdAtField'] ?? 'createdAt',
+            'updatedAt' => $attribute->updatedAtField ?? $this->config['updated_at'] ?? $this->config['updatedAtField'] ?? 'updatedAt',
+            'createdBy' => $attribute->createdByField ?? $this->config['created_by'] ?? $this->config['createdByField'] ?? 'createdBy',
+            'updatedBy' => $attribute->updatedByField ?? $this->config['updated_by'] ?? $this->config['updatedByField'] ?? 'updatedBy',
+        ];
+        $accessor = \Symfony\Component\PropertyAccess\PropertyAccess::createPropertyAccessor();
+        $audit = [];
+        foreach ($fields as $name => $field) {
+            if (!is_string($field) || !$accessor->isReadable($model, $field)) {
+                continue;
+            }
+            $value = $accessor->getValue($model, $field);
+            if ($value instanceof \DateTimeInterface) {
+                $audit[$name] = $value->format(\DateTimeInterface::ATOM);
+            } elseif ($value === null || is_scalar($value)) {
+                $audit[$name] = $value;
+            }
+        }
+        if ($audit !== []) {
+            $meta['audit'] = $audit;
+        }
+    }
+
     public function onTopLevelLinks(ProfileContext $context, array &$links, Request $request): void
     {
         // No top-level links modifications needed

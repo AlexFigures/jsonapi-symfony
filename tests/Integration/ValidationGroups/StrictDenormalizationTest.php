@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\ValidationGroups;
+namespace AlexFigures\JsonApi\Tests\Integration\ValidationGroups;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
 
 /**
  * Tests for strict denormalization mode (ALLOW_EXTRA_ATTRIBUTES=false).
@@ -14,10 +14,10 @@ use AlexFigures\Symfony\Http\Exception\ValidationException;
  * - ALLOW_EXTRA_ATTRIBUTES = false (reject unknown attributes)
  * - COLLECT_DENORMALIZATION_ERRORS = true (collect all errors)
  *
- * @group integration
- * @group validation-groups
- * @group strict-denormalization
  */
+#[\PHPUnit\Framework\Attributes\Group('integration')]
+#[\PHPUnit\Framework\Attributes\Group('validation-groups')]
+#[\PHPUnit\Framework\Attributes\Group('strict-denormalization')]
 final class StrictDenormalizationTest extends ValidationGroupsIntegrationTestCase
 {
     public function testStrictModeRejectsExtraAttributes(): void

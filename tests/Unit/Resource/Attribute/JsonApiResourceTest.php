@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Resource\Attribute;
+namespace AlexFigures\JsonApi\Tests\Unit\Resource\Attribute;
 
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
 use PHPUnit\Framework\TestCase;
 
 final class JsonApiResourceTest extends TestCase

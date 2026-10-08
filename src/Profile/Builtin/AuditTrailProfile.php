@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin;
+namespace AlexFigures\JsonApi\Profile\Builtin;
 
-use AlexFigures\Symfony\Profile\Attribute\Auditable;
-use AlexFigures\Symfony\Profile\Builtin\Hook\AuditTrailDocumentHook;
-use AlexFigures\Symfony\Profile\Builtin\Hook\AuditTrailWriteHook;
-use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\Validation\FieldRequirement;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Profile\Attribute\Auditable;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\AuditTrailDocumentHook;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\AuditTrailWriteHook;
+use AlexFigures\JsonApi\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\Validation\FieldRequirement;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
 
 /**
  * Audit Trail Profile.
@@ -24,12 +24,14 @@ use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
  *
  * @phpstan-type AuditTrailConfig array{
  *     documentation?: string,
+ *     created_at?: string, updated_at?: string, created_by?: string|null, updated_by?: string|null, expose_in_meta?: bool,
  *     createdAtField?: string,
  *     createdByField?: string,
  *     updatedAtField?: string,
  *     updatedByField?: string,
  *     userProvider?: callable(): ?string
  * }
+ * @api
  */
 final class AuditTrailProfile implements ProfileInterface
 {
@@ -38,8 +40,28 @@ final class AuditTrailProfile implements ProfileInterface
     /**
      * @param AuditTrailConfig $config
      */
-    public function __construct(private readonly array $config = [])
+    public function __construct(private array $config = [], private ?\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry = null)
     {
+    }
+
+    /** @internal
+     * @param AuditTrailConfig $config Bundle settings; explicit service settings take precedence.
+     */
+    public function configure(array $config): void
+    {
+        $own = $this->config;
+        foreach (['createdAtField' => 'created_at', 'updatedAtField' => 'updated_at', 'createdByField' => 'created_by', 'updatedByField' => 'updated_by'] as $legacy => $canonical) {
+            if (isset($own[$legacy]) && !array_key_exists($canonical, $own)) {
+                $own[$canonical] = $own[$legacy];
+            }
+        }
+        $this->config = array_replace($config, $own);
+    }
+
+    /** @internal Inject the registry also for profiles with application constructor configuration. */
+    public function setResourceRegistry(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry): void
+    {
+        $this->registry = $registry;
     }
 
     public function uri(): string
@@ -61,8 +83,8 @@ final class AuditTrailProfile implements ProfileInterface
 
     public function hooks(): iterable
     {
-        yield new AuditTrailWriteHook($this->config);
-        yield new AuditTrailDocumentHook();
+        yield new AuditTrailWriteHook($this->config, $this->registry);
+        yield new AuditTrailDocumentHook($this->config);
     }
 
     public function requirements(): ProfileRequirements

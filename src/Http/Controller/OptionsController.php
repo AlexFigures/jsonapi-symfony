@@ -2,22 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Handles OPTIONS requests for JSON:API resources.
  *
  * Returns allowed HTTP methods based on the resource's allowed operations.
+ * @internal
  */
-final class OptionsController
+final readonly class OptionsController
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
+        private ResourceRegistryInterface $registry,
+        private bool $headEnabled = true,
     ) {
     }
 
@@ -40,7 +42,7 @@ final class OptionsController
 
         // Always include OPTIONS itself
         $allowedMethods[] = 'OPTIONS';
-        $allowedMethods = array_values(array_unique($allowedMethods));
+        $allowedMethods = array_values(array_unique($this->filterMethods($allowedMethods)));
         sort($allowedMethods);
 
         return new Response(
@@ -70,7 +72,7 @@ final class OptionsController
 
         // Always include OPTIONS itself
         $allowedMethods[] = 'OPTIONS';
-        $allowedMethods = array_values(array_unique($allowedMethods));
+        $allowedMethods = array_values(array_unique($this->filterMethods($allowedMethods)));
         sort($allowedMethods);
 
         return new Response(
@@ -98,7 +100,7 @@ final class OptionsController
 
         // Always include OPTIONS itself
         $allowedMethods[] = 'OPTIONS';
-        $allowedMethods = array_values(array_unique($allowedMethods));
+        $allowedMethods = array_values(array_unique($this->filterMethods($allowedMethods)));
         sort($allowedMethods);
 
         return new Response(
@@ -114,7 +116,7 @@ final class OptionsController
      * Returns allowed methods for /api/{type}/{id}/relationships/{rel}.
      * GET/HEAD requires SHOW operation, write methods require UPDATE operation.
      */
-    public function relationship(string $type): Response
+    public function relationship(string $type, ?string $rel = null): Response
     {
         if (!$this->registry->hasType($type)) {
             throw new NotFoundException(sprintf('Resource type "%s" not found.', $type));
@@ -130,12 +132,16 @@ final class OptionsController
 
         // UPDATE operation allows PATCH, POST, DELETE
         if ($this->hasOperation(ResourceOperation::UPDATE, $metadata->allowedOperations)) {
-            $allowedMethods = array_merge($allowedMethods, ['PATCH', 'POST', 'DELETE']);
+            if ($rel !== null && !isset($metadata->relationships[$rel])) {
+                throw new NotFoundException('Relationship not found.');
+            }
+            $toMany = $rel === null || $metadata->relationships[$rel]->toMany;
+            $allowedMethods = array_merge($allowedMethods, $toMany ? ['PATCH', 'POST', 'DELETE'] : ['PATCH']);
         }
 
         // Always include OPTIONS itself
         $allowedMethods[] = 'OPTIONS';
-        $allowedMethods = array_values(array_unique($allowedMethods));
+        $allowedMethods = array_values(array_unique($this->filterMethods($allowedMethods)));
         sort($allowedMethods);
 
         return new Response(
@@ -163,7 +169,7 @@ final class OptionsController
             }
         }
 
-        return array_values(array_unique($methods));
+        return array_values(array_unique($this->filterMethods($methods)));
     }
 
     /**
@@ -181,4 +187,12 @@ final class OptionsController
 
         return false;
     }
+    /** @param list<string> $methods
+     * @return list<string>
+     */
+    private function filterMethods(array $methods): array
+    {
+        return $this->headEnabled ? $methods : array_values(array_diff($methods, ['HEAD']));
+    }
+
 }

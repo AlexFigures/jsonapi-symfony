@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\JsonApi\Contract\Data;
 
 /**
  * RelationshipReader interface that supports specific resource types.
  *
+ * @api
  * Used by the tagging system to register per-type readers.
  */
 interface TypedRelationshipReader extends RelationshipReader

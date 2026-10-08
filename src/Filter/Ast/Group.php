@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Ast;
+namespace AlexFigures\JsonApi\Filter\Ast;
 
 /**
  * Represents a grouped sub-expression, preserving explicit parentheses.
+ * @api
  */
-final class Group implements Node
+final readonly class Group implements Node
 {
     public function __construct(
-        public readonly Node $expression,
+        public Node $expression,
     ) {
     }
 }

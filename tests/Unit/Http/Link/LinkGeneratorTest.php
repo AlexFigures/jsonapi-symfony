@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Http\Link;
+namespace AlexFigures\JsonApi\Tests\Unit\Http\Link;
 
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Query\Pagination;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -180,5 +180,17 @@ final class LinkGeneratorTest extends TestCase
         $pagination = new Pagination(number: 1, size: 10);
 
         $linkGenerator->collectionPagination('articles', $pagination, 10, $request);
+    }    public function testRelatedPaginationRetainsMembershipAndClientQuery(): void
+    {
+        $generator = $this->createMock(UrlGeneratorInterface::class);
+        $generator->expects(self::never())->method('generate');
+        $request = Request::create('https://example.test/api/authors/one/articles?filter[title]=visible&page[size]=5');
+        $request->attributes->set('_jsonapi_relationship_collection', true);
+        $links = (new LinkGenerator($generator))->collectionPagination('articles', new Pagination(1, 5), 12, $request);
+        self::assertStringStartsWith('https://example.test/api/authors/one/articles?', $links['next']);
+        parse_str((string) parse_url($links['next'], \PHP_URL_QUERY), $query);
+        self::assertSame('visible', $query['filter']['title']);
+        self::assertSame('2', $query['page']['number']);
     }
+
 }

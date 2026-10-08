@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Mapper;
+namespace AlexFigures\JsonApi\Resource\Mapper;
 
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Definition\ResourceDefinition;
 use ReflectionClass;
 use RuntimeException;
 
+/** @internal */
 final class DefaultReadMapper implements ReadMapperInterface
 {
     public function toView(mixed $row, ResourceDefinition $definition, Criteria $criteria): object

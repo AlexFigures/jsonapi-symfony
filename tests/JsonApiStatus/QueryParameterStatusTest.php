@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\JsonApiStatus;
+namespace AlexFigures\JsonApi\Tests\JsonApiStatus;
 
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
 

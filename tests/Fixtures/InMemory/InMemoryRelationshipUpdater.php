@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\JsonApi\Tests\Fixtures\InMemory;
 
-use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\RelationshipUpdater;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use ReflectionClass;
 use ReflectionException;
 use Stringable;
 
-final class InMemoryRelationshipUpdater implements RelationshipUpdater
+final readonly class InMemoryRelationshipUpdater implements RelationshipUpdater
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly InMemoryRepository $repository,
+        private ResourceRegistryInterface $registry,
+        private InMemoryRepository $repository,
     ) {
     }
 
@@ -202,7 +202,6 @@ final class InMemoryRelationshipUpdater implements RelationshipUpdater
             $reflection = new ReflectionClass($model);
             if ($reflection->hasProperty($property)) {
                 $prop = $reflection->getProperty($property);
-                $prop->setAccessible(true);
                 $prop->setValue($model, $value);
 
                 return;

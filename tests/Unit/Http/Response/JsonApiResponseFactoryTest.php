@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Http\Response;
+namespace AlexFigures\JsonApi\Tests\Unit\Http\Response;
 
-use AlexFigures\Symfony\Http\Response\JsonApiErrorBuilder;
-use AlexFigures\Symfony\Http\Response\JsonApiResponseBuilder;
-use AlexFigures\Symfony\Http\Response\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Response\JsonApiErrorBuilder;
+use AlexFigures\JsonApi\Http\Response\JsonApiResponseBuilder;
+use AlexFigures\JsonApi\Http\Response\JsonApiResponseFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\Response;
  * Note: This test only verifies the factory methods return correct builder types.
  * Full integration tests with DocumentBuilder are in tests/Integration/.
  *
- * @covers \AlexFigures\Symfony\Http\Response\JsonApiResponseFactory
  */
 #[CoversClass(JsonApiResponseFactory::class)]
 final class JsonApiResponseFactoryTest extends TestCase

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\JsonApi\Contract\Data;
 
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Pagination;
 
 /**
  * Reads relationship data and related resources.

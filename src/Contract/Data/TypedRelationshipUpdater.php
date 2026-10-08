@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\JsonApi\Contract\Data;
 
 /**
  * Interface for RelationshipUpdater that supports specific resource types.
  *
+ * @api
  * Used in the tag system for registering per-type updaters.
  */
 interface TypedRelationshipUpdater extends RelationshipUpdater

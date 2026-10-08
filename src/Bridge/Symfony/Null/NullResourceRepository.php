@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Null;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Null;
 
-use AlexFigures\Symfony\Contract\Data\ResourceRepository;
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Http\Exception\NotImplementedException;
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Contract\Data\ResourceRepository;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Http\Exception\NotImplementedException;
+use AlexFigures\JsonApi\Query\Criteria;
 
 /**
  * Null Object implementation of ResourceRepository.
@@ -16,6 +16,7 @@ use AlexFigures\Symfony\Query\Criteria;
  * has not provided their own implementation.
  *
  * Throws NotImplementedException for all methods.
+ * @internal
  */
 final class NullResourceRepository implements ResourceRepository
 {

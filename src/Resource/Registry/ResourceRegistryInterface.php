@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Registry;
+namespace AlexFigures\JsonApi\Resource\Registry;
 
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 
+/** @api */
 interface ResourceRegistryInterface
 {
     public function getByType(string $type): ResourceMetadata;

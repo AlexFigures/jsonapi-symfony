@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Bridge\Symfony\Negotiation;
+namespace AlexFigures\JsonApi\Tests\Unit\Bridge\Symfony\Negotiation;
 
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 

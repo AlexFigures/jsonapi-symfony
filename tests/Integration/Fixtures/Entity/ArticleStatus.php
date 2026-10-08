@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity;
 
 enum ArticleStatus: string
 {

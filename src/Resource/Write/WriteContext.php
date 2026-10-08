@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Write;
+namespace AlexFigures\JsonApi\Resource\Write;
 
-final class WriteContext
+/** @api */
+final readonly class WriteContext
 {
     /**
      * @param array<string, mixed> $options
      */
     public function __construct(
-        public readonly ?object $user = null,
-        public readonly array $options = [],
+        public ?object $user = null,
+        public array $options = [],
     ) {
     }
 }

@@ -1,0 +1,1206 @@
+{
+  "schema_version": 1,
+  "status": "1.0 candidate freeze",
+  "symbols": {
+    "src/Atomic/AtomicConfig.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Execution/AtomicResourceTypes.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Execution/AtomicTransaction.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Execution/Handlers/AddHandler.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Execution/Handlers/RelationshipOps.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Execution/Handlers/RemoveHandler.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Execution/Handlers/UpdateHandler.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Execution/OperationDispatcher.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Execution/OperationOutcome.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Lid/LidRegistry.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Operation.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Parser/AtomicRequestParser.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Ref.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Result/ResultBuilder.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Atomic/Validation/AtomicValidator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Concurrency/DoctrineWriteConcurrencyGuard.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/DQL/ILikeFunction.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/ExistenceChecker/DoctrineExistenceChecker.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Flush/FlushManager.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Identifier/DoctrineIdentifierMetadataValidator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Identifier/IdentifierConverter.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Identifier/IdentifierParameters.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Instantiator/SerializerEntityInstantiator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Persister/DoctrineWriteRequestMapper.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Persister/GenericDoctrineProcessor.php": {
+      "classification": "PUBLIC",
+      "rationale": "Existing documented Doctrine subclass extension; provider-owned validation."
+    },
+    "src/Bridge/Doctrine/Persister/ValidatingDoctrineProcessor.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Profile/ProfileWriteHooks.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Query/DoctrineCollectionQueryProviderInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Opt-in complete scoped Doctrine query projection; never unwrap decorators."
+    },
+    "src/Bridge/Doctrine/Query/DoctrineReadProjection.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Query/DoctrineRootPaginator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Query/DqlRewriter.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Read/DoctrineRepresentationPreloader.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Relationship/DoctrineRelationshipQueryFactory.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Relationship/GenericDoctrineRelationshipHandler.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Relationship/RelationshipNullability.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Repository/GenericDoctrineRepository.php": {
+      "classification": "PUBLIC",
+      "rationale": "Existing documented subclass extension; composition preferred for new policies."
+    },
+    "src/Bridge/Doctrine/Transaction/DoctrineTransactionBoundaryResolver.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Doctrine/Transaction/DoctrineTransactionManager.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Serializer/Normalizer/JsonApiRelationshipDenormalizer.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/JsonApiBundle.php": {
+      "classification": "PUBLIC",
+      "rationale": "Existing consumer entry point retained deliberately; no unnecessary namespace move."
+    },
+    "src/Bridge/Symfony/Command/ValidateProfilesCommand.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Controller/AtomicController.php": {
+      "classification": "PUBLIC",
+      "rationale": "Supported route controller callable: applications explicitly bind the Atomic endpoint. Constructor is internal container wiring."
+    },
+    "src/Bridge/Symfony/DependencyInjection/Compiler/CustomRouteHandlerPass.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/DependencyInjection/Compiler/RegisterDqlFunctionsPass.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/DependencyInjection/Compiler/ResourceDiscoveryPass.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/DependencyInjection/Compiler/ValidateProfilesPass.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/DependencyInjection/Configuration.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/DependencyInjection/JsonApiExtension.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/EventListener/WriteListener.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/EventSubscriber/CachePreconditionsSubscriber.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/EventSubscriber/ContentNegotiationSubscriber.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/EventSubscriber/MediaChannelSubscriber.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/EventSubscriber/ProfileNegotiationSubscriber.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Locator/RelationshipReaderLocator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Locator/RelationshipUpdaterLocator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Locator/ResourcePersisterLocator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Locator/ResourceProcessorLocator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Locator/ResourceRepositoryLocator.php": {
+      "classification": "PUBLIC",
+      "rationale": "Public authoritative getRepositoryForType capability; other locator internals not extension points."
+    },
+    "src/Bridge/Symfony/Negotiation/ChannelScopeMatcher.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Negotiation/ConfigMediaTypePolicyProvider.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Null/NullExistenceChecker.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Null/NullRelationshipReader.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Null/NullRelationshipUpdater.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Null/NullResourceProcessor.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Null/NullResourceRepository.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Routing/Attribute/MediaChannel.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application media-channel declaration."
+    },
+    "src/Bridge/Symfony/Routing/JsonApiRouteLoader.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Bridge/Symfony/Serializer/TypeCoercingDenormalizer.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Contract/Data/ChangeSet.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/ExistenceChecker.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/RelationshipBatchReaderInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/RelationshipReader.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/RelationshipUpdater.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/RepresentationPreloaderInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/ResourceIdentifier.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/ResourcePersister.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/ResourceProcessor.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/ResourceRepository.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/Slice.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/SliceIds.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/TypedRelationshipReader.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/TypedRelationshipUpdater.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/TypedResourcePersister.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/TypedResourceRepository.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Data/WriteConcurrencyGuardInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider extension or value in provider signatures; optional capabilities preserve base interfaces."
+    },
+    "src/Contract/Resource/ResourceMetadataInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Resource type identity contract; complete metadata remains concrete."
+    },
+    "src/Contract/Tx/NullTransactionManager.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Contract/Tx/ResourceWriteTransactionManagerInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Base and optional transactional provider capabilities; topology is provider-owned."
+    },
+    "src/Contract/Tx/ScopedTransactionManagerInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Base and optional transactional provider capabilities; topology is provider-owned."
+    },
+    "src/Contract/Tx/TransactionManager.php": {
+      "classification": "PUBLIC",
+      "rationale": "Base and optional transactional provider capabilities; topology is provider-owned."
+    },
+    "src/CustomRoute/Attribute/NoTransaction.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application custom-route transaction declaration."
+    },
+    "src/CustomRoute/Context/CustomRouteContext.php": {
+      "classification": "PUBLIC",
+      "rationale": "Context required by application custom handlers."
+    },
+    "src/CustomRoute/Context/CustomRouteContextFactory.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/CustomRoute/Controller/CustomRouteController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/CustomRoute/Controller/HandlerReturnedErrorException.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/CustomRoute/Handler/CustomRouteHandlerInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application endpoint handler."
+    },
+    "src/CustomRoute/Handler/CustomRouteHandlerRegistry.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/CustomRoute/Query/CriteriaBuilder.php": {
+      "classification": "PUBLIC",
+      "rationale": "Fluent query value exposed by CustomRouteContext."
+    },
+    "src/CustomRoute/Response/CustomRouteResponseBuilder.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/CustomRoute/Result/CustomRouteResult.php": {
+      "classification": "PUBLIC",
+      "rationale": "Handler result contract."
+    },
+    "src/Docs/Attribute/OpenApiEndpoint.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application OpenAPI declarations."
+    },
+    "src/Docs/Attribute/OpenApiExample.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application OpenAPI declarations."
+    },
+    "src/Docs/Attribute/OpenApiHeader.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application OpenAPI declarations."
+    },
+    "src/Docs/Attribute/OpenApiParameter.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application OpenAPI declarations."
+    },
+    "src/Docs/Attribute/OpenApiRequestBody.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application OpenAPI declarations."
+    },
+    "src/Docs/Attribute/OpenApiResponse.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application OpenAPI declarations."
+    },
+    "src/Docs/OpenApi/CustomEndpointCollector.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Docs/OpenApi/CustomEndpointMetadata.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Docs/OpenApi/OpenApiSpecGenerator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Events/RelationshipChangedEvent.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application post-success notifications; event data and dispatch timing stable."
+    },
+    "src/Events/ResourceChangedEvent.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application post-success notifications; event data and dispatch timing stable."
+    },
+    "src/Filter/Ast/Between.php": {
+      "classification": "PUBLIC",
+      "rationale": "Public immutable filter values transitively required by Criteria; compiler remains internal."
+    },
+    "src/Filter/Ast/Comparison.php": {
+      "classification": "PUBLIC",
+      "rationale": "Public immutable filter values transitively required by Criteria; compiler remains internal."
+    },
+    "src/Filter/Ast/Conjunction.php": {
+      "classification": "PUBLIC",
+      "rationale": "Public immutable filter values transitively required by Criteria; compiler remains internal."
+    },
+    "src/Filter/Ast/Disjunction.php": {
+      "classification": "PUBLIC",
+      "rationale": "Public immutable filter values transitively required by Criteria; compiler remains internal."
+    },
+    "src/Filter/Ast/Group.php": {
+      "classification": "PUBLIC",
+      "rationale": "Public immutable filter values transitively required by Criteria; compiler remains internal."
+    },
+    "src/Filter/Ast/Node.php": {
+      "classification": "PUBLIC",
+      "rationale": "Public immutable filter values transitively required by Criteria; compiler remains internal."
+    },
+    "src/Filter/Ast/NullCheck.php": {
+      "classification": "PUBLIC",
+      "rationale": "Public immutable filter values transitively required by Criteria; compiler remains internal."
+    },
+    "src/Filter/Compiler/Doctrine/DoctrineFilterCompiler.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Compiler/Doctrine/JoinManager.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Family/Family.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Family/SearchFamily.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Handler/FilterHandlerInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application filter/sort handlers; Doctrine builder semantics intentionally adapter-specific."
+    },
+    "src/Filter/Handler/Registry/FilterHandlerRegistry.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Handler/Registry/SortHandlerRegistry.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Handler/SortHandlerInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application filter/sort handlers; Doctrine builder semantics intentionally adapter-specific."
+    },
+    "src/Filter/Operator/AbstractOperator.php": {
+      "classification": "PUBLIC",
+      "rationale": "Custom operator API and compiled expression value; built-in compiler/registry are internal."
+    },
+    "src/Filter/Operator/BetweenOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/DoctrineExpression.php": {
+      "classification": "PUBLIC",
+      "rationale": "Custom operator API and compiled expression value; built-in compiler/registry are internal."
+    },
+    "src/Filter/Operator/EqualOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/GreaterOrEqualOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/GreaterThanOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/ILikeOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/InOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/IsNullOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/LessOrEqualOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/LessThanOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/LikeOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/NotEqualOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/NotInOperator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Operator/Operator.php": {
+      "classification": "PUBLIC",
+      "rationale": "Custom operator API and compiled expression value; built-in compiler/registry are internal."
+    },
+    "src/Filter/Operator/Registry.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Parser/FieldPath.php": {
+      "classification": "PUBLIC",
+      "rationale": "Path value in AST signatures; not the parser/compiler."
+    },
+    "src/Filter/Parser/FilterParser.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Validation/FilterComplexity.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Validation/FilterComplexityAnalyzer.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Validation/FilterLimits.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Filter/Validation/FilterWhitelist.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Authorization/RelationshipAccessChecker.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Authorization/RelationshipAuthorizerInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Opt-in application standalone endpoint policy."
+    },
+    "src/Http/Authorization/RelationshipOperation.php": {
+      "classification": "PUBLIC",
+      "rationale": "Opt-in application standalone endpoint policy."
+    },
+    "src/Http/Cache/CacheKeyBuilder.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Cache/ConditionalRequestEvaluator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Cache/EtagGeneratorInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application representation validator strategy."
+    },
+    "src/Http/Cache/HashEtagGenerator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Cache/HeadersApplier.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Cache/LastModifiedResolver.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Cache/SurrogateKeyBuilder.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Cache/VersionEtagGenerator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/CollectionController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/CreateResourceController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/DeleteResourceController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/JsonSchemaController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/OpenApiController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/OptionsController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/RelatedController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/RelationshipGetController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/RelationshipWriteController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/ResourceController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/Support/JsonApiResponseFactory.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/Support/OperationValidator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/Support/RepresentationResponse.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/Support/RequestDecoder.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/SwaggerUiController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Controller/UpdateResourceController.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Document/DocumentBuilder.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Document/Fetch/RelationshipFetch.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Document/Fetch/RepresentationFetchPlanner.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Error/AtomicErrorRebaser.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Error/CorrelationIdProvider.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Error/ErrorBuilder.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application error construction and stable error code vocabulary; mapping/listener remain internal."
+    },
+    "src/Http/Error/ErrorCodes.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application error construction and stable error code vocabulary; mapping/listener remain internal."
+    },
+    "src/Http/Error/ErrorMapper.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Error/ErrorObject.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application error construction and stable error code vocabulary; mapping/listener remain internal."
+    },
+    "src/Http/Error/ErrorSource.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application error construction and stable error code vocabulary; mapping/listener remain internal."
+    },
+    "src/Http/Error/ErrorTitles.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Error/JsonApiExceptionListener.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Exception/BadRequestException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/ConflictException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/ForbiddenException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/JsonApiHttpException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/MethodNotAllowedException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/MultiErrorException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/NotAcceptableException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/NotFoundException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/NotImplementedException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/PreconditionFailedException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/PreconditionRequiredException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/UnprocessableEntityException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/UnsupportedMediaTypeException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/UnsupportedTransactionBoundaryException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Exception/ValidationException.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application throwable/error contract; detail prose is not byte-stable."
+    },
+    "src/Http/Link/LinkGenerator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Negotiation/MediaType.php": {
+      "classification": "PUBLIC",
+      "rationale": "HTTP policy strategy and values."
+    },
+    "src/Http/Negotiation/MediaTypeNegotiator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Negotiation/MediaTypePolicy.php": {
+      "classification": "PUBLIC",
+      "rationale": "HTTP policy strategy and values."
+    },
+    "src/Http/Negotiation/MediaTypePolicyProviderInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "HTTP policy strategy and values."
+    },
+    "src/Http/Negotiation/ParsedMediaType.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Relationship/LinkageBuilder.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Relationship/WriteRelationshipsResponseConfig.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Request/FilteringWhitelist.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Request/PaginationConfig.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Request/QueryParser.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Request/SortingWhitelist.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Response/JsonApiErrorBuilder.php": {
+      "classification": "PUBLIC",
+      "rationale": "Custom controller response facade; implementation dependencies are internal."
+    },
+    "src/Http/Response/JsonApiResponseBuilder.php": {
+      "classification": "PUBLIC",
+      "rationale": "Custom controller response facade; implementation dependencies are internal."
+    },
+    "src/Http/Response/JsonApiResponseFactory.php": {
+      "classification": "PUBLIC",
+      "rationale": "Custom controller response facade; implementation dependencies are internal."
+    },
+    "src/Http/Safety/LimitsEnforcer.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Safety/RequestComplexityScorer.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Validation/ConstraintViolationMapper.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Validation/DatabaseErrorMapper.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Write/ChangeSetFactory.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Write/InputDocumentValidator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Write/JsonDocument.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Write/RelationshipDocumentValidator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Write/RelationshipIdentifierValidator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Http/Write/WriteConfig.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Invalidation/InvalidationDispatcher.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Invalidation/NullPurger.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Invalidation/SurrogatePurgerInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application cache invalidation integration."
+    },
+    "src/Profile/Attribute/Auditable.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application profile declarations."
+    },
+    "src/Profile/Attribute/SoftDeletable.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application profile declarations."
+    },
+    "src/Profile/AttributeReader.php": {
+      "classification": "PUBLIC",
+      "rationale": "Service-owned profile activation and hook context; AttributeReader is transitive context support."
+    },
+    "src/Profile/Builtin/AuditTrailProfile.php": {
+      "classification": "PUBLIC",
+      "rationale": "Configurable built-in profile services; application constructor DI supported."
+    },
+    "src/Profile/Builtin/Hook/AuditTrailDocumentHook.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Profile/Builtin/Hook/AuditTrailWriteHook.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Profile/Builtin/Hook/RelationshipCountsDocumentHook.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Profile/Builtin/Hook/SoftDeleteDocumentHook.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Profile/Builtin/Hook/SoftDeleteQueryHook.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Profile/Builtin/Hook/SoftDeleteWriteHook.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Profile/Builtin/RelationshipCountsProfile.php": {
+      "classification": "PUBLIC",
+      "rationale": "Configurable built-in profile services; application constructor DI supported."
+    },
+    "src/Profile/Builtin/SoftDeleteProfile.php": {
+      "classification": "PUBLIC",
+      "rationale": "Configurable built-in profile services; application constructor DI supported."
+    },
+    "src/Profile/Descriptor/ProfileDescriptor.php": {
+      "classification": "PUBLIC",
+      "rationale": "Value required by ProfileInterface."
+    },
+    "src/Profile/Hook/ContextualFetchPlanHookInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Optional independently implemented hook capabilities; no required-method additions in 1.x."
+    },
+    "src/Profile/Hook/DocumentHook.php": {
+      "classification": "PUBLIC",
+      "rationale": "Optional independently implemented hook capabilities; no required-method additions in 1.x."
+    },
+    "src/Profile/Hook/FetchPlanHookInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Optional independently implemented hook capabilities; no required-method additions in 1.x."
+    },
+    "src/Profile/Hook/FilterParameterProviderInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Optional independently implemented hook capabilities; no required-method additions in 1.x."
+    },
+    "src/Profile/Hook/QueryHook.php": {
+      "classification": "PUBLIC",
+      "rationale": "Optional independently implemented hook capabilities; no required-method additions in 1.x."
+    },
+    "src/Profile/Hook/ReadHook.php": {
+      "classification": "PUBLIC",
+      "rationale": "Optional independently implemented hook capabilities; no required-method additions in 1.x."
+    },
+    "src/Profile/Hook/RelationshipFetchRequirementsHookInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Optional independently implemented hook capabilities; no required-method additions in 1.x."
+    },
+    "src/Profile/Hook/RelationshipHook.php": {
+      "classification": "PUBLIC",
+      "rationale": "Optional independently implemented hook capabilities; no required-method additions in 1.x."
+    },
+    "src/Profile/Hook/ResourceMetaHookInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Optional independently implemented hook capabilities; no required-method additions in 1.x."
+    },
+    "src/Profile/Hook/WriteHook.php": {
+      "classification": "PUBLIC",
+      "rationale": "Optional independently implemented hook capabilities; no required-method additions in 1.x."
+    },
+    "src/Profile/Negotiation/ProfileNegotiator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Profile/ProfileContext.php": {
+      "classification": "PUBLIC",
+      "rationale": "Service-owned profile activation and hook context; AttributeReader is transitive context support."
+    },
+    "src/Profile/ProfileInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Service-owned profile activation and hook context; AttributeReader is transitive context support."
+    },
+    "src/Profile/ProfileRegistry.php": {
+      "classification": "PUBLIC",
+      "rationale": "Service-owned profile activation and hook context; AttributeReader is transitive context support."
+    },
+    "src/Profile/Validation/FieldRequirement.php": {
+      "classification": "PUBLIC",
+      "rationale": "Public compile-time requirements declaration values."
+    },
+    "src/Profile/Validation/ProfileRequirements.php": {
+      "classification": "PUBLIC",
+      "rationale": "Public compile-time requirements declaration values."
+    },
+    "src/Profile/Validation/ProfileValidator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Profile/Validation/ReflectionProfileValidator.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Profile/Validation/ValidationError.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Profile/Validation/ValidationResult.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Query/Criteria.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider query values; Doctrine conditions are an explicit adapter capability."
+    },
+    "src/Query/Fetch/RelationshipReadMap.php": {
+      "classification": "PUBLIC",
+      "rationale": "Bounded preloader/batch reader signatures."
+    },
+    "src/Query/Fetch/RelationshipReadRequirements.php": {
+      "classification": "PUBLIC",
+      "rationale": "Bounded preloader/batch reader signatures."
+    },
+    "src/Query/Pagination.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider query values; Doctrine conditions are an explicit adapter capability."
+    },
+    "src/Query/Sorting.php": {
+      "classification": "PUBLIC",
+      "rationale": "Provider query values; Doctrine conditions are an explicit adapter capability."
+    },
+    "src/Resource/Attribute/Attribute.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application declaration; constructor names/defaults are contractual."
+    },
+    "src/Resource/Attribute/FilterableField.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application declaration; constructor names/defaults are contractual."
+    },
+    "src/Resource/Attribute/FilterableFields.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application declaration; constructor names/defaults are contractual."
+    },
+    "src/Resource/Attribute/Id.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application declaration; constructor names/defaults are contractual."
+    },
+    "src/Resource/Attribute/JsonApiCustomRoute.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application declaration; constructor names/defaults are contractual."
+    },
+    "src/Resource/Attribute/JsonApiResource.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application declaration; constructor names/defaults are contractual."
+    },
+    "src/Resource/Attribute/Relationship.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application declaration; constructor names/defaults are contractual."
+    },
+    "src/Resource/Attribute/SortableField.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application declaration; constructor names/defaults are contractual."
+    },
+    "src/Resource/Attribute/SortableFields.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application declaration; constructor names/defaults are contractual."
+    },
+    "src/Resource/Definition/ReadProjection.php": {
+      "classification": "PUBLIC",
+      "rationale": "Resource declaration and version selection signatures."
+    },
+    "src/Resource/Definition/ResourceDefinition.php": {
+      "classification": "PUBLIC",
+      "rationale": "Resource declaration and version selection signatures."
+    },
+    "src/Resource/Definition/ResourceOperation.php": {
+      "classification": "PUBLIC",
+      "rationale": "Resource declaration and version selection signatures."
+    },
+    "src/Resource/Definition/VersionDefinition.php": {
+      "classification": "PUBLIC",
+      "rationale": "Resource declaration and version selection signatures."
+    },
+    "src/Resource/Definition/VersionResolverInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Resource declaration and version selection signatures."
+    },
+    "src/Resource/Mapper/DefaultReadMapper.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Resource/Mapper/DefaultWriteMapper.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Resource/Mapper/ReadMapperInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application read/write mapper contracts."
+    },
+    "src/Resource/Mapper/WriteMapperInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Application read/write mapper contracts."
+    },
+    "src/Resource/Metadata/AttributeMetadata.php": {
+      "classification": "PUBLIC",
+      "rationale": "Values/enums required by resource, registry and handler signatures."
+    },
+    "src/Resource/Metadata/CustomRouteMetadata.php": {
+      "classification": "PUBLIC",
+      "rationale": "Values/enums required by resource, registry and handler signatures."
+    },
+    "src/Resource/Metadata/RelationshipLinkingPolicy.php": {
+      "classification": "PUBLIC",
+      "rationale": "Values/enums required by resource, registry and handler signatures."
+    },
+    "src/Resource/Metadata/RelationshipMetadata.php": {
+      "classification": "PUBLIC",
+      "rationale": "Values/enums required by resource, registry and handler signatures."
+    },
+    "src/Resource/Metadata/RelationshipSemantics.php": {
+      "classification": "PUBLIC",
+      "rationale": "Values/enums required by resource, registry and handler signatures."
+    },
+    "src/Resource/Metadata/ResourceMetadata.php": {
+      "classification": "PUBLIC",
+      "rationale": "Values/enums required by resource, registry and handler signatures."
+    },
+    "src/Resource/Metadata/ResourceMetadataValidatorInterface.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Resource/Registry/CustomRouteRegistry.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Resource/Registry/CustomRouteRegistryInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Configurable registry extension contract; lookup ambiguity documented."
+    },
+    "src/Resource/Registry/ResourceRegistry.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Resource/Registry/ResourceRegistryInterface.php": {
+      "classification": "PUBLIC",
+      "rationale": "Configurable registry extension contract; lookup ambiguity documented."
+    },
+    "src/Resource/Relationship/RelationshipResolver.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    },
+    "src/Resource/Write/WriteContext.php": {
+      "classification": "PUBLIC",
+      "rationale": "Value in public mapper signatures."
+    },
+    "src/Tx/TransactionScope.php": {
+      "classification": "INTERNAL",
+      "rationale": "Implementation orchestration, adapter/compiler/helper; extend the classified interface instead."
+    }
+  }
+}

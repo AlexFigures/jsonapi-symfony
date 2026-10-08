@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Docs\Attribute;
+namespace AlexFigures\JsonApi\Docs\Attribute;
 
 use Attribute;
 
@@ -13,7 +13,7 @@ use Attribute;
  * @since 1.0.0
  */
 #[Attribute]
-final class OpenApiResponse
+final readonly class OpenApiResponse
 {
     /**
      * @param string                            $description Description of the response
@@ -23,11 +23,11 @@ final class OpenApiResponse
      * @param array<string, OpenApiHeader>|null $headers     Response headers
      */
     public function __construct(
-        public readonly string $description,
-        public readonly ?string $contentType = null,
-        public readonly ?array $schema = null,
-        public readonly ?string $schemaRef = null,
-        public readonly ?array $headers = null,
+        public string $description,
+        public ?string $contentType = null,
+        public ?array $schema = null,
+        public ?string $schemaRef = null,
+        public ?array $headers = null,
     ) {
         if ($schema !== null && $schemaRef !== null) {
             throw new \InvalidArgumentException('Cannot specify both schema and schemaRef');

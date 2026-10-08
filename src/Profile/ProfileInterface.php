@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile;
+namespace AlexFigures\JsonApi\Profile;
 
-use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
 
+/** @api */
 interface ProfileInterface
 {
     /**

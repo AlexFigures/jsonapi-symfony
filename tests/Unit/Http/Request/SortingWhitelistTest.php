@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Http\Request;
+namespace AlexFigures\JsonApi\Tests\Unit\Http\Request;
 
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 
 final class SortingWhitelistTest extends TestCase
@@ -26,10 +26,10 @@ final class SortingWhitelistTest extends TestCase
 
     public function testAllowedForReturnsFieldsFromAttribute(): void
     {
-        $sortableFields = new \AlexFigures\Symfony\Resource\Attribute\SortableFields(['title', 'createdAt', 'updatedAt', 'viewCount']);
+        $sortableFields = new \AlexFigures\JsonApi\Resource\Attribute\SortableFields(['title', 'createdAt', 'updatedAt', 'viewCount']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             sortableFields: $sortableFields,
@@ -49,10 +49,10 @@ final class SortingWhitelistTest extends TestCase
 
     public function testAllowedForReturnsEmptyWhenAttributeIsEmpty(): void
     {
-        $sortableFields = new \AlexFigures\Symfony\Resource\Attribute\SortableFields([]);
+        $sortableFields = new \AlexFigures\JsonApi\Resource\Attribute\SortableFields([]);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             sortableFields: $sortableFields,
@@ -71,10 +71,10 @@ final class SortingWhitelistTest extends TestCase
     {
         $articlesMetadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
-            sortableFields: new \AlexFigures\Symfony\Resource\Attribute\SortableFields(['title', 'createdAt']),
+            sortableFields: new \AlexFigures\JsonApi\Resource\Attribute\SortableFields(['title', 'createdAt']),
         );
 
         $authorsMetadata = new ResourceMetadata(
@@ -82,7 +82,7 @@ final class SortingWhitelistTest extends TestCase
             class: AuthorFixture::class,
             attributes: [],
             relationships: [],
-            sortableFields: new \AlexFigures\Symfony\Resource\Attribute\SortableFields(['name', 'email']),
+            sortableFields: new \AlexFigures\JsonApi\Resource\Attribute\SortableFields(['name', 'email']),
         );
 
         $registry = $this->createMock(ResourceRegistryInterface::class);
@@ -105,10 +105,10 @@ final class SortingWhitelistTest extends TestCase
 
     public function testIsFieldAllowedForDirectField(): void
     {
-        $sortableFields = new \AlexFigures\Symfony\Resource\Attribute\SortableFields(['title', 'createdAt']);
+        $sortableFields = new \AlexFigures\JsonApi\Resource\Attribute\SortableFields(['title', 'createdAt']);
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             sortableFields: $sortableFields,
@@ -139,7 +139,7 @@ final class SortingWhitelistTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [],
             sortableFields: null,

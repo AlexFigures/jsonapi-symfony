@@ -2,26 +2,27 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Locator;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Locator;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Contract\Data\ResourcePersister;
-use AlexFigures\Symfony\Contract\Data\TypedResourcePersister;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Contract\Data\ResourcePersister;
+use AlexFigures\JsonApi\Contract\Data\TypedResourcePersister;
 
 /**
  * Locator for finding suitable Persister by resource type.
  *
  * Collects all registered persisters via tagged_iterator
  * and selects the appropriate one based on the supports() method.
+ * @internal
  */
-final class ResourcePersisterLocator implements ResourcePersister
+final readonly class ResourcePersisterLocator implements ResourcePersister
 {
     /**
      * @param iterable<ResourcePersister> $persisters
      */
     public function __construct(
-        private readonly iterable $persisters,
-        private readonly ResourcePersister $fallbackPersister,
+        private iterable $persisters,
+        private ResourcePersister $fallbackPersister,
     ) {
     }
 

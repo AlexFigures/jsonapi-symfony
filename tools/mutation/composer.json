@@ -1,0 +1,14 @@
+{
+  "name": "alexfigures/jsonapi-mutation-tools",
+  "description": "Isolated development tooling; not bundle runtime requirements",
+  "license": "MIT",
+  "require": {
+    "php": "^8.4",
+    "infection/infection": "^0.29"
+  },
+  "config": {
+    "allow-plugins": {
+      "infection/extension-installer": true
+    }
+  }
+}

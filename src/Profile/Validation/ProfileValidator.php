@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Validation;
+namespace AlexFigures\JsonApi\Profile\Validation;
 
-use AlexFigures\Symfony\Profile\AttributeReader;
-use AlexFigures\Symfony\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\AttributeReader;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 
@@ -17,12 +17,13 @@ use Doctrine\ORM\Mapping\ClassMetadata;
  * - Required fields exist in entity metadata
  * - Field types match requirements
  * - Nullable constraints are satisfied
+ * @internal
  */
-final class ProfileValidator
+final readonly class ProfileValidator
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly AttributeReader $attributeReader,
+        private EntityManagerInterface $entityManager,
+        private AttributeReader $attributeReader,
     ) {
     }
 

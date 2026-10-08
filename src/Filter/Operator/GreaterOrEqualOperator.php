@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Operator;
+namespace AlexFigures\JsonApi\Filter\Operator;
 
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
+/** @internal */
 final class GreaterOrEqualOperator extends AbstractOperator
 {
     public function name(): string

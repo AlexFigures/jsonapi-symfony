@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\JsonApi\Tests\Fixtures\InMemory;
 
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 /**
  * In-memory implementation of relationship resolver for functional tests.
  */
-final class InMemoryRelationshipResolver
+final readonly class InMemoryRelationshipResolver
 {
     private PropertyAccessorInterface $accessor;
 
     public function __construct(
-        private readonly InMemoryRepository $repository,
-        private readonly ResourceRegistryInterface $registry,
+        private InMemoryRepository $repository,
+        private ResourceRegistryInterface $registry,
         ?PropertyAccessorInterface $accessor = null,
     ) {
         $this->accessor = $accessor ?? PropertyAccess::createPropertyAccessor();

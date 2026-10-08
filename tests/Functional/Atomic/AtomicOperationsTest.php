@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Atomic;
+namespace AlexFigures\JsonApi\Tests\Functional\Atomic;
 
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 
 final class AtomicOperationsTest extends JsonApiTestCase

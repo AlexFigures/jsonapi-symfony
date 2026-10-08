@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\JsonApi\Tests\Fixtures\InMemory;
 
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Contract\Data\ResourceRepository;
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Sorting;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Tag;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Contract\Data\ResourceRepository;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Sorting;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Article;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Author;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Tag;
 use DateInterval;
 use DateTimeImmutable;
 use ReflectionClass;
@@ -25,7 +25,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
 final class InMemoryRepository implements ResourceRepository
 {
-    private PropertyAccessorInterface $accessor;
+    private readonly PropertyAccessorInterface $accessor;
 
     /**
      * @var array<string, array<int, object>>

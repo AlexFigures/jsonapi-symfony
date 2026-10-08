@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller\Support;
+namespace AlexFigures\JsonApi\Http\Controller\Support;
 
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -18,11 +18,13 @@ use Symfony\Component\HttpFoundation\Request;
  * - Content-Type validation (must be application/vnd.api+json)
  * - JSON parsing and validation
  * - Request body structure validation
+ * @internal
  */
-final class RequestDecoder
+final readonly class RequestDecoder
 {
     public function __construct(
-        private readonly ErrorMapper $errors,
+        private ErrorMapper $errors,
+        private ?\AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicyProviderInterface $policyProvider = null,
     ) {
     }
 
@@ -55,12 +57,15 @@ final class RequestDecoder
             return;
         }
 
-        $normalized = $this->normalizeMediaType($contentType);
+        $candidates = \AlexFigures\JsonApi\Http\Negotiation\ParsedMediaType::parse($contentType);
+        $normalized = count($candidates) === 1 ? $candidates[0]->name : '';
 
-        if (MediaType::JSON_API !== $normalized) {
+        $policy = $this->policyProvider?->getPolicy($request);
+        $allowed = $policy->allowedRequestTypes ?? [MediaType::JSON_API];
+        if ($normalized === '' || ($allowed !== ['*'] && !in_array($normalized, $allowed, true))) {
             throw new UnsupportedMediaTypeException(
                 $contentType,
-                'JSON:API requires the "application/vnd.api+json" media type.'
+                'The request media type is not allowed by the configured JSON:API endpoint policy.'
             );
         }
     }
@@ -93,13 +98,10 @@ final class RequestDecoder
      */
     private function parseJson(string $content): array
     {
-        $decoded = json_decode($content, true);
-
-        if ($decoded === null && json_last_error() !== \JSON_ERROR_NONE) {
-            $error = $this->errors->invalidJson(
-                new RuntimeException(sprintf('Malformed JSON: %s.', json_last_error_msg()))
-            );
-            throw new BadRequestException('Malformed JSON.', [$error]);
+        try {
+            $decoded = \AlexFigures\JsonApi\Http\Write\JsonDocument::decode($content);
+        } catch (\JsonException $exception) {
+            throw new BadRequestException('Malformed JSON.', [$this->errors->invalidJson($exception)], previous: $exception);
         }
 
         if (!is_array($decoded) || array_is_list($decoded)) {
@@ -113,16 +115,4 @@ final class RequestDecoder
         return $decoded;
     }
 
-    /**
-     * Normalize media type by removing parameters.
-     */
-    private function normalizeMediaType(string $value): string
-    {
-        $normalized = trim(strtolower($value));
-        $semicolonPosition = strpos($normalized, ';');
-
-        return $semicolonPosition === false
-            ? $normalized
-            : substr($normalized, 0, $semicolonPosition);
-    }
 }

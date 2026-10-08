@@ -2,18 +2,17 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection;
+namespace AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection;
 
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 
-use function trigger_deprecation;
-
+/** @internal */
 final class JsonApiExtension extends Extension
 {
     public function getAlias(): string
@@ -26,12 +25,15 @@ final class JsonApiExtension extends Extension
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
+        if (!$container->hasParameter('jsonapi.discovered_resources')) {
+            $container->setParameter('jsonapi.discovered_resources', []);
+        }
+        $container->setParameter('jsonapi.relationships.unplanned_read_policy', $config['relationships']['unplanned_read_policy']);
+
         $container->setParameter('jsonapi.strict_content_negotiation', $config['strict_content_negotiation']);
 
         $mediaTypes = $config['media_types'];
         if ($config['media_type'] !== null) {
-            trigger_deprecation('alexfigures/symfony-jsonapi', '0.4.0', 'Configuring "jsonapi.media_type" is deprecated. Use the "jsonapi.media_types" section instead.');
-
             $legacy = $config['media_type'];
             $mediaTypes['default']['request']['allowed'] = [$legacy];
             $mediaTypes['default']['response']['default'] = $legacy;
@@ -50,10 +52,13 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.errors.expose_debug_meta', $config['errors']['expose_debug_meta']);
         $container->setParameter('jsonapi.errors.add_correlation_id', $config['errors']['add_correlation_id']);
         $container->setParameter('jsonapi.errors.default_title_map', $config['errors']['default_title_map']);
-        $container->setParameter('jsonapi.errors.locale', $config['errors']['locale']);
         $container->setParameter('jsonapi.cache', $config['cache']);
         $container->setParameter('jsonapi.limits', $config['limits']);
+        $container->setParameter('jsonapi.relationship_max_identifiers', $config['limits']['relationship_max_identifiers']);
+        $container->setParameter('jsonapi.filter_max_depth', $config['limits']['filter_max_depth']);
         $container->setParameter('jsonapi.performance', $config['performance']);
+        $container->setParameter('jsonapi.performance.head_enabled', $config['performance']['head_enabled']);
+        $container->setParameter('jsonapi.performance.doctrine.collection_sort_policy', $config['performance']['doctrine']['collection_sort_policy']);
         $container->setParameter('jsonapi.atomic.enabled', $config['atomic']['enabled']);
         $container->setParameter('jsonapi.atomic.endpoint', $config['atomic']['endpoint']);
         $container->setParameter('jsonapi.atomic.require_ext_header', $config['atomic']['require_ext_header']);
@@ -67,11 +72,10 @@ final class JsonApiExtension extends Extension
         $container->setParameter('jsonapi.profiles.soft_delete', $config['profiles']['soft_delete']);
         $container->setParameter('jsonapi.profiles.audit_trail', $config['profiles']['audit_trail']);
         $container->setParameter('jsonapi.profiles.rel_counts', $config['profiles']['rel_counts']);
-        $container->setParameter('jsonapi.dx', $config['dx']);
         $container->setParameter('jsonapi.docs.generator', $config['docs']['generator']);
+        $container->setParameter('jsonapi.docs.generator.json_schema', $config['docs']['generator']['json_schema']);
         $container->setParameter('jsonapi.docs.generator.openapi', $config['docs']['generator']['openapi']);
         $container->setParameter('jsonapi.docs.ui', $config['docs']['ui']);
-        $container->setParameter('jsonapi.release', $config['release']);
 
         // Store resource paths for ResourceDiscoveryPass
         $container->setParameter('jsonapi.resource_paths', $config['resource_paths']);
@@ -95,9 +99,23 @@ final class JsonApiExtension extends Extension
             }
         }
 
+        if ($config['cache']['etag']['strategy'] === 'version') {
+            $container->setAlias(\AlexFigures\JsonApi\Http\Cache\EtagGeneratorInterface::class, \AlexFigures\JsonApi\Http\Cache\VersionEtagGenerator::class);
+        }
+
         // Configure data layer aliases AFTER loading services.php
         // This will override the default Null implementations
         $this->configureDataLayer($container, $config['data_layer']);
+        // Keep configured/native providers as fallbacks; typed extensions override only supported types.
+        foreach ([
+            \AlexFigures\JsonApi\Contract\Data\RelationshipReader::class => \AlexFigures\JsonApi\Bridge\Symfony\Locator\RelationshipReaderLocator::class,
+            \AlexFigures\JsonApi\Contract\Data\RelationshipUpdater::class => \AlexFigures\JsonApi\Bridge\Symfony\Locator\RelationshipUpdaterLocator::class,
+        ] as $contract => $locator) {
+            $fallback = (string) $container->getAlias($contract);
+            $container->getDefinition($locator)->setArgument(1, new \Symfony\Component\DependencyInjection\Reference($fallback));
+            $container->setAlias($contract, $locator);
+        }
+
     }
 
     private function registerAutoconfiguration(ContainerBuilder $container): void
@@ -108,6 +126,12 @@ final class JsonApiExtension extends Extension
                 $definition->addTag('jsonapi.resource', ['type' => $attribute->type]);
             }
         );
+
+        $container->registerForAutoconfiguration(\AlexFigures\JsonApi\Contract\Data\RelationshipBatchReaderInterface::class)->addTag('jsonapi.relationship_batch_reader');
+
+        $container->registerForAutoconfiguration(\AlexFigures\JsonApi\Contract\Data\TypedResourcePersister::class)->addTag('jsonapi.persister');
+        $container->registerForAutoconfiguration(\AlexFigures\JsonApi\Contract\Data\TypedRelationshipReader::class)->addTag('jsonapi.relationship_reader');
+        $container->registerForAutoconfiguration(\AlexFigures\JsonApi\Contract\Data\TypedRelationshipUpdater::class)->addTag('jsonapi.relationship_updater');
 
         $container->registerForAutoconfiguration(ProfileInterface::class)
             ->addTag('jsonapi.profile');
@@ -120,64 +144,71 @@ final class JsonApiExtension extends Extension
      */
     private function configureDataLayer(ContainerBuilder $container, array $config): void
     {
+        if ($config['provider'] === 'custom') {
+            // Doctrine serializer/flush hooks must not enlist the ORM in a custom provider.
+            $container->removeDefinition(\AlexFigures\JsonApi\Bridge\Symfony\EventListener\WriteListener::class);
+            $container->removeDefinition(\AlexFigures\JsonApi\Bridge\Serializer\Normalizer\JsonApiRelationshipDenormalizer::class);
+        }
         if ($config['provider'] === 'doctrine') {
+            $container->setAlias(\AlexFigures\JsonApi\Contract\Data\RepresentationPreloaderInterface::class, \AlexFigures\JsonApi\Bridge\Doctrine\Read\DoctrineRepresentationPreloader::class);
+            $container->setAlias(\AlexFigures\JsonApi\Contract\Data\WriteConcurrencyGuardInterface::class, \AlexFigures\JsonApi\Bridge\Doctrine\Concurrency\DoctrineWriteConcurrencyGuard::class);
+            $container->getDefinition(\AlexFigures\JsonApi\Bridge\Symfony\Routing\JsonApiRouteLoader::class)
+                ->setArgument(6, new \Symfony\Component\DependencyInjection\Reference(\AlexFigures\JsonApi\Bridge\Doctrine\Identifier\DoctrineIdentifierMetadataValidator::class));
+
             // Use ResourceRepositoryLocator to support both custom TypedResourceRepository
             // and fallback to GenericDoctrineRepository for Doctrine entities
             $container->setAlias(
-                'AlexFigures\Symfony\Contract\Data\ResourceRepository',
-                'AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceRepositoryLocator'
+                \AlexFigures\JsonApi\Contract\Data\ResourceRepository::class,
+                \AlexFigures\JsonApi\Bridge\Symfony\Locator\ResourceRepositoryLocator::class
             )->setPublic(false);
 
             $container->setAlias(
-                'AlexFigures\Symfony\Contract\Data\ResourceProcessor',
-                'AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor'
+                \AlexFigures\JsonApi\Contract\Data\ResourceProcessor::class,
+                \AlexFigures\JsonApi\Bridge\Symfony\Locator\ResourceProcessorLocator::class
             )->setPublic(false);
 
             $container->setAlias(
-                'AlexFigures\Symfony\Contract\Data\RelationshipReader',
-                'AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler'
+                \AlexFigures\JsonApi\Contract\Data\RelationshipReader::class,
+                \AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler::class
             )->setPublic(false);
 
             $container->setAlias(
-                'AlexFigures\Symfony\Contract\Data\RelationshipUpdater',
-                'AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler'
+                \AlexFigures\JsonApi\Contract\Data\RelationshipUpdater::class,
+                \AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler::class
             )->setPublic(false);
 
             $container->setAlias(
-                'AlexFigures\Symfony\Contract\Tx\TransactionManager',
-                'AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager'
+                \AlexFigures\JsonApi\Contract\Tx\TransactionManager::class,
+                \AlexFigures\JsonApi\Bridge\Doctrine\Transaction\DoctrineTransactionManager::class
             )->setPublic(false);
 
             $container->setAlias(
-                'AlexFigures\Symfony\Contract\Data\ExistenceChecker',
-                'AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker'
+                \AlexFigures\JsonApi\Contract\Data\ExistenceChecker::class,
+                \AlexFigures\JsonApi\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker::class
             )->setPublic(false);
         } elseif ($config['provider'] === 'custom') {
+            $container->getDefinition(\AlexFigures\JsonApi\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->setArgument(1, new \Symfony\Component\DependencyInjection\Reference($config['processor'] ?? 'jsonapi.null_resource_processor'));
+            $container->setAlias(\AlexFigures\JsonApi\Contract\Data\ResourceProcessor::class, \AlexFigures\JsonApi\Bridge\Symfony\Locator\ResourceProcessorLocator::class);
             // Use custom implementations
             if ($config['repository'] !== null) {
                 $container->setAlias(
-                    'AlexFigures\Symfony\Contract\Data\ResourceRepository',
+                    \AlexFigures\JsonApi\Contract\Data\ResourceRepository::class,
                     $config['repository']
                 )->setPublic(false);
             }
 
-            if ($config['processor'] !== null) {
-                $container->setAlias(
-                    'AlexFigures\Symfony\Contract\Data\ResourceProcessor',
-                    $config['processor']
-                )->setPublic(false);
-            }
+
 
             if ($config['relationship_reader'] !== null) {
                 $container->setAlias(
-                    'AlexFigures\Symfony\Contract\Data\RelationshipReader',
+                    \AlexFigures\JsonApi\Contract\Data\RelationshipReader::class,
                     $config['relationship_reader']
                 )->setPublic(false);
             }
 
             if ($config['transaction_manager'] !== null) {
                 $container->setAlias(
-                    'AlexFigures\Symfony\Contract\Tx\TransactionManager',
+                    \AlexFigures\JsonApi\Contract\Tx\TransactionManager::class,
                     $config['transaction_manager']
                 )->setPublic(false);
             }

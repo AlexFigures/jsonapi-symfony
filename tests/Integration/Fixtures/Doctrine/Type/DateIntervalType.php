@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Doctrine\Type;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Doctrine\Type;
 
 use DateInterval;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
@@ -19,7 +19,7 @@ final class DateIntervalType extends Type
 
     public function getSQLDeclaration(array $column, AbstractPlatform $platform): string
     {
-        return $platform->getStringTypeDeclarationSQL($column);
+        return $platform->getStringTypeDeclarationSQL(array_replace($column, ['length' => $column['length'] ?? 255]));
     }
 
     /**

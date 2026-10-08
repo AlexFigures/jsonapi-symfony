@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Errors;
+namespace AlexFigures\JsonApi\Tests\Functional\Errors;
 
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
 
@@ -99,7 +99,7 @@ final class RelationshipErrorsTest extends JsonApiTestCase
         }
         /** @var array<string, mixed> $first */
         self::assertSame('resource-not-found', $first['code']);
-        $this->assertErrorPointer($first, '/data/0');
+        $this->assertErrorPointer($first, '/data/0/id');
         $detail = $first['detail'] ?? null;
         self::assertIsString($detail);
         self::assertStringContainsString('999', $detail);

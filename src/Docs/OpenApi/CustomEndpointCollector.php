@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Docs\OpenApi;
+namespace AlexFigures\JsonApi\Docs\OpenApi;
 
-use AlexFigures\Symfony\Docs\Attribute\OpenApiEndpoint;
+use AlexFigures\JsonApi\Docs\Attribute\OpenApiEndpoint;
 use ReflectionClass;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -40,19 +40,18 @@ final class CustomEndpointCollector
 
         foreach ($this->router->getRouteCollection() as $route) {
             $controller = $route->getDefault('_controller');
-            if ($controller === null || !is_string($controller)) {
+            if (is_array($controller) && count($controller) === 2 && is_string($controller[1])) {
+                $className = is_object($controller[0]) ? $controller[0]::class : $controller[0];
+                $methodName = $controller[1];
+            } elseif (is_string($controller)) {
+                [$className, $methodName] = array_pad(explode('::', $controller, 2), 2, '__invoke');
+            } elseif (is_object($controller)) {
+                $className = $controller::class;
+                $methodName = '__invoke';
+            } else {
                 continue;
             }
-
-            // Parse controller string (e.g., "App\Controller\UploadController::upload")
-            $parts = explode('::', $controller);
-            if (count($parts) !== 2) {
-                continue;
-            }
-
-            [$className, $methodName] = $parts;
-
-            if (!class_exists($className)) {
+            if (!is_string($className) || !class_exists($className)) {
                 continue;
             }
 

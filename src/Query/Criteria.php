@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Query;
+namespace AlexFigures\JsonApi\Query;
 
-use AlexFigures\Symfony\Filter\Ast\Node;
+use AlexFigures\JsonApi\Filter\Ast\Node;
 
+/** @api */
 final class Criteria
 {
     /**
@@ -31,6 +32,9 @@ final class Criteria
     public ?Node $filter = null;
 
     public Pagination $pagination;
+
+    /** Identifier projection for graph reads; repositories may return ordinary models as a fallback. */
+    public bool $identifiersOnly = false;
 
     /**
      * Custom QueryBuilder conditions for advanced filtering.

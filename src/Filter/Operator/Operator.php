@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Operator;
+namespace AlexFigures\JsonApi\Filter\Operator;
 
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 
 /**
  * Contract implemented by filter operators.
+ * @api
  */
 interface Operator
 {
@@ -35,19 +36,4 @@ interface Operator
         array $values,
         AbstractPlatform $platform,
     ): DoctrineExpression;
-}
-
-/**
- * Lightweight value object carrying the compiled DQL and bound parameters.
- */
-final class DoctrineExpression
-{
-    /**
-     * @param array<string, mixed> $parameters
-     */
-    public function __construct(
-        public readonly string $dql,
-        public readonly array $parameters,
-    ) {
-    }
 }

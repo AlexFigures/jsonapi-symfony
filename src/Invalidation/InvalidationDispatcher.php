@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Invalidation;
+namespace AlexFigures\JsonApi\Invalidation;
 
-final class InvalidationDispatcher
+/** @internal */
+final readonly class InvalidationDispatcher
 {
-    public function __construct(private readonly SurrogatePurgerInterface $purger)
+    public function __construct(private SurrogatePurgerInterface $purger)
     {
     }
 

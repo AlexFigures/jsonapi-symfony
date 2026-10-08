@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Definition;
+namespace AlexFigures\JsonApi\Resource\Definition;
 
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
 
 /**
  * Immutable DTO describing a JSON:API resource definition.
+ * @api
  */
-final class ResourceDefinition
+final readonly class ResourceDefinition
 {
     /**
      * @param array<string, string>                    $fieldMap
@@ -18,15 +19,15 @@ final class ResourceDefinition
      * @param list<ResourceOperation>                  $allowedOperations
      */
     public function __construct(
-        public readonly string $type,
-        public readonly string $dataClass,
-        public readonly ?string $viewClass,
-        public readonly ReadProjection $readProjection,
-        public readonly array $fieldMap,
-        public readonly array $relationshipPolicies,
-        public readonly array $writeRequests,
-        public readonly ?VersionResolverInterface $versionResolver = null,
-        public readonly array $allowedOperations = [],
+        public string $type,
+        public string $dataClass,
+        public ?string $viewClass,
+        public ReadProjection $readProjection,
+        public array $fieldMap,
+        public array $relationshipPolicies,
+        public array $writeRequests,
+        public ?VersionResolverInterface $versionResolver = null,
+        public array $allowedOperations = [],
     ) {
     }
 

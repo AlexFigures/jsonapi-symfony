@@ -2,20 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Descriptor;
+namespace AlexFigures\JsonApi\Profile\Descriptor;
 
-final class ProfileDescriptor
+/** @api */
+final readonly class ProfileDescriptor
 {
     /**
      * @param list<string> $capabilities
      */
     public function __construct(
-        public readonly string $uri,
-        public readonly string $name,
-        public readonly string $version,
-        public readonly ?string $documentationUrl = null,
-        public readonly string $description = '',
-        public readonly array $capabilities = [],
+        public string $uri,
+        public string $name,
+        public string $version,
+        public ?string $documentationUrl = null,
+        public string $description = '',
+        public array $capabilities = [],
     ) {
     }
 }

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin;
+namespace AlexFigures\JsonApi\Profile\Builtin;
 
-use AlexFigures\Symfony\Profile\Builtin\Hook\RelationshipCountsDocumentHook;
-use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\RelationshipCountsDocumentHook;
+use AlexFigures\JsonApi\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
 
 /**
  * Relationship Counts Profile.
@@ -32,18 +32,20 @@ use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
  *
  * @phpstan-type RelationshipCountsConfig array{
  *     documentation?: string,
+ *     relationship_meta_key?: string, compute_in_related_endpoints?: bool,
  *     includeRelationships?: list<string>,
  *     excludeRelationships?: list<string>
  * }
+ * @api
  */
-final class RelationshipCountsProfile implements ProfileInterface
+final readonly class RelationshipCountsProfile implements ProfileInterface
 {
     public const URI = 'urn:jsonapi:profile:rel-counts';
 
     /**
      * @param RelationshipCountsConfig $config
      */
-    public function __construct(private readonly array $config = [])
+    public function __construct(private array $config = [])
     {
     }
 

@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Http\Document;
+namespace AlexFigures\JsonApi\Tests\Unit\Http\Document;
 
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Profile\Hook\DocumentHook;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use AlexFigures\Symfony\Tests\Util\FakeProfile;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Profile\Hook\DocumentHook;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Tests\Util\FakeProfile;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +25,19 @@ use Symfony\Component\Routing\RequestContext;
 #[CoversClass(DocumentBuilder::class)]
 final class DocumentBuilderTest extends TestCase
 {
+    public function testCustomActionResourceWithoutShowOmitsSelfLink(): void
+    {
+        $metadata = new ResourceMetadata('statistics', \stdClass::class, ['count' => new AttributeMetadata('count')], [], allowedOperations: []);
+        $registry = $this->createMock(ResourceRegistryInterface::class);
+        $registry->method('getByType')->willReturn($metadata);
+        $urls = $this->createMock(UrlGeneratorInterface::class);
+        $urls->expects(self::never())->method('generate');
+        $builder = new DocumentBuilder($registry, PropertyAccess::createPropertyAccessor(), new LinkGenerator($urls));
+        $document = $builder->buildResource('statistics', (object) ['id' => '1', 'count' => 4], new Criteria(), Request::create('/authors/1/statistics'));
+        self::assertSame(4, $document['data']['attributes']['count']);
+        self::assertArrayNotHasKey('links', $document['data']);
+    }
+
     public function testDocumentHooksAugmentDocuments(): void
     {
         $articleMetadata = new ResourceMetadata(
@@ -48,7 +61,7 @@ final class DocumentBuilderTest extends TestCase
         );
 
         $registry = new class ($articleMetadata, $commentMetadata) implements ResourceRegistryInterface {
-            public function __construct(private ResourceMetadata $article, private ResourceMetadata $comment)
+            public function __construct(private readonly ResourceMetadata $article, private readonly ResourceMetadata $comment)
             {
             }
 

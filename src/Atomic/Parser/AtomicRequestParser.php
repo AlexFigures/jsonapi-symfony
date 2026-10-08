@@ -2,23 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Parser;
+namespace AlexFigures\JsonApi\Atomic\Parser;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Atomic\Ref;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Atomic\Ref;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-final class AtomicRequestParser
+/** @internal */
+final readonly class AtomicRequestParser
 {
     public function __construct(
-        private readonly AtomicConfig $config,
-        private readonly ErrorMapper $errors,
+        private AtomicConfig $config,
+        private ErrorMapper $errors,
     ) {
     }
 
@@ -92,7 +93,18 @@ final class AtomicRequestParser
                 ]);
             }
 
+            if (!$this->config->lidInResourceAndIdentifier) {
+                $this->rejectLids($operation['ref'] ?? null, $pointer . '/ref');
+                $this->rejectLids($data, $pointer . '/data');
+            }
+
             $meta = $operation['meta'] ?? [];
+            if (array_key_exists('meta', $operation) && is_array($meta) && array_is_list($meta)) {
+                throw new BadRequestException('Meta must be an object.', [$this->errors->invalidPointer($pointer . '/meta', 'Meta must be an object.')]);
+            }
+            if ($meta instanceof \stdClass) {
+                $meta = [];
+            }
             if (!is_array($meta)) {
                 throw new BadRequestException('Invalid meta member.', [
                     $this->errors->invalidPointer($pointer . '/meta', 'The "meta" member MUST be an object when present.'),
@@ -119,8 +131,8 @@ final class AtomicRequestParser
         }
 
         try {
-            $decoded = json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
-        } catch (Throwable $exception) {
+            $decoded = \AlexFigures\JsonApi\Http\Write\JsonDocument::decode($content);
+        } catch (\JsonException $exception) {
             throw new BadRequestException('Malformed JSON.', [
                 $this->errors->invalidJson($exception),
             ], headers: ['Content-Type' => MediaType::JSON_API_ATOMIC], previous: $exception);
@@ -132,7 +144,7 @@ final class AtomicRequestParser
             ], headers: ['Content-Type' => MediaType::JSON_API_ATOMIC]);
         }
 
-        if (isset($decoded['data']) || isset($decoded['included'])) {
+        if (array_key_exists('data', $decoded) || array_key_exists('included', $decoded)) {
             throw new BadRequestException('JSON:API atomic documents MUST NOT contain top-level data or included members.', [
                 $this->errors->invalidPointer('/', 'Atomic operations documents MUST only contain the "atomic:operations" member.'),
             ], headers: ['Content-Type' => MediaType::JSON_API_ATOMIC]);
@@ -140,6 +152,27 @@ final class AtomicRequestParser
 
         /** @var array<string, mixed> $decoded */
         return $decoded;
+    }
+
+    /** Reject local identifiers only in resource/identifier documents, not attributes or metadata. */
+    private function rejectLids(mixed $data, string $pointer): void
+    {
+        if (!is_array($data)) {
+            return;
+        }
+        if (array_key_exists('lid', $data)) {
+            throw new BadRequestException('Local identifiers are disabled.', [$this->errors->invalidPointer($pointer . '/lid', 'Local identifiers are disabled by configuration.')]);
+        }
+        if (array_is_list($data)) {
+            foreach ($data as $index => $identifier) {
+                $this->rejectLids($identifier, $pointer . '/' . $index);
+            }
+        }
+        foreach (($data['relationships'] ?? []) as $name => $relationship) {
+            if (is_array($relationship)) {
+                $this->rejectLids($relationship['data'] ?? null, $pointer . '/relationships/' . $name . '/data');
+            }
+        }
     }
 
     private function parseRef(mixed $value, string $pointer): Ref
@@ -187,6 +220,9 @@ final class AtomicRequestParser
             }
         }
 
+        if ($id !== null && $lid !== null) {
+            throw new BadRequestException('Identifiers cannot contain both id and lid.', [$this->errors->invalidPointer($pointer, 'Use either id or lid.')]);
+        }
         return new Ref($type, $id, $lid, $relationship);
     }
 }

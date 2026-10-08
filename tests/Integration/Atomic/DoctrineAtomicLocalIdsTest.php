@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
 
 /**
  * Integration tests for Atomic Operations with Doctrine - Local IDs (Phase 2).
@@ -370,7 +370,7 @@ final class DoctrineAtomicLocalIdsTest extends DoctrineAtomicTestCase
         ];
 
         // Expect BadRequestException for duplicate lid
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\BadRequestException::class);
         $this->expectExceptionMessage('Duplicate local identifier');
 
         try {

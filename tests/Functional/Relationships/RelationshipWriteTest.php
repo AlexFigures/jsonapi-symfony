@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Relationships;
+namespace AlexFigures\JsonApi\Tests\Functional\Relationships;
 
-use AlexFigures\Symfony\Http\Exception\ConflictException;
-use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Http\Exception\ConflictException;
+use AlexFigures\JsonApi\Http\Exception\MethodNotAllowedException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Mapper;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Mapper;
 
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
-use AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Definition\ResourceDefinition;
+use AlexFigures\JsonApi\Resource\Mapper\ReadMapperInterface;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleViewDto;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
 
 /**
  * Maps Article Entity to ArticleViewDto.

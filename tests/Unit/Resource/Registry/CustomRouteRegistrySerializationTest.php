@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Resource\Registry;
+namespace AlexFigures\JsonApi\Tests\Unit\Resource\Registry;
 
-use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
-use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry;
+use AlexFigures\JsonApi\Resource\Metadata\CustomRouteMetadata;
+use AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistry;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 

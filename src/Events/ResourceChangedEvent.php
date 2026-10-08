@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Events;
+namespace AlexFigures\JsonApi\Events;
 
-final class ResourceChangedEvent
+/** @api */
+final readonly class ResourceChangedEvent
 {
     public function __construct(
-        public readonly string $type,
-        public readonly string $id,
-        public readonly string $operation,
+        public string $type,
+        public string $id,
+        public string $operation,
     ) {
     }
 }

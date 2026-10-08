@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Integration\Http\Controller;
 
-use AlexFigures\Symfony\Http\Controller\OptionsController;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Http\Controller\OptionsController;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -49,7 +49,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         self::assertSame(['GET', 'HEAD', 'OPTIONS', 'POST'], $methods);
@@ -71,7 +71,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         self::assertSame(['GET', 'HEAD', 'OPTIONS'], $methods);
@@ -93,7 +93,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         self::assertSame(['OPTIONS', 'POST'], $methods);
@@ -117,7 +117,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         self::assertSame(['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH'], $methods);
@@ -139,7 +139,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         self::assertSame(['GET', 'HEAD', 'OPTIONS'], $methods);
@@ -162,7 +162,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         self::assertSame(['DELETE', 'OPTIONS', 'PATCH'], $methods);
@@ -184,7 +184,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         self::assertSame(['GET', 'HEAD', 'OPTIONS'], $methods);
@@ -207,7 +207,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         // Only OPTIONS is allowed when SHOW is not present
@@ -230,7 +230,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         self::assertSame(['GET', 'HEAD', 'OPTIONS'], $methods);
@@ -252,7 +252,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         self::assertSame(['DELETE', 'OPTIONS', 'PATCH', 'POST'], $methods);
@@ -275,7 +275,7 @@ final class OptionsControllerTest extends TestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         self::assertSame(['DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST'], $methods);

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\CustomRoute\Result;
+namespace AlexFigures\JsonApi\Tests\Unit\CustomRoute\Result;
 
-use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\JsonApi\CustomRoute\Result\CustomRouteResult;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * @covers \AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\AlexFigures\JsonApi\CustomRoute\Result\CustomRouteResult::class)]
 final class CustomRouteResultTest extends TestCase
 {
     public function testResourceFactoryMethod(): void

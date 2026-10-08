@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller\Support;
+namespace AlexFigures\JsonApi\Http\Controller\Support;
 
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\MethodNotAllowedException;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
 
 /**
  * Validates that a requested operation is allowed for a resource.
@@ -14,11 +14,12 @@ use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
  * This service encapsulates the logic for checking if a specific operation
  * (e.g., CREATE, UPDATE, DELETE) is permitted based on the resource's
  * allowed operations configuration.
+ * @internal
  */
-final class OperationValidator
+final readonly class OperationValidator
 {
     public function __construct(
-        private readonly ErrorMapper $errors,
+        private ErrorMapper $errors,
     ) {
     }
 
@@ -47,6 +48,16 @@ final class OperationValidator
             'Operation not allowed',
             [$error]
         );
+    }
+
+    /** @param list<ResourceOperation> $allowedOperations */
+    public function assertAtomicAllowed(ResourceOperation $operation, array $allowedOperations): void
+    {
+        try {
+            $this->assertAllowed($operation, $allowedOperations);
+        } catch (MethodNotAllowedException $exception) {
+            throw new \AlexFigures\JsonApi\Http\Exception\ForbiddenException('Operation not allowed', previous: $exception);
+        }
     }
 
     /**

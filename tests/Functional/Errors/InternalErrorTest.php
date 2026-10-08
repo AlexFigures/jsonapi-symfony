@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Errors;
+namespace AlexFigures\JsonApi\Tests\Functional\Errors;
 
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 

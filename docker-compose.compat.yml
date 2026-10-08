@@ -1,0 +1,18 @@
+services:
+  compat:
+    build:
+      context: .
+      dockerfile: tools/compatibility/Dockerfile
+      args:
+        PHP_VERSION: ${COMPAT_PHP:-8.2}
+    image: jsonapi-compat:${COMPAT_PHP:-8.2}
+    working_dir: /app
+    volumes:
+      - ${COMPAT_WORKSPACE:-/tmp/jsonapi-compat-82}:/app
+      - composer_cache:/root/.composer
+    environment:
+      DATABASE_URL_PGSQL: postgresql://jsonapi:secret@postgres:5432/${COMPAT_DATABASE:-jsonapi_test}
+      DATABASE_URL_POSTGRES: postgresql://jsonapi:secret@postgres:5432/${COMPAT_DATABASE:-jsonapi_test}
+      DATABASE_URL_MYSQL: mysql://jsonapi:secret@mysql:3306/${COMPAT_DATABASE:-jsonapi_test}
+      DATABASE_URL_MARIADB: mysql://jsonapi:secret@mariadb:3306/${COMPAT_DATABASE:-jsonapi_test}
+      DATABASE_URL_SQLITE: 'sqlite:///:memory:'

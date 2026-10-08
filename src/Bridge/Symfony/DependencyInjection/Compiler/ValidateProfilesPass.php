@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
+namespace AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\Compiler;
 
-use AlexFigures\Symfony\Profile\AttributeReader;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\Validation\FieldRequirement;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
-use AlexFigures\Symfony\Profile\Validation\ValidationError;
-use AlexFigures\Symfony\Profile\Validation\ValidationResult;
+use AlexFigures\JsonApi\Profile\AttributeReader;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\Validation\FieldRequirement;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Profile\Validation\ValidationError;
+use AlexFigures\JsonApi\Profile\Validation\ValidationResult;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -26,6 +26,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  */
 final class ValidateProfilesPass implements CompilerPassInterface
 {
+    private bool $hasDeferredProfiles = false;
     public function process(ContainerBuilder $container): void
     {
         // Skip validation if profiles are not configured
@@ -34,6 +35,11 @@ final class ValidateProfilesPass implements CompilerPassInterface
             return;
         }
 
+        if ($container->hasDefinition(\AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile::class)) {
+            $container->getDefinition(\AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile::class)->addMethodCall('configure', ['%jsonapi.profiles.audit_trail%']);
+            $container->getDefinition(\AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile::class)->addMethodCall('setResourceRegistry', [new \Symfony\Component\DependencyInjection\Reference(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface::class)]);
+        }
+        $this->hasDeferredProfiles = false;
         // Collect all profiles
         $profilesByUri = $this->collectProfiles($container);
 
@@ -44,7 +50,7 @@ final class ValidateProfilesPass implements CompilerPassInterface
         $enabledProfiles = $this->collectEnabledProfiles($container, $resourceTypes);
 
         // Validate using reflection (no Doctrine dependency)
-        $result = $this->validateWithReflection($profilesByUri, $resourceTypes, $enabledProfiles);
+        $result = (new \AlexFigures\JsonApi\Profile\Validation\ReflectionProfileValidator())->validate($profilesByUri, $resourceTypes, $enabledProfiles, $this->hasDeferredProfiles);
 
         // Handle validation result
         if ($result->hasErrors()) {
@@ -52,7 +58,7 @@ final class ValidateProfilesPass implements CompilerPassInterface
         }
 
         if ($result->hasWarnings()) {
-            $this->handleWarnings($result);
+            $this->handleWarnings($container, $result);
         }
     }
 
@@ -74,6 +80,11 @@ final class ValidateProfilesPass implements CompilerPassInterface
                 continue;
             }
 
+            if ($definition->getArguments() !== [] || $definition->isAutowired() || $definition->getFactory() !== null) {
+                $this->hasDeferredProfiles = true;
+                continue;
+            }
+
             // Instantiate profile to get its URI
             // Note: This assumes profiles have no required constructor dependencies
             // or have default values for all parameters
@@ -83,7 +94,7 @@ final class ValidateProfilesPass implements CompilerPassInterface
                     $profiles[$profile->uri()] = $profile;
                 }
             } catch (\Throwable) {
-                // Skip profiles that cannot be instantiated
+                $this->hasDeferredProfiles = true;
                 continue;
             }
         }
@@ -154,238 +165,12 @@ final class ValidateProfilesPass implements CompilerPassInterface
     }
 
     /**
-     * Validate profiles using reflection (no Doctrine dependency).
-     *
-     * @param array<string, ProfileInterface> $profilesByUri
-     * @param array<string, class-string>     $resourceTypes
-     * @param array<string, list<string>>     $enabledProfiles
-     */
-    private function validateWithReflection(
-        array $profilesByUri,
-        array $resourceTypes,
-        array $enabledProfiles
-    ): ValidationResult {
-        $result = new ValidationResult();
-        $attributeReader = new AttributeReader();
-
-        foreach ($enabledProfiles as $resourceType => $profileUris) {
-            if (!isset($resourceTypes[$resourceType])) {
-                // Resource type not found - this is a configuration error
-                foreach ($profileUris as $profileUri) {
-                    $result->addIssue(ValidationError::error(
-                        $profileUri,
-                        $resourceType,
-                        "Resource type '{$resourceType}' not found in resource registry"
-                    ));
-                }
-                continue;
-            }
-
-            $entityClass = $resourceTypes[$resourceType];
-
-            foreach ($profileUris as $profileUri) {
-                if (!isset($profilesByUri[$profileUri])) {
-                    $result->addIssue(ValidationError::error(
-                        $profileUri,
-                        $resourceType,
-                        "Profile '{$profileUri}' not found in profile registry"
-                    ));
-                    continue;
-                }
-
-                $profile = $profilesByUri[$profileUri];
-                $this->validateProfileForEntity($profile, $resourceType, $entityClass, $result, $attributeReader);
-            }
-        }
-
-        return $result;
-    }
-
-    /**
-     * Validate a single profile for a single entity using reflection.
-     *
-     * @param class-string $entityClass
-     */
-    private function validateProfileForEntity(
-        ProfileInterface $profile,
-        string $resourceType,
-        string $entityClass,
-        ValidationResult $result,
-        AttributeReader $attributeReader
-    ): void {
-        $requirements = $profile->requirements();
-
-        // If profile has no requirements, nothing to validate
-        if ($requirements === null) {
-            return;
-        }
-
-        // Validate required attribute
-        if ($requirements->requiresAttribute()) {
-            $requiredAttribute = $requirements->getRequiredAttribute();
-            if ($requiredAttribute !== null) {
-                /** @var class-string $requiredAttribute */
-                if (!$attributeReader->hasAttribute($entityClass, $requiredAttribute)) {
-                    $result->addIssue(ValidationError::error(
-                        $profile->uri(),
-                        $resourceType,
-                        sprintf(
-                            "Entity '%s' must have #[%s] attribute to use this profile",
-                            $entityClass,
-                            $this->getShortClassName($requiredAttribute)
-                        )
-                    ));
-                }
-            }
-        }
-
-        // Validate required fields using reflection
-        if ($requirements->hasFieldRequirements()) {
-            $this->validateFieldsWithReflection($profile, $resourceType, $entityClass, $requirements, $result);
-        }
-    }
-
-    /**
-     * Validate fields using reflection instead of Doctrine metadata.
-     *
-     * @param class-string $entityClass
-     */
-    private function validateFieldsWithReflection(
-        ProfileInterface $profile,
-        string $resourceType,
-        string $entityClass,
-        ProfileRequirements $requirements,
-        ValidationResult $result
-    ): void {
-        if (!class_exists($entityClass)) {
-            $result->addIssue(ValidationError::error(
-                $profile->uri(),
-                $resourceType,
-                sprintf("Cannot load class '%s': class does not exist", $entityClass)
-            ));
-            return;
-        }
-
-        /** @var \ReflectionClass<object> $reflection */
-        $reflection = new \ReflectionClass($entityClass);
-
-        foreach ($requirements->getFieldRequirements() as $fieldName => $requirement) {
-            $this->validateFieldWithReflection($profile, $resourceType, $reflection, $fieldName, $requirement, $result);
-        }
-    }
-
-    /**
-     * Validate a single field using reflection.
-     *
-     * @param \ReflectionClass<object> $reflection
-     */
-    private function validateFieldWithReflection(
-        ProfileInterface $profile,
-        string $resourceType,
-        \ReflectionClass $reflection,
-        string $fieldName,
-        FieldRequirement $requirement,
-        ValidationResult $result
-    ): void {
-        // Check if property exists
-        if (!$reflection->hasProperty($fieldName)) {
-            if ($requirement->isRequired()) {
-                $result->addIssue(ValidationError::error(
-                    $profile->uri(),
-                    $resourceType,
-                    sprintf(
-                        "Missing required field '%s': %s",
-                        $fieldName,
-                        $requirement->description ?: 'no description'
-                    ),
-                    $fieldName
-                ));
-            }
-            return;
-        }
-
-        $property = $reflection->getProperty($fieldName);
-
-        // Validate type if specified
-        $propertyType = $property->getType();
-        if ($propertyType instanceof \ReflectionNamedType) {
-            $actualType = $propertyType->getName();
-
-            // Simple type matching (can be enhanced)
-            if (!$this->typesMatch($requirement->type, $actualType)) {
-                $severity = $requirement->isRequired() ? 'error' : 'warning';
-                $result->addIssue(ValidationError::$severity(
-                    $profile->uri(),
-                    $resourceType,
-                    sprintf(
-                        "Field '%s' type mismatch: expected '%s', got '%s'",
-                        $fieldName,
-                        $requirement->type,
-                        $actualType
-                    ),
-                    $fieldName
-                ));
-            }
-
-            // Validate nullable constraint
-            if (!$requirement->nullable && $propertyType->allowsNull()) {
-                $result->addIssue(ValidationError::warning(
-                    $profile->uri(),
-                    $resourceType,
-                    sprintf(
-                        "Field '%s' is nullable but profile expects non-nullable",
-                        $fieldName
-                    ),
-                    $fieldName
-                ));
-            }
-        }
-    }
-
-    /**
-     * Check if types match (simplified version).
-     */
-    private function typesMatch(string $expectedType, string $actualType): bool
-    {
-        // Normalize types
-        $expectedType = $this->normalizeType($expectedType);
-        $actualType = $this->normalizeType($actualType);
-
-        return $expectedType === $actualType;
-    }
-
-    /**
-     * Normalize type for comparison.
-     */
-    private function normalizeType(string $type): string
-    {
-        // Map common type aliases
-        $typeMap = [
-            'integer' => 'int',
-            'boolean' => 'bool',
-            'double' => 'float',
-        ];
-
-        $normalized = strtolower(trim($type));
-        return $typeMap[$normalized] ?? $normalized;
-    }
-
-    /**
-     * Get short class name without namespace.
-     */
-    private function getShortClassName(string $fqcn): string
-    {
-        $parts = explode('\\', $fqcn);
-        return end($parts);
-    }
-
-    /**
      * Handle validation errors by throwing an exception.
      *
-     * @param  \AlexFigures\Symfony\Profile\Validation\ValidationResult $result
+     * @param  \AlexFigures\JsonApi\Profile\Validation\ValidationResult $result
      * @throws \RuntimeException
      */
-    private function handleErrors(object $result): void
+    private function handleErrors(ValidationResult $result): never
     {
         $errors = $result->formatErrors();
         $message = sprintf(
@@ -400,16 +185,14 @@ final class ValidateProfilesPass implements CompilerPassInterface
     /**
      * Handle validation warnings by logging them.
      *
-     * @param \AlexFigures\Symfony\Profile\Validation\ValidationResult $result
+     * @param \AlexFigures\JsonApi\Profile\Validation\ValidationResult $result
      */
-    private function handleWarnings(object $result): void
+    private function handleWarnings(ContainerBuilder $container, ValidationResult $result): void
     {
         $warnings = $result->formatWarnings();
 
-        // In Symfony compiler passes, we can't easily access the logger
-        // So we'll just trigger a deprecation notice for each warning
         foreach ($warnings as $warning) {
-            @trigger_error($warning, \E_USER_DEPRECATED);
+            $container->log($this, $warning);
         }
     }
 }

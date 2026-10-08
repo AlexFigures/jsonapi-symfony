@@ -2,20 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Result;
+namespace AlexFigures\JsonApi\Atomic\Result;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Atomic\Execution\OperationOutcome;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Atomic\Execution\OperationOutcome;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Query\Criteria;
 use Symfony\Component\HttpFoundation\Request;
 
-final class ResultBuilder
+/** @internal */
+final readonly class ResultBuilder
 {
     public function __construct(
-        private readonly AtomicConfig $config,
-        private readonly DocumentBuilder $documents,
+        private AtomicConfig $config,
+        private DocumentBuilder $documents,
     ) {
     }
 
@@ -23,7 +24,7 @@ final class ResultBuilder
      * @param list<Operation>        $operations
      * @param list<OperationOutcome> $outcomes
      *
-     * @return array{0: list<array<string, mixed>>, 1: bool}
+     * @return array{0: list<array<string, mixed>|\stdClass>, 1: bool}
      */
     public function build(array $operations, array $outcomes): array
     {
@@ -37,12 +38,12 @@ final class ResultBuilder
             $outcome = $outcomes[$index] ?? OperationOutcome::empty();
 
             if ($this->config->returnPolicy === 'none') {
-                $results[] = [];
+                $results[] = new \stdClass();
                 continue;
             }
 
             if (!$outcome->hasData) {
-                $results[] = [];
+                $results[] = new \stdClass();
                 continue;
             }
 

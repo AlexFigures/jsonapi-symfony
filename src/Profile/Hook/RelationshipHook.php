@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Hook;
+namespace AlexFigures\JsonApi\Profile\Hook;
 
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Profile\ProfileContext;
 
+/** @api */
 interface RelationshipHook
 {
     /**

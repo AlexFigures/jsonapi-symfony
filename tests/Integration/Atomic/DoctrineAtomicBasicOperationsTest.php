@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
 
 /**
  * Integration tests for basic Atomic Operations with Doctrine.

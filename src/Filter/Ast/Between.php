@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Ast;
+namespace AlexFigures\JsonApi\Filter\Ast;
 
 /**
  * Represents a BETWEEN comparison.
+ * @api
  */
-final class Between implements Node
+final readonly class Between implements Node
 {
     public function __construct(
-        public readonly string $fieldPath,
-        public readonly mixed $from,
-        public readonly mixed $to,
+        public string $fieldPath,
+        public mixed $from,
+        public mixed $to,
     ) {
     }
 }

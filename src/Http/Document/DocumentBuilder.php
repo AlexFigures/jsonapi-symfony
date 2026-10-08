@@ -2,30 +2,32 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Document;
+namespace AlexFigures\JsonApi\Http\Document;
 
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Safety\LimitsEnforcer;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use stdClass;
 use Stringable;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-final class DocumentBuilder
+/** @internal */
+final readonly class DocumentBuilder
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly PropertyAccessorInterface $accessor,
-        private readonly LinkGenerator $links,
-        private readonly string $relationshipLinkageMode = 'when_included',
-        private readonly ?LimitsEnforcer $limits = null,
+        private ResourceRegistryInterface $registry,
+        private PropertyAccessorInterface $accessor,
+        private LinkGenerator $links,
+        private string $relationshipLinkageMode = 'when_included',
+        private ?LimitsEnforcer $limits = null,
+        private ?\AlexFigures\JsonApi\Contract\Data\RepresentationPreloaderInterface $preloader = null,
     ) {
     }
 
@@ -42,16 +44,23 @@ final class DocumentBuilder
      */
     public function buildCollection(string $type, array $models, Criteria $criteria, Slice $slice, Request $request): array
     {
+        $request->attributes->set('_jsonapi_collection', true);
+        $request->attributes->set('_jsonapi_models', $models);
+        $request->attributes->set('_jsonapi_model_type', $type);
         $data = [];
         $included = [];
         $visited = [];
+        foreach ($models as $root) {
+            $visited[$type . ':' . $this->resolveId($this->registry->getByType($type), $root)] = true;
+        }
         $includeTree = $this->buildIncludeTree($criteria);
-        $context = ProfileContext::fromRequest($request);
+        $reads = $this->preloader?->preload($type, $models, $criteria, $request);
+        $context = ProfileContext::fromRequest($request)?->withRelationshipReads($reads);
 
         foreach ($models as $model) {
-            $data[] = $this->buildResourceObject($type, $model, $criteria, $context, $includeTree);
+            $data[] = $this->buildResourceObject($type, $model, $criteria, $context, $includeTree, $reads);
             if ($includeTree !== []) {
-                $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context);
+                $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context, $reads);
             }
         }
 
@@ -91,7 +100,7 @@ final class DocumentBuilder
             'meta' => $meta,
         ];
 
-        if ($included !== []) {
+        if ($included !== [] || $criteria->include !== []) {
             $this->limits?->assertIncludedCount(count($included));
             $document['included'] = array_values($included);
         }
@@ -106,9 +115,10 @@ final class DocumentBuilder
      *     data: array{
      *         type: string,
      *         id: string,
-     *         links: array<string, string>,
+     *         links?: array<string, string>,
      *         attributes: array<string, mixed>|stdClass,
-     *         relationships?: array<string, array<string, mixed>>
+     *         relationships?: array<string, array<string, mixed>>,
+     *     meta?: array<string, mixed>
      *     },
      *     meta?: array<string, mixed>,
      *     included?: list<array<string, mixed>>
@@ -116,13 +126,17 @@ final class DocumentBuilder
      */
     public function buildResource(string $type, object $model, Criteria $criteria, Request $request): array
     {
+        $request->attributes->set('_jsonapi_collection', false);
+        $request->attributes->set('_jsonapi_models', [$model]);
+        $request->attributes->set('_jsonapi_model_type', $type);
         $includeTree = $this->buildIncludeTree($criteria);
         $included = [];
-        $visited = [];
-        $context = ProfileContext::fromRequest($request);
+        $visited = [$type . ':' . $this->resolveId($this->registry->getByType($type), $model) => true];
+        $reads = $this->preloader?->preload($type, [$model], $criteria, $request);
+        $context = ProfileContext::fromRequest($request)?->withRelationshipReads($reads);
 
         if ($includeTree !== []) {
-            $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context);
+            $this->gatherIncluded($type, $model, $includeTree, $criteria, $included, $visited, $context, $reads);
         }
 
         /** @var array<string, string|list<string>> $links */
@@ -138,10 +152,10 @@ final class DocumentBuilder
         $document = [
             'jsonapi' => ['version' => '1.1'],
             'links' => $links,
-            'data' => $this->buildResourceObject($type, $model, $criteria, $context, $includeTree),
+            'data' => $this->buildResourceObject($type, $model, $criteria, $context, $includeTree, $reads),
         ];
 
-        if ($included !== []) {
+        if ($included !== [] || $criteria->include !== []) {
             $this->limits?->assertIncludedCount(count($included));
             $document['included'] = array_values($included);
         }
@@ -159,31 +173,46 @@ final class DocumentBuilder
      * @return array{
      *     type: string,
      *     id: string,
-     *     links: array<string, string>,
+     *     links?: array<string, string>,
      *     attributes: array<string, mixed>|stdClass,
-     *     relationships?: array<string, array<string, mixed>>
+     *     relationships?: array<string, array<string, mixed>>,
+     *     meta?: array<string, mixed>
      * }
      */
-    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null, array $activeIncludeTree = []): array
+    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null, array $activeIncludeTree = [], ?\AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap $reads = null): array
     {
         $metadata = $this->registry->getByType($type);
         $fields = $criteria->fields[$type] ?? null;
-        $attributes = $this->buildAttributes($metadata, $model, $fields);
+        $attributes = $this->buildAttributes($metadata, $model, $fields, $context);
         $id = $this->resolveId($metadata, $model);
 
         $resource = [
             'type' => $type,
             'id' => $id,
-            'links' => [
-                'self' => $this->links->resourceSelf($type, $id),
-            ],
         ];
+
+        if (in_array(\AlexFigures\JsonApi\Resource\Definition\ResourceOperation::SHOW, $metadata->allowedOperations, true)) {
+            $resource['links'] = ['self' => $this->links->resourceSelf($type, $id)];
+        }
 
         $resource['attributes'] = $attributes === [] ? new stdClass() : $attributes;
 
-        $relationships = $this->buildRelationships($metadata, $model, $criteria, $id, $context, $activeIncludeTree);
+        $relationships = $this->buildRelationships($metadata, $model, $criteria, $id, $context, $activeIncludeTree, $reads);
         if ($relationships !== []) {
             $resource['relationships'] = $relationships;
+        }
+
+        if ($context !== null) {
+            $resourceMeta = [];
+            $typedContext = $context->forType($type);
+            foreach ($typedContext->documentHooks() as $hook) {
+                if ($hook instanceof \AlexFigures\JsonApi\Profile\Hook\ResourceMetaHookInterface) {
+                    $hook->onResourceMeta($typedContext, $metadata, $resourceMeta, $model);
+                }
+            }
+            if ($resourceMeta !== []) {
+                $resource['meta'] = $resourceMeta;
+            }
         }
 
         return $resource;
@@ -194,17 +223,27 @@ final class DocumentBuilder
      *
      * @return array<string, mixed>
      */
-    private function buildAttributes(ResourceMetadata $metadata, object $model, ?array $fields): array
+    private function buildAttributes(ResourceMetadata $metadata, object $model, ?array $fields, ?ProfileContext $context = null): array
     {
         $attributes = [];
         $restrict = $fields !== null;
         $normalizationGroups = $metadata->getNormalizationGroups();
+        $definition = $metadata->getDefinition($context?->forType($metadata->type));
+        $projected = $definition->readProjection === \AlexFigures\JsonApi\Resource\Definition\ReadProjection::DTO && is_a($model, $definition->getEffectiveViewClass());
 
         /** @var AttributeMetadata $attribute */
         foreach ($metadata->attributes as $name => $attribute) {
+            $path = $attribute->propertyPath ?? $name;
+            if ($projected) {
+                // API visibility remains metadata-owned; DTO fields define the available representation.
+                $path = $this->accessor->isReadable($model, $name) ? $name : $path;
+                if (!$this->accessor->isReadable($model, $path)) {
+                    continue;
+                }
+            }
             // Check if attribute is in normalization groups (if groups are defined)
             if (!empty($normalizationGroups)) {
-                $propertyPath = $attribute->propertyPath ?? $name;
+                $propertyPath = $path;
                 if (!$this->isAttributeInGroups($model, $propertyPath, $normalizationGroups)) {
                     continue;
                 }
@@ -214,7 +253,7 @@ final class DocumentBuilder
                 continue;
             }
 
-            $value = $this->accessor->getValue($model, $attribute->propertyPath ?? $name);
+            $value = $this->accessor->getValue($model, $path);
             $attributes[$name] = $this->normalizeAttributeValue($value);
         }
 
@@ -239,18 +278,18 @@ final class DocumentBuilder
             }
 
             $reflectionProperty = $reflection->getProperty($property);
-            $groupsAttributes = $reflectionProperty->getAttributes(\Symfony\Component\Serializer\Annotation\Groups::class);
+            $groupsAttributes = $reflectionProperty->getAttributes(\Symfony\Component\Serializer\Attribute\Groups::class);
 
             if (empty($groupsAttributes)) {
                 return true; // If no groups defined on property, show it
             }
 
-            /** @var \Symfony\Component\Serializer\Annotation\Groups $propertyGroups */
+            /** @var \Symfony\Component\Serializer\Attribute\Groups $propertyGroups */
             $propertyGroups = $groupsAttributes[0]->newInstance();
 
             // Check if there's an intersection between property groups and requested groups
-            return !empty(array_intersect($groups, $propertyGroups->getGroups()));
-        } catch (\ReflectionException $e) {
+            return !empty(array_intersect($groups, $propertyGroups->groups));
+        } catch (\ReflectionException) {
             return true; // On error, show the attribute
         }
     }
@@ -260,7 +299,7 @@ final class DocumentBuilder
      *
      * @return array<string, array<string, mixed>>
      */
-    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id, ?ProfileContext $context, array $activeIncludeTree = []): array
+    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id, ?ProfileContext $context, array $activeIncludeTree = [], ?\AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap $reads = null): array
     {
         $relationships = [];
         $fields = $criteria->fields[$metadata->type] ?? null;
@@ -279,7 +318,9 @@ final class DocumentBuilder
             ];
 
             if ($this->shouldIncludeRelationshipData($criteria, $metadata->type, $name, $activeIncludeTree)) {
-                $linkage = $this->resolveRelationshipLinkage($relationship, $model);
+                $cached = $reads?->identifiers($metadata->type, $id, $name);
+                $source = $this->relationshipSource($relationship, $model, $reads?->source($metadata->type, $id));
+                $linkage = $cached === null ? $this->resolveRelationshipLinkage($relationship, $source) : ($relationship->toMany ? $cached : ($cached[0] ?? null));
                 $data['data'] = $linkage;
             }
 
@@ -287,7 +328,7 @@ final class DocumentBuilder
         }
 
         if ($relationships !== [] && $context !== null) {
-            foreach ($context->documentHooks() as $hook) {
+            foreach ($context->forType($metadata->type)->documentHooks() as $hook) {
                 $hook->onResourceRelationships($context, $metadata, $relationships, $model);
             }
         }
@@ -302,7 +343,7 @@ final class DocumentBuilder
     {
         return match ($this->relationshipLinkageMode) {
             'always' => true,
-            'never' => false,
+            'never' => isset($activeIncludeTree[$relationship]),
             default => $this->isRelationshipRequested($criteria, $type, $relationship, $activeIncludeTree),
         };
     }
@@ -329,6 +370,13 @@ final class DocumentBuilder
         }
 
         return false;
+    }
+
+    private function relationshipSource(RelationshipMetadata $relationship, object $model, ?object $source): object
+    {
+        $path = $relationship->aliasPath ?? $relationship->propertyPath ?? $relationship->name;
+        $root = explode('.', $path)[0];
+        return $source !== null && !$this->accessor->isReadable($model, $root) ? $source : $model;
     }
 
     /**
@@ -391,7 +439,7 @@ final class DocumentBuilder
      * @param array<string, array<string, mixed>> $included
      * @param array<string, bool>                 $visited
      */
-    private function gatherIncluded(string $type, object $model, array $includeTree, Criteria $criteria, array &$included, array &$visited, ?ProfileContext $context): void
+    private function gatherIncluded(string $type, object $model, array $includeTree, Criteria $criteria, array &$included, array &$visited, ?ProfileContext $context, ?\AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap $reads = null): void
     {
         if ($includeTree === []) {
             return;
@@ -414,13 +462,15 @@ final class DocumentBuilder
             /** @var RelationshipMetadata $relationship */
             $relationship = $metadata->relationships[$relationshipName];
             // Resolve propertyPath aliases (e.g., "articleSpecialTags.specialTag")
-            $related = $this->resolvePropertyPath($model, $relationship);
+            $cached = $reads?->related($type, $this->resolveId($metadata, $model), $relationshipName);
+            $source = $this->relationshipSource($relationship, $model, $reads?->source($type, $this->resolveId($metadata, $model)));
+            $related = $cached ?? $this->resolvePropertyPath($source, $relationship);
 
             if ($related === null) {
                 continue;
             }
 
-            $relatedItems = $relationship->toMany ? $this->normalizeToMany($related) : [$related];
+            $relatedItems = $cached ?? ($relationship->toMany ? $this->normalizeToMany($related) : [$related]);
 
             foreach ($relatedItems as $relatedItem) {
                 if (!is_object($relatedItem)) {
@@ -437,7 +487,7 @@ final class DocumentBuilder
                     $relatedType = $metadataForClass->type;
                 }
 
-                $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria, $context, $children);
+                $resource = $this->buildResourceObject($relatedType, $relatedItem, $criteria, $context, $children, $reads);
                 $typeValue = $resource['type'];
                 $idValue = $resource['id'];
 
@@ -450,11 +500,12 @@ final class DocumentBuilder
                 if (!isset($visited[$identifier])) {
                     $visited[$identifier] = true;
                     $included[$identifier] = $resource;
+                    $this->limits?->assertIncludedCount(count($included));
                     if ($children !== []) {
-                        $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context);
+                        $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context, $reads);
                     }
                 } elseif ($children !== []) {
-                    $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context);
+                    $this->gatherIncluded($relatedType, $relatedItem, $children, $criteria, $included, $visited, $context, $reads);
                 }
             }
         }
@@ -560,7 +611,7 @@ final class DocumentBuilder
     private function normalizeToMany(mixed $value): array
     {
         if (is_array($value)) {
-            return array_values(array_filter($value, static fn ($item) => is_object($item)));
+            return array_values(array_filter($value, is_object(...)));
         }
 
         if ($value instanceof \Traversable) {
@@ -610,7 +661,7 @@ final class DocumentBuilder
                 }
 
                 // Handle collections
-                if ($current instanceof \Traversable || is_array($current)) {
+                if (is_iterable($current)) {
                     $items = [];
                     foreach ($current as $item) {
                         // Ensure $item is an object or array before accessing

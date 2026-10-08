@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Handler\Registry;
+namespace AlexFigures\JsonApi\Filter\Handler\Registry;
 
-use AlexFigures\Symfony\Filter\Handler\SortHandlerInterface;
+use AlexFigures\JsonApi\Filter\Handler\SortHandlerInterface;
 
 /**
  * Registry for custom sort handlers.
@@ -15,8 +15,8 @@ use AlexFigures\Symfony\Filter\Handler\SortHandlerInterface;
  * Handlers are sorted by priority (highest first) and the first matching
  * handler is used.
  *
- * @api This class is part of the public API and follows semantic versioning.
- * @since 1.1.0
+ * @internal This class is part of the public API and follows semantic versioning.
+ * @since 1.0.0
  */
 final class SortHandlerRegistry
 {
@@ -104,9 +104,7 @@ final class SortHandlerRegistry
             return;
         }
 
-        usort($this->handlers, static function (SortHandlerInterface $a, SortHandlerInterface $b): int {
-            return $b->getPriority() <=> $a->getPriority();
-        });
+        usort($this->handlers, static fn (SortHandlerInterface $a, SortHandlerInterface $b): int => $b->getPriority() <=> $a->getPriority());
 
         $this->sorted = true;
     }

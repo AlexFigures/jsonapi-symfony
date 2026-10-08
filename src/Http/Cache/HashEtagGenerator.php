@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Cache;
+namespace AlexFigures\JsonApi\Http\Cache;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,8 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
  *     etag?: array{hash_algo?: string},
  *     hash_algo?: string
  * }
+ * @internal
  */
-final class HashEtagGenerator implements EtagGeneratorInterface
+final readonly class HashEtagGenerator implements EtagGeneratorInterface
 {
     /**
      * @param HashEtagConfig $config
@@ -34,7 +35,9 @@ final class HashEtagGenerator implements EtagGeneratorInterface
 
     public function generate(Request $request, Response $response, string $cacheKey, bool $weak): ?string
     {
-        $content = $response->getContent();
+        $content = $response instanceof \AlexFigures\JsonApi\Http\Controller\Support\RepresentationResponse && $response->representationContent !== null
+            ? $response->representationContent
+            : $response->getContent();
         if ($content === false) {
             return null;
         }

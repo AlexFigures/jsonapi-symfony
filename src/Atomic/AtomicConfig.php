@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic;
+namespace AlexFigures\JsonApi\Atomic;
 
+/** @internal */
 final class AtomicConfig
 {
     public function __construct(

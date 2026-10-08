@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Docs\OpenApi;
+namespace AlexFigures\JsonApi\Tests\Unit\Docs\OpenApi;
 
-use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Docs\OpenApi\OpenApiSpecGenerator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 
 final class OpenApiSpecGeneratorTest extends TestCase
@@ -53,12 +53,12 @@ final class OpenApiSpecGeneratorTest extends TestCase
 
         $registry = new class ($articleMetadata, $authorMetadata, $tagMetadata) implements ResourceRegistryInterface {
             /** @var list<ResourceMetadata> */
-            private array $all;
+            private readonly array $all;
 
             public function __construct(
-                private ResourceMetadata $article,
-                private ResourceMetadata $author,
-                private ResourceMetadata $tag,
+                private readonly ResourceMetadata $article,
+                private readonly ResourceMetadata $author,
+                private readonly ResourceMetadata $tag,
             ) {
                 $this->all = [$article, $author, $tag];
             }
@@ -160,7 +160,7 @@ final class OpenApiSpecGeneratorTest extends TestCase
         );
 
         $registry = new class ($blogPostMetadata) implements ResourceRegistryInterface {
-            public function __construct(private ResourceMetadata $blogPost)
+            public function __construct(private readonly ResourceMetadata $blogPost)
             {
             }
 
@@ -237,7 +237,7 @@ final class OpenApiSpecGeneratorTest extends TestCase
         );
 
         $registry = new class ($userProfileMetadata) implements ResourceRegistryInterface {
-            public function __construct(private ResourceMetadata $userProfile)
+            public function __construct(private readonly ResourceMetadata $userProfile)
             {
             }
 
@@ -323,8 +323,8 @@ final class OpenApiSpecGeneratorTest extends TestCase
 
         $registry = new class ($blogPostMetadata, $authorMetadata) implements ResourceRegistryInterface {
             public function __construct(
-                private ResourceMetadata $blogPost,
-                private ResourceMetadata $author,
+                private readonly ResourceMetadata $blogPost,
+                private readonly ResourceMetadata $author,
             ) {
             }
 

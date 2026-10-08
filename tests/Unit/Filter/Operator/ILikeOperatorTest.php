@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Filter\Operator;
+namespace AlexFigures\JsonApi\Tests\Unit\Filter\Operator;
 
-use AlexFigures\Symfony\Filter\Operator\ILikeOperator;
+use AlexFigures\JsonApi\Filter\Operator\ILikeOperator;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \AlexFigures\Symfony\Filter\Operator\ILikeOperator
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(\AlexFigures\JsonApi\Filter\Operator\ILikeOperator::class)]
 final class ILikeOperatorTest extends TestCase
 {
     private ILikeOperator $operator;

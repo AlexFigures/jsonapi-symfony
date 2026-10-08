@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Definition;
+namespace AlexFigures\JsonApi\Resource\Definition;
 
-use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\JsonApi\Profile\ProfileContext;
 
+/** @api */
 interface VersionResolverInterface
 {
     public function resolve(ProfileContext $context): VersionDefinition;

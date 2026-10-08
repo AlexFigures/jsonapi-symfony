@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\ValidationGroups;
+namespace AlexFigures\JsonApi\Tests\Integration\ValidationGroups;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Comment;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Product;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\User;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ValidatedArticle;
+use AlexFigures\JsonApi\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\CategorySynonym;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Comment;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Product;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\User;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ValidatedArticle;
 
 /**
  * Base test case for validation and denormalization groups integration tests.
@@ -52,10 +52,10 @@ abstract class ValidationGroupsIntegrationTestCase extends DoctrineIntegrationTe
         ]);
 
         // Recreate violationMapper with updated registry
-        $this->violationMapper = new \AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper(
+        $this->violationMapper = new \AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper(
             $this->registry,
-            new \AlexFigures\Symfony\Http\Error\ErrorMapper(
-                new \AlexFigures\Symfony\Http\Error\ErrorBuilder(false)
+            new \AlexFigures\JsonApi\Http\Error\ErrorMapper(
+                new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(false)
             ),
         );
 
@@ -66,11 +66,11 @@ abstract class ValidationGroupsIntegrationTestCase extends DoctrineIntegrationTe
             $this->accessor,
             $this->validator,
             $this->violationMapper,
-            new \AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator(
+            new \AlexFigures\JsonApi\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator(
                 $this->managerRegistry,
                 $this->accessor,
             ),
-            new \AlexFigures\Symfony\Resource\Relationship\RelationshipResolver(
+            new \AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver(
                 $this->managerRegistry,
                 $this->registry,
                 $this->accessor,

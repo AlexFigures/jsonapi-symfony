@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Negotiation;
+namespace AlexFigures\JsonApi\Profile\Negotiation;
 
-use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\ProfileRegistry;
+use AlexFigures\JsonApi\Http\Exception\NotAcceptableException;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\ProfileRegistry;
 use Symfony\Component\HttpFoundation\Request;
 
-final class ProfileNegotiator
+/** @internal */
+final readonly class ProfileNegotiator
 {
     /** @var list<string> */
     private array $enabledByDefault;
@@ -30,7 +31,7 @@ final class ProfileNegotiator
      * @param array{require_known_profiles?: bool, echo_profiles_in_content_type?: bool, link_header?: bool} $negotiation
      */
     public function __construct(
-        private readonly ProfileRegistry $registry,
+        private ProfileRegistry $registry,
         array $enabledByDefault = [],
         array $perType = [],
         array $negotiation = []
@@ -127,7 +128,7 @@ final class ProfileNegotiator
         $profiles = $this->resolveProfiles($activeUris);
         $perTypeProfiles = [];
         foreach ($this->perType as $type => $uris) {
-            $resolved = $this->resolveProfiles($uris);
+            $resolved = $this->resolveProfiles(array_values(array_diff($uris, $disabled)));
             if ($resolved !== []) {
                 /** @var list<ProfileInterface> $profilesForType */
                 $profilesForType = array_values($resolved);
@@ -158,24 +159,19 @@ final class ProfileNegotiator
         }
 
         $profiles = [];
-        $parts = preg_split('/,(?![^\"]*\")/', $header) ?: [$header];
-        foreach ($parts as $part) {
-            if (!preg_match('/profile\s*=\s*([^;]+)/i', $part, $matches)) {
+        foreach (\AlexFigures\JsonApi\Http\Negotiation\ParsedMediaType::parse($header, true) as $media) {
+            if ($media->quality <= 0 || !$media->validJsonApi(['https://jsonapi.org/ext/atomic'])) {
                 continue;
             }
-
-            $raw = trim($matches[1]);
-            $raw = trim($raw, "'\"");
-            if ($raw === '') {
-                continue;
-            }
-
-            foreach (preg_split('/\s+/', $raw) ?: [] as $uri) {
-                $uri = trim($uri);
-                if ($uri !== '') {
-                    $profiles[] = $uri;
+            $raw = $media->parameters['profile'] ?? '';
+            if (is_string($raw)) {
+                foreach (preg_split('/\s+/', trim($raw)) ?: [] as $uri) {
+                    if ($uri !== '') {
+                        $profiles[] = $uri;
+                    }
                 }
             }
+            break;
         }
 
         return $profiles;
