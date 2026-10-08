@@ -2,23 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
-final class ErrorObject
+/** @api */
+final readonly class ErrorObject
 {
     /**
      * @param array<string, mixed> $meta
      */
     public function __construct(
-        public readonly ?string $id,
-        public readonly ?string $aboutLink,
-        public readonly string $status,
-        public readonly string $code,
-        public readonly ?string $title,
-        public readonly ?string $detail,
-        public readonly ?ErrorSource $source,
-        public readonly array $meta = [],
-        public readonly ?string $typeLink = null,
+        public ?string $id,
+        public ?string $aboutLink,
+        public string $status,
+        public string $code,
+        public ?string $title,
+        public ?string $detail,
+        public ?ErrorSource $source,
+        public array $meta = [],
+        public ?string $typeLink = null,
     ) {
     }
 

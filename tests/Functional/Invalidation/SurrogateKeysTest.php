@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Invalidation;
+namespace AlexFigures\JsonApi\Tests\Functional\Invalidation;
 
-use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
-use AlexFigures\Symfony\Http\Cache\CacheKeyBuilder;
-use AlexFigures\Symfony\Http\Cache\ConditionalRequestEvaluator;
-use AlexFigures\Symfony\Http\Cache\HashEtagGenerator;
-use AlexFigures\Symfony\Http\Cache\HeadersApplier;
-use AlexFigures\Symfony\Http\Cache\LastModifiedResolver;
-use AlexFigures\Symfony\Http\Cache\SurrogateKeyBuilder;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
+use AlexFigures\JsonApi\Http\Cache\CacheKeyBuilder;
+use AlexFigures\JsonApi\Http\Cache\ConditionalRequestEvaluator;
+use AlexFigures\JsonApi\Http\Cache\HashEtagGenerator;
+use AlexFigures\JsonApi\Http\Cache\HeadersApplier;
+use AlexFigures\JsonApi\Http\Cache\LastModifiedResolver;
+use AlexFigures\JsonApi\Http\Cache\SurrogateKeyBuilder;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;

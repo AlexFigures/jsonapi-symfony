@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Docs\Attribute;
+namespace AlexFigures\JsonApi\Docs\Attribute;
 
 use Attribute;
 
@@ -14,10 +14,10 @@ use Attribute;
  *
  * Example usage:
  * ```php
- * use AlexFigures\Symfony\Docs\Attribute\OpenApiEndpoint;
- * use AlexFigures\Symfony\Docs\Attribute\OpenApiRequestBody;
- * use AlexFigures\Symfony\Docs\Attribute\OpenApiResponse;
- * use Symfony\Component\Routing\Annotation\Route;
+ * use AlexFigures\JsonApi\Docs\Attribute\OpenApiEndpoint;
+ * use AlexFigures\JsonApi\Docs\Attribute\OpenApiRequestBody;
+ * use AlexFigures\JsonApi\Docs\Attribute\OpenApiResponse;
+ * use Symfony\Component\Routing\Attribute\Route;
  *
  * class UploadController extends AbstractController
  * {
@@ -66,7 +66,7 @@ use Attribute;
  * @since 1.0.0
  */
 #[Attribute(Attribute::TARGET_METHOD)]
-final class OpenApiEndpoint
+final readonly class OpenApiEndpoint
 {
     /**
      * @param string                        $summary     Short summary of the endpoint
@@ -81,16 +81,16 @@ final class OpenApiEndpoint
      * @param array<string, OpenApiExample> $examples    Request/response examples (optional)
      */
     public function __construct(
-        public readonly string $summary,
-        public readonly ?string $description = null,
-        public readonly ?OpenApiRequestBody $requestBody = null,
-        public readonly array $responses = [],
-        public readonly array $tags = [],
-        public readonly array $parameters = [],
-        public readonly ?string $operationId = null,
-        public readonly array $security = [],
-        public readonly bool $deprecated = false,
-        public readonly array $examples = [],
+        public string $summary,
+        public ?string $description = null,
+        public ?OpenApiRequestBody $requestBody = null,
+        public array $responses = [],
+        public array $tags = [],
+        public array $parameters = [],
+        public ?string $operationId = null,
+        public array $security = [],
+        public bool $deprecated = false,
+        public array $examples = [],
     ) {
     }
 }

@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
-use AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile;
-use AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile;
-use AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SoftDeletableArticle;
+use AlexFigures\JsonApi\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\JsonApi\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
+use AlexFigures\JsonApi\Bridge\Doctrine\Profile\ProfileWriteHooks;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile;
+use AlexFigures\JsonApi\Profile\Builtin\RelationshipCountsProfile;
+use AlexFigures\JsonApi\Profile\Builtin\SoftDeleteProfile;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\SoftDeletableArticle;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -57,7 +57,7 @@ final class ProfileAcceptanceRegressionTest extends DoctrineAtomicTestCase
         $request = Request::create('/api/soft-deletable-articles');
         $profile = new SoftDeleteProfile();
         ProfileContext::store($request, new ProfileContext([$profile->uri() => $profile]));
-        $parser = new QueryParser($this->registry, new PaginationConfig(), new SortingWhitelist($this->registry), new FilteringWhitelist($this->registry, $this->errorMapper), $this->errorMapper, new \AlexFigures\Symfony\Filter\Parser\FilterParser());
+        $parser = new QueryParser($this->registry, new PaginationConfig(), new SortingWhitelist($this->registry), new FilteringWhitelist($this->registry, $this->errorMapper), $this->errorMapper, new \AlexFigures\JsonApi\Filter\Parser\FilterParser());
         $criteria = $parser->parse('soft-deletable-articles', $request);
         $items = $this->repository->findCollection('soft-deletable-articles', $criteria)->items;
         self::assertCount(1, $items);

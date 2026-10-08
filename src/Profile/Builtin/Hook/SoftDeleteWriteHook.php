@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin\Hook;
+namespace AlexFigures\JsonApi\Profile\Builtin\Hook;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Profile\Hook\WriteHook;
-use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Profile\Hook\WriteHook;
+use AlexFigures\JsonApi\Profile\ProfileContext;
 
 /**
  * Write hook for soft delete profile.
@@ -17,6 +17,7 @@ use AlexFigures\Symfony\Profile\ProfileContext;
  * Usage:
  * - On delete, sets deletedAt timestamp instead of removing entity
  * - Optionally tracks who deleted the resource (deletedBy field)
+ * @internal
  */
 final readonly class SoftDeleteWriteHook implements WriteHook
 {
@@ -45,7 +46,7 @@ final readonly class SoftDeleteWriteHook implements WriteHook
         //
         // To get field names from the entity's #[SoftDeletable] attribute:
         // $entityClass = $registry->getByType($type)->class;
-        // $attribute = $context->attributeReader()->getAttribute($entityClass, \AlexFigures\Symfony\Profile\Attribute\SoftDeletable::class);
+        // $attribute = $context->attributeReader()->getAttribute($entityClass, \AlexFigures\JsonApi\Profile\Attribute\SoftDeletable::class);
         // $deletedAtField = $attribute?->deletedAtField ?? 'deletedAt';
         // $deletedByField = $attribute?->deletedByField ?? null;
     }

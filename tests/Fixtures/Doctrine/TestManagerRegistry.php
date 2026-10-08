@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\Doctrine;
+namespace AlexFigures\JsonApi\Tests\Fixtures\Doctrine;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -20,7 +20,7 @@ final class TestManagerRegistry implements ManagerRegistry
     public function __construct(
         private array $managers,
         private array $classMap = [],
-        private string $defaultManagerName = 'default',
+        private readonly string $defaultManagerName = 'default',
     ) {
     }
 
@@ -70,7 +70,7 @@ final class TestManagerRegistry implements ManagerRegistry
         throw new RuntimeException('resetManager is not supported in TestManagerRegistry.');
     }
 
-    public function getAliasNamespace($alias)
+    public function getAliasNamespace($alias): never
     {
         throw new RuntimeException('Alias namespaces are not supported in TestManagerRegistry.');
     }

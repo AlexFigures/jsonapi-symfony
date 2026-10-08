@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\ReadPath;
+namespace AlexFigures\JsonApi\Tests\Integration\ReadPath;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineCollectionQueryProviderInterface;
-use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Contract\Data\ResourceRepository;
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Bridge\Doctrine\Query\DoctrineCollectionQueryProviderInterface;
+use AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Contract\Data\ResourceRepository;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Query\Criteria;
 use Doctrine\ORM\QueryBuilder;
 
 final class ScopedRepositoryDecorator implements ResourceRepository, DoctrineCollectionQueryProviderInterface

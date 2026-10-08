@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Cache;
+namespace AlexFigures\JsonApi\Http\Cache;
 
 use Symfony\Component\HttpFoundation\Request;
 
@@ -13,8 +13,9 @@ use Symfony\Component\HttpFoundation\Request;
  *     },
  *     format?: array{resource?: string, collection?: string, relationship?: string}
  * }
+ * @internal
  */
-final class SurrogateKeyBuilder
+final readonly class SurrogateKeyBuilder
 {
     /**
      * @param SurrogateKeyConfig $config

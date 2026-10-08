@@ -2,32 +2,33 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
-use AlexFigures\Symfony\Contract\Data\ResourceRepository;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\ResourceRepository;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(path: '/api/{type}/{id}', name: 'jsonapi.resource', methods: ['GET', 'HEAD'])]
-final class ResourceController
+/** @internal */
+final readonly class ResourceController
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly OperationValidator $operationValidator,
-        private readonly JsonApiResponseFactory $responseFactory,
-        private readonly ResourceRepository $repository,
-        private readonly QueryParser $parser,
-        private readonly DocumentBuilder $document,
-        private readonly ErrorMapper $errors,
+        private ResourceRegistryInterface $registry,
+        private OperationValidator $operationValidator,
+        private JsonApiResponseFactory $responseFactory,
+        private ResourceRepository $repository,
+        private QueryParser $parser,
+        private DocumentBuilder $document,
+        private ErrorMapper $errors,
     ) {
     }
 

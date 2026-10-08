@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Metadata;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Metadata;
 
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ValidatedArticle;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ValidatedArticle;
 
 final class ValidatedArticleMetadata
 {

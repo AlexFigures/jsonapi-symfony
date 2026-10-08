@@ -17,4 +17,6 @@ php bin/console debug:container
 
 For changing validators and N+1, compare cold-cache request query shape at different page sizes and inspect declared relationship/profile needs. Arbitrary application getters and SQL are not automatically batch-loaded.
 
-TODO before freeze: expand verified error code/source examples, media negotiation/OpenAPI troubleshooting and diagnostics for strict fallback behavior. See [documentation TODO](../release/documentation-todo.md).
+406 / 415 indicates media policy mismatch: inspect Accept, Content-Type, media channels and configured default policy. Native OpenAPI/UI routes use their own media. `unplanned_read_policy: reject` indicates a relationship getter/provider has not declared a bounded fetch capability; add a scoped batch reader instead of hiding the error. [Error contract](../api/errors.md) lists stable status/code/source diagnostics; details can vary.
+
+For a custom profile/operator/typed reader, inspect the actual service tags and autoconfiguration. Namespace migration requires replacing service FQCNs, regenerating autoload and rebuilding the container. See [extension examples](../api/extension-examples.md) and [UPGRADE-1.0](../../UPGRADE-1.0.md).

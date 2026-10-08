@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Regression;
+namespace AlexFigures\JsonApi\Tests\Functional\Regression;
 
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Contract\Data\SliceIds;
-use AlexFigures\Symfony\Contract\Data\TypedRelationshipReader;
-use AlexFigures\Symfony\Contract\Data\TypedRelationshipUpdater;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Pagination;
-use AlexFigures\Symfony\Tests\Functional\Regression\Fixtures\RcMemory;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Contract\Data\SliceIds;
+use AlexFigures\JsonApi\Contract\Data\TypedRelationshipReader;
+use AlexFigures\JsonApi\Contract\Data\TypedRelationshipUpdater;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Pagination;
+use AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures\RcMemory;
 
 final class RcTypedRelationshipHandler implements TypedRelationshipReader, TypedRelationshipUpdater
 {

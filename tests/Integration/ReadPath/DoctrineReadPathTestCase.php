@@ -2,29 +2,29 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\ReadPath;
+namespace AlexFigures\JsonApi\Tests\Integration\ReadPath;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader;
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
-use AlexFigures\Symfony\Http\Safety\RequestComplexityScorer;
-use AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Pagination;
-use AlexFigures\Symfony\Query\Sorting;
-use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use Doctrine\DBAL\Logging\DebugStack;
+use AlexFigures\JsonApi\Bridge\Doctrine\Read\DoctrineRepresentationPreloader;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Document\Fetch\RepresentationFetchPlanner;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Safety\LimitsEnforcer;
+use AlexFigures\JsonApi\Http\Safety\RequestComplexityScorer;
+use AlexFigures\JsonApi\Profile\Builtin\RelationshipCountsProfile;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Pagination;
+use AlexFigures\JsonApi\Query\Sorting;
+use AlexFigures\JsonApi\Resource\Mapper\DefaultReadMapper;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\DebugStack;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
 use Doctrine\ORM\PersistentCollection;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Request;
@@ -57,9 +57,9 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     }
 
     /** @param array<string, int> $limits
-     * @param list<\AlexFigures\Symfony\Contract\Data\RelationshipBatchReaderInterface> $batchReaders
+     * @param list<\AlexFigures\JsonApi\Contract\Data\RelationshipBatchReaderInterface> $batchReaders
      */
-    private function builder(string $mode = 'always', array $limits = [], ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null, array $batchReaders = [], string $unplanned = 'legacy'): DocumentBuilder
+    private function builder(string $mode = 'always', array $limits = [], ?\AlexFigures\JsonApi\Contract\Data\ResourceRepository $repository = null, array $batchReaders = [], string $unplanned = 'legacy'): DocumentBuilder
     {
         $routes = new RouteCollection();
         foreach (['articles' => ['author', 'tags', 'secondaryAuthor', 'parentAuthor', 'secondaryTags', 'tertiaryTags'], 'authors' => ['articles', 'otherArticles', 'recentArticles', 'archivedArticles'], 'tags' => [], 'articles-with-special-tags' => ['author', 'tags', 'specialTags'], 'special-tags' => []] as $type => $relationships) {
@@ -113,14 +113,14 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         foreach ([5, 20] as $size) {
             $this->em->clear();
             $log = new DebugStack();
-            $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $log);
             $criteria = new Criteria(new Pagination(1, $size));
             $criteria->include = $includes;
             if ($sparse) {
                 $criteria->fields['articles'] = ['title'];
             }
             $slice = $this->repository->findCollection('articles', $criteria);
-            $document = $this->builder(repository: new \AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceRepositoryLocator([], $this->repository))->buildCollection('articles', $slice->items, $criteria, $slice, Request::create('/api/articles'));
+            $document = $this->builder(repository: new \AlexFigures\JsonApi\Bridge\Symfony\Locator\ResourceRepositoryLocator([], $this->repository))->buildCollection('articles', $slice->items, $criteria, $slice, Request::create('/api/articles'));
             self::assertCount($size, $document['data']);
             self::assertSame(25, $document['meta']['total']);
             $counts[] = count($log->queries);
@@ -157,7 +157,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
             foreach ([5, 20] as $size) {
                 $this->em->clear();
                 $log = new DebugStack();
-                $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+                \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $log);
                 $criteria = new Criteria(new Pagination(1, $size));
                 $criteria->include = $includes;
                 if ($sparse) {
@@ -199,9 +199,9 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $this->em->createQuery('UPDATE ' . Article::class . ' a SET a.author = :owner')->setParameter('owner', 'author-0000')->execute();
         $this->em->clear();
         $log = new DebugStack();
-        $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $log);
         $criteria = new Criteria(new Pagination(1, 20));
-        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
+        $handler = new \AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
         $slice = $handler->getRelatedCollection('authors', 'author-0000', 'articles', $criteria);
         $document = $this->builder(repository: $this->repository)->buildCollection('articles', $slice->items, $criteria, $slice, Request::create('/api/authors/author-0000/articles'));
         self::assertCount(20, $document['data']);
@@ -211,7 +211,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     public function testNativeGraphReadHookScopeIsEmbeddedWithoutVisibilityQueries(): void
     {
         $this->seedGraph(20);
-        $hook = new class () implements \AlexFigures\Symfony\Profile\Hook\ReadHook {
+        $hook = new class () implements \AlexFigures\JsonApi\Profile\Hook\ReadHook {
             public function onBeforeFindCollection(ProfileContext $context, string $type, Criteria $criteria): void
             {
                 if ($type === 'tags') {
@@ -224,17 +224,17 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
             {
             }
         };
-        $profile = new \AlexFigures\Symfony\Tests\Util\FakeProfile('urn:scope', [$hook]);
+        $profile = new \AlexFigures\JsonApi\Tests\Util\FakeProfile('urn:scope', [$hook]);
         $request = Request::create('/api/articles?include=tags');
         ProfileContext::store($request, new ProfileContext([], ['tags' => [$profile]]));
         $stack = new \Symfony\Component\HttpFoundation\RequestStack();
         $stack->push($request);
-        $filters = new \AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry();
-        $repository = new \AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository($this->managerRegistry, $this->registry, new \AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler(new \AlexFigures\Symfony\Filter\Operator\Registry(), $filters), $filters, new \AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry(), new DefaultReadMapper(), requests: $stack);
+        $filters = new \AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry();
+        $repository = new \AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository($this->managerRegistry, $this->registry, new \AlexFigures\JsonApi\Filter\Compiler\Doctrine\DoctrineFilterCompiler(new \AlexFigures\JsonApi\Filter\Operator\Registry(), $filters), $filters, new \AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry(), new DefaultReadMapper(), requests: $stack);
         $criteria = new Criteria(new Pagination(1, 20));
         $criteria->include = ['tags'];
         $log = new DebugStack();
-        $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $log);
         $slice = $repository->findCollection('articles', $criteria);
         $document = $this->builder(repository: $repository)->buildCollection('articles', $slice->items, $criteria, $slice, $request);
         self::assertCount(1, $document['included']);
@@ -248,9 +248,9 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     public function testInheritedNativeCapabilityNeverBypassesSubclassVisibility(): void
     {
         $this->seedGraph(5);
-        $filters = new \AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry();
-        $repository = new class ($this->managerRegistry, $this->registry, new \AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler(new \AlexFigures\Symfony\Filter\Operator\Registry(), $filters), $filters, new \AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry(), new DefaultReadMapper()) extends \AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository {
-            public function findCollection(string $type, Criteria $criteria): \AlexFigures\Symfony\Contract\Data\Slice
+        $filters = new \AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry();
+        $repository = new class ($this->managerRegistry, $this->registry, new \AlexFigures\JsonApi\Filter\Compiler\Doctrine\DoctrineFilterCompiler(new \AlexFigures\JsonApi\Filter\Operator\Registry(), $filters), $filters, new \AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry(), new DefaultReadMapper()) extends \AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository {
+            public function findCollection(string $type, Criteria $criteria): \AlexFigures\JsonApi\Contract\Data\Slice
             {
                 $criteria = clone $criteria;
                 if ($type === 'tags') {
@@ -295,16 +295,16 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     public function testCollectionSortIsRejectedBeforeAnySql(): void
     {
         $log = new DebugStack();
-        $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $log);
         $criteria = new Criteria();
         $criteria->sort = [new Sorting('tags.name', false)];
         try {
-            $strict = new \AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository(
+            $strict = new \AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository(
                 $this->managerRegistry,
                 $this->registry,
-                new \AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler(new \AlexFigures\Symfony\Filter\Operator\Registry([]), new \AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry([])),
-                new \AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry([]),
-                new \AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry(),
+                new \AlexFigures\JsonApi\Filter\Compiler\Doctrine\DoctrineFilterCompiler(new \AlexFigures\JsonApi\Filter\Operator\Registry([]), new \AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry([])),
+                new \AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry([]),
+                new \AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry(),
                 new DefaultReadMapper(),
                 'reject',
             );
@@ -323,7 +323,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $criteria->include = ['tags'];
         $slice = $this->repository->findCollection('articles', $criteria);
         $log = new DebugStack();
-        $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $log);
         try {
             $this->builder(limits: ['included_max_resources' => 10])->buildCollection('articles', $slice->items, $criteria, $slice, Request::create('/api/articles'));
             self::fail('Expected early include budget rejection.');
@@ -363,7 +363,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
             $profile = new RelationshipCountsProfile();
             ProfileContext::store($request, new ProfileContext([$profile->uri() => $profile]));
             $log = new DebugStack();
-            $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+            \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $log);
             $document = $builder->buildCollection('articles', $slice->items, $criteria, $slice, $request);
             foreach ($document['data'] as $resource) {
                 self::assertSame(3, $resource['relationships']['tags']['meta']['count']);
@@ -383,7 +383,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $last->addTag($firstTag);
         $this->em->flush();
         $this->em->clear();
-        $handler = new class () implements \AlexFigures\Symfony\Filter\Handler\SortHandlerInterface {
+        $handler = new class () implements \AlexFigures\JsonApi\Filter\Handler\SortHandlerInterface {
             public function supports(string $field): bool
             {
                 return $field === 'tags.name';
@@ -412,8 +412,8 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     {
         $this->seedGraph();
         $metadata = $this->registry->getByType('articles');
-        $metadata->readProjection = \AlexFigures\Symfony\Resource\Definition\ReadProjection::DTO;
-        $metadata->viewClass = \AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto::class;
+        $metadata->readProjection = \AlexFigures\JsonApi\Resource\Definition\ReadProjection::DTO;
+        $metadata->viewClass = \AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleViewDto::class;
         $metadata->fieldMap = ['id' => 'e.id', 'title' => 'e.title', 'content' => 'e.content', 'createdAt' => 'e.createdAt'];
         $criteria = new Criteria(new Pagination(1, 20));
         $criteria->filter = new Comparison('tags.id', 'in', ['tag-0000', 'tag-0001']);
@@ -421,7 +421,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         self::assertSame(25, $slice->totalItems);
         self::assertCount(20, $slice->items);
         foreach ($slice->items as $i => $view) {
-            self::assertInstanceOf(\AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto::class, $view);
+            self::assertInstanceOf(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleViewDto::class, $view);
             self::assertSame(sprintf('article-%04d', $i), $view->id);
         }
     }
@@ -430,7 +430,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     {
         $ids = [];
         for ($i = 0; $i < 3; ++$i) {
-            $record = new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypedIdentifierRecord();
+            $record = new \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypedIdentifierRecord();
             $record->id = \Symfony\Component\Uid\Uuid::v4();
             $record->name = 'Record ' . $i;
             $ids[] = (string) $record->id;
@@ -439,7 +439,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $this->em->flush();
         $this->em->clear();
         $metadata = $this->registry->getByType('typed-records');
-        $metadata->readProjection = \AlexFigures\Symfony\Resource\Definition\ReadProjection::DTO;
+        $metadata->readProjection = \AlexFigures\JsonApi\Resource\Definition\ReadProjection::DTO;
         $metadata->viewClass = TypedIdentifierView::class;
         $metadata->fieldMap = ['identifier' => 'e.id', 'name' => 'e.name'];
         $metadata->idPropertyPath = 'identifier';
@@ -457,15 +457,15 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
 
     public function testAliasThroughJoinEntityUsesOneBatchedEdge(): void
     {
-        $articleClass = \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTags::class;
-        $tagClass = \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SpecialTag::class;
-        $this->registry = new \AlexFigures\Symfony\Resource\Registry\ResourceRegistry([$articleClass, $tagClass, Tag::class, \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\AuthorForSpecialTags::class]);
+        $articleClass = \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTags::class;
+        $tagClass = \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\SpecialTag::class;
+        $this->registry = new \AlexFigures\JsonApi\Resource\Registry\ResourceRegistry([$articleClass, $tagClass, Tag::class, \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\AuthorForSpecialTags::class]);
         $this->registry->getByType('articles-with-special-tags')->relationships['specialTags']->aliasPath = 'articleSpecialTags.specialTag';
         $tag = (new $tagClass())->setName('Alias tag');
         $this->em->persist($tag);
         for ($i = 0; $i < 20; ++$i) {
             $article = (new $articleClass())->setTitle('Article ' . $i)->setContent('Body');
-            $join = (new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTagsSpecialTag())->setSpecialTag($tag);
+            $join = (new \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTagsSpecialTag())->setSpecialTag($tag);
             $article->addArticleSpecialTag($join);
             $this->em->persist($article);
             $this->em->persist($join);
@@ -477,7 +477,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $criteria->include = ['specialTags'];
         $slice = $this->customRepository()->findCollection('articles-with-special-tags', $criteria);
         $log = new DebugStack();
-        $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $log);
         $document = $this->builder()->buildCollection('articles-with-special-tags', $slice->items, $criteria, $slice, Request::create('/api/articles-with-special-tags'));
         self::assertCount(20, $document['data']);
         self::assertCount(1, $document['included']);
@@ -544,14 +544,14 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     {
         $this->seedGraph(1, 1);
         $metadata = $this->registry->getByType('articles');
-        $metadata->readProjection = \AlexFigures\Symfony\Resource\Definition\ReadProjection::DTO;
-        $metadata->viewClass = \AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto::class;
+        $metadata->readProjection = \AlexFigures\JsonApi\Resource\Definition\ReadProjection::DTO;
+        $metadata->viewClass = \AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleViewDto::class;
         $metadata->fieldMap = [];
         $slice = $this->repository->findCollection('articles', new Criteria());
-        self::assertInstanceOf(\AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto::class, $slice->items[0]);
+        self::assertInstanceOf(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleViewDto::class, $slice->items[0]);
         self::assertSame('article-0000', $slice->items[0]->id);
         $one = $this->repository->findOne('articles', 'article-0000', new Criteria());
-        self::assertInstanceOf(\AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto::class, $one);
+        self::assertInstanceOf(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleViewDto::class, $one);
         self::assertSame('Article 0', $one->title);
     }
 
@@ -567,16 +567,16 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         self::assertArrayNotHasKey('data', $document['data'][0]['relationships']['author']);
     }
 
-    /** @param list<\AlexFigures\Symfony\Filter\Handler\SortHandlerInterface> $handlers */
-    private function customRepository(array $handlers = [], string $policy = 'legacy'): \AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository
+    /** @param list<\AlexFigures\JsonApi\Filter\Handler\SortHandlerInterface> $handlers */
+    private function customRepository(array $handlers = [], string $policy = 'legacy'): \AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository
     {
-        $filters = new \AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry([]);
-        return new \AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository(
+        $filters = new \AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry([]);
+        return new \AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository(
             $this->managerRegistry,
             $this->registry,
-            new \AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler(new \AlexFigures\Symfony\Filter\Operator\Registry([]), $filters),
+            new \AlexFigures\JsonApi\Filter\Compiler\Doctrine\DoctrineFilterCompiler(new \AlexFigures\JsonApi\Filter\Operator\Registry([]), $filters),
             $filters,
-            new \AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry($handlers),
+            new \AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry($handlers),
             new DefaultReadMapper(),
             $policy
         );
@@ -587,7 +587,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $this->seedGraph(30);
         $this->em->createQuery('UPDATE ' . Article::class . ' a SET a.author = :owner')->setParameter('owner', 'author-0000')->execute();
         $this->em->clear();
-        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
+        $handler = new \AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
         $owner = $this->em->find(Author::class, 'author-0000');
         self::assertNotNull($owner);
         $related = $handler->getRelatedCollection('authors', 'author-0000', 'articles', new Criteria(new Pagination(2, 20)));
@@ -609,11 +609,11 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $this->seedGraph(30);
         $this->em->createQuery('UPDATE ' . Article::class . ' a SET a.author = :owner')->setParameter('owner', 'author-0000')->execute();
         $this->em->clear();
-        $scoped = new class ($this->repository) implements \AlexFigures\Symfony\Contract\Data\ResourceRepository {
-            public function __construct(private \AlexFigures\Symfony\Contract\Data\ResourceRepository $inner)
+        $scoped = new class ($this->repository) implements \AlexFigures\JsonApi\Contract\Data\ResourceRepository {
+            public function __construct(private readonly \AlexFigures\JsonApi\Contract\Data\ResourceRepository $inner)
             {
             }
-            public function findCollection(string $type, Criteria $criteria): \AlexFigures\Symfony\Contract\Data\Slice
+            public function findCollection(string $type, Criteria $criteria): \AlexFigures\JsonApi\Contract\Data\Slice
             {
                 $criteria = clone $criteria;
                 if ($type === 'articles') {
@@ -633,7 +633,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
                 return $this->inner->findRelated($type, $relationship, $identifiers);
             }
         };
-        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $scoped);
+        $handler = new \AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $scoped);
         $page = $handler->getRelatedCollection('authors', 'author-0000', 'articles', new Criteria(new Pagination(1, 5)));
         self::assertSame(10, $page->totalItems);
         self::assertSame('article-0020', $page->items[0]->getId());
@@ -674,16 +674,16 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     {
         $this->seedGraph(20);
         $this->registry->getByType('articles')->relationships['tags']->propertyPath = 'computedTags';
-        $reader = new class ($this->repository) implements \AlexFigures\Symfony\Contract\Data\RelationshipBatchReaderInterface {
+        $reader = new class ($this->repository) implements \AlexFigures\JsonApi\Contract\Data\RelationshipBatchReaderInterface {
             public int $calls = 0;
-            public function __construct(private \AlexFigures\Symfony\Contract\Data\ResourceRepository $repository)
+            public function __construct(private readonly \AlexFigures\JsonApi\Contract\Data\ResourceRepository $repository)
             {
             }
             public function supports(string $type, string $relationship): bool
             {
                 return $type === 'articles' && $relationship === 'tags';
             }
-            public function read(\AlexFigures\Symfony\Query\Fetch\RelationshipReadRequirements $requirements, Criteria $criteria, Request $request): \AlexFigures\Symfony\Query\Fetch\RelationshipReadMap
+            public function read(\AlexFigures\JsonApi\Query\Fetch\RelationshipReadRequirements $requirements, Criteria $criteria, Request $request): \AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap
             {
                 ++$this->calls;
                 if ($requirements->remainingIncluded !== 3) {
@@ -694,7 +694,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
                 if ($slice->totalItems > $requirements->remainingIncluded) {
                     throw new BadRequestException('Probe exceeded budget before hydration of more targets.');
                 }
-                $map = new \AlexFigures\Symfony\Query\Fetch\RelationshipReadMap();
+                $map = new \AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap();
                 foreach ($requirements->ownerIds as $ownerId) {
                     $ids = [];
                     foreach ($slice->items as $tag) {
@@ -725,9 +725,9 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     public function testDocumentHookDeclaresAndConsumesBatchModelsWithoutIncludingThem(): void
     {
         $this->seedGraph(20);
-        $hook = new class () implements \AlexFigures\Symfony\Profile\Hook\DocumentHook, \AlexFigures\Symfony\Profile\Hook\RelationshipFetchRequirementsHookInterface {
+        $hook = new class () implements \AlexFigures\JsonApi\Profile\Hook\DocumentHook, \AlexFigures\JsonApi\Profile\Hook\RelationshipFetchRequirementsHookInterface {
             public int $calls = 0;
-            public function relationshipReads(\AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata): array
+            public function relationshipReads(\AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata $metadata): array
             {
                 return $metadata->type === 'articles' ? ['tags' => 'models'] : [];
             }
@@ -737,7 +737,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
             public function onTopLevelMeta(ProfileContext $context, array &$meta): void
             {
             }
-            public function onResourceRelationships(ProfileContext $context, \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata, array &$relationshipsPayload, object $model): void
+            public function onResourceRelationships(ProfileContext $context, \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata $metadata, array &$relationshipsPayload, object $model): void
             {
                 if (!$model instanceof Article) {
                     return;
@@ -748,13 +748,13 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
                 ++$this->calls;
             }
         };
-        $profile = new \AlexFigures\Symfony\Tests\Util\FakeProfile('https://example.test/fetch', [$hook]);
+        $profile = new \AlexFigures\JsonApi\Tests\Util\FakeProfile('https://example.test/fetch', [$hook]);
         $request = Request::create('/api/articles');
         ProfileContext::store($request, new ProfileContext([$profile->uri() => $profile], []));
         $criteria = new Criteria(new Pagination(1, 20));
         $slice = $this->repository->findCollection('articles', $criteria);
         $log = new DebugStack();
-        $this->em->getConnection()->getConfiguration()->setSQLLogger($log);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $log);
         $document = $this->builder('never')->buildCollection('articles', $slice->items, $criteria, $slice, $request);
         self::assertSame(20, $hook->calls);
         self::assertArrayNotHasKey('included', $document);
@@ -769,17 +769,17 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $criteria = new Criteria(new Pagination(2, 5));
         $criteria->filter = new Comparison('id', 'in', array_map(static fn (int $i): string => sprintf('article-%04d', $i), range(15, 29)));
         $criteria->sort = [new Sorting('id', true)];
-        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
+        $handler = new \AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
         $slice = $handler->getRelatedCollection('authors', 'author-0000', 'articles', $criteria);
         self::assertSame(15, $slice->totalItems);
         self::assertSame(['article-0024', 'article-0023', 'article-0022', 'article-0021', 'article-0020'], array_map(static fn (object $model): string => $model instanceof Article ? $model->getId() : '', $slice->items));
         $metadata = $this->registry->getByType('articles');
-        $metadata->readProjection = \AlexFigures\Symfony\Resource\Definition\ReadProjection::DTO;
-        $metadata->viewClass = \AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto::class;
+        $metadata->readProjection = \AlexFigures\JsonApi\Resource\Definition\ReadProjection::DTO;
+        $metadata->viewClass = \AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleViewDto::class;
         $metadata->fieldMap = ['id' => 'e.id', 'title' => 'e.title', 'content' => 'e.content', 'createdAt' => 'e.createdAt'];
         $dto = $handler->getRelatedCollection('authors', 'author-0000', 'articles', $criteria);
         self::assertSame(15, $dto->totalItems);
-        self::assertInstanceOf(\AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto::class, $dto->items[0]);
+        self::assertInstanceOf(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleViewDto::class, $dto->items[0]);
         self::assertSame('article-0024', $dto->items[0]->id);
     }
 
@@ -787,8 +787,8 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
     {
         $this->seedGraph(1);
         $errors = new ErrorMapper(new ErrorBuilder(false));
-        $parser = new \AlexFigures\Symfony\Http\Request\QueryParser($this->registry, new \AlexFigures\Symfony\Http\Request\PaginationConfig(), new \AlexFigures\Symfony\Http\Request\SortingWhitelist($this->registry), new \AlexFigures\Symfony\Http\Request\FilteringWhitelist($this->registry, $errors), $errors, new \AlexFigures\Symfony\Filter\Parser\FilterParser());
-        $hook = new class () implements \AlexFigures\Symfony\Profile\Hook\QueryHook {
+        $parser = new \AlexFigures\JsonApi\Http\Request\QueryParser($this->registry, new \AlexFigures\JsonApi\Http\Request\PaginationConfig(), new \AlexFigures\JsonApi\Http\Request\SortingWhitelist($this->registry), new \AlexFigures\JsonApi\Http\Request\FilteringWhitelist($this->registry, $errors), $errors, new \AlexFigures\JsonApi\Filter\Parser\FilterParser());
+        $hook = new class () implements \AlexFigures\JsonApi\Profile\Hook\QueryHook {
             public function onParseQuery(ProfileContext $context, Request $request, Criteria $criteria): void
             {
                 if ($request->attributes->get('type') === 'articles') {
@@ -801,14 +801,14 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
                 }
             }
         };
-        $profile = new \AlexFigures\Symfony\Tests\Util\FakeProfile('https://example.test/scope', [$hook]);
+        $profile = new \AlexFigures\JsonApi\Tests\Util\FakeProfile('https://example.test/scope', [$hook]);
         $request = Request::create('/api/authors/author-0000/relationships/articles?filter[unknown]=bad');
         $request->attributes->set('type', 'authors');
         $request->headers->set('X-Identity', 'limited');
         ProfileContext::store($request, new ProfileContext([$profile->uri() => $profile]));
         $stack = new \Symfony\Component\HttpFoundation\RequestStack();
         $stack->push($request);
-        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository, $parser, $stack);
+        $handler = new \AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository, $parser, $stack);
         self::assertSame([], $handler->getToManyIds('authors', 'author-0000', 'articles')->ids);
         self::assertSame('authors', $request->attributes->get('type'));
         $criteria = new Criteria();
@@ -826,7 +826,7 @@ abstract class DoctrineReadPathTestCase extends DoctrineIntegrationTestCase
         $this->seedGraph(1, 3);
         $association = $this->em->getClassMetadata(Article::class)->getAssociationMapping('tags');
         $association->orderBy = ['name' => 'DESC'];
-        $handler = new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
+        $handler = new \AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, $this->repository);
         $slice = $handler->getRelatedCollection('articles', 'article-0000', 'tags', new Criteria(new Pagination(1, 2)));
         self::assertInstanceOf(Tag::class, $slice->items[0]);
         self::assertSame('Tag 2', $slice->items[0]->getName());

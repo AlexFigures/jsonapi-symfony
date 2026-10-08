@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\EventSubscriber;
+namespace AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber;
 
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator;
-use AlexFigures\Symfony\Profile\ProfileContext;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Profile\Negotiation\ProfileNegotiator;
+use AlexFigures\JsonApi\Profile\ProfileContext;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-final class ProfileNegotiationSubscriber implements EventSubscriberInterface
+/** @internal */
+final readonly class ProfileNegotiationSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly ProfileNegotiator $negotiator)
+    public function __construct(private ProfileNegotiator $negotiator)
     {
     }
 
@@ -83,7 +84,7 @@ final class ProfileNegotiationSubscriber implements EventSubscriberInterface
      */
     private function withProfileParameter(string $contentType, array $profiles): string
     {
-        $parts = array_map('trim', explode(';', $contentType));
+        $parts = array_map(trim(...), explode(';', $contentType));
         $type = array_shift($parts);
         if ($type === '') {
             $type = $contentType;

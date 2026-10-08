@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Bundle;
+namespace AlexFigures\JsonApi;
 
-use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\CustomRouteHandlerPass;
-use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\RegisterDqlFunctionsPass;
-use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
-use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ValidateProfilesPass;
-use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
+use AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\Compiler\CustomRouteHandlerPass;
+use AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\Compiler\RegisterDqlFunctionsPass;
+use AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
+use AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\Compiler\ValidateProfilesPass;
+use AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\JsonApiExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\ExtensionInterface;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
 /**
  * @psalm-suppress MissingConstructor
+ * @api
  */
 final class JsonApiBundle extends Bundle
 {
@@ -25,7 +26,7 @@ final class JsonApiBundle extends Bundle
         // Register compiler pass for automatic resource discovery
         $container->addCompilerPass(new ResourceDiscoveryPass());
 
-        // Register compiler pass for automatic handler registration (new in 0.3.0)
+        // Register compiler pass for automatic handler registration
         $container->addCompilerPass(new CustomRouteHandlerPass());
 
         // Register compiler pass for profile validation (runs after resource discovery)

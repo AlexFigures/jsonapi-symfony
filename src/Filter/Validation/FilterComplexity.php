@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Validation;
+namespace AlexFigures\JsonApi\Filter\Validation;
 
+/** @internal */
 final readonly class FilterComplexity
 {
     public function __construct(

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\CustomRoute\Result;
+namespace AlexFigures\JsonApi\CustomRoute\Result;
 
 use Symfony\Component\HttpFoundation\Response;
 
@@ -36,7 +36,7 @@ use Symfony\Component\HttpFoundation\Response;
  * @api This class is part of the public API and follows semantic versioning.
  * @since 0.3.0
  */
-final class CustomRouteResult
+final readonly class CustomRouteResult
 {
     private const TYPE_RESOURCE = 'resource';
     private const TYPE_COLLECTION = 'collection';
@@ -53,13 +53,13 @@ final class CustomRouteResult
      * @param int|null              $totalItems Total item count for collections (for pagination)
      */
     private function __construct(
-        private readonly string $type,
-        private readonly mixed $data,
-        private readonly int $status,
-        private readonly array $meta = [],
-        private readonly array $links = [],
-        private readonly array $headers = [],
-        private readonly ?int $totalItems = null,
+        private string $type,
+        private mixed $data,
+        private int $status,
+        private array $meta = [],
+        private array $links = [],
+        private array $headers = [],
+        private ?int $totalItems = null,
     ) {
     }
 

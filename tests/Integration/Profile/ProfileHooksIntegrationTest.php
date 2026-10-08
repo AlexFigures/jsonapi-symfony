@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Profile;
+namespace AlexFigures\JsonApi\Tests\Integration\Profile;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile;
-use AlexFigures\Symfony\Profile\Builtin\Hook\AuditTrailWriteHook;
-use AlexFigures\Symfony\Profile\Builtin\Hook\RelationshipCountsDocumentHook;
-use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteQueryHook;
-use AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile;
-use AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Profile\ProfileRegistry;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\AuditableProduct;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SoftDeletableArticle;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\AuditTrailWriteHook;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\RelationshipCountsDocumentHook;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\SoftDeleteQueryHook;
+use AlexFigures\JsonApi\Profile\Builtin\RelationshipCountsProfile;
+use AlexFigures\JsonApi\Profile\Builtin\SoftDeleteProfile;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Profile\ProfileRegistry;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\AuditableProduct;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\SoftDeletableArticle;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\HttpFoundation\Request;
 

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\JsonApiStatus;
+namespace AlexFigures\JsonApi\Tests\JsonApiStatus;
 
-use AlexFigures\Symfony\Http\Exception\ConflictException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Exception\UnprocessableEntityException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Http\Exception\ConflictException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Exception\UnprocessableEntityException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -35,12 +35,12 @@ final class UpdateOperationStatusTest extends JsonApiTestCase
 
     public function testPatchForbiddenByResourceOperationPolicyReturns405(): void
     {
-        $this->registry()->getByType('articles')->allowedOperations = [\AlexFigures\Symfony\Resource\Definition\ResourceOperation::SHOW];
+        $this->registry()->getByType('articles')->allowedOperations = [\AlexFigures\JsonApi\Resource\Definition\ResourceOperation::SHOW];
         $request = $this->jsonRequest('PATCH', '/api/articles/1', ['data' => ['type' => 'articles', 'id' => '1', 'attributes' => ['title' => 'Denied']]]);
         try {
             ($this->updateController())($request, 'articles', '1');
             self::fail('Resource operation policy must reject this write.');
-        } catch (\AlexFigures\Symfony\Http\Exception\MethodNotAllowedException $exception) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\MethodNotAllowedException $exception) {
             self::assertSame(405, $exception->getStatusCode());
             self::assertSame('PATCH', $request->getMethod());
         }

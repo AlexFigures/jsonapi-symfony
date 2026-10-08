@@ -2,21 +2,22 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Write;
+namespace AlexFigures\JsonApi\Http\Write;
 
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Exception\ConflictException;
-use AlexFigures\Symfony\Http\Exception\MultiErrorException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Exception\ConflictException;
+use AlexFigures\JsonApi\Http\Exception\MultiErrorException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 
-final class InputDocumentValidator
+/** @internal */
+final readonly class InputDocumentValidator
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly WriteConfig $config,
-        private readonly ErrorMapper $errors,
+        private ResourceRegistryInterface $registry,
+        private WriteConfig $config,
+        private ErrorMapper $errors,
     ) {
     }
 

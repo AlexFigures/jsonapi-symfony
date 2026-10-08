@@ -8,4 +8,4 @@ To-many sorting needs an explicit aggregate ordering policy; arbitrary joined ro
 
 Application action handlers are a separate extension point: see [custom routes](custom-routes.md).
 
-TODO before freeze: publish executable registration and handler examples, supported query-builder changes, parameter requirements and aggregate semantics. Verify named/positional parameter composition and nested AND/OR behavior; retain the existing bundle regressions.
+See [public extension examples](../api/extension-examples.md) for registration and tested implementations.

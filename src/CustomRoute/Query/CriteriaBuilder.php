@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\CustomRoute\Query;
+namespace AlexFigures\JsonApi\CustomRoute\Query;
 
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Filter\Ast\Conjunction;
-use AlexFigures\Symfony\Filter\Ast\Node;
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\Conjunction;
+use AlexFigures\JsonApi\Filter\Ast\Node;
+use AlexFigures\JsonApi\Query\Criteria;
 use Doctrine\ORM\QueryBuilder;
 
 /**

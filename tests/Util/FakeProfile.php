@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Util;
+namespace AlexFigures\JsonApi\Tests\Util;
 
-use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
 
-final class FakeProfile implements ProfileInterface
+final readonly class FakeProfile implements ProfileInterface
 {
     /**
      * @param iterable<object> $hooks
      */
     public function __construct(
-        private readonly string $uri,
-        private readonly iterable $hooks = [],
-        private readonly ?ProfileDescriptor $descriptor = null,
-        private readonly string $name = 'Fake Profile',
-        private readonly string $version = '1.0.0',
-        private readonly ?ProfileRequirements $requirements = null,
+        private string $uri,
+        private iterable $hooks = [],
+        private ?ProfileDescriptor $descriptor = null,
+        private string $name = 'Fake Profile',
+        private string $version = '1.0.0',
+        private ?ProfileRequirements $requirements = null,
     ) {
     }
 

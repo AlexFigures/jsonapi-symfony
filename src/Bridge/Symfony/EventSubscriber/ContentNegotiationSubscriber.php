@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\EventSubscriber;
+namespace AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber;
 
-use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicy;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
+use AlexFigures\JsonApi\Http\Exception\NotAcceptableException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicy;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicyProviderInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,12 +15,13 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-final class ContentNegotiationSubscriber implements EventSubscriberInterface
+/** @internal */
+final readonly class ContentNegotiationSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly bool $strictContentNegotiation,
-        private readonly MediaTypePolicyProviderInterface $policyProvider,
-        private readonly bool $atomicEnabled = false,
+        private bool $strictContentNegotiation,
+        private MediaTypePolicyProviderInterface $policyProvider,
+        private bool $atomicEnabled = false,
     ) {
     }
 
@@ -40,7 +41,7 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
         if ($event->isMainRequest() && $event->getRequest()->isMethod('HEAD') && $event->getRequest()->attributes->get('_jsonapi_head_enabled') === false) {
             /** @var list<string> $allowedMethods */
             $allowedMethods = $event->getRequest()->attributes->get('_jsonapi_allowed_methods', ['GET', 'OPTIONS']);
-            throw new \AlexFigures\Symfony\Http\Exception\MethodNotAllowedException($allowedMethods, 'HEAD is disabled for generated resource endpoints.');
+            throw new \AlexFigures\JsonApi\Http\Exception\MethodNotAllowedException($allowedMethods, 'HEAD is disabled for generated resource endpoints.');
         }
         if (!$event->isMainRequest() || !$this->strictContentNegotiation) {
             return;
@@ -103,7 +104,7 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $candidates = \AlexFigures\Symfony\Http\Negotiation\ParsedMediaType::parse($contentType);
+        $candidates = \AlexFigures\JsonApi\Http\Negotiation\ParsedMediaType::parse($contentType);
         $media = count($candidates) === 1 ? $candidates[0] : null;
         if ($media === null || !in_array($media->name, $policy->allowedRequestTypes, true)) {
             throw new UnsupportedMediaTypeException($contentType, sprintf('The "%s" media type is not allowed for this endpoint.', $media->name ?? $contentType));
@@ -127,7 +128,7 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
             return;
         }
         $failure = sprintf('Requested representation is not available. Allowed types: %s.', implode(', ', $policy->negotiableResponseTypes));
-        $candidates = \AlexFigures\Symfony\Http\Negotiation\ParsedMediaType::parse($accept, true);
+        $candidates = \AlexFigures\JsonApi\Http\Negotiation\ParsedMediaType::parse($accept, true);
         foreach ($candidates as $media) {
             if ($media->quality <= 0 || !$this->isAcceptable($media->name, $policy->negotiableResponseTypes)) {
                 continue;
@@ -216,7 +217,7 @@ final class ContentNegotiationSubscriber implements EventSubscriberInterface
             return $value;
         }
 
-        $values = array_map('trim', explode(',', $existing));
+        $values = array_map(trim(...), explode(',', $existing));
         if (!in_array($value, $values, true)) {
             $values[] = $value;
         }

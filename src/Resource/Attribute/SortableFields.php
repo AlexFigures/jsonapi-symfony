@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Attribute;
+namespace AlexFigures\JsonApi\Resource\Attribute;
 
 use Attribute;
 
@@ -88,12 +88,12 @@ use Attribute;
  * @since 1.0.0
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-final class SortableFields
+final readonly class SortableFields
 {
     /**
      * @var array<string, SortableField>
      */
-    public readonly array $fields;
+    public array $fields;
 
     /**
      * @param list<SortableField|string> $fields List of sortable field configurations or field names
@@ -110,13 +110,13 @@ final class SortableFields
      * from related resources (when inherit=true is set on a relationship field).
      *
      * @param string                                                                $field    Field path (e.g., 'title' or 'author.name')
-     * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface|null $registry Optional registry for inheritance resolution
+     * @param \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface|null $registry Optional registry for inheritance resolution
      * @param string|null                                                           $type     Resource type for inheritance resolution
      * @param int                                                                   $depth    Current inheritance depth (for cycle prevention)
      */
     public function isAllowed(
         string $field,
-        ?\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry = null,
+        ?\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry = null,
         ?string $type = null,
         int $depth = 0
     ): bool {
@@ -165,13 +165,13 @@ final class SortableFields
      * Check if a field is allowed through inheritance from a related resource.
      *
      * @param string                                                           $field    Field path (e.g., 'author.name')
-     * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry Resource registry
+     * @param \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry Resource registry
      * @param string                                                           $type     Current resource type
      * @param int                                                              $depth    Current inheritance depth
      */
     private function isInheritedFieldAllowed(
         string $field,
-        \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry,
+        \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry,
         string $type,
         int $depth
     ): bool {

@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional;
+namespace AlexFigures\JsonApi\Tests\Functional;
 
-use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
-use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
-use AlexFigures\Symfony\Http\Write\WriteConfig;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Tag;
+use AlexFigures\JsonApi\Http\Exception\JsonApiHttpException;
+use AlexFigures\JsonApi\Http\Write\InputDocumentValidator;
+use AlexFigures\JsonApi\Http\Write\WriteConfig;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Article;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Author;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Tag;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -73,7 +73,7 @@ final class AcceptanceWriteContractTest extends JsonApiTestCase
         } catch (JsonApiHttpException $exception) {
             self::assertSame($status, $exception->getStatusCode());
         }
-        self::assertNotNull($this->repository()->findOne('articles', '1', new \AlexFigures\Symfony\Query\Criteria()));
+        self::assertNotNull($this->repository()->findOne('articles', '1', new \AlexFigures\JsonApi\Query\Criteria()));
     }
 
     public static function invalidAtomicTargets(): iterable
@@ -142,8 +142,8 @@ final class AcceptanceWriteContractTest extends JsonApiTestCase
             [$this->relationshipGetController(), '/api/articles/1/relationships/author', ['articles', '1', 'author']],
             [$this->relatedController(), '/api/articles/1/author', ['articles', '1', 'author']],
         ];
-        $generator = new \AlexFigures\Symfony\Http\Cache\HashEtagGenerator();
-        $keys = new \AlexFigures\Symfony\Http\Cache\CacheKeyBuilder();
+        $generator = new \AlexFigures\JsonApi\Http\Cache\HashEtagGenerator();
+        $keys = new \AlexFigures\JsonApi\Http\Cache\CacheKeyBuilder();
         foreach ($cases as [$controller, $path, $arguments]) {
             $get = Request::create($path);
             $head = Request::create($path, 'HEAD');

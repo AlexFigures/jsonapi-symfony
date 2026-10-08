@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Bridge\Doctrine\ExistenceChecker;
+namespace AlexFigures\JsonApi\Tests\Integration\Bridge\Doctrine\ExistenceChecker;
 
-use AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Bridge\Doctrine\ExistenceChecker\DoctrineExistenceChecker;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
 
 /**
  * Integration tests for DoctrineExistenceChecker with real PostgreSQL database.

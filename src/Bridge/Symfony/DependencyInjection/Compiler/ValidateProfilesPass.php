@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
+namespace AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\Compiler;
 
-use AlexFigures\Symfony\Profile\AttributeReader;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\Validation\FieldRequirement;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
-use AlexFigures\Symfony\Profile\Validation\ValidationError;
-use AlexFigures\Symfony\Profile\Validation\ValidationResult;
+use AlexFigures\JsonApi\Profile\AttributeReader;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\Validation\FieldRequirement;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Profile\Validation\ValidationError;
+use AlexFigures\JsonApi\Profile\Validation\ValidationResult;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -35,9 +35,9 @@ final class ValidateProfilesPass implements CompilerPassInterface
             return;
         }
 
-        if ($container->hasDefinition(\AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile::class)) {
-            $container->getDefinition(\AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile::class)->addMethodCall('configure', ['%jsonapi.profiles.audit_trail%']);
-            $container->getDefinition(\AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile::class)->addMethodCall('setResourceRegistry', [new \Symfony\Component\DependencyInjection\Reference(\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface::class)]);
+        if ($container->hasDefinition(\AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile::class)) {
+            $container->getDefinition(\AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile::class)->addMethodCall('configure', ['%jsonapi.profiles.audit_trail%']);
+            $container->getDefinition(\AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile::class)->addMethodCall('setResourceRegistry', [new \Symfony\Component\DependencyInjection\Reference(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface::class)]);
         }
         $this->hasDeferredProfiles = false;
         // Collect all profiles
@@ -50,7 +50,7 @@ final class ValidateProfilesPass implements CompilerPassInterface
         $enabledProfiles = $this->collectEnabledProfiles($container, $resourceTypes);
 
         // Validate using reflection (no Doctrine dependency)
-        $result = (new \AlexFigures\Symfony\Profile\Validation\ReflectionProfileValidator())->validate($profilesByUri, $resourceTypes, $enabledProfiles, $this->hasDeferredProfiles);
+        $result = (new \AlexFigures\JsonApi\Profile\Validation\ReflectionProfileValidator())->validate($profilesByUri, $resourceTypes, $enabledProfiles, $this->hasDeferredProfiles);
 
         // Handle validation result
         if ($result->hasErrors()) {
@@ -58,7 +58,7 @@ final class ValidateProfilesPass implements CompilerPassInterface
         }
 
         if ($result->hasWarnings()) {
-            $this->handleWarnings($result);
+            $this->handleWarnings($container, $result);
         }
     }
 
@@ -167,10 +167,10 @@ final class ValidateProfilesPass implements CompilerPassInterface
     /**
      * Handle validation errors by throwing an exception.
      *
-     * @param  \AlexFigures\Symfony\Profile\Validation\ValidationResult $result
+     * @param  \AlexFigures\JsonApi\Profile\Validation\ValidationResult $result
      * @throws \RuntimeException
      */
-    private function handleErrors(object $result): void
+    private function handleErrors(ValidationResult $result): never
     {
         $errors = $result->formatErrors();
         $message = sprintf(
@@ -185,16 +185,14 @@ final class ValidateProfilesPass implements CompilerPassInterface
     /**
      * Handle validation warnings by logging them.
      *
-     * @param \AlexFigures\Symfony\Profile\Validation\ValidationResult $result
+     * @param \AlexFigures\JsonApi\Profile\Validation\ValidationResult $result
      */
-    private function handleWarnings(object $result): void
+    private function handleWarnings(ContainerBuilder $container, ValidationResult $result): void
     {
         $warnings = $result->formatWarnings();
 
-        // In Symfony compiler passes, we can't easily access the logger
-        // So we'll just trigger a deprecation notice for each warning
         foreach ($warnings as $warning) {
-            @trigger_error($warning, \E_USER_DEPRECATED);
+            $container->log($this, $warning);
         }
     }
 }

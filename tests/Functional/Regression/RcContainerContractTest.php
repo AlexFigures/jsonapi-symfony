@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Regression;
+namespace AlexFigures\JsonApi\Tests\Functional\Regression;
 
-use AlexFigures\Symfony\Profile\ProfileRegistry;
+use AlexFigures\JsonApi\Profile\ProfileRegistry;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
@@ -96,16 +96,16 @@ final class RcContainerContractTest extends TestCase
         try {
             $kernel->boot();
             $container = $kernel->getContainer()->get('test.service_container');
-            $profile = $container->get(\AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile::class);
-            $context = new \AlexFigures\Symfony\Profile\ProfileContext([$profile->uri() => $profile]);
-            $changes = new \AlexFigures\Symfony\Contract\Data\ChangeSet();
+            $profile = $container->get(\AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile::class);
+            $context = new \AlexFigures\JsonApi\Profile\ProfileContext([$profile->uri() => $profile]);
+            $changes = new \AlexFigures\JsonApi\Contract\Data\ChangeSet();
             foreach ($context->writeHooks() as $hook) {
                 $hook->onBeforeCreate($context, 'rc-tagged', $changes);
             }
             self::assertSame('constructor-di@example.test', $changes->attributes['insertedBy']);
             self::assertInstanceOf(\DateTimeImmutable::class, $changes->attributes['insertedAt']);
             self::assertArrayNotHasKey('createdBy', $changes->attributes);
-            $changes = new \AlexFigures\Symfony\Contract\Data\ChangeSet();
+            $changes = new \AlexFigures\JsonApi\Contract\Data\ChangeSet();
             foreach ($context->writeHooks() as $hook) {
                 $hook->onBeforeUpdate($context, 'rc-tagged', 'stored', $changes);
             }
@@ -169,7 +169,7 @@ final class RcContainerContractTest extends TestCase
                 $response = $kernel->handle(Request::create($url, server: ['HTTP_ACCEPT' => 'application/vnd.api+json']), catch: false);
                 self::assertSame(200, $response->getStatusCode());
                 $doc = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
-                $resource = isset($doc['data'][0]) ? $doc['data'][0] : $doc['data'];
+                $resource = $doc['data'][0] ?? $doc['data'];
                 self::assertSame('Routed', $resource['attributes']['title']);
                 self::assertSame('/reference/rc-routed/stored', parse_url($resource['links']['self'], \PHP_URL_PATH));
                 if (isset($doc['links']['first'])) {
@@ -189,11 +189,11 @@ final class RcContainerContractTest extends TestCase
         try {
             $kernel->boot();
             $container = $kernel->getContainer()->get('test.service_container');
-            $negotiator = $container->get(\AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator::class);
+            $negotiator = $container->get(\AlexFigures\JsonApi\Profile\Negotiation\ProfileNegotiator::class);
             $request = Request::create('/api/rc-memory', 'POST');
             $request->attributes->set('type', 'rc-memory');
             $context = $negotiator->negotiate($request)->forType('rc-memory');
-            $changes = new \AlexFigures\Symfony\Contract\Data\ChangeSet();
+            $changes = new \AlexFigures\JsonApi\Contract\Data\ChangeSet();
             foreach ($context->writeHooks() as $hook) {
                 $hook->onBeforeCreate($context, 'rc-memory', $changes);
             }

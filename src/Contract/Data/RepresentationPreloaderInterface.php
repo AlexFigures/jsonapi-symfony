@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\JsonApi\Contract\Data;
 
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Fetch\RelationshipReadMap;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap;
 use Symfony\Component\HttpFoundation\Request;
 
-/** Optional persistence capability; the returned data is local to one document build. */
+/** Optional persistence capability; the returned data is local to one document build.
+ * @api
+ */
 interface RepresentationPreloaderInterface
 {
     /** @param list<object> $models */

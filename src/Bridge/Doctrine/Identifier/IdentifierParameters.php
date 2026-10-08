@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Identifier;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Identifier;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Types\Type;

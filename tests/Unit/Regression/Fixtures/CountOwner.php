@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Regression\Fixtures;
+namespace AlexFigures\JsonApi\Tests\Unit\Regression\Fixtures;
 
 final class CountOwner
 {

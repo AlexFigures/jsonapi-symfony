@@ -2,23 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Parser;
+namespace AlexFigures\JsonApi\Atomic\Parser;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Atomic\Ref;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Atomic\Ref;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-final class AtomicRequestParser
+/** @internal */
+final readonly class AtomicRequestParser
 {
     public function __construct(
-        private readonly AtomicConfig $config,
-        private readonly ErrorMapper $errors,
+        private AtomicConfig $config,
+        private ErrorMapper $errors,
     ) {
     }
 
@@ -130,7 +131,7 @@ final class AtomicRequestParser
         }
 
         try {
-            $decoded = \AlexFigures\Symfony\Http\Write\JsonDocument::decode($content);
+            $decoded = \AlexFigures\JsonApi\Http\Write\JsonDocument::decode($content);
         } catch (\JsonException $exception) {
             throw new BadRequestException('Malformed JSON.', [
                 $this->errors->invalidJson($exception),

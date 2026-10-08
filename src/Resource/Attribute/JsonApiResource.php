@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Attribute;
+namespace AlexFigures\JsonApi\Resource\Attribute;
 
-use AlexFigures\Symfony\Resource\Definition\ReadProjection;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Definition\ReadProjection;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
 use Attribute;
 
 /**
@@ -17,8 +17,8 @@ use Attribute;
  *
  * Example usage:
  * ```php
- * use Symfony\Component\Serializer\Annotation\Groups;
- * use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
+ * use Symfony\Component\Serializer\Attribute\Groups;
+ * use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
  *
  * #[JsonApiResource(
  *     type: 'articles',
@@ -61,7 +61,7 @@ use Attribute;
  * @since 0.1.0
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-final class JsonApiResource
+final readonly class JsonApiResource
 {
     /**
      * @param string                                   $type                   JSON:API resource type (e.g., 'articles', 'authors')
@@ -76,20 +76,20 @@ final class JsonApiResource
      * @param array<string, class-string>              $writeRequests
      */
     public function __construct(
-        public readonly string $type,
-        public readonly array $normalizationContext = [],
-        public readonly array $denormalizationContext = [],
-        public readonly ?string $routePrefix = null,
-        public readonly ?string $description = null,
-        public readonly bool $exposeId = true,
-        public readonly ?array $operations = null,
-        public readonly ?string $dataClass = null,
-        public readonly ?string $viewClass = null,
-        public readonly ReadProjection $readProjection = ReadProjection::ENTITY,
-        public readonly array $fieldMap = [],
-        public readonly array $relationshipPolicies = [],
-        public readonly array $writeRequests = [],
-        public readonly ?string $versionResolver = null,
+        public string $type,
+        public array $normalizationContext = [],
+        public array $denormalizationContext = [],
+        public ?string $routePrefix = null,
+        public ?string $description = null,
+        public bool $exposeId = true,
+        public ?array $operations = null,
+        public ?string $dataClass = null,
+        public ?string $viewClass = null,
+        public ReadProjection $readProjection = ReadProjection::ENTITY,
+        public array $fieldMap = [],
+        public array $relationshipPolicies = [],
+        public array $writeRequests = [],
+        public ?string $versionResolver = null,
     ) {
     }
 

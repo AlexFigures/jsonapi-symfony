@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Regression;
+namespace AlexFigures\JsonApi\Tests\Functional\Regression;
 
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
 
 #[JsonApiResource(type: 'rc-tagged', exposeId: false)]
-#[\AlexFigures\Symfony\Profile\Attribute\Auditable(createdAtField: 'insertedAt', updatedAtField: 'changedAt', createdByField: 'insertedBy', updatedByField: 'changedBy')]
+#[\AlexFigures\JsonApi\Profile\Attribute\Auditable(createdAtField: 'insertedAt', updatedAtField: 'changedAt', createdByField: 'insertedBy', updatedByField: 'changedBy')]
 final class RcTaggedResource
 {
     #[Id]
@@ -20,9 +20,9 @@ final class RcTaggedResource
     public \DateTimeImmutable $changedAt;
     public ?string $insertedBy = null;
     public ?string $changedBy = null;
-    #[\AlexFigures\Symfony\Resource\Attribute\Relationship(targetType: 'rc-memory')]
-    public ?\AlexFigures\Symfony\Tests\Functional\Regression\Fixtures\RcMemory $one = null;
-    /** @var list<\AlexFigures\Symfony\Tests\Functional\Regression\Fixtures\RcMemory> */
-    #[\AlexFigures\Symfony\Resource\Attribute\Relationship(toMany: true, targetType: 'rc-memory')]
+    #[\AlexFigures\JsonApi\Resource\Attribute\Relationship(targetType: 'rc-memory')]
+    public ?\AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures\RcMemory $one = null;
+    /** @var list<\AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures\RcMemory> */
+    #[\AlexFigures\JsonApi\Resource\Attribute\Relationship(toMany: true, targetType: 'rc-memory')]
     public array $many = [];
 }

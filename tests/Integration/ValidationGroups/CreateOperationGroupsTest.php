@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\ValidationGroups;
+namespace AlexFigures\JsonApi\Tests\Integration\ValidationGroups;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ValidatedArticle;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ValidatedArticle;
 
 /**
  * Tests for validation groups during create operations.

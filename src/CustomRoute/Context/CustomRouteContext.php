@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\CustomRoute\Context;
+namespace AlexFigures\JsonApi\CustomRoute\Context;
 
-use AlexFigures\Symfony\Contract\Data\ResourceRepository;
-use AlexFigures\Symfony\CustomRoute\Query\CriteriaBuilder;
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Contract\Data\ResourceRepository;
+use AlexFigures\JsonApi\CustomRoute\Query\CriteriaBuilder;
+use AlexFigures\JsonApi\Query\Criteria;
 use LogicException;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -24,7 +24,7 @@ use Symfony\Component\HttpFoundation\Request;
  * @api This class is part of the public API and follows semantic versioning.
  * @since 0.3.0
  */
-final class CustomRouteContext
+final readonly class CustomRouteContext
 {
     /**
      * @param Request              $request      The underlying HTTP request
@@ -36,13 +36,13 @@ final class CustomRouteContext
      * @param ResourceRepository   $repository   Repository for fetching resources with criteria
      */
     public function __construct(
-        private readonly Request $request,
-        private readonly ?object $resource,
-        private readonly string $resourceType,
-        private readonly array $routeParams,
-        private readonly Criteria $criteria,
-        private readonly array $body,
-        private readonly ResourceRepository $repository,
+        private Request $request,
+        private ?object $resource,
+        private string $resourceType,
+        private array $routeParams,
+        private Criteria $criteria,
+        private array $body,
+        private ResourceRepository $repository,
     ) {
     }
 

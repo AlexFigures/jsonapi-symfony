@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Negotiation;
+namespace AlexFigures\JsonApi\Http\Negotiation;
 
+/** @api */
 final class MediaType
 {
     public const JSON_API = 'application/vnd.api+json';

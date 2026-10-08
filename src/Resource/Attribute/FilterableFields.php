@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Attribute;
+namespace AlexFigures\JsonApi\Resource\Attribute;
 
 use Attribute;
 
@@ -59,15 +59,15 @@ use Attribute;
  * ```
  *
  * @api This attribute is part of the public API and follows semantic versioning.
- * @since 1.1.0
+ * @since 1.0.0
  */
 #[Attribute(Attribute::TARGET_CLASS)]
-final class FilterableFields
+final readonly class FilterableFields
 {
     /**
      * @var array<string, FilterableField>
      */
-    public readonly array $fields;
+    public array $fields;
 
     /**
      * @param list<FilterableField|string> $fields List of filterable field configurations or field names
@@ -84,13 +84,13 @@ final class FilterableFields
      * from related resources (when inherit=true is set on a relationship field).
      *
      * @param string                                                                $field    Field path (e.g., 'title' or 'author.name')
-     * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface|null $registry Optional registry for inheritance resolution
+     * @param \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface|null $registry Optional registry for inheritance resolution
      * @param string|null                                                           $type     Resource type for inheritance resolution
      * @param int                                                                   $depth    Current inheritance depth (for cycle prevention)
      */
     public function isAllowed(
         string $field,
-        ?\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry = null,
+        ?\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry = null,
         ?string $type = null,
         int $depth = 0
     ): bool {
@@ -133,14 +133,14 @@ final class FilterableFields
      *
      * @param string                                                                $field    Field path (e.g., 'title' or 'author.name')
      * @param string                                                                $operator Operator to check
-     * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface|null $registry Optional registry for inheritance resolution
+     * @param \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface|null $registry Optional registry for inheritance resolution
      * @param string|null                                                           $type     Resource type for inheritance resolution
      * @param int                                                                   $depth    Current inheritance depth (for cycle prevention)
      */
     public function isOperatorAllowed(
         string $field,
         string $operator,
-        ?\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry = null,
+        ?\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry = null,
         ?string $type = null,
         int $depth = 0
     ): bool {
@@ -173,14 +173,14 @@ final class FilterableFields
      *
      * @param string                                                           $field    Field path (e.g., 'author.name')
      * @param string                                                           $operator Operator to check
-     * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry Resource registry
+     * @param \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry Resource registry
      * @param string                                                           $type     Current resource type
      * @param int                                                              $depth    Current inheritance depth
      */
     private function isOperatorAllowedForInheritedField(
         string $field,
         string $operator,
-        \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry,
+        \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry,
         string $type,
         int $depth
     ): bool {
@@ -248,13 +248,13 @@ final class FilterableFields
      * Check if a field is allowed through inheritance from a related resource.
      *
      * @param string                                                           $field    Field path (e.g., 'author.name')
-     * @param \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry Resource registry
+     * @param \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry Resource registry
      * @param string                                                           $type     Current resource type
      * @param int                                                              $depth    Current inheritance depth
      */
     private function isInheritedFieldAllowed(
         string $field,
-        \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry,
+        \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry,
         string $type,
         int $depth
     ): bool {

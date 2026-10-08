@@ -1,6 +1,6 @@
 .PHONY: test test-unit test-functional test-integration test-all
 .PHONY: docker-up docker-down docker-test docker-shell
-.PHONY: stan cs-fix rector install mutation deptrac bc-check stress-mem stress-perf qa-full
+.PHONY: stan cs-fix rector install mutation deptrac bc-check qa-full
 
 PYTHON ?= python3
 COMPOSER ?= composer
@@ -56,33 +56,23 @@ cs-fix: vendor/autoload.php
 rector: vendor/autoload.php
 	vendor/bin/rector process
 
-mutation: vendor/autoload.php
-	XDEBUG_MODE=coverage $(PHP) -d memory_limit=$(MUTATION_MEMORY_LIMIT) vendor/bin/infection --threads=4 --min-msi=70 --min-covered-msi=70
+tools/mutation/vendor/autoload.php: tools/mutation/composer.json
+	$(COMPOSER) install --working-dir=tools/mutation --no-interaction
+
+mutation: vendor/autoload.php tools/mutation/vendor/autoload.php
+	XDEBUG_MODE=coverage $(PHP) -d memory_limit=$(MUTATION_MEMORY_LIMIT) tools/mutation/vendor/bin/infection --threads=4
 
 deptrac: vendor/autoload.php
 	vendor/bin/deptrac analyse
 
-bc-check: vendor/autoload.php
-	if git describe --tags --abbrev=0 >/dev/null 2>&1; then \
-		latest_tag=$$(git describe --tags --abbrev=0); \
-		vendor/bin/roave-backward-compatibility-check --from=$$latest_tag; \
-	else \
-		echo "No git tags found; skipping BC check."; \
-	fi
+tools/bc/vendor/autoload.php: tools/bc/composer.json
+	$(COMPOSER) install --working-dir=tools/bc --no-interaction
 
-stress-mem: vendor/autoload.php
-	@echo "Running memory stress tests..."
-	php scripts/stress/run.php --profile=mem
+bc-check: tools/bc/vendor/autoload.php
+	sh scripts/bc-check.sh
 
-stress-perf: vendor/autoload.php
-	@echo "Running performance stress tests..."
-	php scripts/stress/run.php --profile=perf
 
-stress: vendor/autoload.php
-	@echo "Running all stress tests..."
-	php scripts/stress/run.php --profile=all
-
-qa-full: test stan mutation deptrac bc-check
+qa-full: test stan deptrac bc-check docs-check api-inventory
 	@echo "✅ All QA checks passed!"
 
 # Documentation preparation does not require Composer or integration databases.

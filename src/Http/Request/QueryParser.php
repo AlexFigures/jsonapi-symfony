@@ -2,33 +2,34 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Request;
+namespace AlexFigures\JsonApi\Http\Request;
 
-use AlexFigures\Symfony\Filter\Parser\FilterParser;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Error\ErrorObject;
-use AlexFigures\Symfony\Http\Error\ErrorSource;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Pagination;
-use AlexFigures\Symfony\Query\Sorting;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Filter\Parser\FilterParser;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Error\ErrorObject;
+use AlexFigures\JsonApi\Http\Error\ErrorSource;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Safety\LimitsEnforcer;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Pagination;
+use AlexFigures\JsonApi\Query\Sorting;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-final class QueryParser
+/** @internal */
+final readonly class QueryParser
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly PaginationConfig $paginationConfig,
-        private readonly SortingWhitelist $sortingWhitelist,
-        private readonly FilteringWhitelist $filteringWhitelist,
-        private readonly ErrorMapper $errors,
-        private readonly FilterParser $filterParser,
-        private readonly ?LimitsEnforcer $limits = null,
+        private ResourceRegistryInterface $registry,
+        private PaginationConfig $paginationConfig,
+        private SortingWhitelist $sortingWhitelist,
+        private FilteringWhitelist $filteringWhitelist,
+        private ErrorMapper $errors,
+        private FilterParser $filterParser,
+        private ?LimitsEnforcer $limits = null,
     ) {
     }
 
@@ -48,11 +49,11 @@ final class QueryParser
         $criteria->fields = $this->parseFields($request);
         $criteria->include = $this->parseInclude($type, $request);
         $criteria->sort = $this->parseSort($type, $request);
-        $context = \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
+        $context = \AlexFigures\JsonApi\Profile\ProfileContext::fromRequest($request)?->forType($type);
         $filterRequest = $request;
         $query = $request->query->all();
         foreach ($context?->queryHooks() ?? [] as $hook) {
-            if ($hook instanceof \AlexFigures\Symfony\Profile\Hook\FilterParameterProviderInterface && isset($query['filter']) && is_array($query['filter'])) {
+            if ($hook instanceof \AlexFigures\JsonApi\Profile\Hook\FilterParameterProviderInterface && isset($query['filter']) && is_array($query['filter'])) {
                 foreach ($hook->filterParameters() as $flag) {
                     unset($query['filter'][$flag]);
                 }
@@ -61,7 +62,7 @@ final class QueryParser
         }
         $criteria->filter = $this->parseFilter($type, $filterRequest);
 
-        $context = \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
+        $context = \AlexFigures\JsonApi\Profile\ProfileContext::fromRequest($request)?->forType($type);
         if ($context !== null) {
             foreach ($context->queryHooks() as $hook) {
                 $hook->onParseQuery($context, $request, $criteria);
@@ -143,7 +144,7 @@ final class QueryParser
                 $this->throwBadRequest($this->errors->invalidParameter(sprintf('fields[%s]', $resourceType), sprintf('fields[%s] must be a comma separated string.', $resourceType)));
             }
 
-            $entries = array_values(array_filter(array_map('trim', explode(',', $list)), static fn (string $value): bool => $value !== ''));
+            $entries = array_values(array_filter(array_map(trim(...), explode(',', $list)), static fn (string $value): bool => $value !== ''));
             if ($entries === []) {
                 $fields[$resourceType] = [];
                 continue;
@@ -205,7 +206,7 @@ final class QueryParser
         }
 
         $paths = [];
-        foreach (array_map('trim', explode(',', $raw)) as $path) {
+        foreach (array_map(trim(...), explode(',', $raw)) as $path) {
             if ($path === '') {
                 continue;
             }
@@ -236,7 +237,7 @@ final class QueryParser
 
         $result = [];
 
-        foreach (array_map('trim', explode(',', $raw)) as $sortField) {
+        foreach (array_map(trim(...), explode(',', $raw)) as $sortField) {
             if ($sortField === '') {
                 continue;
             }
@@ -258,9 +259,9 @@ final class QueryParser
     /**
      * Parse filter parameter from request.
      *
-     * @return \AlexFigures\Symfony\Filter\Ast\Node|null
+     * @return \AlexFigures\JsonApi\Filter\Ast\Node|null
      */
-    private function parseFilter(string $type, Request $request): ?\AlexFigures\Symfony\Filter\Ast\Node
+    private function parseFilter(string $type, Request $request): ?\AlexFigures\JsonApi\Filter\Ast\Node
     {
         /** @var array<string, mixed> $query */
         $query = $request->query->all();

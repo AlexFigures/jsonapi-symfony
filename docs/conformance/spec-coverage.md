@@ -1,6 +1,6 @@
-# Conformance evidence preparation
+# Conformance evidence map
 
-This page is a starting map from behavior areas to executable bundle tests. It does not assert a complete requirement count, coverage percentage or independent specification certification. Final requirement-by-requirement review remains TODO before RC.
+This page is a starting map from behavior areas to executable bundle tests. It does not assert a complete requirement count, coverage percentage or independent specification certification. This maintained map distinguishes specification requirements from optional extensions and application policies; it does not assert exhaustive certification.
 
 | Area | Bundle evidence |
 | --- | --- |
@@ -13,6 +13,8 @@ This page is a starting map from behavior areas to executable bundle tests. It d
 | Graph reads and distinct pagination | [ReadPath integration suite](../../tests/Integration/ReadPath) |
 | Profiles, versions and extension contracts | [Regression kernel tests](../../tests/Functional/Regression), [profile integration](../../tests/Integration/Profile) |
 
-TODO: map each supported specification/extension requirement to an exact test, expected error/source semantics and independent consumer evidence. Distinguish specification conformance from application policy, production limits and infrastructure behavior. A test count is not a conformance percentage.
+JSON:API document/error/media/linkage identity requirements are exercised by Conformance and status snapshots; Atomic is an optional official extension; profiles/version DTOs and query/load budgets are bundle capabilities. Authorization/tenant visibility is application policy; server lock/replica failure is infrastructure behavior. Stable error/source expectations are in [the error contract](../api/errors.md).
 
-[Documentation TODO](../release/documentation-todo.md) · [release checklist](../release/checklist.md).
+Independent consumer evidence applies to bundle `a17ffd40a7d3a1e642a33aaf788427bb6b117fdb`: acceptance 666/666 and torture 62, zero failures/skips. Later stabilization/RC revisions and platform lines need separate proof in [the release gate](../release/checklist.md). Expand individual requirement mappings with regression and consumer references as coverage evolves; a test count is not a conformance percentage.
+
+[release checklist](../release/checklist.md).

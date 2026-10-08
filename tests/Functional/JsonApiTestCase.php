@@ -2,72 +2,72 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional;
+namespace AlexFigures\JsonApi\Tests\Functional;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Atomic\Execution\AtomicTransaction;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\AddHandler;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\RelationshipOps;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\RemoveHandler;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\UpdateHandler;
-use AlexFigures\Symfony\Atomic\Execution\OperationDispatcher;
-use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
-use AlexFigures\Symfony\Atomic\Result\ResultBuilder;
-use AlexFigures\Symfony\Atomic\Validation\AtomicValidator;
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Contract\Data\ResourceRepository;
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
-use AlexFigures\Symfony\Http\Controller\CollectionController;
-use AlexFigures\Symfony\Http\Controller\CreateResourceController;
-use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
-use AlexFigures\Symfony\Http\Controller\OptionsController;
-use AlexFigures\Symfony\Http\Controller\RelatedController;
-use AlexFigures\Symfony\Http\Controller\RelationshipGetController;
-use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
-use AlexFigures\Symfony\Http\Controller\ResourceController;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
-use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\CorrelationIdProvider;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Error\JsonApiExceptionListener;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypeNegotiator;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
-use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
-use AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
-use AlexFigures\Symfony\Http\Write\RelationshipDocumentValidator;
-use AlexFigures\Symfony\Http\Write\WriteConfig;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
-use AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry;
-use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker;
-use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryPersister;
-use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader;
-use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipResolver;
-use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater;
-use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRepository;
-use AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryTransactionManager;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Article;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Author;
-use AlexFigures\Symfony\Tests\Fixtures\Model\Tag;
-use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Atomic\Execution\AtomicTransaction;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\AddHandler;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\RelationshipOps;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\RemoveHandler;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\UpdateHandler;
+use AlexFigures\JsonApi\Atomic\Execution\OperationDispatcher;
+use AlexFigures\JsonApi\Atomic\Parser\AtomicRequestParser;
+use AlexFigures\JsonApi\Atomic\Result\ResultBuilder;
+use AlexFigures\JsonApi\Atomic\Validation\AtomicValidator;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Bridge\Symfony\Controller\AtomicController;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Contract\Data\ResourceRepository;
+use AlexFigures\JsonApi\Contract\Tx\TransactionManager;
+use AlexFigures\JsonApi\Http\Controller\CollectionController;
+use AlexFigures\JsonApi\Http\Controller\CreateResourceController;
+use AlexFigures\JsonApi\Http\Controller\DeleteResourceController;
+use AlexFigures\JsonApi\Http\Controller\OptionsController;
+use AlexFigures\JsonApi\Http\Controller\RelatedController;
+use AlexFigures\JsonApi\Http\Controller\RelationshipGetController;
+use AlexFigures\JsonApi\Http\Controller\RelationshipWriteController;
+use AlexFigures\JsonApi\Http\Controller\ResourceController;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Controller\Support\RequestDecoder;
+use AlexFigures\JsonApi\Http\Controller\UpdateResourceController;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\CorrelationIdProvider;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Error\JsonApiExceptionListener;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypeNegotiator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicyProviderInterface;
+use AlexFigures\JsonApi\Http\Relationship\LinkageBuilder;
+use AlexFigures\JsonApi\Http\Relationship\WriteRelationshipsResponseConfig;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Http\Write\InputDocumentValidator;
+use AlexFigures\JsonApi\Http\Write\RelationshipDocumentValidator;
+use AlexFigures\JsonApi\Http\Write\WriteConfig;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver;
+use AlexFigures\JsonApi\Tests\Fixtures\Doctrine\TestManagerRegistry;
+use AlexFigures\JsonApi\Tests\Fixtures\InMemory\InMemoryExistenceChecker;
+use AlexFigures\JsonApi\Tests\Fixtures\InMemory\InMemoryPersister;
+use AlexFigures\JsonApi\Tests\Fixtures\InMemory\InMemoryRelationshipReader;
+use AlexFigures\JsonApi\Tests\Fixtures\InMemory\InMemoryRelationshipResolver;
+use AlexFigures\JsonApi\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater;
+use AlexFigures\JsonApi\Tests\Fixtures\InMemory\InMemoryRepository;
+use AlexFigures\JsonApi\Tests\Fixtures\InMemory\InMemoryTransactionManager;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Article;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Author;
+use AlexFigures\JsonApi\Tests\Fixtures\Model\Tag;
+use AlexFigures\JsonApi\Tests\Util\JsonApiResponseAsserts;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -252,7 +252,7 @@ abstract class JsonApiTestCase extends TestCase
         $listener = new JsonApiExceptionListener(
             $this->errorMapper(),
             new class ($correlationId) extends CorrelationIdProvider {
-                public function __construct(private string $id)
+                public function __construct(private readonly string $id)
                 {
                 }
 
@@ -383,9 +383,9 @@ abstract class JsonApiTestCase extends TestCase
         $errorBuilder = new ErrorBuilder(true);
         $errorMapper = new ErrorMapper($errorBuilder);
         $violationMapper = new ConstraintViolationMapper($registry, $errorMapper);
-        $filtering = new \AlexFigures\Symfony\Http\Request\FilteringWhitelist($registry, $errorMapper);
+        $filtering = new \AlexFigures\JsonApi\Http\Request\FilteringWhitelist($registry, $errorMapper);
 
-        $filterParser = new \AlexFigures\Symfony\Filter\Parser\FilterParser();
+        $filterParser = new \AlexFigures\JsonApi\Filter\Parser\FilterParser();
         $parser = new QueryParser($registry, $pagination, $sorting, $filtering, $errorMapper, $filterParser);
 
         $routes = new RouteCollection();

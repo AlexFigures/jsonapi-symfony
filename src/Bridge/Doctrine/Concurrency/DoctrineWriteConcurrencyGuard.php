@@ -2,17 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Concurrency;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Concurrency;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter;
-use AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionBoundaryResolver;
-use AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface;
-use AlexFigures\Symfony\Contract\Tx\ScopedTransactionManagerInterface;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter;
+use AlexFigures\JsonApi\Bridge\Doctrine\Transaction\DoctrineTransactionBoundaryResolver;
+use AlexFigures\JsonApi\Contract\Data\WriteConcurrencyGuardInterface;
+use AlexFigures\JsonApi\Contract\Tx\ScopedTransactionManagerInterface;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\DBAL\LockMode;
 use Doctrine\Persistence\ManagerRegistry;
 
-/** Narrow root-row write lock; never reuses a representation read before waiting. */
+/** Narrow root-row write lock; never reuses a representation read before waiting.
+ * @internal
+ */
 final readonly class DoctrineWriteConcurrencyGuard implements WriteConcurrencyGuardInterface
 {
     public function __construct(

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Docs\Attribute;
+namespace AlexFigures\JsonApi\Docs\Attribute;
 
 use Attribute;
 
@@ -13,7 +13,7 @@ use Attribute;
  * @since 1.0.0
  */
 #[Attribute]
-final class OpenApiRequestBody
+final readonly class OpenApiRequestBody
 {
     /**
      * @param string               $contentType Content type (e.g., 'application/json', 'multipart/form-data')
@@ -22,10 +22,10 @@ final class OpenApiRequestBody
      * @param string|null          $description Description of the request body
      */
     public function __construct(
-        public readonly string $contentType,
-        public readonly array $schema,
-        public readonly bool $required = true,
-        public readonly ?string $description = null,
+        public string $contentType,
+        public array $schema,
+        public bool $required = true,
+        public ?string $description = null,
     ) {
     }
 }

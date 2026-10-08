@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\CustomRoute;
+namespace AlexFigures\JsonApi\Tests\Fixtures\CustomRoute;
 
-use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
-use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
-use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\JsonApi\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\JsonApi\CustomRoute\Result\CustomRouteResult;
 
 /**
  * Test handler for bulk archiving articles.
  */
-final class BulkArchiveHandler implements CustomRouteHandlerInterface
+final readonly class BulkArchiveHandler implements CustomRouteHandlerInterface
 {
     public function __construct(
         private array $articles = []

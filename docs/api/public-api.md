@@ -1,6 +1,6 @@
-# Extension contracts before the 1.0 freeze
+# Public extension contracts — 1.0 candidate
 
-This is an index of current extension points, not a frozen 1.0 declaration. Source signatures are authoritative during stabilization. `@api` and `@internal` annotations are inputs to the [public API audit](../release/public-api-audit.md); unmarked code is not automatically classified by namespace.
+This index describes the deliberately reviewed 1.0 candidate. The [manifest](public-api-manifest.json) classifies every source declaration; source signatures and named attribute arguments form the proposed 1.x surface. PUBLIC interfaces and their argument/return DTOs are intended extension points. INTERNAL helpers are not consumer API. See [usage examples](extension-examples.md), [BC policy](bc-policy.md) and [audit record](../release/public-api-audit.md).
 
 ## Persistence
 
@@ -36,7 +36,7 @@ See [production policies](../guide/production-policies.md) for the one-boundary 
 
 [ProfileInterface](../../src/Profile/ProfileInterface.php) profiles are services and may use constructor DI. Their hooks receive a type-scoped context. Existing ReadHook, WriteHook, RelationshipHook, QueryHook and DocumentHook interfaces live in [Profile/Hook](../../src/Profile/Hook).
 
-Optional [FetchPlanHookInterface](../../src/Profile/Hook/FetchPlanHookInterface.php), [RelationshipFetchRequirementsHookInterface](../../src/Profile/Hook/RelationshipFetchRequirementsHookInterface.php) and [ResourceMetaHookInterface](../../src/Profile/Hook/ResourceMetaHookInterface.php) declare additional fetch or resource metadata needs. These additions require explicit freeze review along with the types in their signatures.
+Optional [FetchPlanHookInterface](../../src/Profile/Hook/FetchPlanHookInterface.php), [RelationshipFetchRequirementsHookInterface](../../src/Profile/Hook/RelationshipFetchRequirementsHookInterface.php) and [ResourceMetaHookInterface](../../src/Profile/Hook/ResourceMetaHookInterface.php) declare additional fetch or resource metadata needs. These optional capabilities and their signature types are PUBLIC; new capabilities use new interfaces rather than required methods on existing interfaces.
 
 ## Resource declarations and queries
 
@@ -50,4 +50,17 @@ TypedRelationshipReader and TypedRelationshipUpdater now dispatch endpoint opera
 
 RelationshipReadMap, RelationshipReadRequirements and CustomRouteMetadata are public extension DTOs in their current namespaces. ResourceMetadata implements ResourceMetadataInterface::getType; this small identity interface is not a substitute for the complete ResourceMetadata expected by a custom registry.
 
-See the [contract regression evidence](../architecture/rc-public-contract-gaps.md) for removed configuration options, typed dispatch and independently pending consumer confirmation.
+See the [migration guide](../../UPGRADE-1.0.md) for removed configuration options and typed dispatch. [Verification evidence](../release/verification.md) is recorded separately by exact SHA.
+
+
+## Symfony service and configuration contract
+
+Application services use FQCN IDs. Public registration tags are `jsonapi.resource` (type), `jsonapi.resource_repository`, `jsonapi.persister`, `jsonapi.relationship_reader`, `jsonapi.relationship_updater`, `jsonapi.relationship_batch_reader`, `jsonapi.profile`, `jsonapi.filter.operator`, `jsonapi.filter.handler`, `jsonapi.sort.handler` and `jsonapi.custom_route_handler`. Tagged collection priority selects the first supported candidate; filter/sort handlers expose their own priority. Enable autoconfiguration for typed persisters/readers/updaters, batch readers and profiles, or tag explicitly. Custom operator/handler services use explicit tags. Do not rely on undocumented compiler-pass IDs.
+
+The PUBLIC contract interfaces are the supported alias/decorating targets. Preserve optional capabilities when decorating repositories; use `ResourceRepositoryLocator::getRepositoryForType()` to select the authoritative type provider. Obtain `JsonApiResponseFactory` from DI. Factory/helper constructor collaborators are internal wiring and not replacement contracts.
+
+`jsonapi:validate-profiles`, generated route-loader type `jsonapi`, active configuration and its legacy `media_type` deprecation are documented observable contracts. Internal service parameters are not configuration extension points. [Configuration reference](../reference/configuration.md) lists the actual active tree. Resource/relationship change events and documented HTTP exceptions are PUBLIC; event dispatch does not imply a transaction has committed or an outbox guarantee.
+
+The Bundle FQCN is `AlexFigures\JsonApi\JsonApiBundle`; all classes use the new `AlexFigures\JsonApi` root. The pre-1.0 migration is in UPGRADE-1.0. User-facing attributes retain constructor parameter names/defaults. [Error contract](errors.md) freezes status/code/source semantics, not detail text.
+
+`AtomicController` is the narrow PUBLIC controller callable used to bind the explicit Atomic endpoint. Its constructor is INTERNAL DI wiring; the callable and service FQCN are stable. Ordinary generated-resource controllers remain INTERNAL.

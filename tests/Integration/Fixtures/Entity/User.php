@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity;
 
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 /**
  * Test Entity for demonstrating serialization groups.
@@ -73,12 +73,8 @@ class User
     #[ORM\PrePersist]
     public function initializeTimestamps(): void
     {
-        if ($this->createdAt === null) {
-            $this->createdAt = new \DateTimeImmutable();
-        }
-        if ($this->updatedAt === null) {
-            $this->updatedAt = new \DateTimeImmutable();
-        }
+        $this->createdAt ??= new \DateTimeImmutable();
+        $this->updatedAt ??= new \DateTimeImmutable();
     }
 
     public function getId(): string

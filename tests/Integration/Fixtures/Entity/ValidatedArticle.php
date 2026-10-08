@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity;
 
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Attribute\Relationship;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Embeddable\ContactInfo;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Relationship;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Embeddable\ContactInfo;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -33,17 +33,6 @@ class ValidatedArticle
     #[Id]
     #[Attribute]
     private string $id;
-
-    /**
-     * Title is required in both create and update operations.
-     * Length constraint applies to both operations.
-     */
-    #[ORM\Column(type: 'string', length: 255)]
-    #[Assert\NotBlank(groups: ['create', 'update', 'Default'])]
-    #[Assert\Length(min: 3, max: 255, groups: ['create', 'update', 'Default'])]
-    #[Groups(['write', 'create', 'update', 'Default'])]
-    #[Attribute]
-    private string $title;
 
     /**
      * Content is required only on create, optional on update.
@@ -120,10 +109,18 @@ class ValidatedArticle
     #[Attribute]
     private ?ContactInfo $contactInfo = null;
 
-    public function __construct(string $title)
-    {
+    public function __construct(/**
+     * Title is required in both create and update operations.
+     * Length constraint applies to both operations.
+     */
+        #[ORM\Column(type: 'string', length: 255)]
+        #[Assert\NotBlank(groups: ['create', 'update', 'Default'])]
+        #[Assert\Length(min: 3, max: 255, groups: ['create', 'update', 'Default'])]
+        #[Groups(['write', 'create', 'update', 'Default'])]
+        #[Attribute]
+        private string $title
+    ) {
         $this->id = \Symfony\Component\Uid\Uuid::v7()->toString();
-        $this->title = $title;
     }
 
     public function getId(): string

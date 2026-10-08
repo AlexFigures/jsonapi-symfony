@@ -1,6 +1,4 @@
-# Relationship graph reads and extension costs
-
-This branch implements the bundle-side changes. External acceptance verification remains a separate run; no external tests or expectations were changed.
+# Relationship scopes, batching and extension costs
 
 ## Scope is part of every graph read
 
@@ -31,7 +29,7 @@ A null budget is unlimited; zero means exhausted. A reader must probe at most re
 
 Return request-local `RelationshipReadMap` entries for every owner, including loaded empty relationships. Requested counts must be supplied. Model/include requirements must supply the corresponding models. The core checks type, result completeness, cumulative identifier budget and distinct model budget before document construction. Those checks detect a broken adapter; they do not replace the adapter's bounded fetching obligation. Multiple owners referencing the same target consume one model reservation but separate linkage entries.
 
-The new batch interface is for representation loading. A computed relationship endpoint needs a custom `TypedRelationshipReader` with SQL/provider pagination and the same scope semantics; the built-in Doctrine endpoint implementation cannot infer SQL for an arbitrary getter.
+The batch interface is for representation loading. A computed relationship endpoint needs a custom `TypedRelationshipReader` with SQL/provider pagination and the same scope semantics; the built-in Doctrine endpoint implementation cannot infer SQL for an arbitrary getter.
 
 ## Hooks declare reads before building documents
 
@@ -39,7 +37,7 @@ Existing `FetchPlanHookInterface` continues to declare relationship counts. A do
 
 The planner batches those reads before invoking the hook. Consume `ProfileContext::relationshipReads` inside the document hook rather than navigating lazy ORM collections. Hook-only model requirements do not add resources to the JSON:API `included` member and do not force unsolicited relationship data. They do consume the same distinct model fetch budget as includes, because the limit protects hydration work.
 
-Requirements name registered relationships. Unknown names produce a configuration/development diagnostic. A hook can still execute arbitrary application code, but its undeclared SQL/getter work has no automatic query-cost guarantee. Relationship-backed attribute getters likewise remain application code; this patch does not claim to introspect or batch every arbitrary attribute method.
+Requirements name registered relationships. Unknown names produce a configuration/development diagnostic. A hook can still execute arbitrary application code, but its undeclared SQL/getter work has no automatic query-cost guarantee. Relationship-backed attribute getters likewise remain application code; the bundle does not claim to introspect or batch every arbitrary attribute method.
 
 ## Fallback policy
 
@@ -58,19 +56,3 @@ jsonapi:
 `legacy` retains the property-access fallback, which can initialize a whole collection. That path has no bounded-fetch guarantee. Endpoint fallbacks still pass target reads through the configured repository when available, but the cost of discovering their IDs has already occurred. Custom batch readers own visibility on their computed data; declaring a fetch plan is not an authorization bypass permission.
 
 SQL probes bound returned IDs/models, not all work needed by database joins/counts. Suitable indexes, custom aggregate semantics and opaque application code remain application responsibilities. There is no global SQL row cap, distributed transaction, replication management or sharding engine.
-
-## Reported gaps and bundle regressions
-
-| Gap | Change | Coverage |
-|---|---|---|
-| QUERY-SCOPE-GRAPH | Repository dispatch and target scopes before graph membership, count/page and preload output. | PostgreSQL/MySQL read-path scope tests; target QueryHook identity/isolation test; scalar linkage test. |
-| QUERY-002 | Check the original query string before PHP can discard a deeply nested filter. AST limits remain independently enforced. | `FilterComplexityLimitsTest::testRawDepthIsRejectedEvenWhenPhpDiscardsParsedFilter`. |
-| EXTENSIBILITY-PROFILE-DI | Compile-time validation defers profiles requiring DI; `ProfileRegistry` validates actual constructed profile services with shared reflection validation. Missing URIs and unmet requirements still fail. | `ProfileConstructorDiTest` with a real referenced context service, unknown URI and required-field failures. |
-| CUSTOM-ACTION-READ-MODEL | Resource self links are omitted when SHOW is not supported. No fictitious route is generated. | `DocumentBuilderTest::testCustomActionResourceWithoutShowOmitsSelfLink`. |
-| WRITE-MODEL-SERIALIZER-METADATA | `SerializerEntityInstantiator` receives Symfony's configured metadata factory, including YAML/XML/attributes. Attribute-only metadata remains the standalone fallback. | YAML constructor/aliased field/update/read-only group rejection; DI wiring plus existing write integration suite. |
-
-`ATOMIC-VALIDATION-BOUNDARY` is deliberately unchanged here: the reported 409/422 classification is separate from rollback safety. This patch does not weaken the external assertion or change Atomic validation semantics.
-
-## Verification
-
-The complete local bundle suite passed with **1195 tests, 6771 assertions and 6 skips**. PHPStan and architectural dependency analysis passed without errors/violations; the full CS Fixer dry-run was clean. A targeted PostgreSQL/MySQL rerun also verified graph identity preservation, scoped reads and mapped association ordering after the request-copy fix. Rector dry-run proposed modernization changes in 13 files, including existing code; those proposals were not applied as part of this focused correctness patch. External acceptance results for this revision remain pending.

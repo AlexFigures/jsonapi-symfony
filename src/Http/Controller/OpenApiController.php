@@ -2,22 +2,23 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
-use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
+use AlexFigures\JsonApi\Docs\OpenApi\OpenApiSpecGenerator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(path: '/_jsonapi/openapi.json', name: 'jsonapi.docs.openapi', methods: ['GET'])]
-final class OpenApiController
+/** @internal */
+final readonly class OpenApiController
 {
     /**
      * @param array{enabled?: bool} $config
      */
     public function __construct(
-        private readonly OpenApiSpecGenerator $generator,
-        private readonly array $config,
+        private OpenApiSpecGenerator $generator,
+        private array $config,
     ) {
     }
 

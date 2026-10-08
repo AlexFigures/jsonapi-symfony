@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic;
+namespace AlexFigures\JsonApi\Atomic;
 
 /**
  * @internal
  */
-final class Ref
+final readonly class Ref
 {
     public function __construct(
-        public readonly string $type,
-        public readonly ?string $id,
-        public readonly ?string $lid,
-        public readonly ?string $relationship,
+        public string $type,
+        public ?string $id,
+        public ?string $lid,
+        public ?string $relationship,
     ) {
     }
 

@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Validation;
+namespace AlexFigures\JsonApi\Filter\Validation;
 
-final class FilterLimits
+/** @internal */
+final readonly class FilterLimits
 {
     public function __construct(
-        public readonly int $maxClauses,
-        public readonly int $maxDepth,
-        public readonly int $maxInValues,
+        public int $maxClauses,
+        public int $maxDepth,
+        public int $maxInValues,
     ) {
     }
 }

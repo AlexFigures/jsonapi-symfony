@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Http\Write;
+namespace AlexFigures\JsonApi\Tests\Unit\Http\Write;
 
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
-use AlexFigures\Symfony\Http\Write\WriteConfig;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Write\InputDocumentValidator;
+use AlexFigures\JsonApi\Http\Write\WriteConfig;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 
 final class InputDocumentValidatorTest extends TestCase
@@ -60,7 +60,7 @@ final class InputDocumentValidatorTest extends TestCase
     private function createValidator(ResourceMetadata $metadata): InputDocumentValidator
     {
         $registry = new class ($metadata) implements ResourceRegistryInterface {
-            public function __construct(private ResourceMetadata $metadata)
+            public function __construct(private readonly ResourceMetadata $metadata)
             {
             }
 

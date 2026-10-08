@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Link;
+namespace AlexFigures\JsonApi\Http\Link;
 
-use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\JsonApi\Query\Pagination;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-final class LinkGenerator
+/** @internal */
+final readonly class LinkGenerator
 {
-    public function __construct(private readonly UrlGeneratorInterface $urls)
+    public function __construct(private UrlGeneratorInterface $urls)
     {
     }
 

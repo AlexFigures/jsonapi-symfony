@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Document\Fetch;
+namespace AlexFigures\JsonApi\Http\Document\Fetch;
 
-use AlexFigures\Symfony\Profile\Hook\FetchPlanHookInterface;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Profile\Hook\FetchPlanHookInterface;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 
 /** @internal Pure representation requirements; filters/sorts/page select the roots upstream. */
 final readonly class RepresentationFetchPlanner
@@ -24,7 +24,7 @@ final readonly class RepresentationFetchPlanner
         $counts = [];
         $hookReads = [];
         foreach ($context?->forType($metadata->type)->documentHooks() ?? [] as $hook) {
-            if ($hook instanceof \AlexFigures\Symfony\Profile\Hook\RelationshipFetchRequirementsHookInterface) {
+            if ($hook instanceof \AlexFigures\JsonApi\Profile\Hook\RelationshipFetchRequirementsHookInterface) {
                 foreach ($hook->relationshipReads($metadata) as $name => $requirement) {
                     if (!isset($metadata->relationships[$name])) {
                         throw new \LogicException('Hook fetch plan refers to an unknown relationship: ' . $name);
@@ -34,7 +34,7 @@ final readonly class RepresentationFetchPlanner
             }
             if ($hook instanceof FetchPlanHookInterface) {
                 $typedContext = $context?->forType($metadata->type);
-                $counts = array_merge($counts, $typedContext !== null && $hook instanceof \AlexFigures\Symfony\Profile\Hook\ContextualFetchPlanHookInterface ? $hook->relationshipCountsForContext($metadata, $typedContext) : $hook->relationshipCounts($metadata));
+                $counts = array_merge($counts, $typedContext !== null && $hook instanceof \AlexFigures\JsonApi\Profile\Hook\ContextualFetchPlanHookInterface ? $hook->relationshipCountsForContext($metadata, $typedContext) : $hook->relationshipCounts($metadata));
             }
         }
         $fields = $criteria->fields[$metadata->type] ?? null;

@@ -2,20 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Execution\Handlers;
+namespace AlexFigures\JsonApi\Atomic\Execution\Handlers;
 
-use AlexFigures\Symfony\Atomic\Execution\OperationOutcome;
-use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Atomic\Execution\OperationOutcome;
+use AlexFigures\JsonApi\Atomic\Lid\LidRegistry;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
 
-final class RemoveHandler
+/** @internal */
+final readonly class RemoveHandler
 {
     public function __construct(
-        private readonly ResourceProcessor $processor,
-        private readonly ErrorMapper $errors,
+        private ResourceProcessor $processor,
+        private ErrorMapper $errors,
     ) {
     }
 

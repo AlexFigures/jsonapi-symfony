@@ -2,42 +2,42 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Integration\Http\Controller;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use AlexFigures\Symfony\Filter\Operator\BetweenOperator;
-use AlexFigures\Symfony\Filter\Operator\EqualOperator;
-use AlexFigures\Symfony\Filter\Operator\GreaterOrEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\GreaterThanOperator;
-use AlexFigures\Symfony\Filter\Operator\InOperator;
-use AlexFigures\Symfony\Filter\Operator\IsNullOperator;
-use AlexFigures\Symfony\Filter\Operator\LessOrEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\LessThanOperator;
-use AlexFigures\Symfony\Filter\Operator\LikeOperator;
-use AlexFigures\Symfony\Filter\Operator\NotEqualOperator;
-use AlexFigures\Symfony\Filter\Operator\NotInOperator;
-use AlexFigures\Symfony\Filter\Operator\Registry;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
-use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
-use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleStatus;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\JsonApi\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Operator\BetweenOperator;
+use AlexFigures\JsonApi\Filter\Operator\EqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\GreaterOrEqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\GreaterThanOperator;
+use AlexFigures\JsonApi\Filter\Operator\InOperator;
+use AlexFigures\JsonApi\Filter\Operator\IsNullOperator;
+use AlexFigures\JsonApi\Filter\Operator\LessOrEqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\LessThanOperator;
+use AlexFigures\JsonApi\Filter\Operator\LikeOperator;
+use AlexFigures\JsonApi\Filter\Operator\NotEqualOperator;
+use AlexFigures\JsonApi\Filter\Operator\NotInOperator;
+use AlexFigures\JsonApi\Filter\Operator\Registry;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Controller\Support\RequestDecoder;
+use AlexFigures\JsonApi\Http\Controller\UpdateResourceController;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Http\Write\InputDocumentValidator;
+use AlexFigures\JsonApi\Resource\Mapper\DefaultReadMapper;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ArticleStatus;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -106,7 +106,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
         $urlGenerator = new UrlGenerator($routes, $context);
 
         // Set up error handling
-        $errorBuilder = new \AlexFigures\Symfony\Http\Error\ErrorBuilder(true);
+        $errorBuilder = new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(true);
         $errorMapper = new ErrorMapper($errorBuilder);
 
         // Set up operator registry with all standard operators
@@ -147,7 +147,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
         );
 
         // Set up LinkGenerator
-        $linkGenerator = new \AlexFigures\Symfony\Http\Link\LinkGenerator($urlGenerator);
+        $linkGenerator = new \AlexFigures\JsonApi\Http\Link\LinkGenerator($urlGenerator);
 
         // Set up DocumentBuilder
         $documentBuilder = new DocumentBuilder(
@@ -158,7 +158,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
         );
 
         // Set up write configuration (allow relationships, no client IDs for updates)
-        $writeConfig = new \AlexFigures\Symfony\Http\Write\WriteConfig(true, []);
+        $writeConfig = new \AlexFigures\JsonApi\Http\Write\WriteConfig(true, []);
 
         // Set up InputDocumentValidator
         $inputValidator = new InputDocumentValidator($this->registry, $writeConfig, $errorMapper);
@@ -464,7 +464,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
 
         $request = $this->createJsonApiRequest('PATCH', "/api/tags/{$nonExistentId}", $payload);
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
 
         ($this->controller)($request, 'tags', $nonExistentId);
     }
@@ -487,7 +487,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
 
         $request = $this->createJsonApiRequest('PATCH', '/api/unknown-type/some-id', $payload);
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
         $this->expectExceptionMessage('Resource type "unknown-type" not found');
 
         ($this->controller)($request, 'unknown-type', 'some-id');
@@ -575,7 +575,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
             json_encode($payload)
         );
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException::class);
 
         ($this->controller)($request, 'tags', $tagId);
     }
@@ -608,7 +608,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
             '{invalid json'
         );
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\BadRequestException::class);
         $this->expectExceptionMessage('Malformed JSON');
 
         ($this->controller)($request, 'tags', $tagId);
@@ -642,7 +642,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
             ''
         );
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\BadRequestException::class);
         $this->expectExceptionMessage('Request body must not be empty');
 
         ($this->controller)($request, 'tags', $tagId);
@@ -671,7 +671,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
 
         $request = $this->createJsonApiRequest('PATCH', "/api/tags/{$tagId}", $payload);
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\BadRequestException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\BadRequestException::class);
 
         ($this->controller)($request, 'tags', $tagId);
     }
@@ -703,7 +703,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
 
         $request = $this->createJsonApiRequest('PATCH', "/api/tags/{$tagId}", $payload);
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\ConflictException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\ConflictException::class);
 
         ($this->controller)($request, 'tags', $tagId);
     }
@@ -736,7 +736,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
 
         $request = $this->createJsonApiRequest('PATCH', "/api/tags/{$tagId}", $payload);
 
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\ConflictException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\ConflictException::class);
 
         ($this->controller)($request, 'tags', $tagId);
     }
@@ -1013,11 +1013,11 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'articles', $articleId);
             self::fail('Expected NotFoundException (404) for missing related resource');
-        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\NotFoundException $e) {
             // SPEC COMPLIANT: Should return 404
             self::assertSame(404, $e->getStatusCode());
             self::assertStringContainsString('not found', strtolower($e->getMessage()));
-        } catch (\AlexFigures\Symfony\Http\Exception\UnprocessableEntityException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\UnprocessableEntityException) {
             // CURRENT BEHAVIOR: Returns 422 (spec violation)
             self::markTestIncomplete(
                 'Bundle currently returns 422 for missing related resource, but spec requires 404. ' .
@@ -1337,7 +1337,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
     public function testUpdateResourceWithJsonFieldPreservesNullValues(): void
     {
         // Create entity with initial metadata
-        $entity = new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity();
+        $entity = new \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity();
         $entity->setName('Test Entity');
         $entity->setMetadata([
             'color' => 'blue',
@@ -1394,7 +1394,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
 
         // Verify persistence - reload from database
         $this->em->clear();
-        $persisted = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
+        $persisted = $this->em->find(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
         $persistedMetadata = $persisted->getMetadata();
 
         self::assertArrayHasKey('size', $persistedMetadata);
@@ -1424,7 +1424,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
     public function testUpdateJsonFieldFromNonNullToNull(): void
     {
         // Create entity with all non-null metadata
-        $entity = new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity();
+        $entity = new \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity();
         $entity->setName('Test Entity');
         $entity->setMetadata([
             'field1' => 'value1',
@@ -1467,7 +1467,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
 
         // Verify persistence
         $this->em->clear();
-        $persisted = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
+        $persisted = $this->em->find(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
         $persistedMetadata = $persisted->getMetadata();
 
         self::assertNull($persistedMetadata['field1']);
@@ -1481,7 +1481,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
     public function testPartialUpdatePreservesExistingNullValues(): void
     {
         // Create entity with some null values
-        $entity = new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity();
+        $entity = new \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity();
         $entity->setName('Test Entity');
         $entity->setMetadata([
             'field1' => 'value1',
@@ -1527,7 +1527,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
     public function testUpdateJsonFieldToEmptyObject(): void
     {
         // Create entity with metadata
-        $entity = new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity();
+        $entity = new \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity();
         $entity->setName('Test Entity');
         $entity->setMetadata([
             'field1' => 'value1',
@@ -1562,7 +1562,7 @@ final class UpdateResourceControllerTest extends DoctrineIntegrationTestCase
 
         // Verify persistence
         $this->em->clear();
-        $persisted = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
+        $persisted = $this->em->find(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
         $persistedMetadata = $persisted->getMetadata();
 
         self::assertIsArray($persistedMetadata);

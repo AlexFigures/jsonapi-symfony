@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
-use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
+use AlexFigures\JsonApi\Http\Exception\JsonApiHttpException;
 
 /** @internal */
 final class AtomicErrorRebaser

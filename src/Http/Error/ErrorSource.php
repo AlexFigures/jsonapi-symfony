@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
-final class ErrorSource
+/** @api */
+final readonly class ErrorSource
 {
     public function __construct(
-        public readonly ?string $pointer = null,
-        public readonly ?string $parameter = null,
-        public readonly ?string $header = null,
+        public ?string $pointer = null,
+        public ?string $parameter = null,
+        public ?string $header = null,
     ) {
     }
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Bridge\Doctrine\Instantiator\Fixtures;
+namespace AlexFigures\JsonApi\Tests\Unit\Bridge\Doctrine\Instantiator\Fixtures;
 
 final class YamlWriteModel
 {

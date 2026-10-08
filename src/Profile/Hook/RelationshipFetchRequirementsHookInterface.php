@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Hook;
+namespace AlexFigures\JsonApi\Profile\Hook;
 
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 
-/** Declare document-hook reads before execution; consume ProfileContext::relationshipReads afterwards. */
+/** Declare document-hook reads before execution; consume ProfileContext::relationshipReads afterwards.
+ * @api
+ */
 interface RelationshipFetchRequirementsHookInterface
 {
     /** @return array<string, 'identifiers'|'models'|'count'> */

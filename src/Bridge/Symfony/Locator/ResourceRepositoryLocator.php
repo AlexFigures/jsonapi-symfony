@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Locator;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Locator;
 
-use AlexFigures\Symfony\Contract\Data\ResourceRepository;
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Contract\Data\TypedResourceRepository;
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Contract\Data\ResourceRepository;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Contract\Data\TypedResourceRepository;
+use AlexFigures\JsonApi\Query\Criteria;
 
 /**
  * @api Type selection is supported for repository decorators using optional capabilities.
@@ -17,14 +17,14 @@ use AlexFigures\Symfony\Query\Criteria;
  * Collects all registered repositories via tagged_iterator
  * and selects the appropriate one based on the supports() method.
  */
-final class ResourceRepositoryLocator implements ResourceRepository
+final readonly class ResourceRepositoryLocator implements ResourceRepository
 {
     /**
      * @param iterable<ResourceRepository> $repositories
      */
     public function __construct(
-        private readonly iterable $repositories,
-        private readonly ResourceRepository $fallbackRepository,
+        private iterable $repositories,
+        private ResourceRepository $fallbackRepository,
     ) {
     }
 

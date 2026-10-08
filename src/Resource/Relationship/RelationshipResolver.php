@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Relationship;
+namespace AlexFigures\JsonApi\Resource\Relationship;
 
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Error\ErrorObject;
-use AlexFigures\Symfony\Http\Error\ErrorSource;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipSemantics;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Error\ErrorObject;
+use AlexFigures\JsonApi\Http\Error\ErrorSource;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipSemantics;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Connections\PrimaryReadReplicaConnection;
@@ -34,6 +34,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
  * - keeps owning/inverse sides in sync
  * - never replaces Doctrine collections (no clear()+set array)
  * - produces JSON:API pointers for precise client errors
+ * @internal
  */
 class RelationshipResolver
 {
@@ -106,7 +107,7 @@ class RelationshipResolver
                         );
                         continue;
                     }
-                    if (!\AlexFigures\Symfony\Bridge\Doctrine\Relationship\RelationshipNullability::allowsNull($ownerEm, $entity, $relMeta->propertyPath ?? $relMeta->name, $relMeta->nullable)) {
+                    if (!\AlexFigures\JsonApi\Bridge\Doctrine\Relationship\RelationshipNullability::allowsNull($ownerEm, $entity, $relMeta->propertyPath ?? $relMeta->name, $relMeta->nullable)) {
                         throw new ValidationException([$this->createValidationError($this->pointerRelationships($relName), 'Relationship cannot be null.')]);
                     }
                     $this->beforeReplace($entity, $resourceMetadata, $relMeta, []);
@@ -174,11 +175,11 @@ class RelationshipResolver
     private function beforeReplace(object $entity, ResourceMetadata $metadata, RelationshipMetadata $relationship, array $identifiers): void
     {
         $request = $this->requests?->getCurrentRequest();
-        $context = $request === null ? null : \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($metadata->type);
+        $context = $request === null ? null : \AlexFigures\JsonApi\Profile\ProfileContext::fromRequest($request)?->forType($metadata->type);
         if ($context === null || $context->relationshipHooks() === []) {
             return;
         }
-        $targets = array_map(static fn (array $identifier): \AlexFigures\Symfony\Contract\Data\ResourceIdentifier => new \AlexFigures\Symfony\Contract\Data\ResourceIdentifier($identifier['type'], $identifier['id']), $identifiers);
+        $targets = array_map(static fn (array $identifier): \AlexFigures\JsonApi\Contract\Data\ResourceIdentifier => new \AlexFigures\JsonApi\Contract\Data\ResourceIdentifier($identifier['type'], $identifier['id']), $identifiers);
         $path = $metadata->idPropertyPath ?? 'id';
         try {
             $value = $this->accessor->getValue($entity, $path);
@@ -312,7 +313,7 @@ class RelationshipResolver
         $this->assertCompatibleEntityManagers($ownerEm, $targetEm, $ownerMeta->getDataClass(), $class);
 
         if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
-            $reference = $targetEm->getReference($class, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($targetEm, $class, $id));
+            $reference = $targetEm->getReference($class, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($targetEm, $class, $id));
 
             return $this->expectObject(
                 $reference,
@@ -329,7 +330,7 @@ class RelationshipResolver
             $connection->ensureConnectedToPrimary();
         }
 
-        $obj = $targetEm->find($class, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($targetEm, $class, $id));
+        $obj = $targetEm->find($class, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($targetEm, $class, $id));
         if (!\is_object($obj)) {
             // JSON:API spec requires 404 for missing related resources, not 422
             $error = $this->errors?->notFound(
@@ -389,9 +390,9 @@ class RelationshipResolver
             $ids = array_values($idsWithIndex);
 
             if ($meta->linkingPolicy === RelationshipLinkingPolicy::REFERENCE) {
-                foreach ($idsWithIndex as $idx => $id) {
+                foreach ($idsWithIndex as $id) {
                     $resolved[$id] = $this->expectObject(
-                        $targetEm->getReference($class, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($targetEm, $class, $id)),
+                        $targetEm->getReference($class, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($targetEm, $class, $id)),
                         sprintf('Doctrine reference for "%s" returned a non-object.', $class)
                     );
                 }
@@ -425,7 +426,7 @@ class RelationshipResolver
                 $resolved[$id] = $entity;
             }
 
-            foreach ($idsWithIndex as $idx => $id) {
+            foreach ($idsWithIndex as $id) {
                 if (isset($foundById[$id])) {
                     continue;
                 }
@@ -555,11 +556,11 @@ class RelationshipResolver
         }
 
         // Apply removes first
-        foreach ($removes as $id => $obj) {
+        foreach ($removes as $obj) {
             $this->removeLink($em, $owner, $ownerMeta, $field, $obj);
         }
         // Apply adds
-        foreach ($adds as $id => $obj) {
+        foreach ($adds as $obj) {
             $this->addLink($em, $owner, $ownerMeta, $field, $obj);
         }
 

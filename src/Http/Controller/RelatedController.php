@@ -2,35 +2,36 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
-use AlexFigures\Symfony\Contract\Data\RelationshipReader;
-use AlexFigures\Symfony\Http\Authorization\RelationshipAccessChecker;
-use AlexFigures\Symfony\Http\Authorization\RelationshipOperation;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\RelationshipReader;
+use AlexFigures\JsonApi\Http\Authorization\RelationshipAccessChecker;
+use AlexFigures\JsonApi\Http\Authorization\RelationshipOperation;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\MethodNotAllowedException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route(path: '/api/{type}/{id}/{rel}', methods: ['GET', 'HEAD'], name: 'jsonapi.related')]
-final class RelatedController
+/** @internal */
+final readonly class RelatedController
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly RelationshipReader $reader,
-        private readonly QueryParser $parser,
-        private readonly DocumentBuilder $document,
-        private readonly ErrorMapper $errors,
-        private readonly ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null,
-        private readonly ?RelationshipAccessChecker $access = null,
+        private ResourceRegistryInterface $registry,
+        private RelationshipReader $reader,
+        private QueryParser $parser,
+        private DocumentBuilder $document,
+        private ErrorMapper $errors,
+        private ?\AlexFigures\JsonApi\Contract\Data\ResourceRepository $repository = null,
+        private ?RelationshipAccessChecker $access = null,
     ) {
     }
 
@@ -90,7 +91,7 @@ final class RelatedController
             }
         }
 
-        $response = new \AlexFigures\Symfony\Http\Controller\Support\RepresentationResponse(
+        $response = new \AlexFigures\JsonApi\Http\Controller\Support\RepresentationResponse(
             $document,
             JsonResponse::HTTP_OK,
             ['Content-Type' => MediaType::JSON_API],

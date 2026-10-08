@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Compiler\Doctrine;
+namespace AlexFigures\JsonApi\Filter\Compiler\Doctrine;
 
 use Doctrine\ORM\QueryBuilder;
 
 /**
  * Minimal join manager stub. Ensures structure exists for future logic.
+ * @internal
  */
-final class JoinManager
+final readonly class JoinManager
 {
     public function __construct(
-        private readonly QueryBuilder $qb,
+        private QueryBuilder $qb,
     ) {
     }
 

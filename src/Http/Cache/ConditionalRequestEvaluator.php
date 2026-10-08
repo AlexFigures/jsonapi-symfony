@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Cache;
+namespace AlexFigures\JsonApi\Http\Cache;
 
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\PreconditionFailedException;
-use AlexFigures\Symfony\Http\Exception\PreconditionRequiredException;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\PreconditionFailedException;
+use AlexFigures\JsonApi\Http\Exception\PreconditionRequiredException;
 use DateTimeImmutable;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,13 +21,14 @@ use Symfony\Component\HttpFoundation\Response;
  *         enable_if_unmodified_since?: bool
  *     }
  * }
+ * @internal
  */
-final class ConditionalRequestEvaluator
+final readonly class ConditionalRequestEvaluator
 {
     /**
      * @param ConditionalConfig $config
      */
-    public function __construct(ErrorMapper $errors, array $config = [])
+    public function __construct(private ErrorMapper $errors, array $config = [])
     {
         /** @var array{
          *     require_if_match_on_write?: bool,
@@ -38,16 +39,12 @@ final class ConditionalRequestEvaluator
          * } $conditional
          */
         $conditional = $config['conditional'] ?? [];
-
-        $this->errors = $errors;
         $this->requireIfMatchOnWrite = (bool) ($conditional['require_if_match_on_write'] ?? false);
         $this->enableIfNoneMatch = (bool) ($conditional['enable_if_none_match'] ?? true);
         $this->enableIfModifiedSince = (bool) ($conditional['enable_if_modified_since'] ?? true);
         $this->enableIfMatch = (bool) ($conditional['enable_if_match'] ?? true);
         $this->enableIfUnmodifiedSince = (bool) ($conditional['enable_if_unmodified_since'] ?? true);
     }
-
-    private ErrorMapper $errors;
 
     private bool $requireIfMatchOnWrite;
 
@@ -127,7 +124,7 @@ final class ConditionalRequestEvaluator
     {
         $ifMatch = $request->headers->get('If-Match');
         if ($this->requireIfMatchOnWrite && $ifMatch === null) {
-            $error = $this->errors->invalidHeader('If-Match', 'If-Match header is required for this request.', '428', \AlexFigures\Symfony\Http\Error\ErrorCodes::PRECONDITION_REQUIRED);
+            $error = $this->errors->invalidHeader('If-Match', 'If-Match header is required for this request.', '428', \AlexFigures\JsonApi\Http\Error\ErrorCodes::PRECONDITION_REQUIRED);
 
             throw new PreconditionRequiredException([$error]);
         }

@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Request;
+namespace AlexFigures\JsonApi\Http\Request;
 
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 
-final class SortingWhitelist
+/** @internal */
+final readonly class SortingWhitelist
 {
     public function __construct(
         private ResourceRegistryInterface $registry,

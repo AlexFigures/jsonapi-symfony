@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Bridge\Doctrine\Instantiator;
+namespace AlexFigures\JsonApi\Tests\Unit\Bridge\Doctrine\Instantiator;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\Persistence\ManagerRegistry;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
-use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\Groups;
 use Symfony\Component\Uid\Uuid;
 
 final class SerializerEntityInstantiatorTest extends TestCase
@@ -34,7 +34,7 @@ final class SerializerEntityInstantiatorTest extends TestCase
 
     public function testYamlGroupsControlConstructorAndUpdateDenormalization(): void
     {
-        $class = \AlexFigures\Symfony\Tests\Unit\Bridge\Doctrine\Instantiator\Fixtures\YamlWriteModel::class;
+        $class = \AlexFigures\JsonApi\Tests\Unit\Bridge\Doctrine\Instantiator\Fixtures\YamlWriteModel::class;
         $factory = new \Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory(new \Symfony\Component\Serializer\Mapping\Loader\YamlFileLoader(__DIR__ . '/Fixtures/serializer.yaml'));
         $instantiator = new SerializerEntityInstantiator($this->managerRegistry, $this->accessor, $factory);
         $metadata = new ResourceMetadata(type: 'yaml-models', class: $class, attributes: ['headline' => new AttributeMetadata('headline', 'title')], relationships: [], denormalizationContext: ['groups' => ['write']]);
@@ -114,16 +114,10 @@ class EntityWithConstructor
 {
     public Uuid $uuid;
 
-    #[Groups(['entity:write'])]
-    public string $name;
-
-    #[Groups(['entity:write'])]
-    public string $email;
-
-    public function __construct(string $name, string $email)
+    public function __construct(#[Groups(['entity:write'])]
+        public string $name, #[Groups(['entity:write'])]
+        public string $email)
     {
         $this->uuid = Uuid::v7();
-        $this->name = $name;
-        $this->email = $email;
     }
 }

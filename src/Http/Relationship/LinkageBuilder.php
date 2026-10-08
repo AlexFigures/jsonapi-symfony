@@ -2,26 +2,27 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Relationship;
+namespace AlexFigures\JsonApi\Http\Relationship;
 
-use AlexFigures\Symfony\Contract\Data\RelationshipReader;
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Query\Pagination;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\RelationshipReader;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Query\Pagination;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use LogicException;
 use Symfony\Component\HttpFoundation\Request;
 
-final class LinkageBuilder
+/** @internal */
+final readonly class LinkageBuilder
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly RelationshipReader $reader,
-        private readonly PaginationConfig $paginationConfig,
-        private readonly int $maxIdentifiers = 0,
+        private ResourceRegistryInterface $registry,
+        private RelationshipReader $reader,
+        private PaginationConfig $paginationConfig,
+        private int $maxIdentifiers = 0,
     ) {
     }
 

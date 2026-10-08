@@ -2,31 +2,32 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Document;
+namespace AlexFigures\JsonApi\Http\Document;
 
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Safety\LimitsEnforcer;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use stdClass;
 use Stringable;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-final class DocumentBuilder
+/** @internal */
+final readonly class DocumentBuilder
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly PropertyAccessorInterface $accessor,
-        private readonly LinkGenerator $links,
-        private readonly string $relationshipLinkageMode = 'when_included',
-        private readonly ?LimitsEnforcer $limits = null,
-        private readonly ?\AlexFigures\Symfony\Contract\Data\RepresentationPreloaderInterface $preloader = null,
+        private ResourceRegistryInterface $registry,
+        private PropertyAccessorInterface $accessor,
+        private LinkGenerator $links,
+        private string $relationshipLinkageMode = 'when_included',
+        private ?LimitsEnforcer $limits = null,
+        private ?\AlexFigures\JsonApi\Contract\Data\RepresentationPreloaderInterface $preloader = null,
     ) {
     }
 
@@ -178,7 +179,7 @@ final class DocumentBuilder
      *     meta?: array<string, mixed>
      * }
      */
-    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null, array $activeIncludeTree = [], ?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $reads = null): array
+    private function buildResourceObject(string $type, object $model, Criteria $criteria, ?ProfileContext $context = null, array $activeIncludeTree = [], ?\AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap $reads = null): array
     {
         $metadata = $this->registry->getByType($type);
         $fields = $criteria->fields[$type] ?? null;
@@ -190,7 +191,7 @@ final class DocumentBuilder
             'id' => $id,
         ];
 
-        if (in_array(\AlexFigures\Symfony\Resource\Definition\ResourceOperation::SHOW, $metadata->allowedOperations, true)) {
+        if (in_array(\AlexFigures\JsonApi\Resource\Definition\ResourceOperation::SHOW, $metadata->allowedOperations, true)) {
             $resource['links'] = ['self' => $this->links->resourceSelf($type, $id)];
         }
 
@@ -205,7 +206,7 @@ final class DocumentBuilder
             $resourceMeta = [];
             $typedContext = $context->forType($type);
             foreach ($typedContext->documentHooks() as $hook) {
-                if ($hook instanceof \AlexFigures\Symfony\Profile\Hook\ResourceMetaHookInterface) {
+                if ($hook instanceof \AlexFigures\JsonApi\Profile\Hook\ResourceMetaHookInterface) {
                     $hook->onResourceMeta($typedContext, $metadata, $resourceMeta, $model);
                 }
             }
@@ -228,7 +229,7 @@ final class DocumentBuilder
         $restrict = $fields !== null;
         $normalizationGroups = $metadata->getNormalizationGroups();
         $definition = $metadata->getDefinition($context?->forType($metadata->type));
-        $projected = $definition->readProjection === \AlexFigures\Symfony\Resource\Definition\ReadProjection::DTO && is_a($model, $definition->getEffectiveViewClass());
+        $projected = $definition->readProjection === \AlexFigures\JsonApi\Resource\Definition\ReadProjection::DTO && is_a($model, $definition->getEffectiveViewClass());
 
         /** @var AttributeMetadata $attribute */
         foreach ($metadata->attributes as $name => $attribute) {
@@ -277,20 +278,18 @@ final class DocumentBuilder
             }
 
             $reflectionProperty = $reflection->getProperty($property);
-            $groupsAttributes = $reflectionProperty->getAttributes(\Symfony\Component\Serializer\Annotation\Groups::class);
+            $groupsAttributes = $reflectionProperty->getAttributes(\Symfony\Component\Serializer\Attribute\Groups::class);
 
             if (empty($groupsAttributes)) {
                 return true; // If no groups defined on property, show it
             }
 
-            /** @var \Symfony\Component\Serializer\Annotation\Groups $propertyGroups */
+            /** @var \Symfony\Component\Serializer\Attribute\Groups $propertyGroups */
             $propertyGroups = $groupsAttributes[0]->newInstance();
 
             // Check if there's an intersection between property groups and requested groups
-            /** @var list<string>|null $declared */
-            $declared = get_object_vars($propertyGroups)['groups'] ?? null;
-            return !empty(array_intersect($groups, is_array($declared) ? $declared : $propertyGroups->getGroups()));
-        } catch (\ReflectionException $e) {
+            return !empty(array_intersect($groups, $propertyGroups->groups));
+        } catch (\ReflectionException) {
             return true; // On error, show the attribute
         }
     }
@@ -300,7 +299,7 @@ final class DocumentBuilder
      *
      * @return array<string, array<string, mixed>>
      */
-    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id, ?ProfileContext $context, array $activeIncludeTree = [], ?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $reads = null): array
+    private function buildRelationships(ResourceMetadata $metadata, object $model, Criteria $criteria, string $id, ?ProfileContext $context, array $activeIncludeTree = [], ?\AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap $reads = null): array
     {
         $relationships = [];
         $fields = $criteria->fields[$metadata->type] ?? null;
@@ -440,7 +439,7 @@ final class DocumentBuilder
      * @param array<string, array<string, mixed>> $included
      * @param array<string, bool>                 $visited
      */
-    private function gatherIncluded(string $type, object $model, array $includeTree, Criteria $criteria, array &$included, array &$visited, ?ProfileContext $context, ?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $reads = null): void
+    private function gatherIncluded(string $type, object $model, array $includeTree, Criteria $criteria, array &$included, array &$visited, ?ProfileContext $context, ?\AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap $reads = null): void
     {
         if ($includeTree === []) {
             return;
@@ -612,7 +611,7 @@ final class DocumentBuilder
     private function normalizeToMany(mixed $value): array
     {
         if (is_array($value)) {
-            return array_values(array_filter($value, static fn ($item) => is_object($item)));
+            return array_values(array_filter($value, is_object(...)));
         }
 
         if ($value instanceof \Traversable) {
@@ -662,7 +661,7 @@ final class DocumentBuilder
                 }
 
                 // Handle collections
-                if ($current instanceof \Traversable || is_array($current)) {
+                if (is_iterable($current)) {
                     $items = [];
                     foreach ($current as $item) {
                         // Ensure $item is an object or array before accessing

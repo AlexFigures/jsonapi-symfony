@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Validation;
+namespace AlexFigures\JsonApi\Filter\Validation;
 
 /**
  * Value object describing which fields/operators are allowed per resource type.
+ * @internal
  */
-final class FilterWhitelist
+final readonly class FilterWhitelist
 {
     /**
      * @param array<string, array<string, list<string>>> $whitelist
      */
     public function __construct(
-        private readonly array $whitelist,
+        private array $whitelist,
     ) {
     }
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Bridge\Symfony\DependencyInjection\Compiler;
+namespace AlexFigures\JsonApi\Tests\Unit\Bridge\Symfony\DependencyInjection\Compiler;
 
-use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\Compiler\ResourceDiscoveryPass;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
@@ -28,7 +28,7 @@ final class ResourceDiscoveryPassTest extends TestCase
     public function testTaggedResourceWorksWithoutDirectoryDiscovery(): void
     {
         $container = new ContainerBuilder();
-        $class = \AlexFigures\Symfony\Tests\Unit\Regression\Fixtures\PrimaryResource::class;
+        $class = \AlexFigures\JsonApi\Tests\Unit\Regression\Fixtures\PrimaryResource::class;
         $container->register('application.resource', $class)->addTag('jsonapi.resource', ['type' => 'primary']);
         (new ResourceDiscoveryPass())->process($container);
         self::assertSame(['primary' => $class], $container->getParameter('jsonapi.discovered_resources'));
@@ -37,7 +37,7 @@ final class ResourceDiscoveryPassTest extends TestCase
     public function testTaggedResourceTypeMismatchFailsDiscovery(): void
     {
         $container = new ContainerBuilder();
-        $container->register('application.resource', \AlexFigures\Symfony\Tests\Unit\Regression\Fixtures\PrimaryResource::class)->addTag('jsonapi.resource', ['type' => 'other']);
+        $container->register('application.resource', \AlexFigures\JsonApi\Tests\Unit\Regression\Fixtures\PrimaryResource::class)->addTag('jsonapi.resource', ['type' => 'other']);
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('Resource type mismatch for tagged service');
         (new ResourceDiscoveryPass())->process($container);
@@ -55,12 +55,12 @@ final class ResourceDiscoveryPassTest extends TestCase
         // Add the ResourceRegistry definition
         $registryDefinition = new Definition();
         $registryDefinition->setArguments([[]]);
-        $container->setDefinition('AlexFigures\Symfony\Resource\Registry\ResourceRegistry', $registryDefinition);
+        $container->setDefinition(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistry::class, $registryDefinition);
 
         // Add the CustomRouteRegistry definition
         $customRouteRegistryDefinition = new Definition();
         $customRouteRegistryDefinition->setArguments([[]]);
-        $container->setDefinition('AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry', $customRouteRegistryDefinition);
+        $container->setDefinition(\AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistry::class, $customRouteRegistryDefinition);
 
         $pass = new ResourceDiscoveryPass();
         $pass->process($container);
@@ -102,22 +102,22 @@ final class ResourceDiscoveryPassTest extends TestCase
         // Add the ResourceRegistry definition
         $registryDefinition = new Definition();
         $registryDefinition->setArguments([[]]);
-        $container->setDefinition('AlexFigures\Symfony\Resource\Registry\ResourceRegistry', $registryDefinition);
+        $container->setDefinition(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistry::class, $registryDefinition);
 
         // Add the CustomRouteRegistry definition
         $customRouteRegistryDefinition = new Definition();
         $customRouteRegistryDefinition->setArguments([[]]);
-        $container->setDefinition('AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry', $customRouteRegistryDefinition);
+        $container->setDefinition(\AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistry::class, $customRouteRegistryDefinition);
 
         $pass = new ResourceDiscoveryPass();
         $pass->process($container);
 
         // Check that ResourceRegistry definition was updated
-        $updatedRegistryDefinition = $container->getDefinition('AlexFigures\Symfony\Resource\Registry\ResourceRegistry');
+        $updatedRegistryDefinition = $container->getDefinition(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistry::class);
         $this->assertNotEmpty($updatedRegistryDefinition->getArgument(0));
 
         // Check that CustomRouteRegistry definition was updated
-        $updatedCustomRouteRegistryDefinition = $container->getDefinition('AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry');
+        $updatedCustomRouteRegistryDefinition = $container->getDefinition(\AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistry::class);
         $this->assertNotEmpty($updatedCustomRouteRegistryDefinition->getArgument(0));
     }
 
@@ -128,7 +128,6 @@ final class ResourceDiscoveryPassTest extends TestCase
 
         // Use reflection to access the private method
         $method = new \ReflectionMethod($pass, 'isControllerClass');
-        $method->setAccessible(true);
 
         $result = $method->invoke($pass, $reflection);
         $this->assertTrue($result, 'Class with "Controller" in name should be detected as controller');
@@ -141,7 +140,6 @@ final class ResourceDiscoveryPassTest extends TestCase
 
         // Use reflection to access the private method
         $method = new \ReflectionMethod($pass, 'isControllerClass');
-        $method->setAccessible(true);
 
         $result = $method->invoke($pass, $reflection);
         $this->assertFalse($result, 'Class with JsonApiResource attribute should not be detected as controller');
@@ -154,7 +152,6 @@ final class ResourceDiscoveryPassTest extends TestCase
 
         // Use reflection to access the private method
         $method = new \ReflectionMethod($pass, 'isControllerClass');
-        $method->setAccessible(true);
 
         $result = $method->invoke($pass, $reflection);
         $this->assertTrue($result, 'Class with public methods should be detected as controller');

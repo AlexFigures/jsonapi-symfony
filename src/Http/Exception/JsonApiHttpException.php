@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Exception;
+namespace AlexFigures\JsonApi\Http\Exception;
 
-use AlexFigures\Symfony\Http\Error\ErrorObject;
+use AlexFigures\JsonApi\Http\Error\ErrorObject;
 use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
+/** @api */
 class JsonApiHttpException extends RuntimeException implements HttpExceptionInterface
 {
     /**

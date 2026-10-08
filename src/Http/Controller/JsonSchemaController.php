@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
-use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
-use AlexFigures\Symfony\Profile\ProfileRegistry;
+use AlexFigures\JsonApi\Docs\OpenApi\OpenApiSpecGenerator;
+use AlexFigures\JsonApi\Profile\ProfileRegistry;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 

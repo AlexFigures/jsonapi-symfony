@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Regression;
+namespace AlexFigures\JsonApi\Tests\Unit\Regression;
 
-use AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipReaderLocator;
-use AlexFigures\Symfony\Bridge\Symfony\Locator\RelationshipUpdaterLocator;
-use AlexFigures\Symfony\Contract\Data\RelationshipReader;
-use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Contract\Data\SliceIds;
-use AlexFigures\Symfony\Contract\Data\TypedRelationshipReader;
-use AlexFigures\Symfony\Contract\Data\TypedRelationshipUpdater;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\JsonApi\Bridge\Symfony\Locator\RelationshipReaderLocator;
+use AlexFigures\JsonApi\Bridge\Symfony\Locator\RelationshipUpdaterLocator;
+use AlexFigures\JsonApi\Contract\Data\RelationshipReader;
+use AlexFigures\JsonApi\Contract\Data\RelationshipUpdater;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Contract\Data\SliceIds;
+use AlexFigures\JsonApi\Contract\Data\TypedRelationshipReader;
+use AlexFigures\JsonApi\Contract\Data\TypedRelationshipUpdater;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Pagination;
 use PHPUnit\Framework\TestCase;
 
 final class TypedRelationshipDispatchTest extends TestCase

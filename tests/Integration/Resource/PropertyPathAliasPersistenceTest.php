@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Resource;
+namespace AlexFigures\JsonApi\Tests\Integration\Resource;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTags;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTagsSpecialTag;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\AuthorForSpecialTags;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Comment;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Product;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SpecialTag;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\User;
+use AlexFigures\JsonApi\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\JsonApi\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTags;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ArticleWithSpecialTagsSpecialTag;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\AuthorForSpecialTags;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\CategorySynonym;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Comment;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Product;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\SpecialTag;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\User;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 /**

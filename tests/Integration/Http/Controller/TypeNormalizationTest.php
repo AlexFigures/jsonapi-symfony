@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Integration\Http\Controller;
 
-use AlexFigures\Symfony\Http\Controller\CreateResourceController;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
-use AlexFigures\Symfony\Http\Write\WriteConfig;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleStatus;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity;
-use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\JsonApi\Http\Controller\CreateResourceController;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Controller\Support\RequestDecoder;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Http\Write\InputDocumentValidator;
+use AlexFigures\JsonApi\Http\Write\WriteConfig;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ArticleStatus;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity;
+use AlexFigures\JsonApi\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -415,7 +415,7 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'type-test-entities');
             self::fail('Expected UnprocessableEntityException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\UnprocessableEntityException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\UnprocessableEntityException $e) {
             // Verify HTTP status code (422 for validation errors)
             self::assertSame(422, $e->getStatusCode());
 
@@ -464,7 +464,7 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'type-test-entities');
             self::fail('Expected UnprocessableEntityException to be thrown for invalid enum in constructor');
-        } catch (\AlexFigures\Symfony\Http\Exception\UnprocessableEntityException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\UnprocessableEntityException $e) {
             // Verify HTTP status code (422 for validation errors)
             self::assertSame(422, $e->getStatusCode(), 'Expected 422 status code for validation error');
 
@@ -580,7 +580,7 @@ final class TypeNormalizationTest extends DoctrineIntegrationTestCase
         self::assertSame('large', $initialMetadata['size']);
 
         // Update with null values using validatingProcessor directly
-        $changes = new \AlexFigures\Symfony\Contract\Data\ChangeSet(
+        $changes = new \AlexFigures\JsonApi\Contract\Data\ChangeSet(
             attributes: [
                 'metadata' => [
                     'color' => 'red',

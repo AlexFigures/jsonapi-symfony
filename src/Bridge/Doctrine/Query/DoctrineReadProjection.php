@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Query;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Query;
 
-use AlexFigures\Symfony\Resource\Definition\ResourceDefinition;
+use AlexFigures\JsonApi\Resource\Definition\ResourceDefinition;
 use Doctrine\ORM\QueryBuilder;
 
 /** @internal The same scalar DTO projection for root pages and included targets. */
@@ -22,6 +22,6 @@ final class DoctrineReadProjection
                 $selects[] = $alias . '.' . $field . ' AS ' . $field;
             }
         }
-        $query->select($selects);
+        $query->select(...$selects);
     }
 }

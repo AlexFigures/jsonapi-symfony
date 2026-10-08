@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Cache;
+namespace AlexFigures\JsonApi\Http\Cache;
 
 use Symfony\Component\HttpFoundation\Request;
 
@@ -10,8 +10,9 @@ use Symfony\Component\HttpFoundation\Request;
  * @phpstan-type CacheKeyConfig array{
  *     etag?: array{include_query_shape?: bool}
  * }
+ * @internal
  */
-final class CacheKeyBuilder
+final readonly class CacheKeyBuilder
 {
     /**
      * @param CacheKeyConfig $config

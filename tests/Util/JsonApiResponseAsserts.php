@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Util;
+namespace AlexFigures\JsonApi\Tests\Util;
 
 use PHPUnit\Framework\Assert;
 use Symfony\Component\HttpFoundation\JsonResponse;

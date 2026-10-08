@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Bridge\Doctrine\DQL;
+namespace AlexFigures\JsonApi\Tests\Unit\Bridge\Doctrine\DQL;
 
-use AlexFigures\Symfony\Bridge\Doctrine\DQL\ILikeFunction;
+use AlexFigures\JsonApi\Bridge\Doctrine\DQL\ILikeFunction;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;

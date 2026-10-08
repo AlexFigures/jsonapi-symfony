@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Filter\Handler\Registry;
+namespace AlexFigures\JsonApi\Tests\Unit\Filter\Handler\Registry;
 
-use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use AlexFigures\Symfony\Filter\Handler\SortHandlerInterface;
+use AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Handler\SortHandlerInterface;
 use PHPUnit\Framework\TestCase;
 
 final class SortHandlerRegistryTest extends TestCase

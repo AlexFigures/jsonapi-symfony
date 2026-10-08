@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Parser;
+namespace AlexFigures\JsonApi\Filter\Parser;
 
 /**
  * Represents a dotted field path like "author.name".
+ * @api
  */
-final class FieldPath
+final readonly class FieldPath implements \Stringable
 {
     /** @var list<string> */
     private array $segments;

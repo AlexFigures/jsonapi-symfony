@@ -2,23 +2,24 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Handles OPTIONS requests for JSON:API resources.
  *
  * Returns allowed HTTP methods based on the resource's allowed operations.
+ * @internal
  */
-final class OptionsController
+final readonly class OptionsController
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly bool $headEnabled = true,
+        private ResourceRegistryInterface $registry,
+        private bool $headEnabled = true,
     ) {
     }
 

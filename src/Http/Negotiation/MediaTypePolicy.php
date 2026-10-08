@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Negotiation;
+namespace AlexFigures\JsonApi\Http\Negotiation;
 
-final class MediaTypePolicy
+/** @api */
+final readonly class MediaTypePolicy
 {
     /**
      * @param list<string> $allowedRequestTypes
      * @param list<string> $negotiableResponseTypes
      */
     public function __construct(
-        public readonly array $allowedRequestTypes,
-        public readonly array $negotiableResponseTypes,
-        public readonly string $defaultResponseType,
-        public readonly bool $enforceJsonApiParameters,
+        public array $allowedRequestTypes,
+        public array $negotiableResponseTypes,
+        public string $defaultResponseType,
+        public bool $enforceJsonApiParameters,
     ) {
     }
 

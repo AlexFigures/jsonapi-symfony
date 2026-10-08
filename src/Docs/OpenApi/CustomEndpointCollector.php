@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Docs\OpenApi;
+namespace AlexFigures\JsonApi\Docs\OpenApi;
 
-use AlexFigures\Symfony\Docs\Attribute\OpenApiEndpoint;
+use AlexFigures\JsonApi\Docs\Attribute\OpenApiEndpoint;
 use ReflectionClass;
 use Symfony\Component\Routing\RouterInterface;
 

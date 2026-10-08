@@ -24,4 +24,4 @@ For computed relationships, supply a bounded `RelationshipBatchReaderInterface` 
 
 [Doctrine integration](integration-doctrine.md) · [production boundaries](production-policies.md).
 
-TODO before freeze: provide runnable typed repository/processor/persister examples with exact tag priority, hook and failure behavior, then verify them in a compiled application container.
+See [public extension examples](../api/extension-examples.md) for registration and tested implementations.

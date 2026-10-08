@@ -26,4 +26,6 @@ The class must carry `JsonApiResource`. Autoconfigured resource services receive
 
 `exposeId=false` controls the synthetic id entry in sparse fieldset validation. Every transported read resource/identifier still has its JSON:API id, and its read schema requires a non-null id.
 
-TODO before freeze: complete route naming examples and the full discovery diagnostics reference. See [documentation TODO](../release/documentation-todo.md).
+Generated route names follow `jsonapi.{type}.index`, `.show`, `.create`, `.update`, `.delete` for enabled operations. Relationship and custom routes are visible through `debug:router`; do not construct names for disabled operations. Resource `routePrefix: '/reference'` overrides the global prefix for routes and generated links.
+
+Discovery diagnoses duplicate/ambiguous registrations, unsupported composite Doctrine IDs, invalid relationship/profile requirements and invalid declarations during container/route discovery. Constructor DI profiles are instantiated before their requirements are validated. [Discovery regressions](../../tests/Integration/Discovery) and [container contracts](../../tests/Functional/Regression/RcContainerContractTest.php) cover deterministic failure timing.

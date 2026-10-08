@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Resource;
+namespace AlexFigures\JsonApi\Tests\Integration\Resource;
 
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Attribute\Relationship;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
-use AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Relationship;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver;
+use AlexFigures\JsonApi\Tests\Fixtures\Doctrine\TestManagerRegistry;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -81,11 +81,12 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
             isDevMode: true,
         );
 
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\DoctrineConfiguration::configureLazyObjects($config);
         $config->setMetadataCache($cache);
         $config->setQueryCache($cache);
         $config->setResultCache($cache);
 
-        $connection = \Doctrine\DBAL\DriverManager::getConnection([
+        $connection = \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::create([
             'url' => $this->getDatabaseUrl(),
         ], $config);
 
@@ -386,7 +387,6 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
         if ($isProxy) {
             // If it's a proxy, check that it's initialized
             $property = $reflection->getProperty('__isInitialized__');
-            $property->setAccessible(true);
             self::assertTrue($property->getValue($childFromDb->getParent()), 'Parent should be initialized, not a lazy proxy');
         }
 
@@ -503,7 +503,6 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
         // Check if parent.parent is a proxy BEFORE accessing it
         $parentReflection = new \ReflectionClass($parent);
         $parentParentProperty = $parentReflection->getProperty('parent');
-        $parentParentProperty->setAccessible(true);
         $rawParentParent = $parentParentProperty->getValue($parent);
 
         if ($rawParentParent !== null) {
@@ -512,7 +511,6 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
             // Check for __isInitialized() method (Doctrine 3.x)
             if ($grandparentReflection->hasMethod('__isInitialized')) {
                 $initMethod = $grandparentReflection->getMethod('__isInitialized');
-                $initMethod->setAccessible(true);
                 $isInitializedBefore = $initMethod->invoke($rawParentParent);
 
                 // With VERIFY policy, we expect the entity returned by find() to have
@@ -589,7 +587,6 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
         // Now check if parent.parent is a proxy and if it's initialized
         $parentReflection = new \ReflectionClass($parent);
         $parentParentProperty = $parentReflection->getProperty('parent');
-        $parentParentProperty->setAccessible(true);
         $rawGrandparent = $parentParentProperty->getValue($parent);
 
         self::assertNotNull($rawGrandparent, 'Parent should have a grandparent');
@@ -600,7 +597,6 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
 
         if ($isProxy) {
             $initProperty = $grandparentReflection->getProperty('__isInitialized__');
-            $initProperty->setAccessible(true);
             $isInitialized = $initProperty->getValue($rawGrandparent);
 
             // Log the current state for debugging
@@ -620,7 +616,6 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
 
             // Try to access the name property directly via reflection (simulating PropertyAccessor behavior)
             $nameProperty = $grandparentReflection->getProperty('name');
-            $nameProperty->setAccessible(true);
             $name = $nameProperty->getValue($rawGrandparent);
 
             self::assertSame('Books', $name, 'Should be able to access grandparent name via reflection when using VERIFY policy');
@@ -663,7 +658,6 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
 
         if ($hasIsInitializedMethod) {
             $isInitializedMethod = $parentReflection->getMethod('__isInitialized');
-            $isInitializedMethod->setAccessible(true);
             $isInitializedBefore = $isInitializedMethod->invoke($parentProxy);
 
             // Try to access name property via reflection
@@ -674,7 +668,6 @@ final class RelationshipLinkingPolicyIntegrationTest extends DoctrineIntegration
             } else {
                 $nameProperty = $parentReflection->getProperty('name');
             }
-            $nameProperty->setAccessible(true);
             $nameValue = $nameProperty->getValue($parentProxy);
 
             $isInitializedAfter = $isInitializedMethod->invoke($parentProxy);

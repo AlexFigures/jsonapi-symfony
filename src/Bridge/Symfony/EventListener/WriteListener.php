@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\EventListener;
+namespace AlexFigures\JsonApi\Bridge\Symfony\EventListener;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Http\Validation\DatabaseErrorMapper;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -25,11 +25,11 @@ use Symfony\Component\HttpKernel\KernelEvents;
  *
  * @internal This listener is registered automatically by the bundle
  */
-final class WriteListener implements EventSubscriberInterface
+final readonly class WriteListener implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly FlushManager $flushManager,
-        private readonly DatabaseErrorMapper $errorMapper,
+        private FlushManager $flushManager,
+        private DatabaseErrorMapper $errorMapper,
     ) {
     }
 

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\JsonApi\Contract\Data;
 
-use AlexFigures\Symfony\Http\Exception\ConflictException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Exception\ConflictException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
 
 /**
- * Legacy write contract for JSON:API resource persistence.
+ * Supported write contract for JSON:API resource persistence.
  *
  * @api This interface is part of the public API and follows semantic versioning.
  * @since 0.1.0

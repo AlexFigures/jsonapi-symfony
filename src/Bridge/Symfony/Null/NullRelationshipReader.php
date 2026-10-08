@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Null;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Null;
 
-use AlexFigures\Symfony\Contract\Data\RelationshipReader;
-use AlexFigures\Symfony\Contract\Data\SliceIds;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\JsonApi\Contract\Data\RelationshipReader;
+use AlexFigures\JsonApi\Contract\Data\SliceIds;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Pagination;
 use LogicException;
 
 /**
@@ -24,7 +24,7 @@ final class NullRelationshipReader implements RelationshipReader
     {
         throw new LogicException(
             'No RelationshipReader implementation found. ' .
-            'To use relationship endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipReader ' .
+            'To use relationship endpoints, implement AlexFigures\JsonApi\Contract\Data\RelationshipReader ' .
             'and register it as a service.'
         );
     }
@@ -33,7 +33,7 @@ final class NullRelationshipReader implements RelationshipReader
     {
         throw new LogicException(
             'No RelationshipReader implementation found. ' .
-            'To use relationship endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipReader ' .
+            'To use relationship endpoints, implement AlexFigures\JsonApi\Contract\Data\RelationshipReader ' .
             'and register it as a service.'
         );
     }
@@ -42,16 +42,16 @@ final class NullRelationshipReader implements RelationshipReader
     {
         throw new LogicException(
             'No RelationshipReader implementation found. ' .
-            'To use relationship endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipReader ' .
+            'To use relationship endpoints, implement AlexFigures\JsonApi\Contract\Data\RelationshipReader ' .
             'and register it as a service.'
         );
     }
 
-    public function getRelatedCollection(string $type, string $id, string $rel, Criteria $criteria): \AlexFigures\Symfony\Contract\Data\Slice
+    public function getRelatedCollection(string $type, string $id, string $rel, Criteria $criteria): \AlexFigures\JsonApi\Contract\Data\Slice
     {
         throw new LogicException(
             'No RelationshipReader implementation found. ' .
-            'To use relationship endpoints, implement AlexFigures\Symfony\Contract\Data\RelationshipReader ' .
+            'To use relationship endpoints, implement AlexFigures\JsonApi\Contract\Data\RelationshipReader ' .
             'and register it as a service.'
         );
     }

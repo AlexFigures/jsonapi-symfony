@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Response;
+namespace AlexFigures\JsonApi\Http\Response;
 
-use AlexFigures\Symfony\Http\Error\ErrorObject;
-use AlexFigures\Symfony\Http\Error\ErrorSource;
+use AlexFigures\JsonApi\Http\Error\ErrorObject;
+use AlexFigures\JsonApi\Http\Error\ErrorSource;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -207,7 +207,7 @@ final class JsonApiErrorBuilder
 
         $document = [
             'jsonapi' => ['version' => '1.1'],
-            'errors' => array_map([$this, 'serializeError'], $errors),
+            'errors' => array_map($this->serializeError(...), $errors),
         ];
 
         // Add top-level links if provided

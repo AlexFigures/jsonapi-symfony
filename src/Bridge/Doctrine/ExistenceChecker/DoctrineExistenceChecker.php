@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\ExistenceChecker;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\ExistenceChecker;
 
-use AlexFigures\Symfony\Contract\Data\ExistenceChecker;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\ExistenceChecker;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\DBAL\Connections\PrimaryReadReplicaConnection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -23,14 +23,14 @@ use RuntimeException;
  * - Handles different ID types (string, int, UUID)
  * - Works with all Doctrine-mapped entities
  *
- * @api This class is part of the public API and follows semantic versioning.
+ * @internal This class is part of the public API and follows semantic versioning.
  * @since 0.4.0
  */
-final class DoctrineExistenceChecker implements ExistenceChecker
+final readonly class DoctrineExistenceChecker implements ExistenceChecker
 {
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly ResourceRegistryInterface $registry,
+        private ManagerRegistry $managerRegistry,
+        private ResourceRegistryInterface $registry,
     ) {
     }
 
@@ -59,7 +59,7 @@ final class DoctrineExistenceChecker implements ExistenceChecker
         $qb->select('COUNT(e.' . $identifierField . ')')
             ->from($entityClass, 'e')
             ->where('e.' . $identifierField . ' = :id')
-            ->setParameter('id', \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
+            ->setParameter('id', \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         $count = (int) $qb->getQuery()->getSingleScalarResult();
 

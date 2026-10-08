@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Validation;
+namespace AlexFigures\JsonApi\Profile\Validation;
 
 /**
  * Describes a field requirement for a profile.
@@ -19,8 +19,9 @@ namespace AlexFigures\Symfony\Profile\Validation;
  *     description: 'Timestamp when entity was soft-deleted'
  * )
  * ```
+ * @api
  */
-final class FieldRequirement
+final readonly class FieldRequirement
 {
     /**
      * @param string $type        Expected field type (e.g., 'string', 'int', \DateTimeImmutable::class)
@@ -30,10 +31,10 @@ final class FieldRequirement
      * @param string $description Human-readable description of the field's purpose
      */
     public function __construct(
-        public readonly string $type,
-        public readonly bool $nullable = false,
-        public readonly bool $optional = false,
-        public readonly string $description = '',
+        public string $type,
+        public bool $nullable = false,
+        public bool $optional = false,
+        public string $description = '',
     ) {
     }
 

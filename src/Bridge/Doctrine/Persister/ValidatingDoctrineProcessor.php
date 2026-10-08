@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Persister;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Persister;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Http\Exception\ConflictException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Http\Exception\ConflictException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use RuntimeException;
@@ -42,20 +42,21 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  * through SerializerEntityInstantiator (uses Symfony Serializer, like API Platform).
  *
  * This processor does NOT call flush() - flushing is handled by WriteListener.
+ * @internal
  */
-final class ValidatingDoctrineProcessor implements ResourceProcessor
+final readonly class ValidatingDoctrineProcessor implements ResourceProcessor
 {
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly ResourceRegistryInterface $registry,
-        private readonly PropertyAccessorInterface $accessor,
-        private readonly ValidatorInterface $validator,
-        private readonly ConstraintViolationMapper $violationMapper,
-        private readonly SerializerEntityInstantiator $instantiator,
-        private readonly RelationshipResolver $relationshipResolver,
-        private readonly FlushManager $flushManager,
-        private readonly ?\AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks $profileHooks = null,
-        private readonly ?DoctrineWriteRequestMapper $writeRequests = null,
+        private ManagerRegistry $managerRegistry,
+        private ResourceRegistryInterface $registry,
+        private PropertyAccessorInterface $accessor,
+        private ValidatorInterface $validator,
+        private ConstraintViolationMapper $violationMapper,
+        private SerializerEntityInstantiator $instantiator,
+        private RelationshipResolver $relationshipResolver,
+        private FlushManager $flushManager,
+        private ?\AlexFigures\JsonApi\Bridge\Doctrine\Profile\ProfileWriteHooks $profileHooks = null,
+        private ?DoctrineWriteRequestMapper $writeRequests = null,
     ) {
     }
 
@@ -66,7 +67,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $em = $this->getEntityManagerFor($entityClass);
 
         // Check for ID conflict
-        if ($clientId !== null && $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $clientId))) {
+        if ($clientId !== null && $em->find($entityClass, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $clientId))) {
             throw new ConflictException(
                 sprintf('Resource "%s" with id "%s" already exists.', $type, $clientId)
             );
@@ -113,7 +114,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
 
         // Set ID if needed
         if ($clientId !== null) {
-            $this->accessor->setValue($entity, $idPath, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $clientId));
+            $this->accessor->setValue($entity, $idPath, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $clientId));
         } elseif ($classMetadata->isIdentifierNatural()) {
             // Check if ID is already set (e.g., in constructor)
             try {
@@ -146,7 +147,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->getDataClass();
         $em = $this->getEntityManagerFor($entityClass);
-        $entity = $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
+        $entity = $em->find($entityClass, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -184,7 +185,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->getDataClass();
         $em = $this->getEntityManagerFor($entityClass);
-        $entity = $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
+        $entity = $em->find($entityClass, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -222,7 +223,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     private function denormalizeInto(
         object $entity,
         ChangeSet $changes,
-        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata $metadata,
         bool $isCreate
     ): void {
 
@@ -240,7 +241,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     private function denormalizeAttributes(
         object $entity,
         ChangeSet $changes,
-        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata $metadata,
         bool $isCreate
     ): void {
         // Create ChangeSet with only attributes for denormalization
@@ -279,9 +280,9 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
 
 
     private function findAttributeMetadata(
-        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata $metadata,
         string $path
-    ): ?\AlexFigures\Symfony\Resource\Metadata\AttributeMetadata {
+    ): ?\AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata {
         foreach ($metadata->attributes as $attribute) {
             if ($attribute->propertyPath === $path || $attribute->name === $path) {
                 return $attribute;
@@ -294,12 +295,12 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     /**
      * Validates entity with denormalization groups and throws exception on errors.
      *
-     * @throws \AlexFigures\Symfony\Http\Exception\ValidationException
+     * @throws \AlexFigures\JsonApi\Http\Exception\ValidationException
      */
     private function validateWithGroups(
         object $entity,
         string $type,
-        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
+        \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata $metadata,
         bool $isCreate
     ): void {
         // Use denormalization groups from metadata (includes 'Default' automatically)
@@ -330,7 +331,7 @@ final class ValidatingDoctrineProcessor implements ResourceProcessor
     private function getToOneRelationshipValues(
         object $entity,
         array $relationshipsPayload,
-        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata
+        \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata $metadata
     ): array {
         if ($relationshipsPayload === []) {
             return [];

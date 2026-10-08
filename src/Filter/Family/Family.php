@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Family;
+namespace AlexFigures\JsonApi\Filter\Family;
 
-use AlexFigures\Symfony\Filter\Ast\Node;
+use AlexFigures\JsonApi\Filter\Ast\Node;
 
+/** @internal */
 interface Family
 {
     /**

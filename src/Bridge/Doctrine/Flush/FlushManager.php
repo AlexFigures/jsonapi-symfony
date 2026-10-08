@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Flush;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Flush;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
@@ -32,7 +32,7 @@ final class FlushManager
     {
         foreach ($this->managersToFlush as $scheduled) {
             if ($manager !== null && $manager !== $scheduled) {
-                throw new \AlexFigures\Symfony\Http\Exception\UnsupportedTransactionBoundaryException();
+                throw new \AlexFigures\JsonApi\Http\Exception\UnsupportedTransactionBoundaryException();
             }
         }
         $this->boundary = $manager;
@@ -49,8 +49,8 @@ final class FlushManager
 
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
-        private readonly ?\AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper $errors = null,
-        private readonly ?\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $resources = null,
+        private readonly ?\AlexFigures\JsonApi\Http\Validation\DatabaseErrorMapper $errors = null,
+        private readonly ?\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $resources = null,
     ) {
     }
 
@@ -69,7 +69,7 @@ final class FlushManager
     {
         $em = $this->getEntityManagerFor($entityClass);
         if ($this->boundary !== null && $this->boundary !== $em) {
-            throw new \AlexFigures\Symfony\Http\Exception\UnsupportedTransactionBoundaryException();
+            throw new \AlexFigures\JsonApi\Http\Exception\UnsupportedTransactionBoundaryException();
         }
         $this->managersToFlush[spl_object_id($em)] = $em;
         $this->classesToFlush[spl_object_id($em)] = $entityClass;

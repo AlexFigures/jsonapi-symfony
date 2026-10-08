@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Atomic;
+namespace AlexFigures\JsonApi\Tests\Functional\Atomic;
 
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -31,7 +31,6 @@ final class AtomicTransactionalityTest extends JsonApiTestCase
         $repo = $this->repository();
         $reflection = new \ReflectionClass($repo);
         $property = $reflection->getProperty('data');
-        $property->setAccessible(true);
         $property->setValue($repo, []);
     }
 
@@ -94,7 +93,7 @@ final class AtomicTransactionalityTest extends JsonApiTestCase
         try {
             $controller($request);
             self::fail('Expected BadRequestException for invalid resource type');
-        } catch (BadRequestException $e) {
+        } catch (BadRequestException) {
             // Expected
         }
 
@@ -158,7 +157,7 @@ final class AtomicTransactionalityTest extends JsonApiTestCase
         try {
             $controller($request);
             self::fail('Expected exception for non-existent resource');
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             // Expected
         }
 
@@ -293,7 +292,7 @@ final class AtomicTransactionalityTest extends JsonApiTestCase
         try {
             $controller($request);
             self::fail('Expected exception for unknown type');
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
             // Expected
         }
 

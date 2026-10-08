@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\JsonApiStatus;
+namespace AlexFigures\JsonApi\Tests\JsonApiStatus;
 
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Throwable;
 
@@ -36,7 +36,7 @@ final class ErrorObjectStatusTest extends JsonApiTestCase
 
     public function testConfiguredErrorAboutLinkIsSerialized(): void
     {
-        $error = (new \AlexFigures\Symfony\Http\Error\ErrorBuilder(true))->create('404', 'not-found', aboutLink: 'https://example.org/problems/missing-resource');
+        $error = (new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(true))->create('404', 'not-found', aboutLink: 'https://example.org/problems/missing-resource');
         $request = Request::create('/api/articles/missing');
         $errors = $this->captureErrors($request, static function () use ($error): void {
             throw new NotFoundException('Missing resource.', [$error]);
@@ -46,7 +46,7 @@ final class ErrorObjectStatusTest extends JsonApiTestCase
 
     public function testErrorTypeLinkSurvivesExceptionResponseEnrichment(): void
     {
-        $error = (new \AlexFigures\Symfony\Http\Error\ErrorBuilder(true))->create('404', 'not-found', typeLink: 'https://example.org/problem-types/not-found');
+        $error = (new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(true))->create('404', 'not-found', typeLink: 'https://example.org/problem-types/not-found');
         $errors = $this->captureErrors(Request::create('/api/articles/missing'), static function () use ($error): void {
             throw new NotFoundException('Missing resource.', [$error]);
         }, 404);

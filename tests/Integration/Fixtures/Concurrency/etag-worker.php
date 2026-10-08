@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Concurrency\WritePreconditionsHarness;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Concurrency\WritePreconditionsHarness;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
@@ -11,7 +11,8 @@ require dirname(__DIR__, 3) . '/bootstrap.php';
 
 $input = json_decode((string) fgets(\STDIN), true, 512, \JSON_THROW_ON_ERROR);
 $config = ORMSetup::createAttributeMetadataConfiguration([dirname(__DIR__) . '/Entity'], true);
-$manager = new EntityManager(DriverManager::getConnection(['url' => $input['dsn']]), $config);
+\AlexFigures\JsonApi\Tests\Integration\Fixtures\DoctrineConfiguration::configureLazyObjects($config);
+$manager = new EntityManager(\AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::create(['url' => $input['dsn']]), $config);
 $harness = new WritePreconditionsHarness($manager);
 // Prime this worker's identity map before either writer begins.
 $etag = $harness->request('GET', $input['id'])->getEtag();

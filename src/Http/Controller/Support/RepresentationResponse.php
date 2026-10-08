@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller\Support;
+namespace AlexFigures\JsonApi\Http\Controller\Support;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
 

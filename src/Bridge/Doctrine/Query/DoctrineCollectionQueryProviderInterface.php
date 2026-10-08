@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Query;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Query;
 
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Query\Criteria;
 use Doctrine\ORM\QueryBuilder;
 
 /**

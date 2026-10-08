@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Query\Fetch;
+namespace AlexFigures\JsonApi\Query\Fetch;
 
 /** @api A batch reader must bound identifier/model fetches before hydration; null budgets mean unlimited, zero means exhausted. */
 final readonly class RelationshipReadRequirements

@@ -19,6 +19,6 @@ make api-inventory
 
 Code belongs in focused namespaces under `src`; tests mirror it in Unit, Functional, Integration and Conformance. Use strict types and typed APIs. Add meaningful regression coverage for changed behavior, especially transaction boundaries, concurrent writes, scope and budgets.
 
-Use conventional commits and explain the problem, resulting behavior and validation. Document consumer migrations when changing contracts/defaults. Public/internal classification is still being audited; do not infer completed freeze from a namespace or old annotation.
+Use conventional commits and explain the problem, resulting behavior and validation. Document consumer migrations when changing contracts/defaults. Every source symbol has an explicit reviewed PUBLIC/INTERNAL decision. Update the manifest and named-argument/migration contract deliberately when changing the candidate; never infer status from a namespace.
 
 [Developer path](docs/guide/developer-path.md) · [API audit](docs/release/public-api-audit.md) · [release checklist](docs/release/checklist.md).

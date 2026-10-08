@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Transaction;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Transaction;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Contract\Tx\ScopedTransactionManagerInterface;
-use AlexFigures\Symfony\Http\Exception\UnsupportedTransactionBoundaryException;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Contract\Tx\ScopedTransactionManagerInterface;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedTransactionBoundaryException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
-class DoctrineTransactionManager implements ScopedTransactionManagerInterface, \AlexFigures\Symfony\Contract\Tx\ResourceWriteTransactionManagerInterface
+/** @internal */
+class DoctrineTransactionManager implements ScopedTransactionManagerInterface, \AlexFigures\JsonApi\Contract\Tx\ResourceWriteTransactionManagerInterface
 {
     private ?EntityManagerInterface $active = null;
 
-    /** @param iterable<\AlexFigures\Symfony\Contract\Data\ResourcePersister> $persisters */
+    /** @param iterable<\AlexFigures\JsonApi\Contract\Data\ResourcePersister> $persisters */
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
         private readonly FlushManager $flushManager,
@@ -29,7 +30,7 @@ class DoctrineTransactionManager implements ScopedTransactionManagerInterface, \
             return $this->run($manager, $callback);
         }
         foreach ($this->persisters as $persister) {
-            if ($persister instanceof \AlexFigures\Symfony\Contract\Data\TypedResourcePersister && $persister->supports($type)) {
+            if ($persister instanceof \AlexFigures\JsonApi\Contract\Data\TypedResourcePersister && $persister->supports($type)) {
                 if ($this->active !== null) {
                     throw new UnsupportedTransactionBoundaryException();
                 }

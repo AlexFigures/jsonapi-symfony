@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
+namespace AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\Compiler;
 
-use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiCustomRoute;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
 use LogicException;
 use ReflectionClass;
 use ReflectionMethod;
@@ -65,8 +65,8 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
         $container->setParameter('jsonapi.discovered_custom_routes', $discoveredCustomRoutes);
 
         // Update ResourceRegistry definition to use discovered resources
-        if ($container->hasDefinition('AlexFigures\Symfony\Resource\Registry\ResourceRegistry')) {
-            $registryDefinition = $container->getDefinition('AlexFigures\Symfony\Resource\Registry\ResourceRegistry');
+        if ($container->hasDefinition(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistry::class)) {
+            $registryDefinition = $container->getDefinition(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistry::class);
 
             // Replace the argument with discovered resources
             // The ResourceRegistry constructor accepts iterable<object|string>
@@ -75,8 +75,8 @@ final class ResourceDiscoveryPass implements CompilerPassInterface
         }
 
         // Update CustomRouteRegistry definition to use discovered custom routes
-        if ($container->hasDefinition('AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry')) {
-            $registryDefinition = $container->getDefinition('AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry');
+        if ($container->hasDefinition(\AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistry::class)) {
+            $registryDefinition = $container->getDefinition(\AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistry::class);
             $registryDefinition->setArgument(0, $discoveredCustomRoutes);
         }
     }

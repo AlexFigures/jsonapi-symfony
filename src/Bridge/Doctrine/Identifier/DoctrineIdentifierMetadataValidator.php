@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Identifier;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Identifier;
 
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadataValidatorInterface;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadataValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 
+/** @internal */
 final readonly class DoctrineIdentifierMetadataValidator implements ResourceMetadataValidatorInterface
 {
     public function __construct(private ManagerRegistry $managers)

@@ -2,27 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile;
+namespace AlexFigures\JsonApi\Profile;
 
-use AlexFigures\Symfony\Profile\Hook\DocumentHook;
-use AlexFigures\Symfony\Profile\Hook\QueryHook;
-use AlexFigures\Symfony\Profile\Hook\ReadHook;
-use AlexFigures\Symfony\Profile\Hook\RelationshipHook;
-use AlexFigures\Symfony\Profile\Hook\WriteHook;
+use AlexFigures\JsonApi\Profile\Hook\DocumentHook;
+use AlexFigures\JsonApi\Profile\Hook\QueryHook;
+use AlexFigures\JsonApi\Profile\Hook\ReadHook;
+use AlexFigures\JsonApi\Profile\Hook\RelationshipHook;
+use AlexFigures\JsonApi\Profile\Hook\WriteHook;
 use Symfony\Component\HttpFoundation\Request;
 
+/** @api */
 final class ProfileContext
 {
     public const REQUEST_ATTRIBUTE = '_jsonapi_profile_context';
-
-    /** @var array<string, ProfileInterface> */
-    private array $activeProfiles;
-
-    /** @var array<string, list<ProfileInterface>> */
-    private array $profilesPerType;
-
-    /** @var array<string, list<string>> */
-    private array $sources;
 
     private readonly AttributeReader $attributeReader;
 
@@ -47,16 +39,13 @@ final class ProfileContext
      * @param array<string, list<string>>           $sources
      */
     public function __construct(
-        array $activeProfiles,
-        array $profilesPerType = [],
-        array $sources = [],
+        private array $activeProfiles,
+        private array $profilesPerType = [],
+        private readonly array $sources = [],
         ?AttributeReader $attributeReader = null,
-        public readonly ?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $relationshipReads = null,
+        public readonly ?\AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap $relationshipReads = null,
         public readonly bool $relatedEndpoint = false,
     ) {
-        $this->activeProfiles = $activeProfiles;
-        $this->profilesPerType = $profilesPerType;
-        $this->sources = $sources;
         $this->attributeReader = $attributeReader ?? new AttributeReader();
     }
 
@@ -91,7 +80,7 @@ final class ProfileContext
         return new self($profiles, [], $this->sources, $this->attributeReader, $this->relationshipReads, $this->relatedEndpoint);
     }
 
-    public function withRelationshipReads(?\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap $reads): self
+    public function withRelationshipReads(?\AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap $reads): self
     {
         return new self($this->activeProfiles, $this->profilesPerType, $this->sources, $this->attributeReader, $reads, $this->relatedEndpoint);
     }
@@ -153,9 +142,7 @@ final class ProfileContext
      */
     public function documentHooks(): array
     {
-        if ($this->documentHooks === null) {
-            $this->documentHooks = $this->collectHooks(DocumentHook::class);
-        }
+        $this->documentHooks ??= $this->collectHooks(DocumentHook::class);
 
         return $this->documentHooks;
     }
@@ -165,9 +152,7 @@ final class ProfileContext
      */
     public function queryHooks(): array
     {
-        if ($this->queryHooks === null) {
-            $this->queryHooks = $this->collectHooks(QueryHook::class);
-        }
+        $this->queryHooks ??= $this->collectHooks(QueryHook::class);
 
         return $this->queryHooks;
     }
@@ -177,9 +162,7 @@ final class ProfileContext
      */
     public function readHooks(): array
     {
-        if ($this->readHooks === null) {
-            $this->readHooks = $this->collectHooks(ReadHook::class);
-        }
+        $this->readHooks ??= $this->collectHooks(ReadHook::class);
 
         return $this->readHooks;
     }
@@ -189,9 +172,7 @@ final class ProfileContext
      */
     public function writeHooks(): array
     {
-        if ($this->writeHooks === null) {
-            $this->writeHooks = $this->collectHooks(WriteHook::class);
-        }
+        $this->writeHooks ??= $this->collectHooks(WriteHook::class);
 
         return $this->writeHooks;
     }
@@ -201,9 +182,7 @@ final class ProfileContext
      */
     public function relationshipHooks(): array
     {
-        if ($this->relationshipHooks === null) {
-            $this->relationshipHooks = $this->collectHooks(RelationshipHook::class);
-        }
+        $this->relationshipHooks ??= $this->collectHooks(RelationshipHook::class);
 
         return $this->relationshipHooks;
     }

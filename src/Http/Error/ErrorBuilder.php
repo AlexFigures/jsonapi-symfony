@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
-final class ErrorBuilder
+/** @api */
+final readonly class ErrorBuilder
 {
     public function __construct(
-        private readonly bool $useDefaultTitleMap,
+        private bool $useDefaultTitleMap,
     ) {
     }
 

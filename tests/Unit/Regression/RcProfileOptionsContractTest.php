@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Regression;
+namespace AlexFigures\JsonApi\Tests\Unit\Regression;
 
-use AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner;
-use AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile;
-use AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Fetch\RelationshipReadMap;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Tests\Unit\Regression\Fixtures\CountOwner;
-use AlexFigures\Symfony\Tests\Unit\Regression\Fixtures\SoftOwner;
+use AlexFigures\JsonApi\Http\Document\Fetch\RepresentationFetchPlanner;
+use AlexFigures\JsonApi\Profile\Builtin\RelationshipCountsProfile;
+use AlexFigures\JsonApi\Profile\Builtin\SoftDeleteProfile;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Tests\Unit\Regression\Fixtures\CountOwner;
+use AlexFigures\JsonApi\Tests\Unit\Regression\Fixtures\SoftOwner;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -55,7 +55,7 @@ final class RcProfileOptionsContractTest extends TestCase
         $metadata = new ResourceMetadata('soft', SoftOwner::class, [], []);
         $meta = [];
         foreach ($context->documentHooks() as $hook) {
-            if ($hook instanceof \AlexFigures\Symfony\Profile\Hook\ResourceMetaHookInterface) {
+            if ($hook instanceof \AlexFigures\JsonApi\Profile\Hook\ResourceMetaHookInterface) {
                 $hook->onResourceMeta($context, $metadata, $meta, new SoftOwner());
             }
         }

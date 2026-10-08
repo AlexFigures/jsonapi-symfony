@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Definition;
+namespace AlexFigures\JsonApi\Resource\Definition;
 
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
 
 /**
  * Represents a resource version resolved for a specific profile/context.
+ * @api
  */
-final class VersionDefinition
+final readonly class VersionDefinition
 {
     /**
      * @param array<string, class-string>              $writeRequests
@@ -17,11 +18,11 @@ final class VersionDefinition
      * @param array<string, RelationshipLinkingPolicy> $relationshipPolicies
      */
     public function __construct(
-        public readonly ?string $viewClass,
-        public readonly array $writeRequests,
-        public readonly ReadProjection $readProjection,
-        public readonly array $fieldMap,
-        public readonly array $relationshipPolicies,
+        public ?string $viewClass,
+        public array $writeRequests,
+        public ReadProjection $readProjection,
+        public array $fieldMap,
+        public array $relationshipPolicies,
     ) {
     }
 }

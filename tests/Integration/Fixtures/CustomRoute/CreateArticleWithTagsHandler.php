@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\CustomRoute;
 
-use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
-use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
-use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\JsonApi\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\JsonApi\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -16,10 +16,10 @@ use Doctrine\ORM\EntityManagerInterface;
  *
  * This demonstrates a custom creation endpoint with business logic.
  */
-final class CreateArticleWithTagsHandler implements CustomRouteHandlerInterface
+final readonly class CreateArticleWithTagsHandler implements CustomRouteHandlerInterface
 {
     public function __construct(
-        private readonly EntityManagerInterface $em
+        private EntityManagerInterface $em
     ) {
     }
 

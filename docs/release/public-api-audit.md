@@ -1,42 +1,13 @@
-# Public API audit preparation
+# Public API freeze record
 
-Inventory can begin while runtime verification proceeds. Classification and cleanup decisions remain open until the runtime contract is confirmed; existing annotations do not constitute a completed freeze.
+The candidate surface is deliberately classified in [public-api-manifest.json](../api/public-api-manifest.json), one decision and rationale per source declaration. `make api-inventory` currently reviews 300 declarations: 135 PUBLIC and 165 INTERNAL. There are no unclassified source symbols or retained deprecated PHP types in this inventory.
 
-Generate the current source inventory:
+PUBLIC includes application-implemented persistence/transaction/relationship contracts, typed dispatch, optional batch/preloader/concurrency/query-provider capabilities, their transitive DTOs, resource attributes/enums/metadata, query values and AST values needed by handlers, profile services/contexts/hooks, response/error builders, intended events and exceptions, public documentation/media attributes and selected decoration seams. Compiler passes, ordinary controllers (the explicit Atomic route callable is PUBLIC), parsers, compilers, built-in operator implementations, discovery and wiring machinery are INTERNAL.
 
-```bash
-make api-inventory
-```
+Typed relationship reader/updater dispatch and tags are frozen: `supports(sourceType)` selects a service; configured providers are fallbacks. Endpoint dispatch is separate from batch representation loading. `RelationshipReadMap`, `RelationshipReadRequirements`, `CustomRouteMetadata` and `DoctrineCollectionQueryProviderInterface` are PUBLIC. Query-provider decorators must preserve scope and guards before forwarding or return null. `ResourceMetadataInterface` deliberately exposes only identity, while registries return the complete public metadata value.
 
-The dependency-free scanner writes `reports/public-api-inventory.json`. CI publishes it as an artifact. It lists source symbols, kinds, paths, explicit annotation occurrences and public method names. This is a lexical inventory, not a PHP signature/BC checker: method-level annotations may coexist with class-level annotations, inherited/promoted members and named/default arguments still need review. Unmarked entries are REVIEW, never automatically INTERNAL.
+The public root moves from `AlexFigures\Symfony` to `AlexFigures\JsonApi`; the Bundle moves to `AlexFigures\JsonApi\JsonApiBundle`. No old class aliases remain. This approved pre-1.0 cleanup removes Symfony implementation naming from consumer APIs and enables Flex root-Bundle detection.
 
-## Review groups
+Attribute constructor names/defaults and enum values are retained. Profiles are container services with constructor DI, activate by negotiated/default/per-type policy and declare optional hooks without expanding required methods. Public factories are obtained from DI; internal collaborators in their construction are wiring details, not application extension dependencies. All supported implementable signatures and DTOs are described in [public API](../api/public-api.md) and [examples](../api/extension-examples.md).
 
-| Surface | Review | Status |
-| --- | --- | --- |
-| Data and transaction contracts | Existing implementers, optional capabilities, generic providers, Atomic versus single write | Pending |
-| Attributes and enums | Constructor argument names/order/defaults, enum cases, operations/projections, future extension | Pending |
-| Values and metadata | Mutability, serialization, types used by public signatures, constructor defaults | Pending |
-| Profiles/hooks | DI lifecycle, type scope, activation/defaults, fetch declarations, resource meta | Pending |
-| Filters/sorts/relationships | AST exposure, handler composition, aggregate semantics, scope and batch budgets | Pending |
-| Repository decorator query capability | Supported Doctrine query projection and locator type selection; outer scope/guards and null fallback required | Focused decision made; full freeze pending |
-| Cache strategies | Version source, missing validators, representation variation, precondition extension points | Pending |
-| Exceptions/events | Public throwable/event types, inheritance, properties and dispatch behavior | Pending |
-| Symfony aliases/tags | Intended service replacement points, FQCN/tag names, autoconfiguration and priority | Pending |
-| Configuration | Defaults, normalization, zero/unlimited semantics, deprecated nodes, per-type keys | Pending |
-| Console commands | Registration, arguments/options, exit codes and documented output semantics | Pending |
-| HTTP errors | Status agreement, stable code/title semantics and source fields; descriptive detail | Pending |
-
-For each symbol or non-PHP surface, record PUBLIC or INTERNAL, the rationale, extension example/tests and required migration. Resolve conflicting annotations. Check all transitive types of a public signature; marking an interface PUBLIC while leaving its required value classes unclassified is incomplete.
-
-Use separate optional interfaces to add capabilities to implemented contracts in 1.x. Adding a required method, or an optional parameter to a method consumers implement, can break implementations. Prefer reviewed extension points over exposing an entire bridge namespace. Preserve existing documented use until the cleanup and migration decision is explicit.
-
-## Freeze outputs
-
-- Reviewed inventory and explicit annotations agree.
-- Namespace moves and deprecated/removed symbols are listed in UPGRADE-1.0.
-- Configuration, aliases, commands and error contract have corresponding tests.
-- Required BC tooling compares the actual frozen release baseline.
-- Independent acceptance still protects behavior and configuration beyond signature checking.
-
-The [extension index](../api/public-api.md) is the developer-facing starting point. The [release checklist](checklist.md) tracks the gate; this audit does not change runtime code or mark new capabilities stable yet.
+Configuration is generated from the actual tree; removed inert surfaces are in [UPGRADE-1.0](../../UPGRADE-1.0.md). Error status/code/source semantics are in [errors](../api/errors.md). Future changes to this candidate before final 1.0 require deliberate review, a migration note and fresh consumer evidence; the recorded older evidence cannot be reused automatically.

@@ -3,7 +3,7 @@
 We want every team integrating JsonApiBundle to have a smooth experience. Please use the following channels depending on your request type:
 
 ## 📚 Self-Service
-- Review the [documentation index](docs/guide/README.md) for tutorials, configuration reference, and troubleshooting.
+- Review the [documentation index](docs/index.md) for tutorials, configuration reference, and troubleshooting.
 - Consult the [specification coverage matrix](docs/conformance/spec-coverage.md) to understand current compliance.
 - Check the [production policies](docs/guide/production-policies.md) before going live.
 

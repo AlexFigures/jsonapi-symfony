@@ -1,4 +1,4 @@
-AlexFigures\Symfony\Tests\Unit\Bridge\Doctrine\Instantiator\Fixtures\YamlWriteModel:
+AlexFigures\JsonApi\Tests\Unit\Bridge\Doctrine\Instantiator\Fixtures\YamlWriteModel:
     attributes:
         title:
             groups: [write]

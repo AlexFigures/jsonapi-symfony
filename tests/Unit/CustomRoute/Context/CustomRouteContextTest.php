@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\CustomRoute\Context;
+namespace AlexFigures\JsonApi\Tests\Unit\CustomRoute\Context;
 
-use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Pagination;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Pagination;
 use LogicException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  */
-#[\PHPUnit\Framework\Attributes\CoversClass(\AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext::class)]
+#[\PHPUnit\Framework\Attributes\CoversClass(\AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContext::class)]
 final class CustomRouteContextTest extends TestCase
 {
     public function testGetResourceReturnsPreloadedResource(): void
@@ -93,7 +93,7 @@ final class CustomRouteContextTest extends TestCase
         $criteria = new Criteria(new Pagination(1, 10));
         $criteria->include = ['author', 'comments'];
         $criteria->fields = ['articles' => ['title', 'body']];
-        $criteria->sort = [new \AlexFigures\Symfony\Query\Sorting('createdAt', false)];
+        $criteria->sort = [new \AlexFigures\JsonApi\Query\Sorting('createdAt', false)];
 
         $context = $this->createContext(criteria: $criteria);
 
@@ -156,7 +156,7 @@ final class CustomRouteContextTest extends TestCase
         $criteria = new Criteria(new Pagination(1, 10));
         $routeParams = ['id' => '123'];
         $body = ['key' => 'value'];
-        $repository = $this->createMock(\AlexFigures\Symfony\Contract\Data\ResourceRepository::class);
+        $repository = $this->createMock(\AlexFigures\JsonApi\Contract\Data\ResourceRepository::class);
 
         $context = new CustomRouteContext(
             request: $request,
@@ -187,7 +187,7 @@ final class CustomRouteContextTest extends TestCase
         array $routeParams = [],
         ?Criteria $criteria = null,
         array $body = [],
-        ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null
+        ?\AlexFigures\JsonApi\Contract\Data\ResourceRepository $repository = null
     ): CustomRouteContext {
         return new CustomRouteContext(
             request: $request ?? Request::create('/test'),
@@ -196,7 +196,7 @@ final class CustomRouteContextTest extends TestCase
             routeParams: $routeParams,
             criteria: $criteria ?? new Criteria(new Pagination(1, 10)),
             body: $body,
-            repository: $repository ?? $this->createMock(\AlexFigures\Symfony\Contract\Data\ResourceRepository::class)
+            repository: $repository ?? $this->createMock(\AlexFigures\JsonApi\Contract\Data\ResourceRepository::class)
         );
     }
 }

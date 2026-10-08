@@ -1,6 +1,6 @@
 # Production policies and boundaries
 
-These policies describe implemented behavior on the stabilization branch. Independent consumer confirmation and the final defaults audit remain release gates. [Support contract draft](../architecture/support-contract-1.0-draft.md) maps the implementation to evidence.
+These policies describe implemented behavior on the stabilization branch. Recorded consumer evidence is revision-specific; final stabilization/RC platform proof remains a release gate. [Support contract](../reference/support-contract.md) maps the implementation to evidence.
 
 ## Atomic and single writes
 
@@ -56,7 +56,7 @@ Computed relationships should implement bounded batch reading through `Relations
 
 A negotiated DTO may omit persistence computed getters. In legacy mode, the Doctrine preloader batch-loads the selected persistence owners as separate getter sources; it keeps DTO attribute values and honors readable DTO getters. Strict rejection and explicit batch readers remain the production alternatives.
 
-Legacy getters and undeclared application SQL have no automatic query-cost guarantee. The bundle cannot bound an arbitrary callback that loads an entire graph internally. Applications must supply batch loaders, honor budgets and test their own query shape. See [extension contracts](../api/public-api.md) and [relationship graph design](../architecture/relationship-graph-reads.md).
+Legacy getters and undeclared application SQL have no automatic query-cost guarantee. The bundle cannot bound an arbitrary callback that loads an entire graph internally. Applications must supply batch loaders, honor budgets and test their own query shape. See [extension contracts](../api/public-api.md) and [relationship graph design](relationship-loading.md).
 
 ## Application and infrastructure responsibilities
 
@@ -66,13 +66,13 @@ Unsupported composite Doctrine identifiers fail during discovery. Integer, UUID 
 
 ## Relationship endpoint authorization
 
-Bind `AlexFigures\Symfony\Http\Authorization\RelationshipAuthorizerInterface` to an application service. Its `isGranted(Request $request, string $type, string $id, string $relationship, RelationshipOperation $operation): bool` receives the source resource identity, relationship name, request and operation. The application can delegate to its own voters or permission service; the bundle does not require Symfony Security.
+Bind `AlexFigures\JsonApi\Http\Authorization\RelationshipAuthorizerInterface` to an application service. Its `isGranted(Request $request, string $type, string $id, string $relationship, RelationshipOperation $operation): bool` receives the source resource identity, relationship name, request and operation. The application can delegate to its own voters or permission service; the bundle does not require Symfony Security.
 
 ```yaml
 # config/services.yaml
 services:
     App\JsonApi\RelationshipAuthorizer: ~
-    AlexFigures\Symfony\Http\Authorization\RelationshipAuthorizerInterface:
+    AlexFigures\JsonApi\Http\Authorization\RelationshipAuthorizerInterface:
         alias: App\JsonApi\RelationshipAuthorizer
 ```
 
@@ -80,4 +80,4 @@ The public enum distinguishes `READ_LINKAGE` (GET/HEAD of `/relationships/{rel}`
 
 This policy covers standalone generated relationship endpoints, including typed providers. Resource-body relationship changes, Atomic Operations, collection linkage and included resources retain their existing provider/profile authorization responsibilities. It is not a graph-wide visibility filter or an automatic tenant policy. The internal validator representation read after an authorized write does not require a separate `READ_LINKAGE` grant. Applications may permit mutation without permitting a standalone linkage GET.
 
-Without an application authorizer, endpoint behavior is unchanged. For manually constructed controllers, inject the configured RelationshipAccessChecker; Symfony services receive it automatically.
+Without an application authorizer, endpoint behavior is unchanged. Use generated routes and the public authorizer alias; internal controller/checker construction is not a public integration contract.

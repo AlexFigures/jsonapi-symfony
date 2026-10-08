@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Profile\Fixtures;
+namespace AlexFigures\JsonApi\Tests\Unit\Profile\Fixtures;
 
-use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\Validation\FieldRequirement;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\Validation\FieldRequirement;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
 
 final readonly class InjectedProfile implements ProfileInterface
 {

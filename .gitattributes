@@ -11,3 +11,9 @@
 /.editorconfig export-ignore
 /.php-cs-fixer*.php export-ignore
 /Makefile export-ignore
+/reports export-ignore
+/build export-ignore
+/tools export-ignore
+/stubs export-ignore
+/.gitignore export-ignore
+/.symfony.bundle.yaml export-ignore

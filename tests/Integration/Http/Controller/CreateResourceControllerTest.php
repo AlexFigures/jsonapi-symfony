@@ -2,30 +2,30 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Integration\Http\Controller;
 
-use AlexFigures\Symfony\Http\Controller\CreateResourceController;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
-use AlexFigures\Symfony\Http\Write\WriteConfig;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\ArticleStatus;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\CategorySynonym;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Comment;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use AlexFigures\Symfony\Tests\Util\JsonApiResponseAsserts;
+use AlexFigures\JsonApi\Http\Controller\CreateResourceController;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Controller\Support\RequestDecoder;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Http\Write\InputDocumentValidator;
+use AlexFigures\JsonApi\Http\Write\WriteConfig;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\ArticleStatus;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Category;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\CategorySynonym;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Comment;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Tests\Util\JsonApiResponseAsserts;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -469,7 +469,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'tags');
             self::fail('Expected UnsupportedMediaTypeException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException $e) {
             self::assertSame(415, $e->getStatusCode());
         }
     }
@@ -496,7 +496,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'tags');
             self::fail('Expected BadRequestException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\BadRequestException $e) {
             self::assertSame(400, $e->getStatusCode());
         }
     }
@@ -520,7 +520,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'tags');
             self::fail('Expected BadRequestException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\BadRequestException $e) {
             self::assertSame(400, $e->getStatusCode());
         }
     }
@@ -545,7 +545,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'tags');
             self::fail('Expected ConflictException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\ConflictException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\ConflictException $e) {
             self::assertSame(409, $e->getStatusCode());
         }
     }
@@ -571,7 +571,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'tags');
             self::fail('Expected ForbiddenException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\ForbiddenException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\ForbiddenException $e) {
             self::assertSame(403, $e->getStatusCode());
         }
     }
@@ -631,7 +631,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'unknown-type');
             self::fail('Expected NotFoundException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\NotFoundException $e) {
             self::assertSame(404, $e->getStatusCode());
         }
     }
@@ -932,7 +932,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'articles');
             self::fail('Expected NotFoundException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\NotFoundException $e) {
             // Verify HTTP status code (404 per JSON:API spec for missing related resources)
             self::assertSame(404, $e->getStatusCode());
 
@@ -1000,7 +1000,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'articles');
             self::fail('Expected NotFoundException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\NotFoundException $e) {
             // Verify HTTP status code (404 per JSON:API spec for missing related resources)
             self::assertSame(404, $e->getStatusCode());
 
@@ -1154,7 +1154,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'authors');
             self::fail('Expected NotFoundException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\NotFoundException $e) {
             // Verify HTTP status code (404 per JSON:API spec for missing related resources)
             self::assertSame(404, $e->getStatusCode());
 
@@ -1243,7 +1243,7 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
         try {
             ($this->controller)($request, 'authors');
             self::fail('Expected ConflictException to be thrown');
-        } catch (\AlexFigures\Symfony\Http\Exception\ConflictException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\ConflictException $e) {
             self::assertSame(409, $e->getStatusCode(), 'ConflictException should have status code 409');
         }
     }
@@ -1313,8 +1313,8 @@ final class CreateResourceControllerTest extends DoctrineIntegrationTestCase
 
         // Verify persistence - clear entity manager and reload from database
         $this->em->clear();
-        $entity = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
-        self::assertInstanceOf(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entity);
+        $entity = $this->em->find(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entityId);
+        self::assertInstanceOf(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypeTestEntity::class, $entity);
 
         $persistedMetadata = $entity->getMetadata();
         self::assertIsArray($persistedMetadata);

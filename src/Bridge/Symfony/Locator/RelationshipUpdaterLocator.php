@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Locator;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Locator;
 
-use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Contract\Data\TypedRelationshipUpdater;
+use AlexFigures\JsonApi\Contract\Data\RelationshipUpdater;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Contract\Data\TypedRelationshipUpdater;
 
 /** @internal Dispatch endpoint mutations by source resource type. */
 final readonly class RelationshipUpdaterLocator implements RelationshipUpdater

@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Exception\ConflictException;
-use AlexFigures\Symfony\Http\Exception\ForbiddenException;
-use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
-use AlexFigures\Symfony\Http\Exception\MethodNotAllowedException;
-use AlexFigures\Symfony\Http\Exception\MultiErrorException;
-use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Exception\UnprocessableEntityException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Exception\ConflictException;
+use AlexFigures\JsonApi\Http\Exception\ForbiddenException;
+use AlexFigures\JsonApi\Http\Exception\JsonApiHttpException;
+use AlexFigures\JsonApi\Http\Exception\MethodNotAllowedException;
+use AlexFigures\JsonApi\Http\Exception\MultiErrorException;
+use AlexFigures\JsonApi\Http\Exception\NotAcceptableException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Exception\UnprocessableEntityException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use DateTimeImmutable;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,15 +23,16 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Throwable;
 
-final class JsonApiExceptionListener implements EventSubscriberInterface
+/** @internal */
+final readonly class JsonApiExceptionListener implements EventSubscriberInterface
 {
     private const PRIORITY = 512;
 
     public function __construct(
-        private readonly ErrorMapper $errors,
-        private readonly CorrelationIdProvider $correlationIds,
-        private readonly bool $exposeDebugMeta,
-        private readonly bool $addCorrelationId,
+        private ErrorMapper $errors,
+        private CorrelationIdProvider $correlationIds,
+        private bool $exposeDebugMeta,
+        private bool $addCorrelationId,
     ) {
     }
 
@@ -103,7 +104,7 @@ final class JsonApiExceptionListener implements EventSubscriberInterface
         }
 
         if ($errors === []) {
-            $errors = $this->buildErrorsFor($throwable, $status);
+            $errors = $this->buildErrorsFor($throwable);
             if ($status === 500) {
                 $status = $this->determineStatus($throwable) ?? $status;
             }
@@ -125,7 +126,7 @@ final class JsonApiExceptionListener implements EventSubscriberInterface
     /**
      * @return list<ErrorObject>
      */
-    private function buildErrorsFor(Throwable $throwable, int $status): array
+    private function buildErrorsFor(Throwable $throwable): array
     {
         if ($throwable instanceof UnsupportedMediaTypeException) {
             return [$this->errors->invalidContentType($throwable->getMediaType())];

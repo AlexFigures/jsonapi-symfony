@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Document\Fetch;
+namespace AlexFigures\JsonApi\Http\Document\Fetch;
 
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
 
 /** @internal One graph edge, independently loaded from sibling relationships. */
 final readonly class RelationshipFetch

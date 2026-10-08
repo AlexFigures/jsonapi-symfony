@@ -2,29 +2,29 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Integration\Http\Controller;
 
-use AlexFigures\Symfony\Filter\Parser\FilterParser;
-use AlexFigures\Symfony\Http\Controller\CreateResourceController;
-use AlexFigures\Symfony\Http\Controller\ResourceController;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
-use AlexFigures\Symfony\Http\Write\WriteConfig;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Filter\Parser\FilterParser;
+use AlexFigures\JsonApi\Http\Controller\CreateResourceController;
+use AlexFigures\JsonApi\Http\Controller\ResourceController;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Controller\Support\RequestDecoder;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Http\Write\InputDocumentValidator;
+use AlexFigures\JsonApi\Http\Write\WriteConfig;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -202,7 +202,7 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
         try {
             ($this->resourceController)($request, 'articles', 'non-existent-id');
             self::fail('Expected NotFoundException (404)');
-        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\NotFoundException $e) {
             // Exception thrown - now check error response structure
             $response = $this->handleException($request, $e);
 
@@ -269,7 +269,7 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
             $errorMapper->notFound('Another resource not found'),
         ];
 
-        $exception = new \AlexFigures\Symfony\Http\Exception\NotFoundException(
+        $exception = new \AlexFigures\JsonApi\Http\Exception\NotFoundException(
             'Multiple resources not found',
             $errors
         );
@@ -336,7 +336,7 @@ final class ErrorResponseStructureTest extends DoctrineIntegrationTestCase
         try {
             ($this->resourceController)($request, 'articles', 'non-existent-id');
             self::fail('Expected NotFoundException (404)');
-        } catch (\AlexFigures\Symfony\Http\Exception\NotFoundException $e) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\NotFoundException $e) {
             // Exception thrown - now check error response structure
             $response = $this->handleException($request, $e);
             $data = json_decode($response->getContent(), true);

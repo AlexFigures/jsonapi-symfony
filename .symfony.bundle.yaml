@@ -1,0 +1,6 @@
+branches: [main]
+maintained_branches: [main]
+current_branch: main
+dev_branch: main
+dev_branch_alias: 1.x
+doc_dir: docs/symfony

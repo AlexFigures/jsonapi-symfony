@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Ast;
+namespace AlexFigures\JsonApi\Filter\Ast;
 
 /**
  * Represents an IS NULL / IS NOT NULL check.
+ * @api
  */
-final class NullCheck implements Node
+final readonly class NullCheck implements Node
 {
     public function __construct(
-        public readonly string $fieldPath,
-        public readonly bool $isNull,
+        public string $fieldPath,
+        public bool $isNull,
     ) {
     }
 }

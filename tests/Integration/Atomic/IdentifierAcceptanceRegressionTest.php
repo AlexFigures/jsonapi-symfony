@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Atomic\Execution\Handlers\AddHandler;
-use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
-use AlexFigures\Symfony\Http\Write\WriteConfig;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypedIdentifierRecord;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\AddHandler;
+use AlexFigures\JsonApi\Atomic\Lid\LidRegistry;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Exception\JsonApiHttpException;
+use AlexFigures\JsonApi\Http\Write\WriteConfig;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypedIdentifierRecord;
 use Symfony\Component\Uid\Uuid;
 
 final class IdentifierAcceptanceRegressionTest extends DoctrineAtomicTestCase

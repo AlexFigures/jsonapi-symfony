@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Negotiation;
+namespace AlexFigures\JsonApi\Profile\Negotiation;
 
-use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\ProfileRegistry;
+use AlexFigures\JsonApi\Http\Exception\NotAcceptableException;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\ProfileRegistry;
 use Symfony\Component\HttpFoundation\Request;
 
-final class ProfileNegotiator
+/** @internal */
+final readonly class ProfileNegotiator
 {
     /** @var list<string> */
     private array $enabledByDefault;
@@ -30,7 +31,7 @@ final class ProfileNegotiator
      * @param array{require_known_profiles?: bool, echo_profiles_in_content_type?: bool, link_header?: bool} $negotiation
      */
     public function __construct(
-        private readonly ProfileRegistry $registry,
+        private ProfileRegistry $registry,
         array $enabledByDefault = [],
         array $perType = [],
         array $negotiation = []
@@ -158,7 +159,7 @@ final class ProfileNegotiator
         }
 
         $profiles = [];
-        foreach (\AlexFigures\Symfony\Http\Negotiation\ParsedMediaType::parse($header, true) as $media) {
+        foreach (\AlexFigures\JsonApi\Http\Negotiation\ParsedMediaType::parse($header, true) as $media) {
             if ($media->quality <= 0 || !$media->validJsonApi(['https://jsonapi.org/ext/atomic'])) {
                 continue;
             }

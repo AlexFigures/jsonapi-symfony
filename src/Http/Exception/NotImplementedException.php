@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Exception;
+namespace AlexFigures\JsonApi\Http\Exception;
 
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -10,6 +10,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
  * Exception for functionality that is not implemented.
  *
  * HTTP status: 501 Not Implemented
+ * @api
  */
 final class NotImplementedException extends HttpException
 {

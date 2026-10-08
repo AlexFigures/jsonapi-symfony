@@ -1,24 +1,9 @@
 # Documentation maintenance
 
-Current application documentation starts at the developer path. Old guides and duplicate reports are removed rather than exposed as an alternate onboarding path. Incomplete topics have explicit TODOs in their current pages and the [documentation work list](documentation-todo.md).
+[docs/index.md](../index.md) is the canonical entry point. Topic guides explain the current behavior; the reference defines configuration/support guarantees; API pages define extension and error contracts. Release material is for maintainers and remains outside onboarding.
 
-## Automated checks
+`make docs-check` discovers root Markdown and all documentation pages automatically and checks local link targets. The configuration reference is generated from the real Symfony tree and checked for drift. Examples must use public APIs and supported named arguments. Runtime code, reviewed API inventory and regression tests are authoritative.
 
-```bash
-make docs-check
-make api-inventory
-```
+Keep one current document for each topic. Remove obsolete implementation reports and abandoned proposals instead of linking users to historical instructions. Update navigation, migration notes and tests together when behavior changes. Store generated logs/reports outside version control; CI publishes them as artifacts.
 
-The documentation manifest lives in `scripts/maintained-docs.txt`. Link checking validates local inline Markdown destinations, including source links, on its current pages. It skips fenced examples and external URLs; fragment IDs, reference-style links, remote content and example execution are outside its scope. A passing link check is not proof that an example works.
-
-Validate configuration examples with the real Symfony Configuration processor. Validate PHP snippets for syntax, then add executable fixtures before presenting them as complete application recipes. Documentation changes that alter promised behavior need corresponding runtime evidence and migration review.
-
-## Evidence and local artifacts
-
-Recent architecture/gap reports are internal implementation evidence while independent consumer verification is pending. Keep their exact results and limitations distinguishable from current support guarantees. Consolidate durable requirements into the guides after confirmation; stale reports can then be removed.
-
-JUnit, inventories, analysis output and logs belong in ignored local files or CI artifacts. Do not remove unrelated untracked notes, diagrams or reports while cleaning tracked documentation. They may contain unpublished working material.
-
-## Final synchronization
-
-Once runtime evidence and the API/configuration audit are complete, finalize support guarantees, compatibility evidence and the migration guide. Replace provisional language only when its gate has evidence. [Release checklist](checklist.md) tracks that work; documentation preparation alone does not make 1.0 ready.
+Platform claims need exact-revision bundle CI and independent application evidence. Counts are not conformance percentages. Remaining publication/evidence updates belong in the [release checklist](checklist.md), not a parallel TODO plan.

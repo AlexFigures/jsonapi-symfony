@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Regression\Fixtures;
+namespace AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures;
 
 final class RcAuditIdentity
 {

@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Exception;
+namespace AlexFigures\JsonApi\Http\Exception;
 
-use AlexFigures\Symfony\Http\Error\ErrorCodes;
-use AlexFigures\Symfony\Http\Error\ErrorObject;
-use AlexFigures\Symfony\Http\Error\ErrorTitles;
+use AlexFigures\JsonApi\Http\Error\ErrorCodes;
+use AlexFigures\JsonApi\Http\Error\ErrorObject;
+use AlexFigures\JsonApi\Http\Error\ErrorTitles;
 
+/** @api */
 final class UnsupportedTransactionBoundaryException extends JsonApiHttpException
 {
     public function __construct()

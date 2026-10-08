@@ -23,6 +23,10 @@
         </testsuite>
     </testsuites>
 
+    <source ignoreSelfDeprecations="true" ignoreIndirectDeprecations="true" ignoreSuppressionOfDeprecations="true">
+        <include><directory>src</directory></include>
+        <deprecationTrigger><function>trigger_deprecation</function></deprecationTrigger>
+    </source>
     <php>
         <!-- PostgreSQL -->
         <env name="DATABASE_URL_POSTGRES" value="postgresql://jsonapi:secret@localhost:5432/jsonapi_test?serverVersion=16&amp;charset=utf8"/>

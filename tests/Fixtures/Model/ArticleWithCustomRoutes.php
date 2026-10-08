@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\Model;
+namespace AlexFigures\JsonApi\Tests\Fixtures\Model;
 
-use AlexFigures\Symfony\Resource\Attribute\Attribute;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiCustomRoute;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
 
 /**
  * Example entity with custom routes defined via attributes.
@@ -30,23 +30,17 @@ use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
 )]
 final class ArticleWithCustomRoutes
 {
-    #[Id]
-    #[Attribute]
-    public string $id;
-
-    #[Attribute]
-    public string $title;
-
-    #[Attribute]
-    public string $content;
-
     #[Attribute]
     public bool $published = false;
 
-    public function __construct(string $id, string $title, string $content)
-    {
-        $this->id = $id;
-        $this->title = $title;
-        $this->content = $content;
+    public function __construct(
+        #[Id]
+        #[Attribute]
+        public string $id,
+        #[Attribute]
+        public string $title,
+        #[Attribute]
+        public string $content
+    ) {
     }
 }

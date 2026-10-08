@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Relationship;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Relationship;
 
 use Doctrine\ORM\EntityManagerInterface;
 

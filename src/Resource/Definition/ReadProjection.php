@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Definition;
+namespace AlexFigures\JsonApi\Resource\Definition;
 
+/** @api */
 enum ReadProjection: string
 {
     case ENTITY = 'entity';

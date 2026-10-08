@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection;
+namespace AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection;
 
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use LogicException;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\IntegerNodeDefinition;
@@ -13,6 +13,7 @@ use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
+/** @internal */
 final class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
@@ -32,7 +33,7 @@ final class Configuration implements ConfigurationInterface
         $mediaType = $children->scalarNode('media_type');
         $mediaType
             ->defaultNull()
-            ->setDeprecated('alexfigures/symfony-jsonapi', '0.4.0', 'The "jsonapi.media_type" option is deprecated. Configure "jsonapi.media_types" instead.')
+            ->setDeprecated('alexfigures/symfony-jsonapi-bundle', '0.4.0', 'The "jsonapi.media_type" option is deprecated. Configure "jsonapi.media_types" instead.')
             ->end();
 
         /** @var ScalarNodeDefinition $routePrefix */
@@ -128,7 +129,6 @@ final class Configuration implements ConfigurationInterface
         $this->addLimitsSection($children);
         $this->addPerformanceSection($children);
         $this->addDocsSection($children);
-        $this->addReleaseSection($children);
         $atomic = $children->arrayNode('atomic')->addDefaultsIfNotSet();
         $atomicChildren = $atomic->children();
         $atomicChildren->booleanNode('enabled')->defaultFalse()->end();
@@ -382,18 +382,5 @@ final class Configuration implements ConfigurationInterface
 
         $generator->end();
         $docs->end();
-    }
-
-    private function addReleaseSection(NodeBuilder $root): void
-    {
-        $release = $root->arrayNode('release')->addDefaultsIfNotSet();
-        $releaseChildren = $release->children();
-
-        $releaseChildren->enumNode('semver')->values(['strict', 'relaxed'])->defaultValue('strict')->end();
-        $releaseChildren->scalarNode('bc_policy')->defaultValue('minor-no-break')->end();
-        $releaseChildren->scalarNode('min_php')->defaultValue('8.2')->end();
-        $releaseChildren->scalarNode('min_symfony')->defaultValue('7.1')->end();
-
-        $release->end();
     }
 }

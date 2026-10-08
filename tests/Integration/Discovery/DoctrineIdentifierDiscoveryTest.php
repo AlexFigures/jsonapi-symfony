@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Discovery;
+namespace AlexFigures\JsonApi\Tests\Integration\Discovery;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Identifier\DoctrineIdentifierMetadataValidator;
-use AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Discovery\RegionalQuota;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\GeneratedRecord;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\TypedIdentifierRecord;
+use AlexFigures\JsonApi\Bridge\Doctrine\Identifier\DoctrineIdentifierMetadataValidator;
+use AlexFigures\JsonApi\Bridge\Symfony\Routing\JsonApiRouteLoader;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Tests\Fixtures\Doctrine\TestManagerRegistry;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Discovery\RegionalQuota;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\GeneratedRecord;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\TypedIdentifierRecord;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
@@ -43,8 +43,10 @@ final class DoctrineIdentifierDiscoveryTest extends TestCase
 
     private function loader(string $class): JsonApiRouteLoader
     {
-        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
-        $manager = new EntityManager($connection, ORMSetup::createAttributeMetadataConfiguration([dirname(__DIR__) . '/Fixtures'], true));
+        $connection = \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::create(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $config = ORMSetup::createAttributeMetadataConfiguration([dirname(__DIR__) . '/Fixtures'], true);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\DoctrineConfiguration::configureLazyObjects($config);
+        $manager = new EntityManager($connection, $config);
         $validator = new DoctrineIdentifierMetadataValidator(new TestManagerRegistry(['default' => $manager]));
         return new JsonApiRouteLoader(new ResourceRegistry([$class]), metadataValidator: $validator);
     }

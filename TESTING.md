@@ -10,7 +10,7 @@ Install dependencies on a compatible development PHP version, then run:
 make test
 ```
 
-The target includes Unit, Functional, Conformance and JsonApiStatus suites. `make test-unit` and `make test-functional` select narrower suites. `make test-all` includes Integration and needs database services. Current development tools are resolved for PHP 8.4; see [compatibility evidence](docs/release/compatibility.md).
+The target includes Unit, Functional, Conformance and JsonApiStatus suites. `make test-unit` and `make test-functional` select narrower suites. `make test-all` includes Integration and needs database services. Core dependencies resolve on real PHP 8.2+. BC/mutation tools install separately on PHP 8.4; see [compatibility evidence](docs/release/compatibility.md).
 
 ## Real database and concurrency suites
 
@@ -43,6 +43,17 @@ make docs-check
 make api-inventory
 ```
 
-Run PHP tools inside the test container if host PHP is incompatible with installed dependencies. `make mutation` needs coverage and checks the configured 70% thresholds. `make bc-check` is currently advisory against an available tag; it is not the frozen 1.0 baseline gate.
+Run PHP tools inside the test container if host PHP is incompatible with installed dependencies. `make mutation` needs coverage and is advisory/nightly: its current scope excludes database integrations, so no arbitrary historic 70% release gate applies. `make bc-check` becomes blocking against the actual `1.0.0` tag; before that tag, the required BC smoke proves operational tooling, not a SemVer guarantee.
 
-Documentation checks validate maintained local links. The inventory is advisory and does not prove BC. Record exact commands, commit, environment and results in release evidence; avoid replacing failure evidence with unsupported feature claims.
+Documentation checks validate maintained local links. The inventory rejects unclassified/stale symbols and mismatched source annotations; it does not replace signature BC checking. Record exact commands, commit, environment and results in release evidence; avoid replacing failure evidence with unsupported feature claims.
+
+
+## Platform lanes
+
+Run Composer resolution in an isolated checkout with `python3 scripts/prepare-compatibility.py 7.4` (or `8.1`, `8.2-dev`), then `composer update --with-all-dependencies`; add `--prefer-lowest` for the PHP 8.2 minimum lane. Do not pin root Composer platform to a pretend PHP version. The helper uses DBAL 3 for Symfony 7.4 and DBAL 4.3+ for Symfony 8.x.
+
+Run `php scripts/resolved-versions.php` and `vendor/bin/phpunit --fail-on-deprecation --display-deprecations --fail-on-risky` for exact dependency evidence and zero direct Symfony deprecations. PHPUnit source filtering ignores unrelated transitive deprecations. Four async-status scaffolding tests remain explicitly skipped: async mutation is outside the 1.0 contract. No other skip is expected.
+
+Local container lanes can use `docker-compose.compat.yml`, `COMPAT_PHP`, `COMPAT_WORKSPACE` and distinct `COMPAT_DATABASE` names after creating those test databases. Never run concurrent schema-mutating lanes against the same database. SQL observation uses DBAL logging middleware shared by DBAL 3/4; the test suite no longer depends on removed SQLLogger APIs.
+
+Check generated configuration with `php scripts/configuration-reference.php --check` and execute BC smoke with `sh scripts/bc-smoke.sh`. Remote required jobs and independent platform evidence must be checked separately on the final SHA.

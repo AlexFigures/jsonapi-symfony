@@ -2,29 +2,30 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller;
+namespace AlexFigures\JsonApi\Http\Controller;
 
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
-use AlexFigures\Symfony\Events\ResourceChangedEvent;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Http\Validation\DatabaseErrorMapper;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Contract\Tx\TransactionManager;
+use AlexFigures\JsonApi\Events\ResourceChangedEvent;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Http\Validation\DatabaseErrorMapper;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 #[Route(path: '/api/{type}/{id}', methods: ['DELETE'], name: 'jsonapi.delete')]
-final class DeleteResourceController
+/** @internal */
+final readonly class DeleteResourceController
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly OperationValidator $operationValidator,
-        private readonly ResourceProcessor $processor,
-        private readonly TransactionManager $transaction,
-        private readonly EventDispatcherInterface $eventDispatcher,
+        private ResourceRegistryInterface $registry,
+        private OperationValidator $operationValidator,
+        private ResourceProcessor $processor,
+        private TransactionManager $transaction,
+        private EventDispatcherInterface $eventDispatcher,
     ) {
     }
 
@@ -38,7 +39,7 @@ final class DeleteResourceController
         $metadata = $this->registry->getByType($type);
         $this->operationValidator->assertAllowed(ResourceOperation::DELETE, $metadata->allowedOperations);
 
-        \AlexFigures\Symfony\Tx\TransactionScope::write($this->transaction, $this->registry, $type, function () use ($type, $id): void {
+        \AlexFigures\JsonApi\Tx\TransactionScope::write($this->transaction, $this->registry, $type, function () use ($type, $id): void {
             // Process entity deletion (remove + schedule flush, flush handled by WriteListener)
             $this->processor->processDelete($type, $id);
         });

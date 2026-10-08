@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Command;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Command;
 
-use AlexFigures\Symfony\Profile\AttributeReader;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\ProfileRegistry;
-use AlexFigures\Symfony\Profile\Validation\ProfileValidator;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Profile\AttributeReader;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\ProfileRegistry;
+use AlexFigures\JsonApi\Profile\Validation\ProfileValidator;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -25,6 +25,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
  *
  * Usage:
  *   php bin/console jsonapi:validate-profiles
+ * @internal
  */
 #[AsCommand(
     name: 'jsonapi:validate-profiles',
@@ -57,7 +58,7 @@ final class ValidateProfilesCommand extends Command
 
         // Collect enabled profiles
         $enabledProfiles = $this->collectEnabledProfiles($resourceTypes);
-        $totalEnabled = array_sum(array_map('count', $enabledProfiles));
+        $totalEnabled = array_sum(array_map(count(...), $enabledProfiles));
         $io->info(sprintf('Found %d enabled profile assignment(s)', $totalEnabled));
 
         if ($totalEnabled === 0) {
@@ -67,7 +68,7 @@ final class ValidateProfilesCommand extends Command
 
         // Create validator and validate
         $validator = $this->entityManager === null
-            ? new \AlexFigures\Symfony\Profile\Validation\ReflectionProfileValidator()
+            ? new \AlexFigures\JsonApi\Profile\Validation\ReflectionProfileValidator()
             : new ProfileValidator($this->entityManager, new AttributeReader());
 
         $result = $validator->validate($profilesByUri, $resourceTypes, $enabledProfiles);

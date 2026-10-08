@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check local Markdown link targets in explicitly maintained entry-point docs."""
+"""Check local Markdown link targets throughout the maintained documentation."""
 
 import argparse
 import re
@@ -14,10 +14,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('paths', nargs='*', help='Repository-relative Markdown files')
     args = parser.parse_args()
-    paths = args.paths or [
-        line.strip() for line in (ROOT / 'scripts/maintained-docs.txt').read_text().splitlines()
-        if line.strip() and not line.startswith('#')
-    ]
+    paths = args.paths or sorted(
+        str(page.relative_to(ROOT))
+        for page in [*ROOT.glob('*.md'), *(ROOT / 'docs').rglob('*.md')]
+    )
     errors = []
     checked = 0
     for relative in paths:

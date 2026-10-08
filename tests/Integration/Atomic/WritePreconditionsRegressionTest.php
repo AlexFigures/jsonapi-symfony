@@ -2,30 +2,30 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
-use AlexFigures\Symfony\Filter\Parser\FilterParser;
-use AlexFigures\Symfony\Http\Cache\CacheKeyBuilder;
-use AlexFigures\Symfony\Http\Cache\ConditionalRequestEvaluator;
-use AlexFigures\Symfony\Http\Cache\HashEtagGenerator;
-use AlexFigures\Symfony\Http\Cache\HeadersApplier;
-use AlexFigures\Symfony\Http\Cache\LastModifiedResolver;
-use AlexFigures\Symfony\Http\Cache\SurrogateKeyBuilder;
-use AlexFigures\Symfony\Http\Controller\DeleteResourceController;
-use AlexFigures\Symfony\Http\Controller\ResourceController;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Controller\Support\RequestDecoder;
-use AlexFigures\Symfony\Http\Controller\UpdateResourceController;
-use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Http\Write\InputDocumentValidator;
-use AlexFigures\Symfony\Http\Write\WriteConfig;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\GeneratedRecord;
+use AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber\CachePreconditionsSubscriber;
+use AlexFigures\JsonApi\Filter\Parser\FilterParser;
+use AlexFigures\JsonApi\Http\Cache\CacheKeyBuilder;
+use AlexFigures\JsonApi\Http\Cache\ConditionalRequestEvaluator;
+use AlexFigures\JsonApi\Http\Cache\HashEtagGenerator;
+use AlexFigures\JsonApi\Http\Cache\HeadersApplier;
+use AlexFigures\JsonApi\Http\Cache\LastModifiedResolver;
+use AlexFigures\JsonApi\Http\Cache\SurrogateKeyBuilder;
+use AlexFigures\JsonApi\Http\Controller\DeleteResourceController;
+use AlexFigures\JsonApi\Http\Controller\ResourceController;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Controller\Support\RequestDecoder;
+use AlexFigures\JsonApi\Http\Controller\UpdateResourceController;
+use AlexFigures\JsonApi\Http\Exception\JsonApiHttpException;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Http\Write\InputDocumentValidator;
+use AlexFigures\JsonApi\Http\Write\WriteConfig;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\GeneratedRecord;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
@@ -92,7 +92,7 @@ final class WritePreconditionsRegressionTest extends DoctrineAtomicTestCase
     public function testWritePreconditionDoesNotRequireShowPermission(): void
     {
         [$model, , $update, , $subscriber] = $this->setupControllers(true);
-        $this->registry->getByType('generated-records')->allowedOperations = [\AlexFigures\Symfony\Resource\Definition\ResourceOperation::UPDATE];
+        $this->registry->getByType('generated-records')->allowedOperations = [\AlexFigures\JsonApi\Resource\Definition\ResourceOperation::UPDATE];
         $request = $this->writeRequest($model, 'PATCH', '*');
         $subscriber->onKernelController(new ControllerEvent($this->kernel(), $update, $request, HttpKernelInterface::MAIN_REQUEST));
         self::assertSame(200, $update($request, 'generated-records', (string) $model->id)->getStatusCode());

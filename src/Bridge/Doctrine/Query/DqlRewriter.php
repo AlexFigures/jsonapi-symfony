@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Query;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Query;
 
 use Doctrine\ORM\Query\Lexer;
 use Doctrine\ORM\Query\TokenType;

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\InMemory;
+namespace AlexFigures\JsonApi\Tests\Fixtures\InMemory;
 
-use AlexFigures\Symfony\Contract\Data\ExistenceChecker;
+use AlexFigures\JsonApi\Contract\Data\ExistenceChecker;
 
-final class InMemoryExistenceChecker implements ExistenceChecker
+final readonly class InMemoryExistenceChecker implements ExistenceChecker
 {
-    public function __construct(private readonly InMemoryRepository $repository)
+    public function __construct(private InMemoryRepository $repository)
     {
     }
 

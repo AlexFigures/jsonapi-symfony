@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Hook;
+namespace AlexFigures\JsonApi\Profile\Hook;
 
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 
-/** Optional declaration for document hooks that need relationship counts. */
+/** Optional declaration for document hooks that need relationship counts.
+ * @api
+ */
 interface FetchPlanHookInterface
 {
     /** @return list<string> */

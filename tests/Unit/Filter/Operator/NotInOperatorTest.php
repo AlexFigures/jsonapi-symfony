@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Filter\Operator;
+namespace AlexFigures\JsonApi\Tests\Unit\Filter\Operator;
 
-use AlexFigures\Symfony\Filter\Operator\NotInOperator;
+use AlexFigures\JsonApi\Filter\Operator\NotInOperator;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use PHPUnit\Framework\TestCase;
 

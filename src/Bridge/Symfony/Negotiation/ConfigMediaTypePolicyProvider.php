@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Negotiation;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Negotiation;
 
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicy;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicy;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicyProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @internal The default policy provider used by the Symfony bridge.
  */
-final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInterface
+final readonly class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInterface
 {
     /**
      * @var array<int, array{scope: array{path_prefix: string|null, route_name: string|null, attribute: string|null}, policy: MediaTypePolicy}>
@@ -27,7 +27,7 @@ final class ConfigMediaTypePolicyProvider implements MediaTypePolicyProviderInte
      */
     public function __construct(
         array $config,
-        private readonly ChannelScopeMatcher $matcher,
+        private ChannelScopeMatcher $matcher,
     ) {
         $this->channels = $this->buildChannels($config['channels'] ?? []);
         $this->defaultPolicy = $this->buildPolicy($config['default']);

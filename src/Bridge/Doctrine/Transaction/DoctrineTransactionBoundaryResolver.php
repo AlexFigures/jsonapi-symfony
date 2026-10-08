@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Transaction;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Transaction;
 
-use AlexFigures\Symfony\Http\Exception\UnsupportedTransactionBoundaryException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedTransactionBoundaryException;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 

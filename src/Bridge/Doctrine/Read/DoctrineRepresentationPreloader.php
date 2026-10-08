@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Read;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Read;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierParameters;
-use AlexFigures\Symfony\Contract\Data\RepresentationPreloaderInterface;
-use AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Fetch\RelationshipReadMap;
-use AlexFigures\Symfony\Resource\Definition\ReadProjection;
-use AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierParameters;
+use AlexFigures\JsonApi\Contract\Data\RepresentationPreloaderInterface;
+use AlexFigures\JsonApi\Http\Document\Fetch\RepresentationFetchPlanner;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap;
+use AlexFigures\JsonApi\Resource\Definition\ReadProjection;
+use AlexFigures\JsonApi\Resource\Mapper\ReadMapperInterface;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -26,7 +26,7 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 final readonly class DoctrineRepresentationPreloader implements RepresentationPreloaderInterface
 {
     /** @param array<string, int> $limits
-     * @param iterable<\AlexFigures\Symfony\Contract\Data\RelationshipBatchReaderInterface> $batchReaders
+     * @param iterable<\AlexFigures\JsonApi\Contract\Data\RelationshipBatchReaderInterface> $batchReaders
      */
     public function __construct(
         private ManagerRegistry $managers,
@@ -36,8 +36,8 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
         private RepresentationFetchPlanner $planner,
         private ErrorMapper $errors,
         private array $limits,
-        private ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null,
-        private ?\AlexFigures\Symfony\Http\Request\QueryParser $parser = null,
+        private ?\AlexFigures\JsonApi\Contract\Data\ResourceRepository $repository = null,
+        private ?\AlexFigures\JsonApi\Http\Request\QueryParser $parser = null,
         private iterable $batchReaders = [],
         private string $unplannedReadPolicy = 'legacy',
     ) {
@@ -127,7 +127,7 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                     $name = $edge->relationship->name;
                     $identifierLimit = $isRead ? ($this->limits['relationship_max_identifiers'] ?? 10000) : 0;
                     $includeLimit = $isRead ? ($this->limits['included_max_resources'] ?? 1000) : 0;
-                    $requirements = new \AlexFigures\Symfony\Query\Fetch\RelationshipReadRequirements($ownerType, $name, $targetType, $ownerIds, $edge->linkage, $edge->includeChildren !== null, $edge->count, $identifierLimit > 0 ? $identifierLimit - $linkageCount : null, $includeLimit > 0 ? $includeLimit - $includedCount : null, array_map('strval', array_keys($known[$targetType] ?? [])));
+                    $requirements = new \AlexFigures\JsonApi\Query\Fetch\RelationshipReadRequirements($ownerType, $name, $targetType, $ownerIds, $edge->linkage, $edge->includeChildren !== null, $edge->count, $identifierLimit > 0 ? $identifierLimit - $linkageCount : null, $includeLimit > 0 ? $includeLimit - $includedCount : null, array_map(strval(...), array_keys($known[$targetType] ?? [])));
                     $batch = $reader->read($requirements, $this->parser?->parseGraph($targetType, $request) ?? new Criteria(), $request);
                     $related = [];
                     foreach ($ownerIds as $ownerId) {
@@ -185,8 +185,8 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                 }
                 $visibleIds = null;
                 $visibility = null;
-                $provider = $this->repository instanceof \AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceRepositoryLocator ? $this->repository->getRepositoryForType($target->type) : $this->repository;
-                if ($provider instanceof \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineCollectionQueryProviderInterface) {
+                $provider = $this->repository instanceof \AlexFigures\JsonApi\Bridge\Symfony\Locator\ResourceRepositoryLocator ? $this->repository->getRepositoryForType($target->type) : $this->repository;
+                if ($provider instanceof \AlexFigures\JsonApi\Bridge\Doctrine\Query\DoctrineCollectionQueryProviderInterface) {
                     $scoped = $this->parser?->parseGraph($target->type, $request) ?? new Criteria();
                     $visibility = $provider->collectionQuery($target->type, $scoped);
                     $visibility?->select(($visibility->getRootAliases()[0] ?? 'e') . '.' . $class->getSingleIdentifierFieldName())->resetDQLPart('orderBy');
@@ -201,21 +201,21 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                     $visibleIds = [];
                     $page = 1;
                     do {
-                        $scoped->pagination = new \AlexFigures\Symfony\Query\Pagination($page++, max(1, $fetchSize));
+                        $scoped->pagination = new \AlexFigures\JsonApi\Query\Pagination($page++, max(1, $fetchSize));
                         $scoped->identifiersOnly = true;
-                        $membership = (new \AlexFigures\Symfony\Bridge\Doctrine\Relationship\DoctrineRelationshipQueryFactory($this->managers, $this->registry))->select($ownerType, $edge->relationship->name, $ownerIds, $scoped);
+                        $membership = (new \AlexFigures\JsonApi\Bridge\Doctrine\Relationship\DoctrineRelationshipQueryFactory($this->managers, $this->registry))->select($ownerType, $edge->relationship->name, $ownerIds, $scoped);
                         if ($membership === null) {
                             throw new \LogicException('Mapped graph relationship could not be queried.');
                         }
                         $slice = $this->repository->findCollection($target->type, $membership[1]);
                         foreach ($slice->items as $item) {
-                            $visibleIds[] = $item instanceof \AlexFigures\Symfony\Contract\Data\ResourceIdentifier ? $item->id : $this->id($target, $item);
+                            $visibleIds[] = $item instanceof \AlexFigures\JsonApi\Contract\Data\ResourceIdentifier ? $item->id : $this->id($target, $item);
                         }
                         if ($edge->includeChildren !== null && $includeLimit > 0 && $slice->totalItems > $fetchSize - 1) {
                             throw new BadRequestException('Too many included resources.', [$this->errors->includedResourcesLimit($includeLimit)]);
                         }
                         if (($edge->linkage || $edge->includeChildren !== null || $edge->count) && $identifierLimit > 0 && count($visibleIds) > $identifierLimit - $linkageCount) {
-                            throw new BadRequestException('Relationship identifier budget exceeded.', [$this->errors->invalidParameter('fields', 'Relationship identifier budget exceeded.', code: \AlexFigures\Symfony\Http\Error\ErrorCodes::RELATIONSHIP_IDENTIFIERS_LIMIT)]);
+                            throw new BadRequestException('Relationship identifier budget exceeded.', [$this->errors->invalidParameter('fields', 'Relationship identifier budget exceeded.', code: \AlexFigures\JsonApi\Http\Error\ErrorCodes::RELATIONSHIP_IDENTIFIERS_LIMIT)]);
                         }
                         if ($slice->items === [] && count($visibleIds) < $slice->totalItems) {
                             break; // A concurrent delete can invalidate a count before its page is fetched.
@@ -233,7 +233,7 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                     foreach (array_chunk($ownerIds, 256) as $chunk) {
                         [$query, $alias] = $this->edgeQuery($em, $metadata, $path, $chunk, $target, $visibleIds, $visibility);
                         $query->select('DISTINCT ' . $alias . '.' . $targetField . ' AS target_id')->andWhere($alias . '.' . $targetField . ' IS NOT NULL');
-                        $excluded = array_map('strval', array_keys($known[$target->type] ?? []));
+                        $excluded = array_map(strval(...), array_keys($known[$target->type] ?? []));
                         if ($excluded !== []) {
                             $query->andWhere($alias . '.' . $targetField . ' NOT IN (:known)');
                             IdentifierParameters::bind($query, $em, $target->dataClass, 'known', $excluded);
@@ -291,7 +291,7 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                         foreach ($this->scalarRows($query) as $row) {
                             ++$linkageCount;
                             if ($limit > 0 && $linkageCount > $limit) {
-                                throw new BadRequestException('Relationship identifier budget exceeded.', [$this->errors->invalidParameter('fields', sprintf('Relationship loading cannot exceed %d identifiers per document. Use sparse fields or a safer linkage policy.', $limit), code: \AlexFigures\Symfony\Http\Error\ErrorCodes::RELATIONSHIP_IDENTIFIERS_LIMIT)]);
+                                throw new BadRequestException('Relationship identifier budget exceeded.', [$this->errors->invalidParameter('fields', sprintf('Relationship loading cannot exceed %d identifiers per document. Use sparse fields or a safer linkage policy.', $limit), code: \AlexFigures\JsonApi\Http\Error\ErrorCodes::RELATIONSHIP_IDENTIFIERS_LIMIT)]);
                             }
                             $targetId = (string) $row['target_id'];
                             // A target may have appeared between the budget probe and linkage query.
@@ -354,7 +354,7 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
                 $parameterType = $parameter->getType();
                 $query->setParameter($name, $parameter->getValue(), $parameterType);
             }
-            $dql = \AlexFigures\Symfony\Bridge\Doctrine\Query\DqlRewriter::rewrite($dql, parameters: $renamed);
+            $dql = \AlexFigures\JsonApi\Bridge\Doctrine\Query\DqlRewriter::rewrite($dql, parameters: $renamed);
             // Scope stays inside every bounded identifier/count query; no separate unbounded ID list.
             $query->andWhere($alias . '.' . $field . ' IN (' . $dql . ')');
         }
@@ -379,7 +379,7 @@ final readonly class DoctrineRepresentationPreloader implements RepresentationPr
             IdentifierParameters::bind($query, $em, $target->dataClass, 'targets', $chunk);
             $definition = $target->getDefinition($context?->forType($target->type));
             if ($definition->readProjection === ReadProjection::DTO) {
-                \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineReadProjection::apply($query, $definition);
+                \AlexFigures\JsonApi\Bridge\Doctrine\Query\DoctrineReadProjection::apply($query, $definition);
                 $rows = $query->getQuery()->getArrayResult();
             } else {
                 $query->select('e');

@@ -1,0 +1,9 @@
+{
+  "name": "alexfigures/jsonapi-bc-tools",
+  "description": "Isolated development tooling; not bundle runtime requirements",
+  "license": "MIT",
+  "require": {
+    "php": "^8.4",
+    "roave/backward-compatibility-check": "^8.23"
+  }
+}

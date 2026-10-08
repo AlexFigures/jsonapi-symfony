@@ -2,38 +2,38 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Regression;
+namespace AlexFigures\JsonApi\Tests\Unit\Regression;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Atomic\Parser\AtomicRequestParser;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
-use AlexFigures\Symfony\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
-use AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader;
-use AlexFigures\Symfony\Contract\Data\RelationshipReader;
-use AlexFigures\Symfony\Contract\Data\SliceIds;
-use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Filter\Ast\NullCheck;
-use AlexFigures\Symfony\Filter\Operator\AbstractOperator;
-use AlexFigures\Symfony\Filter\Operator\DoctrineExpression;
-use AlexFigures\Symfony\Filter\Operator\Registry;
-use AlexFigures\Symfony\Filter\Parser\FilterParser;
-use AlexFigures\Symfony\Http\Cache\SurrogateKeyBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Atomic\Parser\AtomicRequestParser;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ChannelScopeMatcher;
+use AlexFigures\JsonApi\Bridge\Symfony\Negotiation\ConfigMediaTypePolicyProvider;
+use AlexFigures\JsonApi\Bridge\Symfony\Routing\JsonApiRouteLoader;
+use AlexFigures\JsonApi\Contract\Data\RelationshipReader;
+use AlexFigures\JsonApi\Contract\Data\SliceIds;
+use AlexFigures\JsonApi\Docs\OpenApi\OpenApiSpecGenerator;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\NullCheck;
+use AlexFigures\JsonApi\Filter\Operator\AbstractOperator;
+use AlexFigures\JsonApi\Filter\Operator\DoctrineExpression;
+use AlexFigures\JsonApi\Filter\Operator\Registry;
+use AlexFigures\JsonApi\Filter\Parser\FilterParser;
+use AlexFigures\JsonApi\Http\Cache\SurrogateKeyBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Relationship\LinkageBuilder;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Profile\Builtin\SoftDeleteProfile;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -60,7 +60,7 @@ final class RcExtensionContractTest extends TestCase
         };
         $registry = new ResourceRegistry([Article::class]);
         $metadata = $registry->getByType('articles');
-        $metadata->filterableFields = new \AlexFigures\Symfony\Resource\Attribute\FilterableFields([new \AlexFigures\Symfony\Resource\Attribute\FilterableField('title', operators: ['starts_with'])]);
+        $metadata->filterableFields = new \AlexFigures\JsonApi\Resource\Attribute\FilterableFields([new \AlexFigures\JsonApi\Resource\Attribute\FilterableField('title', operators: ['starts_with'])]);
         $parser = new QueryParser($registry, new PaginationConfig(), new SortingWhitelist($registry), new FilteringWhitelist($registry, $this->errors()), $this->errors(), new FilterParser(8, new Registry([$operator])));
         $criteria = $parser->parse('articles', Request::create('/api/articles?filter[title][starts_with]=Hello'));
         self::assertInstanceOf(Comparison::class, $criteria->filter);
@@ -160,12 +160,12 @@ final class RcExtensionContractTest extends TestCase
     public function testCustomApplicationParameterIsRetainedAlongsideParsedCriteria(): void
     {
         $resources = new ResourceRegistry([Article::class]);
-        $route = new \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata('articles.search', '/api/search', ['GET'], null, null, 'articles', [], [], null, 1);
-        $routes = new \AlexFigures\Symfony\Resource\Registry\CustomRouteRegistry([$route]);
-        $repository = $this->createMock(\AlexFigures\Symfony\Contract\Data\ResourceRepository::class);
+        $route = new \AlexFigures\JsonApi\Resource\Metadata\CustomRouteMetadata('articles.search', '/api/search', ['GET'], null, null, 'articles', [], [], null, 1);
+        $routes = new \AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistry([$route]);
+        $repository = $this->createMock(\AlexFigures\JsonApi\Contract\Data\ResourceRepository::class);
         $repository->expects(self::never())->method('findOne');
         $parser = new QueryParser($resources, new PaginationConfig(), new SortingWhitelist($resources), new FilteringWhitelist($resources, $this->errors()), $this->errors(), new FilterParser());
-        $factory = new \AlexFigures\Symfony\CustomRoute\Context\CustomRouteContextFactory($routes, $resources, $repository, $parser, $this->errors());
+        $factory = new \AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContextFactory($routes, $resources, $repository, $parser, $this->errors());
         $request = Request::create('/api/search?q=application-text&page[size]=7');
         $context = $factory->create($request, 'articles.search');
         self::assertSame('application-text', $context->getQueryParam('q'));
@@ -178,11 +178,11 @@ final class RcExtensionContractTest extends TestCase
     {
         $resources = new ResourceRegistry([Article::class, Author::class, Tag::class]);
         $metadata = $resources->getByType('articles');
-        $metadata->filterableFields = new \AlexFigures\Symfony\Resource\Attribute\FilterableFields([
-            new \AlexFigures\Symfony\Resource\Attribute\FilterableField('author', inherit: true, except: ['email']),
-            new \AlexFigures\Symfony\Resource\Attribute\FilterableField('tags', inherit: true),
+        $metadata->filterableFields = new \AlexFigures\JsonApi\Resource\Attribute\FilterableFields([
+            new \AlexFigures\JsonApi\Resource\Attribute\FilterableField('author', inherit: true, except: ['email']),
+            new \AlexFigures\JsonApi\Resource\Attribute\FilterableField('tags', inherit: true),
         ]);
-        $metadata->sortableFields = new \AlexFigures\Symfony\Resource\Attribute\SortableFields([new \AlexFigures\Symfony\Resource\Attribute\SortableField('author', inherit: true, except: ['email'])]);
+        $metadata->sortableFields = new \AlexFigures\JsonApi\Resource\Attribute\SortableFields([new \AlexFigures\JsonApi\Resource\Attribute\SortableField('author', inherit: true, except: ['email'])]);
         $spec = (new OpenApiSpecGenerator($resources, null, ['enabled' => true, 'route' => '/spec', 'title' => 'API', 'version' => '1', 'servers' => []], '/api', 'linkage'))->generate();
         $parameters = $spec['paths']['/api/articles']['get']['parameters'];
         $names = array_column($parameters, 'name');
@@ -198,7 +198,7 @@ final class RcExtensionContractTest extends TestCase
     {
         $resources = new ResourceRegistry([Article::class, Author::class, Tag::class]);
         $generator = new OpenApiSpecGenerator($resources, null, ['enabled' => false, 'route' => '/spec', 'title' => 'API', 'version' => '1', 'servers' => []], '/api', 'linkage');
-        $response = (new \AlexFigures\Symfony\Http\Controller\JsonSchemaController($generator, ['enabled' => true, 'include_profiles' => false]))();
+        $response = (new \AlexFigures\JsonApi\Http\Controller\JsonSchemaController($generator, ['enabled' => true, 'include_profiles' => false]))();
         $schema = json_decode($response->getContent(), true, 512, \JSON_THROW_ON_ERROR);
         self::assertSame('https://json-schema.org/draft/2020-12/schema', $schema['$schema']);
         self::assertArrayHasKey('ArticlesResource', $schema['$defs']);

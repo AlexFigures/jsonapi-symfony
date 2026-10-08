@@ -2,26 +2,27 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Validation;
+namespace AlexFigures\JsonApi\Atomic\Validation;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Atomic\Ref;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Atomic\Lid\LidRegistry;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Atomic\Ref;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 
-final class AtomicValidator
+/** @internal */
+final readonly class AtomicValidator
 {
     private const ALLOWED_OPS = ['add', 'update', 'remove'];
 
     public function __construct(
-        private readonly AtomicConfig $config,
-        private readonly ResourceRegistryInterface $registry,
-        private readonly ErrorMapper $errors,
+        private AtomicConfig $config,
+        private ResourceRegistryInterface $registry,
+        private ErrorMapper $errors,
     ) {
     }
 
@@ -91,12 +92,12 @@ final class AtomicValidator
             throw new BadRequestException('Local identifier type mismatch.', [$this->errors->invalidPointer($operation->pointer . '/ref/type', 'The lid belongs to a different resource type.')]);
         }
         $metadata = $this->registry->getByType($ref->type);
-        $policyOperation = $ref->relationship !== null ? \AlexFigures\Symfony\Resource\Definition\ResourceOperation::UPDATE : match ($operation->op) {
-            'add' => \AlexFigures\Symfony\Resource\Definition\ResourceOperation::CREATE,
-            'update' => \AlexFigures\Symfony\Resource\Definition\ResourceOperation::UPDATE,
-            'remove' => \AlexFigures\Symfony\Resource\Definition\ResourceOperation::DELETE,
+        $policyOperation = $ref->relationship !== null ? \AlexFigures\JsonApi\Resource\Definition\ResourceOperation::UPDATE : match ($operation->op) {
+            'add' => \AlexFigures\JsonApi\Resource\Definition\ResourceOperation::CREATE,
+            'update' => \AlexFigures\JsonApi\Resource\Definition\ResourceOperation::UPDATE,
+            'remove' => \AlexFigures\JsonApi\Resource\Definition\ResourceOperation::DELETE,
         };
-        (new \AlexFigures\Symfony\Http\Controller\Support\OperationValidator($this->errors))->assertAtomicAllowed($policyOperation, $metadata->allowedOperations);
+        (new \AlexFigures\JsonApi\Http\Controller\Support\OperationValidator($this->errors))->assertAtomicAllowed($policyOperation, $metadata->allowedOperations);
 
         if ($ref->relationship !== null) {
             $relationship = $metadata->relationships[$ref->relationship] ?? null;
@@ -106,17 +107,17 @@ final class AtomicValidator
                 ]);
             }
 
-            $this->validateRelationshipData($operation, $relationship, $lids);
+            $this->validateRelationshipData($operation, $relationship);
 
             return new Operation($operation->op, $ref, $operation->href, $operation->data, $operation->meta, $operation->pointer);
         }
 
-        $this->validateResourceTarget($operation, $ref, $metadata, $lids);
+        $this->validateResourceTarget($operation, $ref, $lids);
 
         return new Operation($operation->op, $ref, $operation->href, $operation->data, $operation->meta, $operation->pointer);
     }
 
-    private function validateResourceTarget(Operation $operation, Ref $ref, ResourceMetadata $metadata, LidRegistry $lids): void
+    private function validateResourceTarget(Operation $operation, Ref $ref, LidRegistry $lids): void
     {
         if (is_array($operation->data)) {
             $data = $operation->data;
@@ -190,7 +191,7 @@ final class AtomicValidator
         }
     }
 
-    private function validateRelationshipData(Operation $operation, RelationshipMetadata $relationship, LidRegistry $lids): void
+    private function validateRelationshipData(Operation $operation, RelationshipMetadata $relationship): void
     {
         $targetType = $relationship->targetType;
         if ($targetType === null) {
@@ -208,7 +209,7 @@ final class AtomicValidator
                 }
 
                 foreach ($operation->data as $index => $identifier) {
-                    $this->validateResourceIdentifier($operation, $identifier, $targetType, sprintf('%s/data/%d', $operation->pointer, $index), $lids);
+                    $this->validateResourceIdentifier($identifier, $targetType, sprintf('%s/data/%d', $operation->pointer, $index));
                 }
 
                 return;
@@ -224,13 +225,13 @@ final class AtomicValidator
                 return;
             }
 
-            $this->validateResourceIdentifier($operation, $operation->data, $targetType, $operation->pointer . '/data', $lids);
+            $this->validateResourceIdentifier($operation->data, $targetType, $operation->pointer . '/data');
         }
     }
 
-    private function validateResourceIdentifier(Operation $operation, mixed $identifier, string $expectedType, string $pointer, LidRegistry $lids): void
+    private function validateResourceIdentifier(mixed $identifier, string $expectedType, string $pointer): void
     {
-        \AlexFigures\Symfony\Http\Write\RelationshipIdentifierValidator::validate($identifier, $expectedType, $pointer, $this->errors, true, 400);
+        \AlexFigures\JsonApi\Http\Write\RelationshipIdentifierValidator::validate($identifier, $expectedType, $pointer, $this->errors, true, 400);
     }
 
     private function refFromHref(string $href, string $pointer, ?\Symfony\Component\HttpFoundation\Request $request = null): Ref

@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Serializer\Normalizer;
+namespace AlexFigures\JsonApi\Bridge\Serializer\Normalizer;
 
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
-use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver;
 use Symfony\Component\Serializer\Exception\InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
 /**
  * Denormalizer for JSON:API relationships that integrates with Symfony Serializer
  * to provide consistent error handling and pointer generation.
+ * @internal
  */
-final class JsonApiRelationshipDenormalizer implements DenormalizerInterface
+final readonly class JsonApiRelationshipDenormalizer implements DenormalizerInterface
 {
     public function __construct(
         private RelationshipResolver $relationshipResolver,

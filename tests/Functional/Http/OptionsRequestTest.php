@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Http;
+namespace AlexFigures\JsonApi\Tests\Functional\Http;
 
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -29,7 +29,7 @@ final class OptionsRequestTest extends JsonApiTestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         // Articles resource has all operations enabled by default
@@ -52,7 +52,7 @@ final class OptionsRequestTest extends JsonApiTestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         // Articles resource has all operations enabled by default
@@ -76,7 +76,7 @@ final class OptionsRequestTest extends JsonApiTestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         // Relationship endpoints support GET (SHOW) and write methods (UPDATE)
@@ -99,7 +99,7 @@ final class OptionsRequestTest extends JsonApiTestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         // To-many relationships support POST and DELETE in addition to GET and PATCH
@@ -116,7 +116,7 @@ final class OptionsRequestTest extends JsonApiTestCase
      */
     public function testOptionsForRelatedResourceEndpoint(): void
     {
-        $response = $this->optionsController()->related('articles', 'author');
+        $response = $this->optionsController()->related('articles');
 
         self::assertSame(Response::HTTP_NO_CONTENT, $response->getStatusCode());
         self::assertTrue($response->headers->has('Allow'));
@@ -124,7 +124,7 @@ final class OptionsRequestTest extends JsonApiTestCase
         $allowHeader = $response->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $methods = array_map('trim', explode(',', $allowHeader));
+        $methods = array_map(trim(...), explode(',', $allowHeader));
         sort($methods);
 
         // Related resource endpoints only support GET (SHOW operation)
@@ -138,7 +138,7 @@ final class OptionsRequestTest extends JsonApiTestCase
      */
     public function testOptionsForNonExistentResourceType(): void
     {
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
 
         $this->optionsController()->collection('nonexistent');
     }
@@ -156,7 +156,7 @@ final class OptionsRequestTest extends JsonApiTestCase
         $allowHeader = $optionsResponse->headers->get('Allow');
         self::assertNotNull($allowHeader);
 
-        $allowedMethods = array_map('trim', explode(',', $allowHeader));
+        $allowedMethods = array_map(trim(...), explode(',', $allowHeader));
 
         // Verify GET is allowed and works
         if (in_array('GET', $allowedMethods, true)) {

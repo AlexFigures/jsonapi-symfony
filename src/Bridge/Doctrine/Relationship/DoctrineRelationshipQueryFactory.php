@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Relationship;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Relationship;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierParameters;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierParameters;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -51,7 +51,7 @@ final readonly class DoctrineRelationshipQueryFactory
         if ($selected->sort === []) {
             foreach ($orderBy as $field => $direction) {
                 $descending = $direction instanceof \UnitEnum ? $direction->name !== 'Ascending' : strtoupper($direction) === 'DESC';
-                $selected->sort[] = new \AlexFigures\Symfony\Query\Sorting($field, $descending);
+                $selected->sort[] = new \AlexFigures\JsonApi\Query\Sorting($field, $descending);
             }
         }
         $selected->customConditions[] = static function (QueryBuilder $query) use ($source, $path, $owners, $class, $em): void {

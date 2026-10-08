@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\Compiler;
+namespace AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\Compiler;
 
-use AlexFigures\Symfony\Bridge\Doctrine\DQL\ILikeFunction;
+use AlexFigures\JsonApi\Bridge\Doctrine\DQL\ILikeFunction;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -22,6 +22,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  *             string_functions:
  *                 ILIKE: App\Custom\ILikeFunction
  * ```
+ * @internal
  */
 final class RegisterDqlFunctionsPass implements CompilerPassInterface
 {
@@ -42,14 +43,10 @@ final class RegisterDqlFunctionsPass implements CompilerPassInterface
         }
 
         // Initialize string_functions if not set
-        if (!isset($dqlConfig['string_functions'])) {
-            $dqlConfig['string_functions'] = [];
-        }
+        $dqlConfig['string_functions'] ??= [];
 
         // Only register ILIKE if not already configured
-        if (!isset($dqlConfig['string_functions']['ILIKE'])) {
-            $dqlConfig['string_functions']['ILIKE'] = ILikeFunction::class;
-        }
+        $dqlConfig['string_functions']['ILIKE'] ??= ILikeFunction::class;
 
         // Update the parameter
         $container->setParameter('doctrine.orm.configuration.dql', $dqlConfig);

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tx;
+namespace AlexFigures\JsonApi\Tx;
 
-use AlexFigures\Symfony\Contract\Tx\ScopedTransactionManagerInterface;
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Tx\ScopedTransactionManagerInterface;
+use AlexFigures\JsonApi\Contract\Tx\TransactionManager;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 
 /** @internal Adapts optional scoped transactions while retaining custom providers' contract. */
 final class TransactionScope
@@ -17,7 +17,7 @@ final class TransactionScope
      */
     public static function write(TransactionManager $transactions, ResourceRegistryInterface $resources, string $type, callable $callback): mixed
     {
-        if ($transactions instanceof \AlexFigures\Symfony\Contract\Tx\ResourceWriteTransactionManagerInterface) {
+        if ($transactions instanceof \AlexFigures\JsonApi\Contract\Tx\ResourceWriteTransactionManagerInterface) {
             return $transactions->transactionalWriteFor($type, $resources->getByType($type)->dataClass, $callback);
         }
         return self::run($transactions, $resources, [$type], $callback);

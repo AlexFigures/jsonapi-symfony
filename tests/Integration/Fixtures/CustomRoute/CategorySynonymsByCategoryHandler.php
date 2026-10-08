@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\CustomRoute;
 
-use AlexFigures\Symfony\CustomRoute\Attribute\NoTransaction;
-use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
-use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
-use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\JsonApi\CustomRoute\Attribute\NoTransaction;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\JsonApi\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\JsonApi\CustomRoute\Result\CustomRouteResult;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -21,10 +21,10 @@ use Doctrine\ORM\EntityManagerInterface;
  * - All JSON:API query parameters (filter, sort, page) are automatically applied
  */
 #[NoTransaction]
-final class CategorySynonymsByCategoryHandler implements CustomRouteHandlerInterface
+final readonly class CategorySynonymsByCategoryHandler implements CustomRouteHandlerInterface
 {
     public function __construct(
-        private readonly EntityManagerInterface $em
+        private EntityManagerInterface $em
     ) {
     }
 
@@ -33,7 +33,7 @@ final class CategorySynonymsByCategoryHandler implements CustomRouteHandlerInter
         $categoryId = $context->getParam('categoryId');
 
         // Verify category exists
-        $category = $this->em->getRepository(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Category::class)
+        $category = $this->em->getRepository(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Category::class)
             ->find($categoryId);
 
         if ($category === null) {

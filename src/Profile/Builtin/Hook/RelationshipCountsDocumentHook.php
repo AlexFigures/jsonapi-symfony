@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin\Hook;
+namespace AlexFigures\JsonApi\Profile\Builtin\Hook;
 
-use AlexFigures\Symfony\Profile\Hook\DocumentHook;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Profile\Hook\DocumentHook;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use Doctrine\Common\Collections\Collection;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PropertyAccess\PropertyAccess;
@@ -43,8 +43,9 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
  *     propertyAccessor?: PropertyAccessorInterface,
  *     ...
  * }
+ * @internal
  */
-final readonly class RelationshipCountsDocumentHook implements DocumentHook, \AlexFigures\Symfony\Profile\Hook\ContextualFetchPlanHookInterface
+final readonly class RelationshipCountsDocumentHook implements DocumentHook, \AlexFigures\JsonApi\Profile\Hook\ContextualFetchPlanHookInterface
 {
     private PropertyAccessorInterface $propertyAccessor;
 

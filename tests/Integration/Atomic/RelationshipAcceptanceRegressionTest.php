@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\GeneratedRecord;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\RequiredChild;
+use AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Exception\JsonApiHttpException;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\GeneratedRecord;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\RequiredChild;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class RelationshipAcceptanceRegressionTest extends DoctrineAtomicTestCase

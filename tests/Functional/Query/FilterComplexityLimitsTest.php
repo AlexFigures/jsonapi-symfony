@@ -2,28 +2,28 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Query;
+namespace AlexFigures\JsonApi\Tests\Functional\Query;
 
-use AlexFigures\Symfony\Filter\Ast\Between;
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Filter\Ast\Conjunction;
-use AlexFigures\Symfony\Filter\Ast\Disjunction;
-use AlexFigures\Symfony\Filter\Ast\Group;
-use AlexFigures\Symfony\Filter\Ast\NullCheck;
-use AlexFigures\Symfony\Filter\Parser\FilterParser;
-use AlexFigures\Symfony\Filter\Validation\FilterComplexityAnalyzer;
-use AlexFigures\Symfony\Http\Controller\CollectionController;
-use AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory;
-use AlexFigures\Symfony\Http\Controller\Support\OperationValidator;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Http\Safety\LimitsEnforcer;
-use AlexFigures\Symfony\Http\Safety\RequestComplexityScorer;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Filter\Ast\Between;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\Conjunction;
+use AlexFigures\JsonApi\Filter\Ast\Disjunction;
+use AlexFigures\JsonApi\Filter\Ast\Group;
+use AlexFigures\JsonApi\Filter\Ast\NullCheck;
+use AlexFigures\JsonApi\Filter\Parser\FilterParser;
+use AlexFigures\JsonApi\Filter\Validation\FilterComplexityAnalyzer;
+use AlexFigures\JsonApi\Http\Controller\CollectionController;
+use AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory;
+use AlexFigures\JsonApi\Http\Controller\Support\OperationValidator;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Http\Safety\LimitsEnforcer;
+use AlexFigures\JsonApi\Http\Safety\RequestComplexityScorer;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -49,7 +49,7 @@ final class FilterComplexityLimitsTest extends JsonApiTestCase
     #[DataProvider('excessiveFilters')]
     public function testExcessiveFiltersAreRejectedBeforeRepositoryAccess(array $filter, array $limits): void
     {
-        $repository = $this->createMock(\AlexFigures\Symfony\Contract\Data\ResourceRepository::class);
+        $repository = $this->createMock(\AlexFigures\JsonApi\Contract\Data\ResourceRepository::class);
         $repository->expects(self::never())->method('findCollection');
         $controller = new CollectionController($this->filterRegistry(), new OperationValidator($this->errorMapper()), new JsonApiResponseFactory(), $repository, $this->limitedParser($limits), $this->documentBuilder());
         try {
@@ -109,9 +109,9 @@ final class FilterComplexityLimitsTest extends JsonApiTestCase
         }
     }
 
-    private function filterRegistry(): \AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface
+    private function filterRegistry(): \AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface
     {
-        return new \AlexFigures\Symfony\Resource\Registry\ResourceRegistry([\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\GeneratedRecord::class]);
+        return new \AlexFigures\JsonApi\Resource\Registry\ResourceRegistry([\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\GeneratedRecord::class]);
     }
 
     private function limitedParser(array $config): QueryParser

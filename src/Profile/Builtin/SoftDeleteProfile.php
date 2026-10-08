@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin;
+namespace AlexFigures\JsonApi\Profile\Builtin;
 
-use AlexFigures\Symfony\Profile\Attribute\SoftDeletable;
-use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteDocumentHook;
-use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteQueryHook;
-use AlexFigures\Symfony\Profile\Builtin\Hook\SoftDeleteWriteHook;
-use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\Validation\FieldRequirement;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Profile\Attribute\SoftDeletable;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\SoftDeleteDocumentHook;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\SoftDeleteQueryHook;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\SoftDeleteWriteHook;
+use AlexFigures\JsonApi\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\Validation\FieldRequirement;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
 
 /**
  * Soft Delete Profile.
@@ -32,15 +32,16 @@ use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
  *     onlyTrashedParam?: string,
  *     userProvider?: callable(): ?string
  * }
+ * @api
  */
-final class SoftDeleteProfile implements ProfileInterface
+final readonly class SoftDeleteProfile implements ProfileInterface
 {
     public const URI = 'urn:jsonapi:profile:soft-delete';
 
     /**
      * @param SoftDeleteConfig $config
      */
-    public function __construct(private readonly array $config = [])
+    public function __construct(private array $config = [])
     {
     }
 

@@ -6,7 +6,18 @@ Build representations using the request's effective resource definition and prof
 
 Use [custom routes](custom-routes.md) for application endpoint declarations and [production policies](production-policies.md) for read budgets. Formatting a model does not make arbitrary relationship getters bounded.
 
-TODO before freeze: audit both factory APIs and publish a tested application example for resource, collection, metadata, errors and disabled item links. Resolve their public/internal boundary before the namespace freeze.
+## Public factory examples
+
+Inject `AlexFigures\JsonApi\Http\Response\JsonApiResponseFactory` through Symfony DI:
+
+```php
+return $jsonApi->resource('articles', $article)->withMeta(['requestId' => $requestId])->build();
+return $jsonApi->created('articles', $article)->build();
+return $jsonApi->collection('articles', $pageItems, totalItems: $total)->build();
+return $jsonApi->error(422, 'Invalid input.')->withCode('validation-error')->build();
+```
+
+Builders are immutable; retain returned copies. The public factory's constructor is internal container wiring. `Http/Controller/Support/JsonApiResponseFactory` is INTERNAL and not the application facade. Full response, disabled-SHOW links, metadata and errors are exercised by [response regressions](../../tests/Integration/Http/Response/JsonApiResponseFactoryIntegrationTest.php) and [error type link responses](../../tests/Functional/Regression/ErrorTypeLinkResponseTest.php).
 
 ## Error type links
 

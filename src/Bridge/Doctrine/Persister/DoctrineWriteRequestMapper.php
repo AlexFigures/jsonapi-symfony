@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Persister;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Persister;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Resource\Mapper\WriteMapperInterface;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Write\WriteContext;
+use AlexFigures\JsonApi\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Resource\Mapper\WriteMapperInterface;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Write\WriteContext;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
@@ -52,9 +52,7 @@ final readonly class DoctrineWriteRequestMapper
             throw $this->errors->mapToException($metadata->type, $violations);
         }
         $writeContext = new WriteContext(options: ['operation' => $operation, 'relationships' => $changes->relationships]);
-        if ($entity === null) {
-            $entity = $this->mapper->instantiate($definition, $dto, $writeContext);
-        }
+        $entity ??= $this->mapper->instantiate($definition, $dto, $writeContext);
         if (!$entity instanceof $definition->dataClass) {
             throw new \LogicException('WriteMapper must return the configured resource data class.');
         }

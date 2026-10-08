@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use Doctrine\DBAL\Logging\SQLLogger;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
 
 /**
  * Test E1: FlushManager behavior in atomic operations.
@@ -27,7 +26,7 @@ final class DoctrineAtomicFlushTest extends DoctrineAtomicTestCase
     public function testFlushOccursAfterEachOperation(): void
     {
         // Track SQL queries to count COMMIT statements
-        $queryLogger = new class () implements SQLLogger {
+        $queryLogger = new class () {
             public array $queries = [];
 
             public function startQuery($sql, ?array $params = null, ?array $types = null): void
@@ -40,7 +39,7 @@ final class DoctrineAtomicFlushTest extends DoctrineAtomicTestCase
             }
         };
 
-        $this->em->getConnection()->getConfiguration()->setSQLLogger($queryLogger);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $queryLogger);
 
         $operations = [
             [
@@ -199,7 +198,7 @@ final class DoctrineAtomicFlushTest extends DoctrineAtomicTestCase
         ];
 
         // Expect NotFoundException
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
 
         try {
             $this->executeAtomicRequest($operations);

@@ -12,8 +12,11 @@ infection.log
 /.idea/
 /.vscode/
 
-# Generated QA artifacts (historical Markdown reports stay tracked)
+# Generated QA artifacts; CI publishes evidence outside the source tree.
 /.deptrac.cache
-/reports/*.xml
-/reports/public-api-inventory.json
+/reports/
+/build/
 /scripts/__pycache__/
+
+/tools/*/vendor/
+/tools/*/composer.lock

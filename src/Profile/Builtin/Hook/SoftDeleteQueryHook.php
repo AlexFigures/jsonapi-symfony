@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin\Hook;
+namespace AlexFigures\JsonApi\Profile\Builtin\Hook;
 
-use AlexFigures\Symfony\Profile\Attribute\SoftDeletable;
-use AlexFigures\Symfony\Profile\AttributeReader;
-use AlexFigures\Symfony\Profile\Hook\QueryHook;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Query\Criteria;
+use AlexFigures\JsonApi\Profile\Attribute\SoftDeletable;
+use AlexFigures\JsonApi\Profile\AttributeReader;
+use AlexFigures\JsonApi\Profile\Hook\QueryHook;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Query\Criteria;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -29,8 +29,9 @@ use Symfony\Component\HttpFoundation\Request;
  *     onlyTrashedParam?: string,
  *     ...
  * }
+ * @internal
  */
-final readonly class SoftDeleteQueryHook implements QueryHook, \AlexFigures\Symfony\Profile\Hook\FilterParameterProviderInterface
+final readonly class SoftDeleteQueryHook implements QueryHook, \AlexFigures\JsonApi\Profile\Hook\FilterParameterProviderInterface
 {
     /**
      * @param SoftDeleteQueryConfig $config
@@ -52,7 +53,7 @@ final readonly class SoftDeleteQueryHook implements QueryHook, \AlexFigures\Symf
         $flags = $request->query->all('filter');
         foreach ([$with, $only] as $flag) {
             if (array_key_exists($flag, $flags) && !in_array($flags[$flag], [true, false, 1, 0, 'true', 'false', '1', '0'], true)) {
-                throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Soft-delete flags require a boolean value.', [new \AlexFigures\Symfony\Http\Error\ErrorObject(id: null, aboutLink: null, status: '400', code: 'invalid-parameter', title: 'Invalid Parameter', detail: 'Soft-delete flags require a boolean value.', source: new \AlexFigures\Symfony\Http\Error\ErrorSource(parameter: 'filter[' . $flag . ']'))]);
+                throw new \AlexFigures\JsonApi\Http\Exception\BadRequestException('Soft-delete flags require a boolean value.', [new \AlexFigures\JsonApi\Http\Error\ErrorObject(id: null, aboutLink: null, status: '400', code: 'invalid-parameter', title: 'Invalid Parameter', detail: 'Soft-delete flags require a boolean value.', source: new \AlexFigures\JsonApi\Http\Error\ErrorSource(parameter: 'filter[' . $flag . ']'))]);
             }
         }
         $visibility = $this->config['default_visibility'] ?? 'exclude';

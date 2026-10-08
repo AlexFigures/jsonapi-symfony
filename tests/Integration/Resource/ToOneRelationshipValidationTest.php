@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Resource;
+namespace AlexFigures\JsonApi\Tests\Integration\Resource;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Validation\ConstraintViolationMapper;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
-use AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Relationship\EagerNode;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\JsonApi\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Validation\ConstraintViolationMapper;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver;
+use AlexFigures\JsonApi\Tests\Fixtures\Doctrine\TestManagerRegistry;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Relationship\EagerNode;
 use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
@@ -34,9 +34,10 @@ final class ToOneRelationshipValidationTest extends TestCase
         $config = ORMSetup::createAttributeMetadataConfiguration([
             __DIR__.'/../Fixtures/Relationship',
         ], true);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\DoctrineConfiguration::configureLazyObjects($config);
         $url = $_ENV['DATABASE_URL_POSTGRES'] ?? 'postgresql://jsonapi:secret@postgres:5432/jsonapi_test?serverVersion=16&charset=utf8';
         self::assertIsString($url);
-        $this->em = new EntityManager(DriverManager::getConnection(['url' => $url]), $config);
+        $this->em = new EntityManager(\AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::create(['url' => $url]), $config);
         $schemaTool = new SchemaTool($this->em);
         $metadata = [$this->em->getClassMetadata(EagerNode::class)];
         $schemaTool->dropSchema($metadata);

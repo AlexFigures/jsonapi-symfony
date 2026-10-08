@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Query;
+namespace AlexFigures\JsonApi\Query;
 
-use AlexFigures\Symfony\Filter\Ast\Node;
+use AlexFigures\JsonApi\Filter\Ast\Node;
 
+/** @api */
 final class Criteria
 {
     /**

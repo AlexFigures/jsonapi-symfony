@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Http\Exception\JsonApiHttpException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedTransactionBoundaryException;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Concurrency\ObservedEntityManager;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\GeneratedRecord;
+use AlexFigures\JsonApi\Http\Exception\JsonApiHttpException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedTransactionBoundaryException;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Concurrency\ObservedEntityManager;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\DebugStack;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\GeneratedRecord;
 use Doctrine\DBAL\DriverManager;
-use Doctrine\DBAL\Logging\DebugStack;
 use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -53,8 +53,8 @@ final class DoctrineAtomicBoundariesTest extends DoctrineAtomicTestCase
         $other->flushes = 0;
         $queriesA = new DebugStack();
         $queriesB = new DebugStack();
-        $this->em->getConnection()->getConfiguration()->setSQLLogger($queriesA);
-        $other->getConnection()->getConfiguration()->setSQLLogger($queriesB);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $queriesA);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($other->getConnection(), $queriesB);
         try {
             try {
                 $this->executeAtomicRequest([
@@ -85,7 +85,7 @@ final class DoctrineAtomicBoundariesTest extends DoctrineAtomicTestCase
     public function testInvalidLinkageTypeIsRejectedBeforeBoundaryLookupAndSql(): void
     {
         $queries = new DebugStack();
-        $this->em->getConnection()->getConfiguration()->setSQLLogger($queries);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::observe($this->em->getConnection(), $queries);
         try {
             $this->executeAtomicRequest([
                 ['op' => 'add', 'data' => ['type' => 'generated-records', 'attributes' => ['name' => 'First']]],
@@ -117,17 +117,19 @@ final class DoctrineAtomicBoundariesTest extends DoctrineAtomicTestCase
 
     private function otherManager(string $database): ObservedEntityManager
     {
-        $params = $database === 'mysql'
-            ? ['url' => $_ENV['DATABASE_URL_MYSQL']]
-            : ['driver' => 'pdo_pgsql', 'host' => 'postgres', 'user' => 'jsonapi', 'password' => 'secret', 'dbname' => 'jsonapi_boundary_shard'];
+        $admin = \AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::create(['url' => $this->getDatabaseUrl()]);
+        $params = $database === 'mysql' ? ['url' => $_ENV['DATABASE_URL_MYSQL']] : $admin->getParams();
         if ($database === 'postgres') {
-            $admin = DriverManager::getConnection(['url' => $this->getDatabaseUrl()]);
-            if (!$admin->fetchOne("SELECT 1 FROM pg_database WHERE datname = 'jsonapi_boundary_shard'")) {
-                $admin->executeStatement('CREATE DATABASE jsonapi_boundary_shard');
+            $shard = $admin->getDatabase() . '_boundary_shard';
+            if (!$admin->fetchOne('SELECT 1 FROM pg_database WHERE datname = ?', [$shard])) {
+                $admin->executeStatement('CREATE DATABASE ' . $admin->quoteIdentifier($shard));
             }
-            $admin->close();
+            $params['dbname'] = $shard;
         }
-        $other = new ObservedEntityManager(DriverManager::getConnection($params), ORMSetup::createAttributeMetadataConfiguration([dirname(__DIR__) . '/Fixtures/Entity'], true));
+        $admin->close();
+        $config = ORMSetup::createAttributeMetadataConfiguration([dirname(__DIR__) . '/Fixtures/Entity'], true);
+        \AlexFigures\JsonApi\Tests\Integration\Fixtures\DoctrineConfiguration::configureLazyObjects($config);
+        $other = new ObservedEntityManager(\AlexFigures\JsonApi\Tests\Integration\Fixtures\ConnectionFactory::create($params), $config);
         $this->managerRegistry->registerManager('other', $other);
         $this->managerRegistry->mapClassToManager(Author::class, 'other');
         return $other;

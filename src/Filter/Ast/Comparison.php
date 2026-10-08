@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Ast;
+namespace AlexFigures\JsonApi\Filter\Ast;
 
 /**
  * Represents a primitive comparison like eq, lt, etc.
+ * @api
  */
-final class Comparison implements Node
+final readonly class Comparison implements Node
 {
     public function __construct(
-        public readonly string $fieldPath,
-        public readonly string $operator,
+        public string $fieldPath,
+        public string $operator,
         /** @var list<mixed> */
-        public readonly array $values,
+        public array $values,
     ) {
     }
 }

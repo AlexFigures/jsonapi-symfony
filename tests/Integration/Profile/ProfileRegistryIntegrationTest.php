@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Profile;
+namespace AlexFigures\JsonApi\Tests\Integration\Profile;
 
-use AlexFigures\Symfony\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
-use AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile;
-use AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile;
-use AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile;
-use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
-use AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\ProfileRegistry;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber\ProfileNegotiationSubscriber;
+use AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile;
+use AlexFigures\JsonApi\Profile\Builtin\RelationshipCountsProfile;
+use AlexFigures\JsonApi\Profile\Builtin\SoftDeleteProfile;
+use AlexFigures\JsonApi\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\JsonApi\Profile\Negotiation\ProfileNegotiator;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\ProfileRegistry;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -108,7 +108,7 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         self::assertSame($profile, $registered);
 
         // Verify database operations still work
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $article = $this->repository->findOne('articles', 'article-1', $criteria);
         self::assertNotNull($article);
     }
@@ -143,7 +143,7 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         self::assertTrue($context->has(SoftDeleteProfile::URI));
 
         // Verify database query works with default profile
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $article = $this->repository->findOne('articles', 'article-1', $criteria);
         self::assertNotNull($article);
         self::assertInstanceOf(Article::class, $article);
@@ -180,7 +180,7 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         self::assertTrue($context->has(AuditTrailProfile::URI));
 
         // Verify database operations work
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $articles = $this->repository->findCollection('articles', $criteria);
         self::assertNotEmpty($articles);
     }
@@ -227,7 +227,7 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         self::assertNotContains(SoftDeleteProfile::URI, $authorUris);
 
         // Verify database queries work for both types
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $article = $this->repository->findOne('articles', 'article-1', $criteria);
         self::assertNotNull($article);
 
@@ -266,7 +266,7 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         self::assertTrue($context->has(AuditTrailProfile::URI));
 
         // Verify database query works
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $article = $this->repository->findOne('articles', 'article-1', $criteria);
         self::assertNotNull($article);
     }
@@ -309,7 +309,7 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         self::assertContains(RelationshipCountsProfile::URI, $articleUris);
 
         // Verify database operations work with all profiles
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $article = $this->repository->findOne('articles', 'article-1', $criteria);
         self::assertNotNull($article);
 
@@ -351,7 +351,7 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         self::assertContains(AuditTrailProfile::URI, $uris);
 
         // Verify database operations work
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $article = $this->repository->findOne('articles', 'article-1', $criteria);
         self::assertNotNull($article);
     }
@@ -368,7 +368,7 @@ final class ProfileRegistryIntegrationTest extends DoctrineIntegrationTestCase
         self::assertEmpty($context->activeUris());
 
         // Verify database operations still work without profiles
-        $criteria = new \AlexFigures\Symfony\Query\Criteria();
+        $criteria = new \AlexFigures\JsonApi\Query\Criteria();
         $article = $this->repository->findOne('articles', 'article-1', $criteria);
         self::assertNotNull($article);
 

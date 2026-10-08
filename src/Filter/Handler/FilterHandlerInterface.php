@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Handler;
+namespace AlexFigures\JsonApi\Filter\Handler;
 
-use AlexFigures\Symfony\Filter\Ast\Node;
+use AlexFigures\JsonApi\Filter\Ast\Node;
 
 /**
  * Interface for custom filter handlers.
@@ -35,7 +35,7 @@ use AlexFigures\Symfony\Filter\Ast\Node;
  * ```
  *
  * @api This interface is part of the public API and follows semantic versioning.
- * @since 1.1.0
+ * @since 1.0.0
  */
 interface FilterHandlerInterface
 {

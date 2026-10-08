@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Http\Controller;
+namespace AlexFigures\JsonApi\Tests\Unit\Http\Controller;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Docs\OpenApi\OpenApiSpecGenerator;
-use AlexFigures\Symfony\Http\Controller\OpenApiController;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Docs\OpenApi\OpenApiSpecGenerator;
+use AlexFigures\JsonApi\Http\Controller\OpenApiController;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -180,7 +180,7 @@ final class OpenApiControllerTest extends TestCase
         );
 
         $registry = new class ($articleMetadata) implements ResourceRegistryInterface {
-            public function __construct(private ResourceMetadata $article)
+            public function __construct(private readonly ResourceMetadata $article)
             {
             }
 

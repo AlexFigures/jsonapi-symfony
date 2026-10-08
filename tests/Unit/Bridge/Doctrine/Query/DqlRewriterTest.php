@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Bridge\Doctrine\Query;
+namespace AlexFigures\JsonApi\Tests\Unit\Bridge\Doctrine\Query;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Query\DqlRewriter;
+use AlexFigures\JsonApi\Bridge\Doctrine\Query\DqlRewriter;
 use PHPUnit\Framework\TestCase;
 
 final class DqlRewriterTest extends TestCase

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Regression;
+namespace AlexFigures\JsonApi\Tests\Functional\Regression;
 
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
+use AlexFigures\JsonApi\Contract\Tx\TransactionManager;
 
-final class RcRelationshipTransaction implements TransactionManager, \AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface
+final class RcRelationshipTransaction implements TransactionManager, \AlexFigures\JsonApi\Contract\Data\WriteConcurrencyGuardInterface
 {
     public int $calls = 0;
     public int $protections = 0;

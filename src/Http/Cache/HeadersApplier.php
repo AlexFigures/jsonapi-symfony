@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Cache;
+namespace AlexFigures\JsonApi\Http\Cache;
 
 use DateTimeImmutable;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,8 +26,9 @@ use Symfony\Component\HttpFoundation\Response;
  *         header_name?: string
  *     }
  * }
+ * @internal
  */
-final class HeadersApplier
+final readonly class HeadersApplier
 {
     /**
      * @param HeadersConfig $config

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Relationship;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Relationship;
 
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Attribute\Relationship;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Relationship;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -16,11 +16,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[JsonApiResource(type: 'eager-nodes')]
 class EagerNode
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'string')]
-    #[Id]
-    public string $id;
-
     #[ORM\Column(type: 'string', unique: true)]
     public string $name;
 
@@ -38,10 +33,12 @@ class EagerNode
     #[Relationship(toMany: true, targetType: 'eager-nodes')]
     private Collection $children;
 
-    public function __construct(string $id)
+    public function __construct(#[ORM\Id]
+        #[ORM\Column(type: 'string')]
+        #[Id]
+        public string $id)
     {
-        $this->id = $id;
-        $this->name = $id;
+        $this->name = $this->id;
         $this->children = new ArrayCollection();
     }
 

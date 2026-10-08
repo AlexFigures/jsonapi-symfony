@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Docs;
+namespace AlexFigures\JsonApi\Tests\Functional\Docs;
 
-use AlexFigures\Symfony\Http\Controller\SwaggerUiController;
+use AlexFigures\JsonApi\Http\Controller\SwaggerUiController;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;

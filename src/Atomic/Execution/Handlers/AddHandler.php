@@ -2,28 +2,29 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Execution\Handlers;
+namespace AlexFigures\JsonApi\Atomic\Execution\Handlers;
 
-use AlexFigures\Symfony\Atomic\Execution\OperationOutcome;
-use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Atomic\Execution\OperationOutcome;
+use AlexFigures\JsonApi\Atomic\Lid\LidRegistry;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Stringable;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
 
-final class AddHandler
+/** @internal */
+final readonly class AddHandler
 {
     public function __construct(
-        private readonly ResourceProcessor $processor,
-        private readonly ChangeSetFactory $changeSet,
-        private readonly ResourceRegistryInterface $registry,
-        private readonly PropertyAccessorInterface $accessor,
-        private readonly ?\AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager $flushManager = null,
-        private readonly ?\AlexFigures\Symfony\Http\Write\WriteConfig $writeConfig = null,
-        private readonly ?\AlexFigures\Symfony\Http\Write\InputDocumentValidator $inputValidator = null,
+        private ResourceProcessor $processor,
+        private ChangeSetFactory $changeSet,
+        private ResourceRegistryInterface $registry,
+        private PropertyAccessorInterface $accessor,
+        private ?\AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager $flushManager = null,
+        private ?\AlexFigures\JsonApi\Http\Write\WriteConfig $writeConfig = null,
+        private ?\AlexFigures\JsonApi\Http\Write\InputDocumentValidator $inputValidator = null,
     ) {
     }
 
@@ -44,9 +45,7 @@ final class AddHandler
         }
 
         $attributes = $data['attributes'] ?? null;
-        if ($attributes === null) {
-            $attributes = [];
-        }
+        $attributes ??= [];
 
         if ($attributes instanceof \stdClass) {
             $attributes = [];
@@ -57,10 +56,10 @@ final class AddHandler
 
         /** @var array<string, mixed> $attributes */
 
-        $validator = $this->inputValidator ?? new \AlexFigures\Symfony\Http\Write\InputDocumentValidator(
+        $validator = $this->inputValidator ?? new \AlexFigures\JsonApi\Http\Write\InputDocumentValidator(
             $this->registry,
-            $this->writeConfig ?? new \AlexFigures\Symfony\Http\Write\WriteConfig(true),
-            new \AlexFigures\Symfony\Http\Error\ErrorMapper(new \AlexFigures\Symfony\Http\Error\ErrorBuilder(true))
+            $this->writeConfig ?? new \AlexFigures\JsonApi\Http\Write\WriteConfig(true),
+            new \AlexFigures\JsonApi\Http\Error\ErrorMapper(new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(true))
         );
         $validated = $validator->validateAndExtract($type, null, ['data' => $data], 'POST', true);
         $attributes = $validated['attributes'];
@@ -74,7 +73,7 @@ final class AddHandler
         }
 
         if ($clientId !== null && $this->writeConfig !== null && !$this->writeConfig->allowClientId($type)) {
-            throw new \AlexFigures\Symfony\Http\Exception\ForbiddenException('Client-generated IDs are not allowed.');
+            throw new \AlexFigures\JsonApi\Http\Exception\ForbiddenException('Client-generated IDs are not allowed.');
         }
         $model = $this->processor->processCreate($type, $changes, $clientId);
         $this->flushManager?->flush();

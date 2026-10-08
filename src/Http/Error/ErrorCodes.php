@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
+/** @api */
 final class ErrorCodes
 {
     public const INVALID_JSON = 'invalid-json';

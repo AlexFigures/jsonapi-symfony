@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Negotiation;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Negotiation;
 
-use AlexFigures\Symfony\Bridge\Symfony\Routing\Attribute\MediaChannel;
+use AlexFigures\JsonApi\Bridge\Symfony\Routing\Attribute\MediaChannel;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 
+/** @internal */
 final class ChannelScopeMatcher
 {
     /**

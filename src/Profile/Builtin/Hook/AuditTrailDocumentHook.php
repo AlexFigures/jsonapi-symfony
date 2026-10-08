@@ -2,15 +2,17 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin\Hook;
+namespace AlexFigures\JsonApi\Profile\Builtin\Hook;
 
-use AlexFigures\Symfony\Profile\Hook\DocumentHook;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Profile\Hook\DocumentHook;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use Symfony\Component\HttpFoundation\Request;
 
-/** Adds configured, readable audit fields without loading relationships. */
-final readonly class AuditTrailDocumentHook implements DocumentHook, \AlexFigures\Symfony\Profile\Hook\ResourceMetaHookInterface
+/** Adds configured, readable audit fields without loading relationships.
+ * @internal
+ */
+final readonly class AuditTrailDocumentHook implements DocumentHook, \AlexFigures\JsonApi\Profile\Hook\ResourceMetaHookInterface
 {
     /** @param array<string, mixed> $config */
     public function __construct(private array $config = [])
@@ -22,7 +24,7 @@ final readonly class AuditTrailDocumentHook implements DocumentHook, \AlexFigure
         if (!($this->config['expose_in_meta'] ?? true)) {
             return;
         }
-        $attribute = $context->attributeReader()->getAttribute($metadata->dataClass, \AlexFigures\Symfony\Profile\Attribute\Auditable::class);
+        $attribute = $context->attributeReader()->getAttribute($metadata->dataClass, \AlexFigures\JsonApi\Profile\Attribute\Auditable::class);
         $fields = [
             'createdAt' => $attribute->createdAtField ?? $this->config['created_at'] ?? $this->config['createdAtField'] ?? 'createdAt',
             'updatedAt' => $attribute->updatedAtField ?? $this->config['updated_at'] ?? $this->config['updatedAtField'] ?? 'updatedAt',

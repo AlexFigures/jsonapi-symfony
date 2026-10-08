@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Routing;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Routing;
 
-use AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController;
-use AlexFigures\Symfony\Http\Controller\OpenApiController;
-use AlexFigures\Symfony\Http\Controller\SwaggerUiController;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata;
-use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\CustomRoute\Controller\CustomRouteController;
+use AlexFigures\JsonApi\Http\Controller\OpenApiController;
+use AlexFigures\JsonApi\Http\Controller\SwaggerUiController;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Metadata\CustomRouteMetadata;
+use AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistryInterface;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Symfony\Component\Config\Loader\Loader;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -39,6 +39,7 @@ use Symfony\Component\Routing\RouteCollection;
  *     resource: .
  *     type: jsonapi
  * ```
+ * @internal
  */
 final class JsonApiRouteLoader extends Loader
 {
@@ -56,7 +57,7 @@ final class JsonApiRouteLoader extends Loader
         private readonly array $openApiConfig = [],
         private readonly array $docsUiConfig = [],
         private readonly ?CustomRouteRegistryInterface $customRouteRegistry = null,
-        private readonly ?\AlexFigures\Symfony\Resource\Metadata\ResourceMetadataValidatorInterface $metadataValidator = null,
+        private readonly ?\AlexFigures\JsonApi\Resource\Metadata\ResourceMetadataValidatorInterface $metadataValidator = null,
         private readonly array $jsonSchemaConfig = [],
         private readonly bool $headEnabled = true,
     ) {
@@ -88,7 +89,7 @@ final class JsonApiRouteLoader extends Loader
                     new Route(
                         path: "{$prefix}/{$resourceType}",
                         defaults: [
-                            '_controller' => 'AlexFigures\Symfony\Http\Controller\CollectionController',
+                            '_controller' => \AlexFigures\JsonApi\Http\Controller\CollectionController::class,
                             'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -105,7 +106,7 @@ final class JsonApiRouteLoader extends Loader
                     new Route(
                         path: "{$prefix}/{$resourceType}",
                         defaults: [
-                            '_controller' => 'AlexFigures\Symfony\Http\Controller\CreateResourceController',
+                            '_controller' => \AlexFigures\JsonApi\Http\Controller\CreateResourceController::class,
                             'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -122,7 +123,7 @@ final class JsonApiRouteLoader extends Loader
                     new Route(
                         path: "{$prefix}/{$resourceType}/{id}",
                         defaults: [
-                            '_controller' => 'AlexFigures\Symfony\Http\Controller\ResourceController',
+                            '_controller' => \AlexFigures\JsonApi\Http\Controller\ResourceController::class,
                             'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -140,7 +141,7 @@ final class JsonApiRouteLoader extends Loader
                     new Route(
                         path: "{$prefix}/{$resourceType}/{id}",
                         defaults: [
-                            '_controller' => 'AlexFigures\Symfony\Http\Controller\UpdateResourceController',
+                            '_controller' => \AlexFigures\JsonApi\Http\Controller\UpdateResourceController::class,
                             'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -158,7 +159,7 @@ final class JsonApiRouteLoader extends Loader
                     new Route(
                         path: "{$prefix}/{$resourceType}/{id}",
                         defaults: [
-                            '_controller' => 'AlexFigures\Symfony\Http\Controller\DeleteResourceController',
+                            '_controller' => \AlexFigures\JsonApi\Http\Controller\DeleteResourceController::class,
                             'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -178,7 +179,7 @@ final class JsonApiRouteLoader extends Loader
                     new Route(
                         path: "{$prefix}/{$resourceType}",
                         defaults: [
-                            '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::collection',
+                            '_controller' => 'AlexFigures\JsonApi\Http\Controller\OptionsController::collection',
                             'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -198,7 +199,7 @@ final class JsonApiRouteLoader extends Loader
                     new Route(
                         path: "{$prefix}/{$resourceType}/{id}",
                         defaults: [
-                            '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::resource',
+                            '_controller' => 'AlexFigures\JsonApi\Http\Controller\OptionsController::resource',
                             'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -220,7 +221,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'AlexFigures\Symfony\Http\Controller\RelationshipGetController',
+                                '_controller' => \AlexFigures\JsonApi\Http\Controller\RelationshipGetController::class,
                                 'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -237,7 +238,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'AlexFigures\Symfony\Http\Controller\RelationshipWriteController',
+                                '_controller' => \AlexFigures\JsonApi\Http\Controller\RelationshipWriteController::class,
                                 'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -255,7 +256,7 @@ final class JsonApiRouteLoader extends Loader
                             new Route(
                                 path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                                 defaults: [
-                                    '_controller' => 'AlexFigures\Symfony\Http\Controller\RelationshipWriteController',
+                                    '_controller' => \AlexFigures\JsonApi\Http\Controller\RelationshipWriteController::class,
                                     'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -272,7 +273,7 @@ final class JsonApiRouteLoader extends Loader
                             new Route(
                                 path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                                 defaults: [
-                                    '_controller' => 'AlexFigures\Symfony\Http\Controller\RelationshipWriteController',
+                                    '_controller' => \AlexFigures\JsonApi\Http\Controller\RelationshipWriteController::class,
                                     'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -290,7 +291,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'AlexFigures\Symfony\Http\Controller\RelatedController',
+                                '_controller' => \AlexFigures\JsonApi\Http\Controller\RelatedController::class,
                                 'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -307,7 +308,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/relationships/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::relationship',
+                                '_controller' => 'AlexFigures\JsonApi\Http\Controller\OptionsController::relationship',
                                 'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -324,7 +325,7 @@ final class JsonApiRouteLoader extends Loader
                         new Route(
                             path: "{$prefix}/{$resourceType}/{id}/{$relationshipName}",
                             defaults: [
-                                '_controller' => 'AlexFigures\Symfony\Http\Controller\OptionsController::related',
+                                '_controller' => 'AlexFigures\JsonApi\Http\Controller\OptionsController::related',
                                 'type' => $resourceType,
                             '_jsonapi_generated_resource' => true,
                             '_jsonapi_head_enabled' => $this->headEnabled,
@@ -415,7 +416,7 @@ final class JsonApiRouteLoader extends Loader
         if (($this->jsonSchemaConfig['enabled'] ?? false) === true) {
             $routes->add('jsonapi.docs.schemas', new Route(
                 path: $this->jsonSchemaConfig['route'] ?? '/_jsonapi/schemas',
-                defaults: ['_controller' => \AlexFigures\Symfony\Http\Controller\JsonSchemaController::class, '_jsonapi_native_media_type' => 'application/schema+json'],
+                defaults: ['_controller' => \AlexFigures\JsonApi\Http\Controller\JsonSchemaController::class, '_jsonapi_native_media_type' => 'application/schema+json'],
                 methods: ['GET'],
             ));
         }

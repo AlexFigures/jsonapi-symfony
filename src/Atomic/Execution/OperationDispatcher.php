@@ -2,27 +2,28 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Execution;
+namespace AlexFigures\JsonApi\Atomic\Execution;
 
-use AlexFigures\Symfony\Atomic\Execution\Handlers\AddHandler;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\RelationshipOps;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\RemoveHandler;
-use AlexFigures\Symfony\Atomic\Execution\Handlers\UpdateHandler;
-use AlexFigures\Symfony\Atomic\Lid\LidRegistry;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Atomic\Result\ResultBuilder;
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\AddHandler;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\RelationshipOps;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\RemoveHandler;
+use AlexFigures\JsonApi\Atomic\Execution\Handlers\UpdateHandler;
+use AlexFigures\JsonApi\Atomic\Lid\LidRegistry;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Atomic\Result\ResultBuilder;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
 
-final class OperationDispatcher
+/** @internal */
+final readonly class OperationDispatcher
 {
     public function __construct(
-        private readonly AtomicTransaction $transaction,
-        private readonly AddHandler $add,
-        private readonly UpdateHandler $update,
-        private readonly RemoveHandler $remove,
-        private readonly RelationshipOps $relationships,
-        private readonly ResultBuilder $results,
-        private readonly FlushManager $flushManager,
+        private AtomicTransaction $transaction,
+        private AddHandler $add,
+        private UpdateHandler $update,
+        private RemoveHandler $remove,
+        private RelationshipOps $relationships,
+        private ResultBuilder $results,
+        private FlushManager $flushManager,
     ) {
     }
 
@@ -57,8 +58,8 @@ final class OperationDispatcher
                     [$snapshot, $empty] = $this->results->build([$operation], [$outcome]);
                     $resultSet[] = $snapshot[0];
                     $allEmpty = $allEmpty && $empty;
-                } catch (\AlexFigures\Symfony\Http\Exception\JsonApiHttpException $exception) {
-                    throw \AlexFigures\Symfony\Http\Error\AtomicErrorRebaser::rebase($exception, $operation->pointer);
+                } catch (\AlexFigures\JsonApi\Http\Exception\JsonApiHttpException $exception) {
+                    throw \AlexFigures\JsonApi\Http\Error\AtomicErrorRebaser::rebase($exception, $operation->pointer);
                 }
             }
 

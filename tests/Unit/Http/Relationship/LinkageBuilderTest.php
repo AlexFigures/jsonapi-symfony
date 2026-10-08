@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Http\Relationship;
+namespace AlexFigures\JsonApi\Tests\Unit\Http\Relationship;
 
-use AlexFigures\Symfony\Contract\Data\RelationshipReader;
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Contract\Data\SliceIds;
-use AlexFigures\Symfony\Http\Relationship\LinkageBuilder;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\RelationshipReader;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Contract\Data\SliceIds;
+use AlexFigures\JsonApi\Http\Relationship\LinkageBuilder;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use BadMethodCallException;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,8 +34,8 @@ final class LinkageBuilderTest extends TestCase
 
         $registry = new class ($articleMetadata, $authorMetadata) implements ResourceRegistryInterface {
             public function __construct(
-                private ResourceMetadata $article,
-                private ResourceMetadata $author,
+                private readonly ResourceMetadata $article,
+                private readonly ResourceMetadata $author,
             ) {
             }
 
@@ -74,7 +74,7 @@ final class LinkageBuilderTest extends TestCase
                 return $rel === 'author' ? '1' : null;
             }
 
-            public function getToManyIds(string $type, string $id, string $rel, \AlexFigures\Symfony\Query\Pagination $pagination): SliceIds
+            public function getToManyIds(string $type, string $id, string $rel, \AlexFigures\JsonApi\Query\Pagination $pagination): SliceIds
             {
                 throw new BadMethodCallException('Not implemented.');
             }
@@ -113,8 +113,8 @@ final class LinkageBuilderTest extends TestCase
 
         $registry = new class ($articleMetadata, $commentMetadata) implements ResourceRegistryInterface {
             public function __construct(
-                private ResourceMetadata $article,
-                private ResourceMetadata $comment,
+                private readonly ResourceMetadata $article,
+                private readonly ResourceMetadata $comment,
             ) {
             }
 
@@ -153,7 +153,7 @@ final class LinkageBuilderTest extends TestCase
                 return $rel === 'comments' ? '2' : null;
             }
 
-            public function getToManyIds(string $type, string $id, string $rel, \AlexFigures\Symfony\Query\Pagination $pagination): SliceIds
+            public function getToManyIds(string $type, string $id, string $rel, \AlexFigures\JsonApi\Query\Pagination $pagination): SliceIds
             {
                 throw new BadMethodCallException('Not implemented.');
             }

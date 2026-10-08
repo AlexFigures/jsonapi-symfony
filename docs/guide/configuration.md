@@ -1,6 +1,6 @@
-# Configuration during stabilization
+# Configuration
 
-Configure the bundle under `jsonapi:` in `config/packages/jsonapi.yaml`. This page describes current source defaults; it is not a declaration that the 1.0 schema is frozen. The [source schema](../../src/Bridge/Symfony/DependencyInjection/Configuration.php) remains authoritative.
+Configure the bundle under `jsonapi:` in `config/packages/jsonapi.yaml`. This guide describes the reviewed candidate. The [generated reference](../reference/configuration.md) documents every active node, default, scope, limit and deprecation directly from the actual Symfony tree.
 
 ## Discovery and provider
 
@@ -59,14 +59,12 @@ Literal resource names such as `feature-memos` are preserved in `profiles.per_ty
 
 Review `cache.headers.public` explicitly: the current default is true. An authenticated or tenant-scoped API needs an application-reviewed cache policy. The [developer path](developer-path.md) starts with private responses.
 
-## Pending reference work
-
-TODO before freeze: complete the node-by-node reference for media channels, Atomic/lid settings, profile configuration, docs/OpenAPI/JSON Schema, serializer contexts and performance caches. Validate all examples with Symfony Configuration, document deprecations and attach migration notes to accepted default changes. Track this in [documentation TODO](../release/documentation-todo.md).
-
-## Effective options and deprecated placeholders
+## Effective options and removed placeholders
 
 Generated requests and responses apply `media_types.default` request/response settings; explicit acceptable negotiation selects the response type. The legacy `media_type` alias remains deprecated but effective. `performance.head_enabled: false` rejects HEAD on generated resource endpoints, including Symfony's automatic HEAD-to-GET matching; OPTIONS stops advertising HEAD.
 
 `profiles.rel_counts.relationship_meta_key` names relationship count metadata. `compute_in_related_endpoints: false` suppresses both the count fetch requirement and its output for related representations. Resource-level relationshipPolicies default each relationship's linking policy; an explicit relationship attribute wins.
 
 The config-only `dx` section, `errors.locale`, and Doctrine options `enable_query_cache`, `query_cache_pool`, `enable_second_level_cache`, `hydrate_partial_by_fields`, `default_fetch` were removed before 1.0 because they had no runtime effect. Configuring them now fails container configuration validation. Remove them and configure application tooling and ORM caches/fetch metadata directly. Active `head_enabled` and `collection_sort_policy` are retained.
+
+The inert `release.*` section was also removed; release/API freezing is a build-time policy, not a runtime switch.

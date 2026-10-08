@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Operator;
+namespace AlexFigures\JsonApi\Filter\Operator;
 
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 
 /**
  * Shared defaults for operator implementations.
+ * @api
  */
 abstract class AbstractOperator implements Operator
 {
     public function supportsField(ResourceMetadata $meta, string $fieldPath): bool
     {
-        // Proper whitelist handling will arrive with the full implementation.
+        // Field whitelists are validated separately by the query parser.
         return true;
     }
 

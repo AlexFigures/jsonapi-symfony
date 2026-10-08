@@ -6,4 +6,35 @@ Custom actions need explicit application authorization and query-parameter polic
 
 Use the [response factory](response-factory.md) when a controller needs bundle document formatting. Handler transactions do not provide cross-database atomicity; retain the [single-boundary policy](production-policies.md).
 
-TODO before freeze: provide a compiled-container runnable action example with query parameters, input DTO validation, negotiated version representation, operation restrictions and error responses. Audit route/channel selection by path, route name and route attributes.
+## Read-only handler example
+
+Declare this on a discovered resource, using its actual type:
+
+```php
+#[JsonApiCustomRoute(
+    name: 'articles.search',
+    path: '/articles/search',
+    methods: ['GET'],
+    handler: SearchArticles::class,
+)]
+```
+
+```php
+use AlexFigures\JsonApi\CustomRoute\Attribute\NoTransaction;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\JsonApi\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\JsonApi\CustomRoute\Result\CustomRouteResult;
+
+#[NoTransaction]
+final class SearchArticles implements CustomRouteHandlerInterface
+{
+    public function __construct(private ArticleSearch $search) {}
+
+    public function handle(CustomRouteContext $context): CustomRouteResult
+    {
+        return CustomRouteResult::collection($this->search->find($context->getRequest()->query->getString('q')));
+    }
+}
+```
+
+Register the handler as an autowired service tagged `jsonapi.custom_route_handler`. Application query parameters such as q reach custom handlers; reserved JSON:API parameters retain validation. `NoTransaction` is appropriate for a read-only handler. Mutation handlers remain subject to scoped persistence/transaction rules. Controller mode is retained; use the public ResponseFactory for formatting. [Custom route tests](../../tests/Integration/Http/Controller/CustomRouteControllerTest.php) and [regression kernel](../../tests/Functional/Regression) verify actual wiring and media/channel/version behavior.

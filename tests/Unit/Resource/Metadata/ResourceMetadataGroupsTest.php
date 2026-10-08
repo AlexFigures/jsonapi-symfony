@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Resource\Metadata;
+namespace AlexFigures\JsonApi\Tests\Unit\Resource\Metadata;
 
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use PHPUnit\Framework\TestCase;
 
 final class ResourceMetadataGroupsTest extends TestCase

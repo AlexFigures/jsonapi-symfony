@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Concurrency;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Concurrency;
 
 use Doctrine\ORM\EntityManager;
 

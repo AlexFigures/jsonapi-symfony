@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Fixtures\Model;
+namespace AlexFigures\JsonApi\Tests\Fixtures\Model;
 
-use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiCustomRoute;
 
 /**
  * Example controller with custom routes defined via attributes.
@@ -13,7 +13,7 @@ use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
     name: 'articles.search',
     path: '/articles/search',
     methods: ['GET'],
-    controller: 'AlexFigures\Symfony\Tests\Fixtures\Model\SearchController::search',
+    controller: 'AlexFigures\JsonApi\Tests\Fixtures\Model\SearchController::search',
     resourceType: 'custom-articles',
     description: 'Search articles by query'
 )]
@@ -21,7 +21,7 @@ use AlexFigures\Symfony\Resource\Attribute\JsonApiCustomRoute;
     name: 'articles.trending',
     path: '/articles/trending',
     methods: ['GET'],
-    controller: 'AlexFigures\Symfony\Tests\Fixtures\Model\SearchController::trending',
+    controller: 'AlexFigures\JsonApi\Tests\Fixtures\Model\SearchController::trending',
     resourceType: 'custom-articles',
     defaults: ['_format' => 'json'],
     priority: 10

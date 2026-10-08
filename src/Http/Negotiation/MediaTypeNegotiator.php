@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Negotiation;
+namespace AlexFigures\JsonApi\Http\Negotiation;
 
-use AlexFigures\Symfony\Atomic\AtomicConfig;
-use AlexFigures\Symfony\Http\Exception\NotAcceptableException;
-use AlexFigures\Symfony\Http\Exception\UnsupportedMediaTypeException;
-use AlexFigures\Symfony\Http\Negotiation\MediaTypePolicyProviderInterface;
+use AlexFigures\JsonApi\Atomic\AtomicConfig;
+use AlexFigures\JsonApi\Http\Exception\NotAcceptableException;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedMediaTypeException;
+use AlexFigures\JsonApi\Http\Negotiation\MediaTypePolicyProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-final class MediaTypeNegotiator
+/** @internal */
+final readonly class MediaTypeNegotiator
 {
     public function __construct(
-        private readonly AtomicConfig $config,
-        private readonly MediaTypePolicyProviderInterface $policyProvider,
+        private AtomicConfig $config,
+        private MediaTypePolicyProviderInterface $policyProvider,
     ) {
     }
 

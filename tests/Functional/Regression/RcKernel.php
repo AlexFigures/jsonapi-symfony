@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Regression;
+namespace AlexFigures\JsonApi\Tests\Functional\Regression;
 
-use AlexFigures\Symfony\Bridge\Symfony\Bundle\JsonApiBundle;
-use AlexFigures\Symfony\Tests\Unit\Profile\Fixtures\InjectedProfile;
-use AlexFigures\Symfony\Tests\Unit\Profile\Fixtures\InjectedProfileContext;
+use AlexFigures\JsonApi\JsonApiBundle;
+use AlexFigures\JsonApi\Tests\Unit\Profile\Fixtures\InjectedProfile;
+use AlexFigures\JsonApi\Tests\Unit\Profile\Fixtures\InjectedProfileContext;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -19,6 +19,36 @@ use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 final class RcKernel extends Kernel
 {
     use MicroKernelTrait;
+
+    /** @var callable|null */
+    private $previousExceptionHandler = null;
+
+    public function boot(): void
+    {
+        if (!$this->booted) {
+            // Capture once: Kernel::handle() can call boot() for every request.
+            $this->previousExceptionHandler = $this->currentExceptionHandler();
+        }
+        parent::boot();
+    }
+
+    public function shutdown(): void
+    {
+        parent::shutdown();
+        // Unwind registrations rather than pushing another copy of PHPUnit's handler.
+        while ($this->currentExceptionHandler() !== $this->previousExceptionHandler) {
+            restore_exception_handler();
+        }
+    }
+
+    private function currentExceptionHandler(): ?callable
+    {
+        $handler = set_exception_handler(static function (\Throwable $exception): void {
+        });
+        restore_exception_handler();
+
+        return $handler;
+    }
 
     public function registerBundles(): iterable
     {
@@ -42,7 +72,7 @@ final class RcKernel extends Kernel
             'atomic' => ['enabled' => $this->environment === 'doctrine_typed'],
             'resource_paths' => [__DIR__ . '/Fixtures'],
             'cache' => ['etag' => ['strategy' => 'version'], 'last_modified' => ['collections_max_of' => false], 'conditional' => ['require_if_match_on_write' => false]],
-            'data_layer' => ['provider' => $this->environment === 'doctrine_typed' ? 'doctrine' : 'custom', 'repository' => \AlexFigures\Symfony\Tests\Functional\Regression\Fixtures\RcTypedRepository::class],
+            'data_layer' => ['provider' => $this->environment === 'doctrine_typed' ? 'doctrine' : 'custom', 'repository' => \AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures\RcTypedRepository::class],
             'profiles' => ['enabled_by_default' => ['urn:test:injected'], 'per_type' => ['rc-memory' => ['urn:jsonapi:profile:audit-trail']], 'audit_trail' => ['expose_in_meta' => false, 'created_by' => 'createdBy', 'updated_by' => 'updatedBy']],
             'docs' => ['generator' => ['openapi' => ['enabled' => true]], 'ui' => ['enabled' => true]],
             'media_types' => ['channels' => [
@@ -66,10 +96,10 @@ final class RcKernel extends Kernel
         }
         $services = $container->services();
         if ($this->environment === 'error_links') {
-            $services->alias('test.error_response_factory', \AlexFigures\Symfony\Http\Response\JsonApiResponseFactory::class)->public();
+            $services->alias('test.error_response_factory', \AlexFigures\JsonApi\Http\Response\JsonApiResponseFactory::class)->public();
         }
         $services->set(RcExistenceChecker::class);
-        $services->alias(\AlexFigures\Symfony\Contract\Data\ExistenceChecker::class, RcExistenceChecker::class);
+        $services->alias(\AlexFigures\JsonApi\Contract\Data\ExistenceChecker::class, RcExistenceChecker::class);
         $relationshipHandler = $services->set(RcTypedRelationshipHandler::class)->public();
         if ($this->environment === 'tagged_relationships') {
             $relationshipHandler->tag('jsonapi.relationship_reader')->tag('jsonapi.relationship_updater');
@@ -78,21 +108,21 @@ final class RcKernel extends Kernel
         }
         if ($this->environment === 'authorized_relationships') {
             $services->set(RcRelationshipAuthorizer::class);
-            $services->alias(\AlexFigures\Symfony\Http\Authorization\RelationshipAuthorizerInterface::class, RcRelationshipAuthorizer::class);
+            $services->alias(\AlexFigures\JsonApi\Http\Authorization\RelationshipAuthorizerInterface::class, RcRelationshipAuthorizer::class);
             $services->set(RcRelationshipTransaction::class)->public();
-            $services->alias(\AlexFigures\Symfony\Contract\Tx\TransactionManager::class, RcRelationshipTransaction::class);
-            $services->alias(\AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface::class, RcRelationshipTransaction::class);
+            $services->alias(\AlexFigures\JsonApi\Contract\Tx\TransactionManager::class, RcRelationshipTransaction::class);
+            $services->alias(\AlexFigures\JsonApi\Contract\Data\WriteConcurrencyGuardInterface::class, RcRelationshipTransaction::class);
         }
         $services->set(RcTaggedResource::class)->tag('jsonapi.resource', ['type' => 'rc-tagged']);
         if ($this->environment === 'doctrine_typed') {
-            $services->set('doctrine', \AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry::class)->args([[]]);
+            $services->set('doctrine', \AlexFigures\JsonApi\Tests\Fixtures\Doctrine\TestManagerRegistry::class)->args([[]]);
         }
-        $services->set(\AlexFigures\Symfony\Tests\Functional\Regression\Fixtures\RcAuditIdentity::class);
-        $services->set(\AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile::class)->args([['userProvider' => service(\AlexFigures\Symfony\Tests\Functional\Regression\Fixtures\RcAuditIdentity::class)]])->tag('jsonapi.profile');
+        $services->set(\AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures\RcAuditIdentity::class);
+        $services->set(\AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile::class)->args([['userProvider' => service(\AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures\RcAuditIdentity::class)]])->tag('jsonapi.profile');
         $services->set(InjectedProfileContext::class)->args(['urn:test:injected']);
         $services->set(InjectedProfile::class)->args([service(InjectedProfileContext::class)])->tag('jsonapi.profile');
-        $services->set(\AlexFigures\Symfony\Tests\Functional\Regression\Fixtures\RcTypedRepository::class)->tag('jsonapi.resource_repository');
-        $services->set(\AlexFigures\Symfony\Tests\Functional\Regression\Fixtures\RcTypedPersister::class)->autoconfigure();
+        $services->set(\AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures\RcTypedRepository::class)->tag('jsonapi.resource_repository');
+        $services->set(\AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures\RcTypedPersister::class)->autoconfigure();
         $services->set(RcMediaController::class)->public()->tag('controller.service_arguments');
     }
 
@@ -100,7 +130,7 @@ final class RcKernel extends Kernel
     {
         $routes->import('.', 'jsonapi');
         if ($this->environment === 'doctrine_typed') {
-            $routes->add('test_atomic', '/api/operations')->controller(\AlexFigures\Symfony\Bridge\Symfony\Controller\AtomicController::class)->methods(['POST']);
+            $routes->add('test_atomic', '/api/operations')->controller(\AlexFigures\JsonApi\Bridge\Symfony\Controller\AtomicController::class)->methods(['POST']);
         }
         $routes->add('test_version', '/version/{version}')->controller([RcMediaController::class, 'version'])->methods(['GET']);
         $routes->add('test_route_channel', '/route-channel')->controller([RcMediaController::class, 'plain'])->methods(['GET']);

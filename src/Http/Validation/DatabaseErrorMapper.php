@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Validation;
+namespace AlexFigures\JsonApi\Http\Validation;
 
-use AlexFigures\Symfony\Http\Error\ErrorMapper;
-use AlexFigures\Symfony\Http\Exception\ConflictException;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Error\ErrorMapper;
+use AlexFigures\JsonApi\Http\Exception\ConflictException;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\DBAL\Exception\ConstraintViolationException;
 use Doctrine\DBAL\Exception\ForeignKeyConstraintViolationException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -19,12 +19,13 @@ use Doctrine\ORM\OptimisticLockException;
  *
  * Handles constraint violations, optimistic locking, and other database-level errors
  * with proper JSON:API error formatting and source pointers.
+ * @internal
  */
-final class DatabaseErrorMapper
+final readonly class DatabaseErrorMapper
 {
     public function __construct(
-        private readonly ResourceRegistryInterface $registry,
-        private readonly ErrorMapper $errorMapper,
+        private ResourceRegistryInterface $registry,
+        private ErrorMapper $errorMapper,
     ) {
     }
 
@@ -38,8 +39,8 @@ final class DatabaseErrorMapper
         return match (true) {
             $exception instanceof UniqueConstraintViolationException => $this->mapUniqueConstraintViolation($resourceType, $exception),
             $exception instanceof ForeignKeyConstraintViolationException => $this->mapForeignKeyConstraintViolation($resourceType, $exception),
-            $exception instanceof OptimisticLockException => $this->mapOptimisticLockException($resourceType, $exception),
-            $exception instanceof ConstraintViolationException => $this->mapGenericConstraintViolation($resourceType, $exception),
+            $exception instanceof OptimisticLockException => $this->mapOptimisticLockException(),
+            $exception instanceof ConstraintViolationException => $this->mapGenericConstraintViolation(),
             default => $exception, // Re-throw unknown exceptions
         };
     }
@@ -95,7 +96,7 @@ final class DatabaseErrorMapper
     /**
      * Maps optimistic lock exceptions to ConflictException.
      */
-    private function mapOptimisticLockException(string $resourceType, OptimisticLockException $exception): ConflictException
+    private function mapOptimisticLockException(): ConflictException
     {
         $error = $this->errorMapper->conflict(
             'The resource was modified by another request. Please refresh and try again.',
@@ -108,7 +109,7 @@ final class DatabaseErrorMapper
     /**
      * Maps generic constraint violations to ValidationException.
      */
-    private function mapGenericConstraintViolation(string $resourceType, ConstraintViolationException $exception): ValidationException
+    private function mapGenericConstraintViolation(): ValidationException
     {
         $error = $this->errorMapper->validationError(
             '/data',

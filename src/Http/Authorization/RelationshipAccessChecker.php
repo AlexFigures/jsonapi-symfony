@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Authorization;
+namespace AlexFigures\JsonApi\Http\Authorization;
 
-use AlexFigures\Symfony\Http\Exception\ForbiddenException;
+use AlexFigures\JsonApi\Http\Exception\ForbiddenException;
 use Symfony\Component\HttpFoundation\Request;
 
 /** @internal */
-final class RelationshipAccessChecker
+final readonly class RelationshipAccessChecker
 {
-    public function __construct(private readonly ?RelationshipAuthorizerInterface $authorizer = null)
+    public function __construct(private ?RelationshipAuthorizerInterface $authorizer = null)
     {
     }
 

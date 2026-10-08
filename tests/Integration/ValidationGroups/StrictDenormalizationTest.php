@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\ValidationGroups;
+namespace AlexFigures\JsonApi\Tests\Integration\ValidationGroups;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
 
 /**
  * Tests for strict denormalization mode (ALLOW_EXTRA_ATTRIBUTES=false).

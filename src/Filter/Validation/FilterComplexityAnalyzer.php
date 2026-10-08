@@ -2,17 +2,19 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Validation;
+namespace AlexFigures\JsonApi\Filter\Validation;
 
-use AlexFigures\Symfony\Filter\Ast\Between;
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Filter\Ast\Conjunction;
-use AlexFigures\Symfony\Filter\Ast\Disjunction;
-use AlexFigures\Symfony\Filter\Ast\Group;
-use AlexFigures\Symfony\Filter\Ast\Node;
-use AlexFigures\Symfony\Filter\Ast\NullCheck;
+use AlexFigures\JsonApi\Filter\Ast\Between;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\Conjunction;
+use AlexFigures\JsonApi\Filter\Ast\Disjunction;
+use AlexFigures\JsonApi\Filter\Ast\Group;
+use AlexFigures\JsonApi\Filter\Ast\Node;
+use AlexFigures\JsonApi\Filter\Ast\NullCheck;
 
-/** Counts every structural node, including logical groups, without recursive traversal. */
+/** Counts every structural node, including logical groups, without recursive traversal.
+ * @internal
+ */
 final class FilterComplexityAnalyzer
 {
     public function analyze(?Node $root): FilterComplexity

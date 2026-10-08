@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Discovery;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Discovery;
 
-use AlexFigures\Symfony\Resource\Attribute as JsonApi;
+use AlexFigures\JsonApi\Resource\Attribute as JsonApi;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]

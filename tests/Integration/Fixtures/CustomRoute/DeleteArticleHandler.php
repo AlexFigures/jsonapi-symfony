@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\CustomRoute;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\CustomRoute;
 
-use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
-use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerInterface;
-use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\JsonApi\CustomRoute\Handler\CustomRouteHandlerInterface;
+use AlexFigures\JsonApi\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Test handler for deleting an article (custom delete endpoint).
  */
-final class DeleteArticleHandler implements CustomRouteHandlerInterface
+final readonly class DeleteArticleHandler implements CustomRouteHandlerInterface
 {
     public function __construct(
-        private readonly EntityManagerInterface $em
+        private EntityManagerInterface $em
     ) {
     }
 

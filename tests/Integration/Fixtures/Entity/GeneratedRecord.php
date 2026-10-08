@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Entity;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity;
 
-use AlexFigures\Symfony\Resource\Attribute as JsonApi;
+use AlexFigures\JsonApi\Resource\Attribute as JsonApi;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -32,6 +32,6 @@ class GeneratedRecord
 
     #[ORM\ManyToOne(targetEntity: self::class)]
     #[ORM\JoinColumn(nullable: true, onDelete: 'RESTRICT')]
-    #[JsonApi\Relationship(targetType: 'generated-records', linkingPolicy: \AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy::VERIFY)]
+    #[JsonApi\Relationship(targetType: 'generated-records', linkingPolicy: \AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy::VERIFY)]
     public ?self $parent = null;
 }

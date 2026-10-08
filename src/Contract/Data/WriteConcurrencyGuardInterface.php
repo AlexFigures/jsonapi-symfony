@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Data;
+namespace AlexFigures\JsonApi\Contract\Data;
 
 /**
  * Protect current-validator evaluation and mutation as one persistence operation.
  * The callback must rebuild its validator after protection is acquired.
  * Implementations retain protection until the write is flushed and committed.
+ * @api
  */
 interface WriteConcurrencyGuardInterface
 {

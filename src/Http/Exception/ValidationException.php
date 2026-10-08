@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Exception;
+namespace AlexFigures\JsonApi\Http\Exception;
 
-use AlexFigures\Symfony\Http\Error\ErrorObject;
+use AlexFigures\JsonApi\Http\Error\ErrorObject;
 
 /**
  * Exception for validation errors.
@@ -12,6 +12,7 @@ use AlexFigures\Symfony\Http\Error\ErrorObject;
  * HTTP status: 422 Unprocessable Entity
  *
  * Contains an array of JSON:API error objects with validation details.
+ * @api
  */
 final class ValidationException extends JsonApiHttpException
 {

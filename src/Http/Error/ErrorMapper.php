@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Error;
+namespace AlexFigures\JsonApi\Http\Error;
 
 use Throwable;
 
-final class ErrorMapper
+/** @internal */
+final readonly class ErrorMapper
 {
     public function __construct(
-        private readonly ErrorBuilder $builder,
+        private ErrorBuilder $builder,
     ) {
     }
 

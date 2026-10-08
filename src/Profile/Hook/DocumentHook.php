@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Hook;
+namespace AlexFigures\JsonApi\Profile\Hook;
 
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use Symfony\Component\HttpFoundation\Request;
 
+/** @api */
 interface DocumentHook
 {
     /**

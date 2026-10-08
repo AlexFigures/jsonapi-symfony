@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Locator;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Locator;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Contract\Data\TypedResourcePersister;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Contract\Data\TypedResourcePersister;
 
 /** @internal Adapts the documented legacy typed persister contract to write controllers. */
 final readonly class ResourceProcessorLocator implements ResourceProcessor
 {
-    /** @param iterable<\AlexFigures\Symfony\Contract\Data\ResourcePersister> $persisters */
+    /** @param iterable<\AlexFigures\JsonApi\Contract\Data\ResourcePersister> $persisters */
     public function __construct(private iterable $persisters, private ResourceProcessor $fallback)
     {
     }
@@ -19,13 +19,13 @@ final readonly class ResourceProcessorLocator implements ResourceProcessor
     public function processCreate(string $type, ChangeSet $changes, ?string $clientId = null): object
     {
         $persister = $this->persister($type);
-        return $persister === null ? $this->fallback->processCreate($type, $changes, $clientId) : $persister->create($type, $changes, $clientId);
+        return $persister?->create($type, $changes, $clientId) ?? $this->fallback->processCreate($type, $changes, $clientId);
     }
 
     public function processUpdate(string $type, string $id, ChangeSet $changes): object
     {
         $persister = $this->persister($type);
-        return $persister === null ? $this->fallback->processUpdate($type, $id, $changes) : $persister->update($type, $id, $changes);
+        return $persister?->update($type, $id, $changes) ?? $this->fallback->processUpdate($type, $id, $changes);
     }
 
     public function processDelete(string $type, string $id): void

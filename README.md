@@ -1,29 +1,49 @@
 # JsonApiBundle
 
-JSON:API resources, relationships, queries, writes, profiles and HTTP caching for Symfony, with a built-in Doctrine ORM provider and custom persistence contracts.
+A JSON:API 1.1 bundle for Symfony, with Doctrine ORM or custom persistence, generated resource routes, relationships, profiles and Atomic Operations.
 
-This branch is preparing for 1.0. Bundle regressions and independent consumer acceptance are separate release gates. The public API and supported platform matrix are still being audited.
+**Status:** 1.0 stabilization; no stable 1.0 release is declared yet. Known runtime gaps have independent consumer proof for a recorded revision. Later stabilization/RC revisions require fresh platform verification.
+
+## Requirements and installation
+
+PHP 8.2+ with Symfony 7.4; PHP 8.4.1+ for Symfony 8.x. Target lines are Symfony 7.4 LTS, 8.1 and 8.2 (development until released). The optional Doctrine provider targets ORM 3 / DBAL 3.8+ or 4.3+. [Compatibility policy and evidence](docs/release/compatibility.md) distinguish resolvable dependencies from officially verified support.
 
 ```bash
 composer require alexfigures/symfony-jsonapi-bundle
 ```
 
-Start with the [developer path](docs/guide/developer-path.md): installation, a Doctrine resource, generated routes, query options, writes and production limits.
+Use an available development/RC constraint during stabilization. Register the bundle, configure Doctrine and import the generated routes as shown in [installation](docs/guide/installation.md).
 
-| Need | Documentation |
-| --- | --- |
-| Build an application | [Developer path](docs/guide/developer-path.md) |
-| Configure the bundle | [Configuration reference](docs/guide/configuration.md) |
-| Extend persistence, relationships or profiles | [Extension contracts](docs/api/public-api.md) |
-| Understand transaction, concurrency and read limits | [Production policies](docs/guide/production-policies.md) |
-| Migrate an existing integration | [Upgrade to 1.0 draft](UPGRADE-1.0.md) |
-| Contribute and run bundle tests | [Contributing](CONTRIBUTING.md), [testing](TESTING.md) |
-| Prepare RC / final | [Release checklist](docs/release/checklist.md) |
+Flex detects the root Bundle. Without Flex, add this entry to `config/bundles.php`:
 
-Composer currently allows PHP `^8.2` and Symfony components `^7.1`; development tooling is resolved for PHP 8.4. CI currently runs PHP 8.4. These constraints are not a tested 1.0 compatibility matrix. See the [compatibility evidence](docs/release/compatibility.md) before choosing release targets.
+```php
+AlexFigures\JsonApi\JsonApiBundle::class => ['all' => true],
+```
 
-Atomic execution requires one supported Doctrine manager/connection boundary. Independent connections and separate managers sharing a connection are rejected before mutation. Custom providers must supply their own transaction and concurrency guarantees.
+```php
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
 
-Native Doctrine relationship loading uses a fetch plan and bounded batches. Cost guarantees do not extend automatically to arbitrary getters, custom provider SQL or undeclared hooks. See [production policies](docs/guide/production-policies.md).
+#[JsonApiResource(type: 'articles')]
+class Article
+{
+    // Add Doctrine mapping, one API ID and exposed attributes.
+}
+```
 
-[Documentation index](docs/README.md) · [BC policy](docs/api/bc-policy.md) · [License](LICENSE)
+The [quick start](docs/guide/quick-start.md) supplies the complete runnable entity, configuration, migration, first GET and first POST.
+
+## Core capabilities
+
+- Resource CRUD, linkage/related endpoints, includes and sparse fields.
+- Whitelisted filters/sorts, distinct-root pagination and bounded native relationship loading.
+- Validation/errors, media negotiation, cache validators and concurrent write preconditions.
+- Single-boundary Atomic Operations with rollback and generated-ID/lid workflows.
+- DI profiles/hooks, DTO representations/input, custom handlers/routes/providers and OpenAPI.
+
+Applications own authorization policy, database topology and custom-provider cost. Distributed transactions, sharding/tenant frameworks and replication management are outside the contract.
+
+[Documentation](docs/index.md) · [Public API](docs/api/public-api.md) · [Support contract](docs/reference/support-contract.md) · [BC policy](docs/api/bc-policy.md) · [Upgrade to 1.0](UPGRADE-1.0.md) · [Changelog](CHANGELOG.md)
+
+The independent [example application](https://github.com/AlexFigures/example-jsonapi-bundle) provides black-box consumer verification and is maintained separately. [Release gates](docs/release/checklist.md) record exact revisions and required compatibility reruns.
+
+Contributors: [CONTRIBUTING](CONTRIBUTING.md), [TESTING](TESTING.md). Security reports: [SECURITY](SECURITY.md). Licensed under [MIT](LICENSE).

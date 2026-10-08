@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Repository;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Repository;
 
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Contract\Data\ResourceRepository;
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Filter\Ast\Between;
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Filter\Ast\Conjunction;
-use AlexFigures\Symfony\Filter\Ast\Disjunction;
-use AlexFigures\Symfony\Filter\Ast\Group;
-use AlexFigures\Symfony\Filter\Ast\Node;
-use AlexFigures\Symfony\Filter\Ast\NullCheck;
-use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Sorting;
-use AlexFigures\Symfony\Resource\Definition\ReadProjection;
-use AlexFigures\Symfony\Resource\Mapper\ReadMapperInterface;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Contract\Data\ResourceRepository;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Filter\Ast\Between;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\Conjunction;
+use AlexFigures\JsonApi\Filter\Ast\Disjunction;
+use AlexFigures\JsonApi\Filter\Ast\Group;
+use AlexFigures\JsonApi\Filter\Ast\Node;
+use AlexFigures\JsonApi\Filter\Ast\NullCheck;
+use AlexFigures\JsonApi\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Sorting;
+use AlexFigures\JsonApi\Resource\Definition\ReadProjection;
+use AlexFigures\JsonApi\Resource\Mapper\ReadMapperInterface;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -38,11 +38,13 @@ use Stringable;
  * - Pagination
  * - Root-resource pagination independent of joined row counts
  * Representation relationship loading is delegated to the optional preloader.
+ * @api
  */
-class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineCollectionQueryProviderInterface
+class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\JsonApi\Bridge\Doctrine\Query\DoctrineCollectionQueryProviderInterface
 {
     private readonly DoctrineFilterCompiler $filterCompiler;
 
+    /** @internal Container wiring; applications use the public service/contract. */
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
@@ -60,7 +62,7 @@ class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symf
     {
         $metadata = $this->registry->getByType($type);
         $request = $this->requests?->getCurrentRequest();
-        $context = $request === null ? null : \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
+        $context = $request === null ? null : \AlexFigures\JsonApi\Profile\ProfileContext::fromRequest($request)?->forType($type);
         $criteria = clone $criteria;
         if ($context !== null) {
             foreach ($context->readHooks() as $hook) {
@@ -76,7 +78,7 @@ class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symf
             $offset = ($criteria->pagination->number - 1) * $criteria->pagination->size;
             if ($roots->getDQLPart('join') !== []) {
                 // Doctrine output walkers require an entity result mapping. Hydrate only the bounded page.
-                [$page, $total] = (new \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineRootPaginator())->paginate($roots, $offset, $criteria->pagination->size);
+                [$page, $total] = (new \AlexFigures\JsonApi\Bridge\Doctrine\Query\DoctrineRootPaginator())->paginate($roots, $offset, $criteria->pagination->size);
                 $ids = array_map(fn (object $entity): ResourceIdentifier => new ResourceIdentifier($type, (string) $this->identifierMapKey($em->getClassMetadata($entityClass)->getFieldValue($entity, $field))), $page);
             } else {
                 $count = clone $roots;
@@ -92,7 +94,7 @@ class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symf
             }
             return new Slice($ids, $criteria->pagination->number, $criteria->pagination->size, $total);
         }
-        [$entities, $total] = (new \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineRootPaginator())->paginate(
+        [$entities, $total] = (new \AlexFigures\JsonApi\Bridge\Doctrine\Query\DoctrineRootPaginator())->paginate(
             $roots,
             ($criteria->pagination->number - 1) * $criteria->pagination->size,
             $criteria->pagination->size,
@@ -101,8 +103,8 @@ class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symf
             $idField = $em->getClassMetadata($entityClass)->getSingleIdentifierFieldName();
             $ids = array_map(static fn (object $entity): mixed => $em->getClassMetadata($entityClass)->getFieldValue($entity, $idField), $entities);
             $projection = $em->createQueryBuilder()->from($entityClass, 'e')->where('e.' . $idField . ' IN (:pageIds)');
-            \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierParameters::bind($projection, $em, $entityClass, 'pageIds', array_map(fn (mixed $id): string => (string) $this->identifierMapKey($id), $ids));
-            \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineReadProjection::apply($projection, $definition);
+            \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierParameters::bind($projection, $em, $entityClass, 'pageIds', array_map(fn (mixed $id): string => (string) $this->identifierMapKey($id), $ids));
+            \AlexFigures\JsonApi\Bridge\Doctrine\Query\DoctrineReadProjection::apply($projection, $definition);
             $projection->addSelect('e.' . $idField . ' AS __jsonapi_root_id');
             foreach ($criteria->customConditions as $condition) {
                 $condition($projection);
@@ -138,7 +140,7 @@ class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symf
         $metadata = $this->registry->getByType($type);
         $criteria = clone $criteria;
         $request = $this->requests?->getCurrentRequest();
-        $context = $request === null ? null : \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
+        $context = $request === null ? null : \AlexFigures\JsonApi\Profile\ProfileContext::fromRequest($request)?->forType($type);
         if ($context !== null) {
             foreach ($context->readHooks() as $hook) {
                 $hook->onBeforeFindCollection($context, $type, $criteria);
@@ -162,7 +164,7 @@ class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symf
     {
         $metadata = $this->registry->getByType($type);
         $request = $this->requests?->getCurrentRequest();
-        $context = $request === null ? null : \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($type);
+        $context = $request === null ? null : \AlexFigures\JsonApi\Profile\ProfileContext::fromRequest($request)?->forType($type);
         $criteria = clone $criteria;
         if ($context !== null) {
             foreach ($context->readHooks() as $hook) {
@@ -174,7 +176,7 @@ class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symf
         $entityClass = $metadata->dataClass;
         $em = $this->getEntityManagerFor($entityClass);
 
-        $id = \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id);
+        $id = \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id);
         $classMetadata = $em->getClassMetadata($entityClass);
         $idField = $classMetadata->getSingleIdentifierFieldName();
         if ($definition->readProjection === ReadProjection::DTO) {
@@ -184,7 +186,7 @@ class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symf
                 ->setParameter('id', $id, $classMetadata->getTypeOfField($idField));
 
             $this->applyCriteriaFilter($qb, $criteria, $metadata, $em);
-            \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineReadProjection::apply($qb, $definition);
+            \AlexFigures\JsonApi\Bridge\Doctrine\Query\DoctrineReadProjection::apply($qb, $definition);
             foreach ($criteria->customConditions as $condition) {
                 $condition($qb);
             }
@@ -301,14 +303,13 @@ class GenericDoctrineRepository implements ResourceRepository, \AlexFigures\Symf
 
                 // Build the join path and alias
                 $currentAlias = 'e';
-                $fullJoinPath = '';
 
                 $classMetadata = $qb->getEntityManager()->getClassMetadata($metadata->dataClass);
                 foreach ($segments as $index => $relationshipName) {
                     if ($classMetadata->hasAssociation($relationshipName)) {
                         if ($this->collectionSortPolicy === 'reject' && $classMetadata->isCollectionValuedAssociation($relationshipName)) {
-                            throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Collection sorting requires an explicit aggregate handler.', [
-                                new \AlexFigures\Symfony\Http\Error\ErrorObject(null, null, '400', \AlexFigures\Symfony\Http\Error\ErrorCodes::COLLECTION_SORT_UNSUPPORTED, \AlexFigures\Symfony\Http\Error\ErrorTitles::MAP[\AlexFigures\Symfony\Http\Error\ErrorCodes::COLLECTION_SORT_UNSUPPORTED], 'Sorting through a to-many relationship requires a registered custom sort handler with explicit aggregate semantics.', new \AlexFigures\Symfony\Http\Error\ErrorSource(parameter: 'sort')),
+                            throw new \AlexFigures\JsonApi\Http\Exception\BadRequestException('Collection sorting requires an explicit aggregate handler.', [
+                                new \AlexFigures\JsonApi\Http\Error\ErrorObject(null, null, '400', \AlexFigures\JsonApi\Http\Error\ErrorCodes::COLLECTION_SORT_UNSUPPORTED, \AlexFigures\JsonApi\Http\Error\ErrorTitles::MAP[\AlexFigures\JsonApi\Http\Error\ErrorCodes::COLLECTION_SORT_UNSUPPORTED], 'Sorting through a to-many relationship requires a registered custom sort handler with explicit aggregate semantics.', new \AlexFigures\JsonApi\Http\Error\ErrorSource(parameter: 'sort')),
                             ]);
                         }
                         $classMetadata = $qb->getEntityManager()->getClassMetadata($classMetadata->getAssociationTargetClass($relationshipName));

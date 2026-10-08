@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Http\Write;
+namespace AlexFigures\JsonApi\Tests\Unit\Http\Write;
 
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
-use AlexFigures\Symfony\Http\Write\ChangeSetFactory;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Write\ChangeSetFactory;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,7 +29,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [
                 'title' => new AttributeMetadata(name: 'title'),
                 'body' => new AttributeMetadata(name: 'body'),
@@ -64,7 +64,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [
                 'title' => new AttributeMetadata(name: 'title', propertyPath: 'articleTitle'),
                 'body' => new AttributeMetadata(name: 'body'),
@@ -94,7 +94,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [
                 'title' => new AttributeMetadata(name: 'title'),
             ],
@@ -105,7 +105,7 @@ final class ChangeSetFactoryTest extends TestCase
             ->with('articles')
             ->willReturn($metadata);
 
-        $changeSet = $this->factory->fromInput('articles', ['title' => 'Test'], []);
+        $changeSet = $this->factory->fromInput('articles', ['title' => 'Test']);
 
         $this->assertEquals(['title' => 'Test'], $changeSet->attributes);
         $this->assertEquals([], $changeSet->relationships);
@@ -115,7 +115,7 @@ final class ChangeSetFactoryTest extends TestCase
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [
                 'title' => new AttributeMetadata(name: 'title'),
             ],
@@ -132,72 +132,11 @@ final class ChangeSetFactoryTest extends TestCase
         $this->factory->fromInput('articles', ['title' => 'Test', 'unknown' => 'value'], []);
     }
 
-    #[\PHPUnit\Framework\Attributes\IgnoreDeprecations]
-    public function testFromAttributesIsDeprecatedButStillWorks(): void
-    {
-        $metadata = new ResourceMetadata(
-            type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
-            attributes: [
-                'title' => new AttributeMetadata(name: 'title'),
-            ],
-            relationships: []
-        );
-
-        $this->registry->method('getByType')
-            ->with('articles')
-            ->willReturn($metadata);
-
-        // Suppress deprecation warning for this test
-        $errorReporting = error_reporting();
-        error_reporting($errorReporting & ~\E_USER_DEPRECATED);
-
-        $changeSet = $this->factory->fromAttributes('articles', ['title' => 'Test']);
-
-        error_reporting($errorReporting);
-
-        $this->assertEquals(['title' => 'Test'], $changeSet->attributes);
-        $this->assertEquals([], $changeSet->relationships);
-    }
-
-    public function testFromAttributesTriggersDeprecationWarning(): void
-    {
-        $metadata = new ResourceMetadata(
-            type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
-            attributes: [
-                'title' => new AttributeMetadata(name: 'title'),
-            ],
-            relationships: []
-        );
-
-        $this->registry->method('getByType')
-            ->with('articles')
-            ->willReturn($metadata);
-
-        // Capture deprecation warnings
-        $deprecations = [];
-        set_error_handler(function ($errno, $errstr) use (&$deprecations) {
-            if ($errno === \E_USER_DEPRECATED) {
-                $deprecations[] = $errstr;
-            }
-            return true;
-        });
-
-        $this->factory->fromAttributes('articles', ['title' => 'Test']);
-
-        restore_error_handler();
-
-        $this->assertCount(1, $deprecations);
-        $this->assertStringContainsString('fromAttributes() is deprecated', $deprecations[0]);
-        $this->assertStringContainsString('Use fromInput() instead', $deprecations[0]);
-    }
-
     public function testFromInputWithOnlyRelationshipsNoAttributes(): void
     {
         $metadata = new ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: []
         );

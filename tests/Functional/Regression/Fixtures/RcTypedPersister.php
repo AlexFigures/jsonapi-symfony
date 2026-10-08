@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Regression\Fixtures;
+namespace AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures;
 
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Contract\Data\TypedResourcePersister;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Contract\Data\TypedResourcePersister;
 
 final class RcTypedPersister implements TypedResourcePersister
 {

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Atomic\Execution;
+namespace AlexFigures\JsonApi\Atomic\Execution;
 
-use AlexFigures\Symfony\Atomic\Operation;
+use AlexFigures\JsonApi\Atomic\Operation;
 
 /** @internal Preflight roots and explicit relationship identifiers, including lids. */
 final class AtomicResourceTypes

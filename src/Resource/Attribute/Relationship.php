@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Attribute;
+namespace AlexFigures\JsonApi\Resource\Attribute;
 
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
 use Attribute;
 
 /**
@@ -84,7 +84,7 @@ use Attribute;
  * @since 0.1.0
  */
 #[Attribute(Attribute::TARGET_PROPERTY | Attribute::TARGET_METHOD)]
-final class Relationship
+final readonly class Relationship
 {
     /**
      * @param bool                                  $toMany        Whether this is a to-many relationship (true) or to-one (false)
@@ -94,11 +94,11 @@ final class Relationship
      * @param string|null                           $propertyPath  Doctrine property path for filtering/sorting/including (e.g., 'articleTags.tag')
      */
     public function __construct(
-        public readonly bool $toMany = false,
-        public readonly ?string $inverse = null,
-        public readonly ?string $targetType = null,
-        public readonly RelationshipLinkingPolicy|string|null $linkingPolicy = null,
-        public readonly ?string $propertyPath = null,
+        public bool $toMany = false,
+        public ?string $inverse = null,
+        public ?string $targetType = null,
+        public RelationshipLinkingPolicy|string|null $linkingPolicy = null,
+        public ?string $propertyPath = null,
     ) {
     }
 }

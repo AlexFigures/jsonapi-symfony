@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Http\Error;
+namespace AlexFigures\JsonApi\Tests\Unit\Http\Error;
 
-use AlexFigures\Symfony\Http\Error\AtomicErrorRebaser;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Exception\BadRequestException;
+use AlexFigures\JsonApi\Http\Error\AtomicErrorRebaser;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Exception\BadRequestException;
 use PHPUnit\Framework\TestCase;
 
 final class ErrorTypeLinkTest extends TestCase

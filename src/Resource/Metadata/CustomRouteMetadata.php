@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Metadata;
+namespace AlexFigures\JsonApi\Resource\Metadata;
 
 /**
  * Metadata for a custom JSON:API route.
  *
  * @api
  */
-final class CustomRouteMetadata
+final readonly class CustomRouteMetadata
 {
     /**
      * @param string                $name         Route name
@@ -24,16 +24,16 @@ final class CustomRouteMetadata
      * @param int                   $priority     Route priority
      */
     public function __construct(
-        public readonly string $name,
-        public readonly string $path,
-        public readonly array $methods,
-        public readonly ?string $handler,
-        public readonly ?string $controller,
-        public readonly ?string $resourceType,
-        public readonly array $defaults,
-        public readonly array $requirements,
-        public readonly ?string $description,
-        public readonly int $priority,
+        public string $name,
+        public string $path,
+        public array $methods,
+        public ?string $handler,
+        public ?string $controller,
+        public ?string $resourceType,
+        public array $defaults,
+        public array $requirements,
+        public ?string $description,
+        public int $priority,
     ) {
     }
 

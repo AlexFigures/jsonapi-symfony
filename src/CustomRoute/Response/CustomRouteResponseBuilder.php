@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\CustomRoute\Response;
+namespace AlexFigures\JsonApi\CustomRoute\Response;
 
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContext;
-use AlexFigures\Symfony\CustomRoute\Result\CustomRouteResult;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorCodes;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContext;
+use AlexFigures\JsonApi\CustomRoute\Result\CustomRouteResult;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorCodes;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,12 +27,12 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * @internal
  */
-final class CustomRouteResponseBuilder
+final readonly class CustomRouteResponseBuilder
 {
     public function __construct(
-        private readonly DocumentBuilder $documentBuilder,
-        private readonly LinkGenerator $linkGenerator,
-        private readonly ErrorBuilder $errorBuilder,
+        private DocumentBuilder $documentBuilder,
+        private LinkGenerator $linkGenerator,
+        private ErrorBuilder $errorBuilder,
     ) {
     }
 

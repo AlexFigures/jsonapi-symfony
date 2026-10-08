@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Regression;
+namespace AlexFigures\JsonApi\Tests\Unit\Regression;
 
-use AlexFigures\Symfony\Contract\Resource\ResourceMetadataInterface;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Tests\Unit\Regression\Fixtures\OtherProjectedResource;
-use AlexFigures\Symfony\Tests\Unit\Regression\Fixtures\PolicyResource;
-use AlexFigures\Symfony\Tests\Unit\Regression\Fixtures\PrimaryResource;
-use AlexFigures\Symfony\Tests\Unit\Regression\Fixtures\ProjectedResource;
+use AlexFigures\JsonApi\Contract\Resource\ResourceMetadataInterface;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Tests\Unit\Regression\Fixtures\OtherProjectedResource;
+use AlexFigures\JsonApi\Tests\Unit\Regression\Fixtures\PolicyResource;
+use AlexFigures\JsonApi\Tests\Unit\Regression\Fixtures\PrimaryResource;
+use AlexFigures\JsonApi\Tests\Unit\Regression\Fixtures\ProjectedResource;
 use PHPUnit\Framework\TestCase;
 
 final class RcPublicMetadataContractTest extends TestCase
@@ -42,7 +42,7 @@ final class RcPublicMetadataContractTest extends TestCase
 
     public function testExtensionDtosArePublic(): void
     {
-        foreach ([\AlexFigures\Symfony\Query\Fetch\RelationshipReadMap::class, \AlexFigures\Symfony\Resource\Metadata\CustomRouteMetadata::class, \AlexFigures\Symfony\Bridge\Doctrine\Query\DoctrineCollectionQueryProviderInterface::class] as $class) {
+        foreach ([\AlexFigures\JsonApi\Query\Fetch\RelationshipReadMap::class, \AlexFigures\JsonApi\Resource\Metadata\CustomRouteMetadata::class, \AlexFigures\JsonApi\Bridge\Doctrine\Query\DoctrineCollectionQueryProviderInterface::class] as $class) {
             $comment = (new \ReflectionClass($class))->getDocComment();
             self::assertStringNotContainsString('@internal', (string) $comment);
             self::assertStringContainsString('@api', (string) $comment);

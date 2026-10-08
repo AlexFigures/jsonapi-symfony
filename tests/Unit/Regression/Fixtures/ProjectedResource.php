@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Regression\Fixtures;
+namespace AlexFigures\JsonApi\Tests\Unit\Regression\Fixtures;
 
-#[\AlexFigures\Symfony\Resource\Attribute\JsonApiResource(type: 'projected', dataClass: PrimaryResource::class)]
+#[\AlexFigures\JsonApi\Resource\Attribute\JsonApiResource(type: 'projected', dataClass: PrimaryResource::class)]
 final class ProjectedResource
 {
 }

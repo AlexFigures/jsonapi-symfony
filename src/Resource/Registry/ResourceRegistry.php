@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Resource\Registry;
+namespace AlexFigures\JsonApi\Resource\Registry;
 
-use AlexFigures\Symfony\Resource\Attribute\Attribute as AttributeAttribute;
-use AlexFigures\Symfony\Resource\Attribute\FilterableFields;
-use AlexFigures\Symfony\Resource\Attribute\Id;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
-use AlexFigures\Symfony\Resource\Attribute\Relationship as RelationshipAttribute;
-use AlexFigures\Symfony\Resource\Attribute\SortableFields;
-use AlexFigures\Symfony\Resource\Definition\ResourceOperation;
-use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
-use AlexFigures\Symfony\Resource\Metadata\AttributeMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipSemantics;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Attribute\Attribute as AttributeAttribute;
+use AlexFigures\JsonApi\Resource\Attribute\FilterableFields;
+use AlexFigures\JsonApi\Resource\Attribute\Id;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Resource\Attribute\Relationship as RelationshipAttribute;
+use AlexFigures\JsonApi\Resource\Attribute\SortableFields;
+use AlexFigures\JsonApi\Resource\Definition\ResourceOperation;
+use AlexFigures\JsonApi\Resource\Definition\VersionResolverInterface;
+use AlexFigures\JsonApi\Resource\Metadata\AttributeMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipSemantics;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
 use LogicException;
 use ReflectionAttribute;
 use ReflectionClass;
@@ -26,6 +26,7 @@ use ReflectionNamedType;
 use ReflectionProperty;
 use ReflectionUnionType;
 
+/** @internal */
 final class ResourceRegistry implements ResourceRegistryInterface
 {
     /**

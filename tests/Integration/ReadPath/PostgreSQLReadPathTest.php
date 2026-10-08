@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\ReadPath;
+namespace AlexFigures\JsonApi\Tests\Integration\ReadPath;
 
 final class PostgreSQLReadPathTest extends DoctrineReadPathTestCase
 {

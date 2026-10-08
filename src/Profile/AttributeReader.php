@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile;
+namespace AlexFigures\JsonApi\Profile;
 
 /**
  * Reads PHP 8 attributes from entity classes.
  *
  * Simplified version that only checks the class itself (no inheritance).
+ * @api
  */
 final class AttributeReader
 {

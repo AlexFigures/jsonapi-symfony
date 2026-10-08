@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile\Builtin;
+namespace AlexFigures\JsonApi\Profile\Builtin;
 
-use AlexFigures\Symfony\Profile\Attribute\Auditable;
-use AlexFigures\Symfony\Profile\Builtin\Hook\AuditTrailDocumentHook;
-use AlexFigures\Symfony\Profile\Builtin\Hook\AuditTrailWriteHook;
-use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
-use AlexFigures\Symfony\Profile\ProfileInterface;
-use AlexFigures\Symfony\Profile\Validation\FieldRequirement;
-use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
+use AlexFigures\JsonApi\Profile\Attribute\Auditable;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\AuditTrailDocumentHook;
+use AlexFigures\JsonApi\Profile\Builtin\Hook\AuditTrailWriteHook;
+use AlexFigures\JsonApi\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\JsonApi\Profile\ProfileInterface;
+use AlexFigures\JsonApi\Profile\Validation\FieldRequirement;
+use AlexFigures\JsonApi\Profile\Validation\ProfileRequirements;
 
 /**
  * Audit Trail Profile.
@@ -31,6 +31,7 @@ use AlexFigures\Symfony\Profile\Validation\ProfileRequirements;
  *     updatedByField?: string,
  *     userProvider?: callable(): ?string
  * }
+ * @api
  */
 final class AuditTrailProfile implements ProfileInterface
 {
@@ -39,7 +40,7 @@ final class AuditTrailProfile implements ProfileInterface
     /**
      * @param AuditTrailConfig $config
      */
-    public function __construct(private array $config = [], private ?\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry = null)
+    public function __construct(private array $config = [], private ?\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry = null)
     {
     }
 
@@ -58,7 +59,7 @@ final class AuditTrailProfile implements ProfileInterface
     }
 
     /** @internal Inject the registry also for profiles with application constructor configuration. */
-    public function setResourceRegistry(\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface $registry): void
+    public function setResourceRegistry(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface $registry): void
     {
         $this->registry = $registry;
     }

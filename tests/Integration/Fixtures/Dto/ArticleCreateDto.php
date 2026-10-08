@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Fixtures\Dto;
+namespace AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -12,15 +12,15 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This DTO validates incoming JSON:API payloads before
  * mapping them to the Article Entity.
  */
-final class ArticleCreateDto
+final readonly class ArticleCreateDto
 {
     public function __construct(
         #[Assert\NotBlank(message: 'Title is required')]
         #[Assert\Length(min: 3, max: 255)]
-        public readonly string $title,
+        public string $title,
         #[Assert\NotBlank(message: 'Content is required')]
         #[Assert\Length(min: 10)]
-        public readonly string $content,
+        public string $content,
     ) {
     }
 }

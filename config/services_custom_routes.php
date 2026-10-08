@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-use AlexFigures\Symfony\Contract\Data\ResourceRepository;
-use AlexFigures\Symfony\Contract\Tx\TransactionManager;
-use AlexFigures\Symfony\CustomRoute\Context\CustomRouteContextFactory;
-use AlexFigures\Symfony\CustomRoute\Controller\CustomRouteController;
-use AlexFigures\Symfony\CustomRoute\Handler\CustomRouteHandlerRegistry;
-use AlexFigures\Symfony\CustomRoute\Response\CustomRouteResponseBuilder;
-use AlexFigures\Symfony\Http\Document\DocumentBuilder;
-use AlexFigures\Symfony\Http\Error\ErrorBuilder;
-use AlexFigures\Symfony\Http\Link\LinkGenerator;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Resource\Registry\CustomRouteRegistryInterface;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Contract\Data\ResourceRepository;
+use AlexFigures\JsonApi\Contract\Tx\TransactionManager;
+use AlexFigures\JsonApi\CustomRoute\Context\CustomRouteContextFactory;
+use AlexFigures\JsonApi\CustomRoute\Controller\CustomRouteController;
+use AlexFigures\JsonApi\CustomRoute\Handler\CustomRouteHandlerRegistry;
+use AlexFigures\JsonApi\CustomRoute\Response\CustomRouteResponseBuilder;
+use AlexFigures\JsonApi\Http\Document\DocumentBuilder;
+use AlexFigures\JsonApi\Http\Error\ErrorBuilder;
+use AlexFigures\JsonApi\Http\Link\LinkGenerator;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Resource\Registry\CustomRouteRegistryInterface;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -41,7 +41,7 @@ return static function (ContainerConfigurator $configurator): void {
             service(ResourceRegistryInterface::class),
             service(ResourceRepository::class),
             service(QueryParser::class),
-            service(\AlexFigures\Symfony\Http\Error\ErrorMapper::class),
+            service(\AlexFigures\JsonApi\Http\Error\ErrorMapper::class),
         ])
     ;
 

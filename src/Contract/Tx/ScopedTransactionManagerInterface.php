@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Tx;
+namespace AlexFigures\JsonApi\Contract\Tx;
 
-/** Optional extension: resolve the entire persistence boundary before running the callback. */
+/** Optional extension: resolve the entire persistence boundary before running the callback.
+ * @api
+ */
 interface ScopedTransactionManagerInterface extends TransactionManager
 {
     /** @template T

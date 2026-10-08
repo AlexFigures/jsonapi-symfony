@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Profile\Fixtures;
+namespace AlexFigures\JsonApi\Tests\Unit\Profile\Fixtures;
 
 final readonly class InjectedProfileContext
 {

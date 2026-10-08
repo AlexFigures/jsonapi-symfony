@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Atomic;
+namespace AlexFigures\JsonApi\Tests\Integration\Atomic;
 
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
 
 /**
  * Integration tests for Atomic Operations transactionality with Doctrine.
@@ -75,7 +75,7 @@ final class DoctrineAtomicTransactionalityTest extends DoctrineAtomicTestCase
         ];
 
         // Expect NotFoundException to be thrown (Doctrine rollback happens automatically)
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
 
         try {
             $this->executeAtomicRequest($operations);
@@ -167,7 +167,7 @@ final class DoctrineAtomicTransactionalityTest extends DoctrineAtomicTestCase
         ];
 
         // Expect NotFoundException to be thrown
-        $this->expectException(\AlexFigures\Symfony\Http\Exception\NotFoundException::class);
+        $this->expectException(\AlexFigures\JsonApi\Http\Exception\NotFoundException::class);
 
         try {
             $this->executeAtomicRequest($operations);

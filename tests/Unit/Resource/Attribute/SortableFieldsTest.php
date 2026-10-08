@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Resource\Attribute;
+namespace AlexFigures\JsonApi\Tests\Unit\Resource\Attribute;
 
-use AlexFigures\Symfony\Resource\Attribute\SortableField;
-use AlexFigures\Symfony\Resource\Attribute\SortableFields;
+use AlexFigures\JsonApi\Resource\Attribute\SortableField;
+use AlexFigures\JsonApi\Resource\Attribute\SortableFields;
 use PHPUnit\Framework\TestCase;
 
 final class SortableFieldsTest extends TestCase
@@ -115,13 +115,13 @@ final class SortableFieldsTest extends TestCase
 
     public function testIsAllowedWithInheritanceFromRelationship(): void
     {
-        $registry = $this->createMock(\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface::class);
+        $registry = $this->createMock(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface::class);
 
         // Author resource has 'name' and 'email' sortable fields
         $authorSortableFields = new SortableFields(['name', 'email']);
-        $authorMetadata = new \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata(
+        $authorMetadata = new \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata(
             type: 'authors',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Author::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Author::class,
             attributes: [],
             relationships: [],
             sortableFields: $authorSortableFields,
@@ -132,16 +132,16 @@ final class SortableFieldsTest extends TestCase
             'title',
             new SortableField('author', inherit: true),
         ]);
-        $articleMetadata = new \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata(
+        $articleMetadata = new \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [
-                'author' => new \AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata(
+                'author' => new \AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata(
                     name: 'author',
                     targetType: 'authors',
                     toMany: false,
-                    linkingPolicy: \AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy::VERIFY,
+                    linkingPolicy: \AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy::VERIFY,
                 ),
             ],
             sortableFields: $articleSortableFields,
@@ -170,13 +170,13 @@ final class SortableFieldsTest extends TestCase
 
     public function testIsAllowedWithInheritanceAndExcept(): void
     {
-        $registry = $this->createMock(\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface::class);
+        $registry = $this->createMock(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface::class);
 
         // Author resource has 'name', 'email', 'password' sortable fields
         $authorSortableFields = new SortableFields(['name', 'email', 'password']);
-        $authorMetadata = new \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata(
+        $authorMetadata = new \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata(
             type: 'authors',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Author::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Author::class,
             attributes: [],
             relationships: [],
             sortableFields: $authorSortableFields,
@@ -187,16 +187,16 @@ final class SortableFieldsTest extends TestCase
             'title',
             new SortableField('author', inherit: true, except: ['password']),
         ]);
-        $articleMetadata = new \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata(
+        $articleMetadata = new \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [
-                'author' => new \AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata(
+                'author' => new \AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata(
                     name: 'author',
                     targetType: 'authors',
                     toMany: false,
-                    linkingPolicy: \AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy::VERIFY,
+                    linkingPolicy: \AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy::VERIFY,
                 ),
             ],
             sortableFields: $articleSortableFields,
@@ -222,13 +222,13 @@ final class SortableFieldsTest extends TestCase
 
     public function testIsAllowedWithDepthLimit(): void
     {
-        $registry = $this->createMock(\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface::class);
+        $registry = $this->createMock(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface::class);
 
         // Create a simple metadata structure
         $authorSortableFields = new SortableFields(['name']);
-        $authorMetadata = new \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata(
+        $authorMetadata = new \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata(
             type: 'authors',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Author::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Author::class,
             attributes: [],
             relationships: [],
             sortableFields: $authorSortableFields,
@@ -237,16 +237,16 @@ final class SortableFieldsTest extends TestCase
         $articleSortableFields = new SortableFields([
             new SortableField('author', inherit: true),
         ]);
-        $articleMetadata = new \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata(
+        $articleMetadata = new \AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata(
             type: 'articles',
-            class: \AlexFigures\Symfony\Tests\Fixtures\Model\Article::class,
+            class: \AlexFigures\JsonApi\Tests\Fixtures\Model\Article::class,
             attributes: [],
             relationships: [
-                'author' => new \AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata(
+                'author' => new \AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata(
                     name: 'author',
                     targetType: 'authors',
                     toMany: false,
-                    linkingPolicy: \AlexFigures\Symfony\Resource\Metadata\RelationshipLinkingPolicy::VERIFY,
+                    linkingPolicy: \AlexFigures\JsonApi\Resource\Metadata\RelationshipLinkingPolicy::VERIFY,
                 ),
             ],
             sortableFields: $articleSortableFields,
@@ -271,7 +271,7 @@ final class SortableFieldsTest extends TestCase
 
     public function testIsAllowedWithoutInheritance(): void
     {
-        $registry = $this->createMock(\AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface::class);
+        $registry = $this->createMock(\AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface::class);
 
         // Article resource has 'author' field but WITHOUT inherit: true
         $articleSortableFields = new SortableFields([

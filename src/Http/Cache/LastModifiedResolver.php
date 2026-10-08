@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Cache;
+namespace AlexFigures\JsonApi\Http\Cache;
 
 use DateTimeImmutable;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/** @internal */
 final readonly class LastModifiedResolver
 {
     /** @param array{last_modified?: array{resource_field?: string, per_type?: array<string, string>, collections_max_of?: bool}} $config */

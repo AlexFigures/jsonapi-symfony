@@ -2,18 +2,18 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit\Bridge\Doctrine\Transaction;
+namespace AlexFigures\JsonApi\Tests\Unit\Bridge\Doctrine\Transaction;
 
-use AlexFigures\Symfony\Atomic\Execution\AtomicTransaction;
-use AlexFigures\Symfony\Atomic\Operation;
-use AlexFigures\Symfony\Atomic\Ref;
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
-use AlexFigures\Symfony\Http\Exception\UnsupportedTransactionBoundaryException;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistry;
-use AlexFigures\Symfony\Tests\Fixtures\Doctrine\TestManagerRegistry;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\GeneratedRecord;
+use AlexFigures\JsonApi\Atomic\Execution\AtomicTransaction;
+use AlexFigures\JsonApi\Atomic\Operation;
+use AlexFigures\JsonApi\Atomic\Ref;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Bridge\Doctrine\Transaction\DoctrineTransactionManager;
+use AlexFigures\JsonApi\Http\Exception\UnsupportedTransactionBoundaryException;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistry;
+use AlexFigures\JsonApi\Tests\Fixtures\Doctrine\TestManagerRegistry;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\GeneratedRecord;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -35,12 +35,10 @@ final class DoctrineTransactionManagerTest extends TestCase
         $registry = new TestManagerRegistry(['default' => $unrelated, 'selected' => $selected], [GeneratedRecord::class => 'selected']);
         $flush = new FlushManager($registry);
         $transactions = new DoctrineTransactionManager($registry, $flush);
-        self::assertSame('done', $transactions->transactionalFor([GeneratedRecord::class], function () use ($transactions, $flush): string {
-            return $transactions->transactionalFor([GeneratedRecord::class], function () use ($flush): string {
-                $flush->scheduleFlush(GeneratedRecord::class);
-                return 'done';
-            });
-        }));
+        self::assertSame('done', $transactions->transactionalFor([GeneratedRecord::class], fn (): string => $transactions->transactionalFor([GeneratedRecord::class], function () use ($flush): string {
+            $flush->scheduleFlush(GeneratedRecord::class);
+            return 'done';
+        })));
         self::assertFalse($flush->isFlushScheduled());
     }
 
@@ -50,14 +48,14 @@ final class DoctrineTransactionManagerTest extends TestCase
         foreach (['beginTransaction', 'flush', 'commit', 'rollback', 'close'] as $method) {
             $unrelated->expects(self::never())->method($method);
         }
-        $class = \AlexFigures\Symfony\Tests\Functional\Regression\Fixtures\RcMemory::class;
+        $class = \AlexFigures\JsonApi\Tests\Functional\Regression\Fixtures\RcMemory::class;
         $registry = new TestManagerRegistry(['default' => $unrelated], [$class => 'unmapped']);
-        $persister = $this->createMock(\AlexFigures\Symfony\Contract\Data\TypedResourcePersister::class);
+        $persister = $this->createMock(\AlexFigures\JsonApi\Contract\Data\TypedResourcePersister::class);
         $persister->method('supports')->willReturnCallback(static fn (string $type): bool => $type === 'rc-memory');
         $model = new $class('typed', 'Title');
         $persister->expects(self::once())->method('create')->willReturn($model);
         $transactions = new DoctrineTransactionManager($registry, new FlushManager($registry), [$persister]);
-        self::assertSame($model, $transactions->transactionalWriteFor('rc-memory', $class, static fn (): object => $persister->create('rc-memory', new \AlexFigures\Symfony\Contract\Data\ChangeSet())));
+        self::assertSame($model, $transactions->transactionalWriteFor('rc-memory', $class, static fn (): object => $persister->create('rc-memory', new \AlexFigures\JsonApi\Contract\Data\ChangeSet())));
         $atomic = new AtomicTransaction($transactions, new ResourceRegistry([$class]));
         $operation = new Operation('add', new Ref('rc-memory', null, null, null), null, ['type' => 'rc-memory', 'attributes' => ['title' => 'Title']], [], '/atomic:operations/0');
         try {

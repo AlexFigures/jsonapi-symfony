@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Profile;
+namespace AlexFigures\JsonApi\Profile;
 
-use AlexFigures\Symfony\Profile\Descriptor\ProfileDescriptor;
+use AlexFigures\JsonApi\Profile\Descriptor\ProfileDescriptor;
 
+/** @api */
 final class ProfileRegistry
 {
     /** @var array<string, ProfileInterface> */
@@ -26,7 +27,7 @@ final class ProfileRegistry
         foreach ($resources as $type => $class) {
             $enabled[$type] = array_values(array_unique(array_merge($defaultProfiles, $perType[$type] ?? [])));
         }
-        $validation = (new \AlexFigures\Symfony\Profile\Validation\ReflectionProfileValidator())->validate($this->profiles, $resources, $enabled);
+        $validation = (new \AlexFigures\JsonApi\Profile\Validation\ReflectionProfileValidator())->validate($this->profiles, $resources, $enabled);
         if ($validation->hasErrors()) {
             throw new \LogicException('Profile validation failed: ' . implode("\n", $validation->formatErrors()));
         }

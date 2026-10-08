@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Unit;
+namespace AlexFigures\JsonApi\Tests\Unit;
 
-use AlexFigures\Symfony\Bridge\Symfony\DependencyInjection\JsonApiExtension;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Resource\Attribute\JsonApiResource;
+use AlexFigures\JsonApi\Bridge\Symfony\DependencyInjection\JsonApiExtension;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Resource\Attribute\JsonApiResource;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -29,7 +29,6 @@ final class AttributeAutoconfigurationTest extends TestCase
         // but we can verify that the extension registered it
         $reflection = new \ReflectionClass($container);
         $property = $reflection->getProperty('autoconfiguredAttributes');
-        $property->setAccessible(true);
         $autoconfiguredAttributes = $property->getValue($container);
 
         // Check that JsonApiResource attribute is registered for autoconfiguration
@@ -51,10 +50,10 @@ final class AttributeAutoconfigurationTest extends TestCase
         self::assertTrue($container->hasAlias(ResourceProcessor::class));
         $alias = $container->getAlias(ResourceProcessor::class);
         self::assertSame(
-            \AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class,
+            \AlexFigures\JsonApi\Bridge\Symfony\Locator\ResourceProcessorLocator::class,
             (string) $alias
         );
-        self::assertSame(\AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor::class, (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->getArgument(1));
+        self::assertSame(\AlexFigures\JsonApi\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor::class, (string) $container->getDefinition(\AlexFigures\JsonApi\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->getArgument(1));
     }
 
     public function testCustomProviderAliasesResourceProcessor(): void
@@ -81,8 +80,8 @@ final class AttributeAutoconfigurationTest extends TestCase
         // Typed dispatch wraps the configured custom fallback.
         self::assertTrue($container->hasAlias(ResourceProcessor::class));
         $alias = $container->getAlias(ResourceProcessor::class);
-        self::assertSame(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class, (string) $alias);
-        self::assertSame('my_custom_processor', (string) $container->getDefinition(\AlexFigures\Symfony\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->getArgument(1));
+        self::assertSame(\AlexFigures\JsonApi\Bridge\Symfony\Locator\ResourceProcessorLocator::class, (string) $alias);
+        self::assertSame('my_custom_processor', (string) $container->getDefinition(\AlexFigures\JsonApi\Bridge\Symfony\Locator\ResourceProcessorLocator::class)->getArgument(1));
     }
 }
 

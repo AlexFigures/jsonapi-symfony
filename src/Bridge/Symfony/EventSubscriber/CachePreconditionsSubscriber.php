@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\EventSubscriber;
+namespace AlexFigures\JsonApi\Bridge\Symfony\EventSubscriber;
 
-use AlexFigures\Symfony\Http\Cache\CacheKeyBuilder;
-use AlexFigures\Symfony\Http\Cache\ConditionalRequestEvaluator;
-use AlexFigures\Symfony\Http\Cache\EtagGeneratorInterface;
-use AlexFigures\Symfony\Http\Cache\HeadersApplier;
-use AlexFigures\Symfony\Http\Cache\LastModifiedResolver;
-use AlexFigures\Symfony\Http\Cache\SurrogateKeyBuilder;
+use AlexFigures\JsonApi\Http\Cache\CacheKeyBuilder;
+use AlexFigures\JsonApi\Http\Cache\ConditionalRequestEvaluator;
+use AlexFigures\JsonApi\Http\Cache\EtagGeneratorInterface;
+use AlexFigures\JsonApi\Http\Cache\HeadersApplier;
+use AlexFigures\JsonApi\Http\Cache\LastModifiedResolver;
+use AlexFigures\JsonApi\Http\Cache\SurrogateKeyBuilder;
 use DateTimeImmutable;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,23 +22,24 @@ use Symfony\Component\HttpKernel\KernelEvents;
  *     enabled?: bool,
  *     etag?: array{weak_for_collections?: bool}
  * }
+ * @internal
  */
-final class CachePreconditionsSubscriber implements EventSubscriberInterface
+final readonly class CachePreconditionsSubscriber implements EventSubscriberInterface
 {
     /**
      * @param CachePreconditionsConfig $config
      */
     public function __construct(
         array $config,
-        private readonly CacheKeyBuilder $cacheKeyBuilder,
-        private readonly EtagGeneratorInterface $etagGenerator,
-        private readonly LastModifiedResolver $lastModified,
-        private readonly ConditionalRequestEvaluator $conditional,
-        private readonly HeadersApplier $headers,
-        private readonly SurrogateKeyBuilder $surrogates,
-        private readonly ?\AlexFigures\Symfony\Http\Controller\ResourceController $resource = null,
-        private readonly ?\AlexFigures\Symfony\Http\Controller\RelationshipGetController $relationship = null,
-        private readonly ?\AlexFigures\Symfony\Contract\Data\WriteConcurrencyGuardInterface $concurrency = null,
+        private CacheKeyBuilder $cacheKeyBuilder,
+        private EtagGeneratorInterface $etagGenerator,
+        private LastModifiedResolver $lastModified,
+        private ConditionalRequestEvaluator $conditional,
+        private HeadersApplier $headers,
+        private SurrogateKeyBuilder $surrogates,
+        private ?\AlexFigures\JsonApi\Http\Controller\ResourceController $resource = null,
+        private ?\AlexFigures\JsonApi\Http\Controller\RelationshipGetController $relationship = null,
+        private ?\AlexFigures\JsonApi\Contract\Data\WriteConcurrencyGuardInterface $concurrency = null,
     ) {
         $this->enabled = $config['enabled'] ?? true;
         /** @var array{weak_for_collections?: bool} $etagConfig */
@@ -64,7 +65,7 @@ final class CachePreconditionsSubscriber implements EventSubscriberInterface
         if ($this->shouldEvaluate($event->getRequest(), $event->getController(), $event->isMainRequest())) {
             $controller = $event->getController();
             $handler = is_array($controller) ? $controller[0] : $controller;
-            if ($handler instanceof \AlexFigures\Symfony\Http\Controller\RelationshipWriteController) {
+            if ($handler instanceof \AlexFigures\JsonApi\Http\Controller\RelationshipWriteController) {
                 $request = $event->getRequest();
                 $type = $request->attributes->get('type');
                 $id = $request->attributes->get('id');
@@ -91,12 +92,10 @@ final class CachePreconditionsSubscriber implements EventSubscriberInterface
         $id = $request->attributes->get('id');
         \assert(is_string($type) && is_string($id));
         // Arguments are already resolved; keep the original controller's parameter contract.
-        $event->setController(function (...$arguments) use ($request, $controller, $type, $id) {
-            return $this->concurrency->protect($type, $id, function () use ($request, $controller, $arguments) {
-                $this->evaluateBeforeWrite($request, $controller, true);
-                return $controller(...$arguments);
-            });
-        });
+        $event->setController(fn (...$arguments) => $this->concurrency->protect($type, $id, function () use ($request, $controller, $arguments) {
+            $this->evaluateBeforeWrite($request, $controller, true);
+            return $controller(...$arguments);
+        }));
     }
 
     /** @param callable(mixed ...):mixed $controller */
@@ -109,9 +108,9 @@ final class CachePreconditionsSubscriber implements EventSubscriberInterface
             return false;
         }
         $handler = is_array($controller) ? $controller[0] : $controller;
-        return $handler instanceof \AlexFigures\Symfony\Http\Controller\UpdateResourceController
-            || $handler instanceof \AlexFigures\Symfony\Http\Controller\DeleteResourceController
-            || $handler instanceof \AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
+        return $handler instanceof \AlexFigures\JsonApi\Http\Controller\UpdateResourceController
+            || $handler instanceof \AlexFigures\JsonApi\Http\Controller\DeleteResourceController
+            || $handler instanceof \AlexFigures\JsonApi\Http\Controller\RelationshipWriteController;
     }
 
     /** @param callable(mixed ...):mixed $controller */

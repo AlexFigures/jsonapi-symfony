@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Filter\Parser;
+namespace AlexFigures\JsonApi\Filter\Parser;
 
-use AlexFigures\Symfony\Filter\Ast\Between;
-use AlexFigures\Symfony\Filter\Ast\Comparison;
-use AlexFigures\Symfony\Filter\Ast\Conjunction;
-use AlexFigures\Symfony\Filter\Ast\Disjunction;
-use AlexFigures\Symfony\Filter\Ast\Node;
-use AlexFigures\Symfony\Filter\Ast\NullCheck;
+use AlexFigures\JsonApi\Filter\Ast\Between;
+use AlexFigures\JsonApi\Filter\Ast\Comparison;
+use AlexFigures\JsonApi\Filter\Ast\Conjunction;
+use AlexFigures\JsonApi\Filter\Ast\Disjunction;
+use AlexFigures\JsonApi\Filter\Ast\Node;
+use AlexFigures\JsonApi\Filter\Ast\NullCheck;
 
 /**
  * Heuristic filter parser responsible for turning query parameters into an AST.
@@ -17,10 +17,11 @@ use AlexFigures\Symfony\Filter\Ast\NullCheck;
  * A dedicated grammar will arrive alongside the full Stage 5 implementation.
  * Until then the parser recognises a pragmatic subset of the JSON:API filter
  * dialect so consumers can begin exercising the downstream components.
+ * @internal
  */
 final readonly class FilterParser
 {
-    public function __construct(private int $maxDepth = 8, private ?\AlexFigures\Symfony\Filter\Operator\Registry $operators = null)
+    public function __construct(private int $maxDepth = 8, private ?\AlexFigures\JsonApi\Filter\Operator\Registry $operators = null)
     {
     }
     /** Check logical depth before PHP's max_input_nesting_level can silently discard filter keys. */

@@ -2,43 +2,43 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Profile;
+namespace AlexFigures\JsonApi\Tests\Integration\Profile;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use AlexFigures\Symfony\Bridge\Doctrine\Persister\DoctrineWriteRequestMapper;
-use AlexFigures\Symfony\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
-use AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks;
-use AlexFigures\Symfony\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
-use AlexFigures\Symfony\Bridge\Doctrine\Repository\GenericDoctrineRepository;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
-use AlexFigures\Symfony\Filter\Handler\Registry\FilterHandlerRegistry;
-use AlexFigures\Symfony\Filter\Handler\Registry\SortHandlerRegistry;
-use AlexFigures\Symfony\Filter\Operator\Registry;
-use AlexFigures\Symfony\Http\Exception\ForbiddenException;
-use AlexFigures\Symfony\Http\Exception\ValidationException;
-use AlexFigures\Symfony\Http\Request\FilteringWhitelist;
-use AlexFigures\Symfony\Http\Request\PaginationConfig;
-use AlexFigures\Symfony\Http\Request\QueryParser;
-use AlexFigures\Symfony\Http\Request\SortingWhitelist;
-use AlexFigures\Symfony\Profile\Builtin\SoftDeleteProfile;
-use AlexFigures\Symfony\Profile\Hook\ReadHook;
-use AlexFigures\Symfony\Profile\Hook\RelationshipHook;
-use AlexFigures\Symfony\Profile\ProfileContext;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Resource\Definition\ReadProjection;
-use AlexFigures\Symfony\Resource\Definition\VersionDefinition;
-use AlexFigures\Symfony\Resource\Definition\VersionResolverInterface;
-use AlexFigures\Symfony\Resource\Mapper\DefaultReadMapper;
-use AlexFigures\Symfony\Resource\Mapper\DefaultWriteMapper;
-use AlexFigures\Symfony\Resource\Relationship\RelationshipResolver;
-use AlexFigures\Symfony\Tests\Integration\DoctrineIntegrationTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Dto\ArticleViewDto;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Article;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\SoftDeletableArticle;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Tag;
-use AlexFigures\Symfony\Tests\Util\FakeProfile;
+use AlexFigures\JsonApi\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\JsonApi\Bridge\Doctrine\Persister\DoctrineWriteRequestMapper;
+use AlexFigures\JsonApi\Bridge\Doctrine\Persister\ValidatingDoctrineProcessor;
+use AlexFigures\JsonApi\Bridge\Doctrine\Profile\ProfileWriteHooks;
+use AlexFigures\JsonApi\Bridge\Doctrine\Relationship\GenericDoctrineRelationshipHandler;
+use AlexFigures\JsonApi\Bridge\Doctrine\Repository\GenericDoctrineRepository;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Filter\Compiler\Doctrine\DoctrineFilterCompiler;
+use AlexFigures\JsonApi\Filter\Handler\Registry\FilterHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Handler\Registry\SortHandlerRegistry;
+use AlexFigures\JsonApi\Filter\Operator\Registry;
+use AlexFigures\JsonApi\Http\Exception\ForbiddenException;
+use AlexFigures\JsonApi\Http\Exception\ValidationException;
+use AlexFigures\JsonApi\Http\Request\FilteringWhitelist;
+use AlexFigures\JsonApi\Http\Request\PaginationConfig;
+use AlexFigures\JsonApi\Http\Request\QueryParser;
+use AlexFigures\JsonApi\Http\Request\SortingWhitelist;
+use AlexFigures\JsonApi\Profile\Builtin\SoftDeleteProfile;
+use AlexFigures\JsonApi\Profile\Hook\ReadHook;
+use AlexFigures\JsonApi\Profile\Hook\RelationshipHook;
+use AlexFigures\JsonApi\Profile\ProfileContext;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Resource\Definition\ReadProjection;
+use AlexFigures\JsonApi\Resource\Definition\VersionDefinition;
+use AlexFigures\JsonApi\Resource\Definition\VersionResolverInterface;
+use AlexFigures\JsonApi\Resource\Mapper\DefaultReadMapper;
+use AlexFigures\JsonApi\Resource\Mapper\DefaultWriteMapper;
+use AlexFigures\JsonApi\Resource\Relationship\RelationshipResolver;
+use AlexFigures\JsonApi\Tests\Integration\DoctrineIntegrationTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Dto\ArticleViewDto;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Article;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\SoftDeletableArticle;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Tag;
+use AlexFigures\JsonApi\Tests\Util\FakeProfile;
 use Doctrine\ORM\QueryBuilder;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Component\HttpFoundation\Request;
@@ -123,9 +123,9 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         $view = $repository->findOne('articles', 'root', new Criteria());
         self::assertInstanceOf(ArticleViewDto::class, $view);
         self::assertSame('Original content', $view->title);
-        $routes = (new \AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
-        $links = new \AlexFigures\Symfony\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
-        $builder = new \AlexFigures\Symfony\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links);
+        $routes = (new \AlexFigures\JsonApi\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
+        $links = new \AlexFigures\JsonApi\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
+        $builder = new \AlexFigures\JsonApi\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links);
         // An ordinary GET must honor the DTO shape without requiring sparse fields.
         $representation = new Criteria();
         $document = $builder->buildResource('articles', $view, $representation, $stack->getCurrentRequest());
@@ -143,13 +143,13 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
     public function testVersionedDtoWithComputedLinkageAcrossHttpReadControllers(): void
     {
         $article = $this->article();
-        $author = (new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author())->setId('owner')->setName('Owner')->setEmail('owner@example.test');
+        $author = (new \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author())->setId('owner')->setName('Owner')->setEmail('owner@example.test');
         $article->setAuthor($author);
         $this->em->persist($author);
         $this->em->flush();
         $metadata = $this->registry->getByType('articles');
-        $metadata->relationships['computedTags'] = new \AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata('computedTags', true, 'tags');
-        $this->registry->getByType('authors')->relationships['firstArticle'] = new \AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata('firstArticle', false, 'articles');
+        $metadata->relationships['computedTags'] = new \AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata('computedTags', true, 'tags');
+        $this->registry->getByType('authors')->relationships['firstArticle'] = new \AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata('firstArticle', false, 'articles');
         $metadata->versionResolver = new class () implements VersionResolverInterface {
             public function resolve(ProfileContext $context): VersionDefinition
             {
@@ -158,18 +158,18 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         };
         $stack = $this->stack(new FakeProfile('urn:alternate'));
         $repository = $this->contextualRepository($stack);
-        $errors = new \AlexFigures\Symfony\Http\Error\ErrorMapper(new \AlexFigures\Symfony\Http\Error\ErrorBuilder(false));
-        $parser = new QueryParser($this->registry, new PaginationConfig(), new SortingWhitelist($this->registry), new FilteringWhitelist($this->registry, $errors), $errors, new \AlexFigures\Symfony\Filter\Parser\FilterParser());
-        $routes = (new \AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
-        $links = new \AlexFigures\Symfony\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
-        $preloader = new \AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new \AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner('always'), $errors, [], $repository, $parser);
-        $builder = new \AlexFigures\Symfony\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links, 'always', preloader: $preloader);
-        $factory = new \AlexFigures\Symfony\Http\Controller\Support\JsonApiResponseFactory();
-        $policy = new \AlexFigures\Symfony\Http\Controller\Support\OperationValidator($errors);
-        $item = new \AlexFigures\Symfony\Http\Controller\ResourceController($this->registry, $policy, $factory, $repository, $parser, $builder, $errors);
-        $collection = new \AlexFigures\Symfony\Http\Controller\CollectionController($this->registry, $policy, $factory, $repository, $parser, $builder);
+        $errors = new \AlexFigures\JsonApi\Http\Error\ErrorMapper(new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(false));
+        $parser = new QueryParser($this->registry, new PaginationConfig(), new SortingWhitelist($this->registry), new FilteringWhitelist($this->registry, $errors), $errors, new \AlexFigures\JsonApi\Filter\Parser\FilterParser());
+        $routes = (new \AlexFigures\JsonApi\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
+        $links = new \AlexFigures\JsonApi\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
+        $preloader = new \AlexFigures\JsonApi\Bridge\Doctrine\Read\DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new \AlexFigures\JsonApi\Http\Document\Fetch\RepresentationFetchPlanner('always'), $errors, [], $repository, $parser);
+        $builder = new \AlexFigures\JsonApi\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links, 'always', preloader: $preloader);
+        $factory = new \AlexFigures\JsonApi\Http\Controller\Support\JsonApiResponseFactory();
+        $policy = new \AlexFigures\JsonApi\Http\Controller\Support\OperationValidator($errors);
+        $item = new \AlexFigures\JsonApi\Http\Controller\ResourceController($this->registry, $policy, $factory, $repository, $parser, $builder, $errors);
+        $collection = new \AlexFigures\JsonApi\Http\Controller\CollectionController($this->registry, $policy, $factory, $repository, $parser, $builder);
         $reader = new GenericDoctrineRelationshipHandler($this->managerRegistry, $this->registry, $this->accessor, $this->flushManager, requests: $stack, repository: $repository);
-        $related = new \AlexFigures\Symfony\Http\Controller\RelatedController($this->registry, $reader, $parser, $builder, $errors, $repository);
+        $related = new \AlexFigures\JsonApi\Http\Controller\RelatedController($this->registry, $reader, $parser, $builder, $errors, $repository);
         foreach (['show', 'index', 'related', 'related-to-one'] as $channel) {
             $this->em->clear();
             $request = $stack->getCurrentRequest();
@@ -192,11 +192,11 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         $reads = $preloader->preload('articles', [$view], new Criteria(), $stack->getCurrentRequest());
         self::assertSame($view, $reads->model('articles', 'root'), 'Persistence fallback must never replace the DTO representation.');
         self::assertInstanceOf(Article::class, $reads->source('articles', 'root'));
-        $strict = new \AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new \AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner('always'), $errors, [], $repository, $parser, unplannedReadPolicy: 'reject');
+        $strict = new \AlexFigures\JsonApi\Bridge\Doctrine\Read\DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new \AlexFigures\JsonApi\Http\Document\Fetch\RepresentationFetchPlanner('always'), $errors, [], $repository, $parser, unplannedReadPolicy: 'reject');
         try {
             $strict->preload('articles', [$view], new Criteria(), $stack->getCurrentRequest());
             self::fail('Strict policy must continue rejecting unplanned computed getters.');
-        } catch (\AlexFigures\Symfony\Http\Exception\BadRequestException $exception) {
+        } catch (\AlexFigures\JsonApi\Http\Exception\BadRequestException $exception) {
             self::assertStringContainsString('computedTags', $exception->getMessage());
         }
         $stack->pop();
@@ -206,7 +206,7 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
     public function testRenamedAuditAttributeFieldsPersistOnCreateAndUpdate(): void
     {
         $actor = 'creator@example.test';
-        $profile = new \AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile(['userProvider' => static function () use (&$actor): string {
+        $profile = new \AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile(['userProvider' => static function () use (&$actor): string {
             return $actor;
         }], $this->registry);
         $stack = $this->stack($profile);
@@ -214,7 +214,7 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         $model = $processor->processCreate('renamed-audit', new ChangeSet(['title' => 'Created']));
         $this->flushManager->flush();
         $this->em->clear();
-        $model = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\RenamedAuditRecord::class, 'audit');
+        $model = $this->em->find(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\RenamedAuditRecord::class, 'audit');
         self::assertSame('creator@example.test', $model->insertedBy);
         self::assertInstanceOf(\DateTimeImmutable::class, $model->insertedAt);
         $createdAt = $model->insertedAt;
@@ -222,7 +222,7 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         $processor->processUpdate('renamed-audit', 'audit', new ChangeSet(['title' => 'Updated']));
         $this->flushManager->flush();
         $this->em->clear();
-        $model = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\RenamedAuditRecord::class, 'audit');
+        $model = $this->em->find(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\RenamedAuditRecord::class, 'audit');
         self::assertSame('creator@example.test', $model->insertedBy);
         self::assertEquals($createdAt, $model->insertedAt);
         self::assertSame('editor@example.test', $model->changedBy);
@@ -230,7 +230,7 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         $meta = [];
         $context = ProfileContext::fromRequest($stack->getCurrentRequest());
         foreach ($context->documentHooks() as $hook) {
-            if ($hook instanceof \AlexFigures\Symfony\Profile\Hook\ResourceMetaHookInterface) {
+            if ($hook instanceof \AlexFigures\JsonApi\Profile\Hook\ResourceMetaHookInterface) {
                 $hook->onResourceMeta($context, $this->registry->getByType('renamed-audit'), $meta, $model);
             }
         }
@@ -241,19 +241,19 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
     public function testRelatedCountPolicySuppressesCountFetchAndDocumentMeta(): void
     {
         $article = $this->article();
-        $errors = new \AlexFigures\Symfony\Http\Error\ErrorMapper(new \AlexFigures\Symfony\Http\Error\ErrorBuilder(false));
+        $errors = new \AlexFigures\JsonApi\Http\Error\ErrorMapper(new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(false));
         foreach ([true, false] as $enabled) {
-            $profile = new \AlexFigures\Symfony\Profile\Builtin\RelationshipCountsProfile(['relationship_meta_key' => 'cardinality', 'compute_in_related_endpoints' => $enabled]);
+            $profile = new \AlexFigures\JsonApi\Profile\Builtin\RelationshipCountsProfile(['relationship_meta_key' => 'cardinality', 'compute_in_related_endpoints' => $enabled]);
             $stack = $this->stack($profile);
             $request = $stack->getCurrentRequest();
             $request->attributes->set('_jsonapi_related_endpoint', true);
             $repository = $this->contextualRepository($stack);
-            $preloader = new \AlexFigures\Symfony\Bridge\Doctrine\Read\DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new \AlexFigures\Symfony\Http\Document\Fetch\RepresentationFetchPlanner('never'), $errors, [], $repository);
+            $preloader = new \AlexFigures\JsonApi\Bridge\Doctrine\Read\DoctrineRepresentationPreloader($this->managerRegistry, $this->registry, $this->accessor, new DefaultReadMapper(), new \AlexFigures\JsonApi\Http\Document\Fetch\RepresentationFetchPlanner('never'), $errors, [], $repository);
             $reads = $preloader->preload('articles', [$article], new Criteria(), $request);
             self::assertSame($enabled ? 1 : null, $reads->count('articles', 'root', 'tags'));
-            $routes = (new \AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
-            $links = new \AlexFigures\Symfony\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
-            $builder = new \AlexFigures\Symfony\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links, 'never', preloader: $preloader);
+            $routes = (new \AlexFigures\JsonApi\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
+            $links = new \AlexFigures\JsonApi\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
+            $builder = new \AlexFigures\JsonApi\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links, 'never', preloader: $preloader);
             $document = $builder->buildResource('articles', $article, new Criteria(), $request);
             self::assertSame($enabled ? ['cardinality' => 1] : [], $document['data']['relationships']['tags']['meta'] ?? []);
         }
@@ -261,9 +261,9 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
 
     public function testPerTypeAuditHooksWithoutNegotiationPersistAndExposeResourceMeta(): void
     {
-        $profile = new \AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile(['userProvider' => static fn (): string => 'editor@example.test']);
+        $profile = new \AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile(['userProvider' => static fn (): string => 'editor@example.test']);
         $profile->configure(['created_by' => 'createdBy', 'updated_by' => 'updatedBy', 'expose_in_meta' => true]);
-        $negotiator = new \AlexFigures\Symfony\Profile\Negotiation\ProfileNegotiator(new \AlexFigures\Symfony\Profile\ProfileRegistry([$profile]), perType: ['auditable-products' => [$profile->uri()]]);
+        $negotiator = new \AlexFigures\JsonApi\Profile\Negotiation\ProfileNegotiator(new \AlexFigures\JsonApi\Profile\ProfileRegistry([$profile]), perType: ['auditable-products' => [$profile->uri()]]);
         $request = Request::create('/api/auditable-products', 'POST');
         $request->attributes->set('type', 'auditable-products');
         ProfileContext::store($request, $negotiator->negotiate($request));
@@ -275,17 +275,17 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         $id = $product->getId();
         $this->flushManager->flush();
         $this->em->clear();
-        $product = $this->em->find(\AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\AuditableProduct::class, $id);
+        $product = $this->em->find(\AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\AuditableProduct::class, $id);
         self::assertSame('editor@example.test', $product->getCreatedBy());
-        $routes = (new \AlexFigures\Symfony\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
-        $links = new \AlexFigures\Symfony\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
-        $builder = new \AlexFigures\Symfony\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links);
+        $routes = (new \AlexFigures\JsonApi\Bridge\Symfony\Routing\JsonApiRouteLoader($this->registry))->load('.', 'jsonapi');
+        $links = new \AlexFigures\JsonApi\Http\Link\LinkGenerator(new \Symfony\Component\Routing\Generator\UrlGenerator($routes, new \Symfony\Component\Routing\RequestContext()));
+        $builder = new \AlexFigures\JsonApi\Http\Document\DocumentBuilder($this->registry, $this->accessor, $links);
         $document = $builder->buildResource('auditable-products', $product, new Criteria(), $request);
         self::assertSame('editor@example.test', $document['data']['meta']['audit']['createdBy']);
         self::assertSame($product->getCreatedAt()->format(\DateTimeInterface::ATOM), $document['data']['meta']['audit']['createdAt']);
         $profile->configure(['expose_in_meta' => false]);
         // Explicit service config takes precedence; a separate disabled profile verifies suppression.
-        $disabled = new \AlexFigures\Symfony\Profile\Builtin\AuditTrailProfile(['expose_in_meta' => false]);
+        $disabled = new \AlexFigures\JsonApi\Profile\Builtin\AuditTrailProfile(['expose_in_meta' => false]);
         ProfileContext::store($request, new ProfileContext([], ['auditable-products' => [$disabled]]));
         self::assertArrayNotHasKey('meta', $builder->buildResource('auditable-products', $product, new Criteria(), $request)['data']);
     }
@@ -297,7 +297,7 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
             $this->em->persist($article);
         }
         $this->em->flush();
-        $handler = new class () implements \AlexFigures\Symfony\Filter\Handler\FilterHandlerInterface {
+        $handler = new class () implements \AlexFigures\JsonApi\Filter\Handler\FilterHandlerInterface {
             public function supports(string $field, string $operator): bool
             {
                 return $field === 'search';
@@ -316,19 +316,19 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
             }
         };
         $handlers = new FilterHandlerRegistry([$handler]);
-        $repository = new GenericDoctrineRepository($this->managerRegistry, $this->registry, new DoctrineFilterCompiler(new Registry([new \AlexFigures\Symfony\Filter\Operator\EqualOperator()]), $handlers), $handlers, new SortHandlerRegistry(), new DefaultReadMapper());
+        $repository = new GenericDoctrineRepository($this->managerRegistry, $this->registry, new DoctrineFilterCompiler(new Registry([new \AlexFigures\JsonApi\Filter\Operator\EqualOperator()]), $handlers), $handlers, new SortHandlerRegistry(), new DefaultReadMapper());
         $criteria = new Criteria();
-        $criteria->filter = new \AlexFigures\Symfony\Filter\Ast\Group(new \AlexFigures\Symfony\Filter\Ast\Disjunction([new \AlexFigures\Symfony\Filter\Ast\Comparison('search', 'eq', ['alpha']), new \AlexFigures\Symfony\Filter\Ast\Comparison('id', 'eq', ['beta'])]));
+        $criteria->filter = new \AlexFigures\JsonApi\Filter\Ast\Group(new \AlexFigures\JsonApi\Filter\Ast\Disjunction([new \AlexFigures\JsonApi\Filter\Ast\Comparison('search', 'eq', ['alpha']), new \AlexFigures\JsonApi\Filter\Ast\Comparison('id', 'eq', ['beta'])]));
         self::assertSame(['alpha', 'beta'], array_map(static fn (Article $article): string => $article->getId(), $repository->findCollection('articles', $criteria)->items));
-        $criteria->filter = new \AlexFigures\Symfony\Filter\Ast\Conjunction([new \AlexFigures\Symfony\Filter\Ast\Disjunction([new \AlexFigures\Symfony\Filter\Ast\Comparison('search', 'eq', ['alpha']), new \AlexFigures\Symfony\Filter\Ast\Comparison('search', 'eq', ['beta'])]), new \AlexFigures\Symfony\Filter\Ast\Comparison('id', 'eq', ['beta'])]);
+        $criteria->filter = new \AlexFigures\JsonApi\Filter\Ast\Conjunction([new \AlexFigures\JsonApi\Filter\Ast\Disjunction([new \AlexFigures\JsonApi\Filter\Ast\Comparison('search', 'eq', ['alpha']), new \AlexFigures\JsonApi\Filter\Ast\Comparison('search', 'eq', ['beta'])]), new \AlexFigures\JsonApi\Filter\Ast\Comparison('id', 'eq', ['beta'])]);
         self::assertSame(['beta'], array_map(static fn (Article $article): string => $article->getId(), $repository->findCollection('articles', $criteria)->items));
         self::assertNotNull($repository->findOne('articles', 'beta', $criteria));
         self::assertNull($repository->findOne('articles', 'gamma', $criteria));
-        $author = (new \AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\Author())->setId('author')->setName('Alice')->setEmail('alice@example.test');
+        $author = (new \AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\Author())->setId('author')->setName('Alice')->setEmail('alice@example.test');
         $this->em->persist($author);
         $this->em->find(Article::class, 'alpha')->setAuthor($author);
         $this->em->flush();
-        $criteria->filter = new \AlexFigures\Symfony\Filter\Ast\Disjunction([new \AlexFigures\Symfony\Filter\Ast\Comparison('search', 'joined', ['Alice']), new \AlexFigures\Symfony\Filter\Ast\Comparison('id', 'eq', ['beta'])]);
+        $criteria->filter = new \AlexFigures\JsonApi\Filter\Ast\Disjunction([new \AlexFigures\JsonApi\Filter\Ast\Comparison('search', 'joined', ['Alice']), new \AlexFigures\JsonApi\Filter\Ast\Comparison('id', 'eq', ['beta'])]);
         self::assertSame(['alpha', 'beta'], array_map(static fn (Article $article): string => $article->getId(), $repository->findCollection('articles', $criteria)->items), 'The inner join in the search branch must not discard beta, which has no author.');
     }
 
@@ -438,8 +438,8 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         $this->em->flush();
         $profile = new SoftDeleteProfile(['default_visibility' => $visibility]);
         $request = $this->stack($profile)->getCurrentRequest();
-        $errors = new \AlexFigures\Symfony\Http\Error\ErrorMapper(new \AlexFigures\Symfony\Http\Error\ErrorBuilder(false));
-        $parser = new QueryParser($this->registry, new PaginationConfig(), new SortingWhitelist($this->registry), new FilteringWhitelist($this->registry, $errors), $errors, new \AlexFigures\Symfony\Filter\Parser\FilterParser());
+        $errors = new \AlexFigures\JsonApi\Http\Error\ErrorMapper(new \AlexFigures\JsonApi\Http\Error\ErrorBuilder(false));
+        $parser = new QueryParser($this->registry, new PaginationConfig(), new SortingWhitelist($this->registry), new FilteringWhitelist($this->registry, $errors), $errors, new \AlexFigures\JsonApi\Filter\Parser\FilterParser());
         $criteria = $parser->parse('soft-deletable-articles', $request);
         self::assertCount($count, $this->repository->findCollection('soft-deletable-articles', $criteria)->items);
     }
@@ -464,7 +464,7 @@ final class RcProfileContractTest extends DoctrineIntegrationTestCase
         $stack = $this->stack($profile);
         $criteria = new Criteria();
         foreach ($profile->hooks() as $hook) {
-            if ($hook instanceof \AlexFigures\Symfony\Profile\Hook\QueryHook) {
+            if ($hook instanceof \AlexFigures\JsonApi\Profile\Hook\QueryHook) {
                 $hook->onParseQuery(ProfileContext::fromRequest($stack->getCurrentRequest()), $stack->getCurrentRequest(), $criteria);
             }
         }

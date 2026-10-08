@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Regression;
+namespace AlexFigures\JsonApi\Tests\Functional\Regression;
 
-use AlexFigures\Symfony\Http\Authorization\RelationshipAuthorizerInterface;
-use AlexFigures\Symfony\Http\Authorization\RelationshipOperation;
+use AlexFigures\JsonApi\Http\Authorization\RelationshipAuthorizerInterface;
+use AlexFigures\JsonApi\Http\Authorization\RelationshipOperation;
 use Symfony\Component\HttpFoundation\Request;
 
 final class RcRelationshipAuthorizer implements RelationshipAuthorizerInterface

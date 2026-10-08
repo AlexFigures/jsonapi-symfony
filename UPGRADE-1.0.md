@@ -1,6 +1,6 @@
-# Upgrade toward 1.0 — draft
+# Upgrade to 1.0
 
-This document describes implemented changes on `fix/acceptance-gaps`. It is not a frozen 1.0 migration guide yet. Independent consumer verification, the final PUBLIC/INTERNAL audit and the compatibility matrix remain release gates. No namespace moves or final public API freeze are announced by this pass.
+This guide records implemented pre-1.0 changes and the reviewed public candidate. No stable release is announced. The independent proof applies to its recorded SHA; final stabilization and RC revisions require fresh platform-specific verification. The namespace migration is recorded below.
 
 ## Atomic transaction boundaries
 
@@ -62,7 +62,7 @@ This document describes implemented changes on `fix/acceptance-gaps`. It is not 
 
 **Migration:** use sparse fields and `relationships.linkage_in_resource: when_included` for large graphs; keep `always` only when complete visible linkage is intended and affordable. Identifier linkage no longer initializes PersistentCollection objects; code that requires initialized collections must load them explicitly. Built-in relationship-count profiles use grouped queries. Custom hooks may declare count requirements through `FetchPlanHookInterface`; opaque custom code retains its own cost responsibility. Stock already-flushed write responses use fresh relationship ordering but do not gain a new read-budget rejection after commit.
 
-Dedicated relationship endpoints still have a legacy collection-reading path and remain a separate release blocker. Computed relationships and nested application getters are not automatically made bounded by the optional preloader. See [read-path scope and follow-up](docs/architecture/read-path-stabilization.md).
+Native relationship endpoints now use scoped SQL membership/pagination instead of initializing complete collections. Custom computed endpoints and arbitrary application getters remain application-owned: supply bounded endpoint/batch readers. See [relationships](docs/guide/relationships.md).
 
 ## Included identity and linkage corrections
 
@@ -82,11 +82,21 @@ Dedicated relationship endpoints still have a legacy collection-reading path and
 
 **Why:** a root with several related values needs an explicit sort definition.
 
-**Migration:** enable `reject` and register handlers defining MIN/MAX or a domain aggregate. The bundle regression suite demonstrates a correlated MIN handler. A future default change before the 1.0 freeze must be announced and independently verified; it has not happened in this pass.
+**Migration:** enable `reject` and register handlers defining MIN/MAX or a domain aggregate. The bundle regression suite demonstrates a correlated MIN handler. The 1.0 candidate retains this default; strict production ordering requires explicit policy and aggregate handlers.
 
-## Pending final migration audit
+## Reviewed migration scope
 
-Before final 1.0, append every approved namespace/interface/service-alias move, constructor/named attribute argument change, configuration default change and removed/deprecated behavior. Review public exceptions/events/hooks/value objects and error code/title/source semantics. Declare only the platform matrix actually exercised in CI. Freeze and RC follow independent consumer confirmation; this draft does not substitute for it.
+The reviewed candidate retains attribute constructor names/defaults and moves its public namespace as recorded below. Active configuration, public types and error semantics are documented below and in the API manifest. Final platform support and release still require exact-revision CI plus independent consumer verification.
+
+## Readonly final types
+
+**Before:** several final attributes, value objects and services used individually readonly properties, or private properties assigned only during construction.
+
+**After:** these types use PHP 8.2 readonly classes/properties. Constructor argument names, defaults and declared methods remain unchanged.
+
+**Why:** express the existing immutable state explicitly while retaining the PHP 8.2 minimum.
+
+**Migration:** do not attach dynamic properties or modify constructor-owned state through reflection. Store application state in your own objects and use the documented extension interfaces. Mutable entities and metadata retain their supported mutation behavior.
 
 ## Graph scopes and extension read plans
 
@@ -96,7 +106,7 @@ Before final 1.0, append every approved namespace/interface/service-alias move, 
 
 **Why:** Scopes must survive every transport path, and read costs require an explicit provider plan.
 
-**Migration:** Review repository decorators for optional `Criteria::identifiersOnly` results, implement bounded/scoped computed readers, declare hook reads, then opt into `relationships.unplanned_read_policy: reject`. Keep `legacy` only where application-specific getters have an understood cost. Computed endpoints need a custom `TypedRelationshipReader`. Do not rely on a self link for resources that expose no SHOW route. See [graph read contract](docs/architecture/relationship-graph-reads.md).
+**Migration:** Review repository decorators for optional `Criteria::identifiersOnly` results, implement bounded/scoped computed readers, declare hook reads, then opt into `relationships.unplanned_read_policy: reject`. Keep `legacy` only where application-specific getters have an understood cost. Computed endpoints need a custom `TypedRelationshipReader`. Do not rely on a self link for resources that expose no SHOW route. See [graph read contract](docs/guide/relationship-loading.md).
 
 ## Extension execution and effective configuration
 
@@ -106,7 +116,7 @@ Before final 1.0, append every approved namespace/interface/service-alias move, 
 
 **Why:** Public extension points and configuration must have executable effects before they can be frozen for 1.0.
 
-**Migration:** Review input DTO defaults and write mappers, because these now execute; invalid input can return 422 before entity mutation. Audit hook restrictions that previously did not run. If physical removal is required while the soft-delete profile is active, explicitly set `profiles.soft_delete.delete_semantics: hard`; the configured default `soft` is now enforced. Remove non-JSON:API query parameters from ordinary CRUD requests; custom handlers retain them. Keep explicit linkage pages within `relationship_max_identifiers`. Validate profiles through `jsonapi:validate-profiles`. Negotiation now follows router/controller discovery, so routing errors can precede 406/415 errors. See [RC extension/configuration regression report](docs/architecture/rc-extension-gaps.md) for exact boundaries and independent verification status.
+**Migration:** Review input DTO defaults and write mappers, because these now execute; invalid input can return 422 before entity mutation. Audit hook restrictions that previously did not run. If physical removal is required while the soft-delete profile is active, explicitly set `profiles.soft_delete.delete_semantics: hard`; the configured default `soft` is now enforced. Remove non-JSON:API query parameters from ordinary CRUD requests; custom handlers retain them. Keep explicit linkage pages within `relationship_max_identifiers`. Validate profiles through `jsonapi:validate-profiles`. Negotiation now follows router/controller discovery, so routing errors can precede 406/415 errors. See [profile and caching guide](docs/guide/advanced-features.md) for exact boundaries and independent verification status.
 
 ## Final RC consumer gaps
 
@@ -118,7 +128,7 @@ Before final 1.0, append every approved namespace/interface/service-alias move, 
 
 **Migration:** use actual kebab-case resource names in `profiles.per_type`, `cache.last_modified.per_type` and `write.client_generated_ids`. Keep legacy typed persisters tagged `jsonapi.persister`, or enable interface autoconfiguration; unhandled types use the configured/default processor. A non-ORM persister owns single-write persistence and hooks; configure a suitable transaction manager for custom Atomic. Existing TransactionManager signatures are unchanged; ResourceWriteTransactionManagerInterface is an optional capability. Filter handlers must supply a WHERE predicate, with optional joins; use repository/query hooks for pagination, sorting or projections. Applications using version validators must supply `X-Resource-Version` for the current representation. Existing Doctrine subclasses overriding `findCollection` retain their scoped fallback automatically. To opt into native query projection, explicitly override `collectionQuery` with the same visibility rules; returning null also requests the fallback.
 
-The native representation preloader now embeds the collection scope predicate in its bounded relationship queries instead of executing separate visible-ID count/page queries. It keeps independent include/linkage budgets and distinct-root pagination. See [the final eight-gap report](docs/architecture/rc-final-eight-gaps.md) for tests, SQL budgets and provider limitations. External consumer confirmation remains a separate release gate.
+The native representation preloader now embeds the collection scope predicate in its bounded relationship queries instead of executing separate visible-ID count/page queries. It keeps independent include/linkage budgets and distinct-root pagination. See [relationship loading guide](docs/guide/relationship-loading.md) for tests, SQL budgets and provider limitations. Independent consumer proof is recorded for the tested baseline SHA; subsequent stabilization/RC revisions need a separate rerun.
 
 ## Resource prefixes and DTO relationship sources
 
@@ -128,7 +138,7 @@ The native representation preloader now embeds the collection scope predicate in
 
 **Why:** route declarations must match published URLs and choosing a representation must not require entity-only getters on that DTO.
 
-**Migration:** use the declared resource URL and update clients relying on the accidental global URL. Use explicit computed batch readers for predictable production costs. Repository decorators should preserve their full scope when opting into Doctrine query planning; an opaque wrapper retains scoped fallback and its extra SQL cost. See the [follow-up report](docs/architecture/rc-route-version-decorator-gaps.md).
+**Migration:** use the declared resource URL and update clients relying on the accidental global URL. Use explicit computed batch readers for predictable production costs. Repository decorators should preserve their full scope when opting into Doctrine query planning; an opaque wrapper retains scoped fallback and its extra SQL cost. See the [extension examples](docs/api/extension-examples.md).
 
 ## Metadata, media and profile contracts
 
@@ -159,3 +169,57 @@ The native representation preloader now embeds the collection scope predicate in
 **Why:** application access policies and optional JSON:API error members need explicit, tested extension points.
 
 **Migration:** no authorizer preserves current endpoint behavior. Register the interface alias to enable application policy; keep it side-effect free because writes with preconditions may evaluate it twice. This endpoint policy does not replace Atomic, resource-body or graph-wide scope checks. Use named `typeLink` or `withTypeLink()` for `errors[].links.type`; existing about links and top-level `withLinks()` retain their meanings.
+
+
+## Stabilized platform and development tooling
+
+**Before:** Symfony `^7.1`, a Composer PHP 8.4.12/ext-sodium platform override, root BC/mutation dependencies and `dev-main: 0.1-dev`.
+
+**After:** runtime PHP `^8.2`, Symfony components `^7.4 || ^8.0`, no simulated platform and `dev-main: 1.x-dev`. Symfony 8.x requires PHP 8.4.1+ through dependencies. BC and mutation tools install independently in `tools/`; PHPUnit development minimum is 11.5.50 for the deprecation-gate configuration.
+
+**Why:** real PHP 8.2 resolution and one 1.x implementation need isolated newer tools and explicit platform evidence.
+
+**Migration:** upgrade Symfony to a targeted verified line, regenerate the application lock on its real PHP runtime, and use `make bc-check` / `make mutation` rather than root vendor tool paths. Use Serializer and Routing `Attribute` namespaces; removed Symfony 8 `Annotation` aliases are not portable. Applications using Symfony 8 / current ORM must configure native lazy objects (normally through current DoctrineBundle); bundle test fixtures do so without managing application EntityManagers. Check [compatibility](docs/release/compatibility.md).
+
+## Remove inert release configuration
+
+**Before:** `jsonapi.release.semver`, `bc_policy`, `min_php` and `min_symfony` were accepted but did not freeze behavior.
+
+**After:** the entire inert `jsonapi.release` section is removed; unknown configuration now fails validation.
+
+**Why:** fake functionality is not part of the 1.0 configuration contract.
+
+**Migration:** remove `release:` from application configuration. Freeze is enforced by the API inventory, regression/BC tests and release process, not runtime switches.
+
+## Public candidate and error semantics
+
+**Before:** many types were unclassified; extension DTOs could carry internal annotations.
+
+**After:** the reviewed manifest and source annotations distinguish PUBLIC/INTERNAL. Typed relationship reader/updater, batch/preloader DTOs and safe collection-query provider capability are supported. Bundle and public DTOs move to the new root described below. Helper declarations were split into matching PSR-4 files; the namespace migration is recorded below.
+
+**Why:** consumers need deliberate extension seams and operational compatibility tooling before SemVer freeze.
+
+**Migration:** implement/decorate documented PUBLIC contracts and optional capabilities; stop relying on INTERNAL controllers, compiler passes and helpers. Obtain factories from DI. HTTP status, error status/code/title meaning/source are stable; detail wording is descriptive. See [public API](docs/api/public-api.md), [BC policy](docs/api/bc-policy.md) and [errors](docs/api/errors.md).
+
+Symfony 8.1/8.2 compatibility lanes use DBAL `^4.3` because current HttpFoundation conflicts with DBAL below 4.3. Symfony 7.4 retains the DBAL 3.8+ lane. Update application locks accordingly; this is verified through separate DBAL lanes rather than a mixed Symfony-component resolution. The root Bundle now follows Flex’s naming convention; check generated activation or register it explicitly without Flex.
+
+
+## Namespace migration
+
+**Before:** bundle classes used `AlexFigures\Symfony`; activation used `AlexFigures\Symfony\Bridge\Symfony\Bundle\JsonApiBundle`.
+
+**After:** the public root is `AlexFigures\JsonApi`; the Bundle is `AlexFigures\JsonApi\JsonApiBundle` in the package source root. No legacy class aliases are retained.
+
+**Why:** the public API describes JSON:API rather than Symfony implementation machinery. The root Bundle also follows Symfony Flex’s automatic naming convention. This is the final pre-1.0 namespace cleanup.
+
+**Migration:** replace PHP imports, FQCNs, service IDs/aliases/decorators, serializer metadata class names and string configuration values beginning with `AlexFigures\Symfony` by `AlexFigures\JsonApi`. Replace the old activation entry with `AlexFigures\JsonApi\JsonApiBundle`. Package name and `jsonapi.*` tags/config keys stay unchanged. Regenerate Composer autoload, clear Symfony cache and rebuild the application container. There is no dual-namespace compatibility promise.
+
+## Deprecated implementation cleanup
+
+**Before:** the internal `ChangeSetFactory::fromAttributes()` alias emitted a deprecation; compiler profile warnings were emitted as PHP deprecations; legacy media configuration warned twice. Doctrine pagination always used the paginator deprecated in current ORM 3.x.
+
+**After:** the obsolete internal factory alias is removed. Compiler profile warnings are retained in Symfony's compiler log. The working `media_type` alias emits one canonical configuration deprecation. Current Doctrine uses `OffsetPaginator` with output walkers; older supported ORM releases retain a guarded fallback.
+
+**Why:** outdated implementation paths and misleading deprecations should not ship into the stable line.
+
+**Migration:** any direct use of the internal factory should use `fromInput($type, $attributes)` instead. `ResourcePersister` and `TypedResourcePersister` remain supported public contracts; their old deprecation description was incorrect. Prefer canonical `media_types` configuration. Resource pagination semantics and supported dependency floors remain unchanged.

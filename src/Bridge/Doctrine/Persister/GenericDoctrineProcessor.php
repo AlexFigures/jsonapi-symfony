@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Persister;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Persister;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
-use AlexFigures\Symfony\Contract\Data\ChangeSet;
-use AlexFigures\Symfony\Contract\Data\ResourceProcessor;
-use AlexFigures\Symfony\Http\Exception\ConflictException;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Bridge\Doctrine\Instantiator\SerializerEntityInstantiator;
+use AlexFigures\JsonApi\Contract\Data\ChangeSet;
+use AlexFigures\JsonApi\Contract\Data\ResourceProcessor;
+use AlexFigures\JsonApi\Http\Exception\ConflictException;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use RuntimeException;
@@ -26,16 +26,18 @@ use Symfony\Component\Uid\Uuid;
  * through SerializerEntityInstantiator (uses Symfony Serializer, like API Platform).
  *
  * This processor does NOT call flush() - flushing is handled by WriteListener.
+ * @api
  */
 class GenericDoctrineProcessor implements ResourceProcessor
 {
+    /** @internal Container wiring; applications use the public service/contract. */
     public function __construct(
         private readonly ManagerRegistry $managerRegistry,
         private readonly ResourceRegistryInterface $registry,
         private readonly PropertyAccessorInterface $accessor,
         private readonly SerializerEntityInstantiator $instantiator,
         private readonly FlushManager $flushManager,
-        private readonly ?\AlexFigures\Symfony\Bridge\Doctrine\Profile\ProfileWriteHooks $profileHooks = null,
+        private readonly ?\AlexFigures\JsonApi\Bridge\Doctrine\Profile\ProfileWriteHooks $profileHooks = null,
     ) {
     }
 
@@ -46,7 +48,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
         $em = $this->getEntityManagerFor($entityClass);
 
         // Check for ID conflict
-        if ($clientId !== null && $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $clientId))) {
+        if ($clientId !== null && $em->find($entityClass, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $clientId))) {
             throw new ConflictException(
                 sprintf('Resource "%s" with id "%s" already exists.', $type, $clientId)
             );
@@ -62,7 +64,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
 
         // Set ID if needed
         if ($clientId !== null) {
-            $this->accessor->setValue($entity, $idPath, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $clientId));
+            $this->accessor->setValue($entity, $idPath, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $clientId));
         } elseif ($classMetadata->isIdentifierNatural()) {
             // Check if ID is already set (e.g., in constructor)
             try {
@@ -77,7 +79,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
         }
 
         // Apply remaining attributes considering serialization groups
-        $this->applyAttributes($entity, $metadata, $remainingChanges, true);
+        $this->applyAttributes($entity, $remainingChanges);
 
         $this->profileHooks?->apply($entity, $metadata, true, $changes);
         // Persist entity and schedule flush
@@ -92,7 +94,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->getDataClass();
         $em = $this->getEntityManagerFor($entityClass);
-        $entity = $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
+        $entity = $em->find($entityClass, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -101,7 +103,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
         }
 
         // Apply attributes considering serialization groups
-        $this->applyAttributes($entity, $metadata, $changes, false);
+        $this->applyAttributes($entity, $changes);
 
         $this->profileHooks?->apply($entity, $metadata, false, $changes);
         // Entity is already managed, schedule flush
@@ -115,7 +117,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
         $metadata = $this->registry->getByType($type);
         $entityClass = $metadata->getDataClass();
         $em = $this->getEntityManagerFor($entityClass);
-        $entity = $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
+        $entity = $em->find($entityClass, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -133,9 +135,7 @@ class GenericDoctrineProcessor implements ResourceProcessor
 
     private function applyAttributes(
         object $entity,
-        \AlexFigures\Symfony\Resource\Metadata\ResourceMetadata $metadata,
-        ChangeSet $changes,
-        bool $isCreate
+        ChangeSet $changes
     ): void {
         foreach ($changes->attributes as $path => $value) {
             // Note: Attribute writability is now controlled by Symfony Serializer's groups

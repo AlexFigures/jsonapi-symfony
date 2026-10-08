@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Doctrine\Relationship;
+namespace AlexFigures\JsonApi\Bridge\Doctrine\Relationship;
 
-use AlexFigures\Symfony\Bridge\Doctrine\Flush\FlushManager;
-use AlexFigures\Symfony\Contract\Data\RelationshipReader;
-use AlexFigures\Symfony\Contract\Data\RelationshipUpdater;
-use AlexFigures\Symfony\Contract\Data\ResourceIdentifier;
-use AlexFigures\Symfony\Contract\Data\Slice;
-use AlexFigures\Symfony\Contract\Data\SliceIds;
-use AlexFigures\Symfony\Http\Exception\NotFoundException;
-use AlexFigures\Symfony\Query\Criteria;
-use AlexFigures\Symfony\Query\Pagination;
-use AlexFigures\Symfony\Resource\Metadata\RelationshipMetadata;
-use AlexFigures\Symfony\Resource\Metadata\ResourceMetadata;
-use AlexFigures\Symfony\Resource\Registry\ResourceRegistryInterface;
+use AlexFigures\JsonApi\Bridge\Doctrine\Flush\FlushManager;
+use AlexFigures\JsonApi\Contract\Data\RelationshipReader;
+use AlexFigures\JsonApi\Contract\Data\RelationshipUpdater;
+use AlexFigures\JsonApi\Contract\Data\ResourceIdentifier;
+use AlexFigures\JsonApi\Contract\Data\Slice;
+use AlexFigures\JsonApi\Contract\Data\SliceIds;
+use AlexFigures\JsonApi\Http\Exception\NotFoundException;
+use AlexFigures\JsonApi\Query\Criteria;
+use AlexFigures\JsonApi\Query\Pagination;
+use AlexFigures\JsonApi\Resource\Metadata\RelationshipMetadata;
+use AlexFigures\JsonApi\Resource\Metadata\ResourceMetadata;
+use AlexFigures\JsonApi\Resource\Registry\ResourceRegistryInterface;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
@@ -36,18 +36,19 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
  * - ManyToOne
  * - OneToMany
  * - ManyToMany
+ * @internal
  */
-final class GenericDoctrineRelationshipHandler implements RelationshipReader, RelationshipUpdater
+final readonly class GenericDoctrineRelationshipHandler implements RelationshipReader, RelationshipUpdater
 {
     public function __construct(
-        private readonly ManagerRegistry $managerRegistry,
-        private readonly ResourceRegistryInterface $registry,
-        private readonly PropertyAccessorInterface $accessor,
-        private readonly FlushManager $flushManager,
-        private readonly ?\AlexFigures\Symfony\Contract\Data\ResourceRepository $repository = null,
-        private readonly ?\AlexFigures\Symfony\Http\Request\QueryParser $queryParser = null,
-        private readonly ?\Symfony\Component\HttpFoundation\RequestStack $requests = null,
-        private readonly string $unplannedReadPolicy = 'legacy',
+        private ManagerRegistry $managerRegistry,
+        private ResourceRegistryInterface $registry,
+        private PropertyAccessorInterface $accessor,
+        private FlushManager $flushManager,
+        private ?\AlexFigures\JsonApi\Contract\Data\ResourceRepository $repository = null,
+        private ?\AlexFigures\JsonApi\Http\Request\QueryParser $queryParser = null,
+        private ?\Symfony\Component\HttpFoundation\RequestStack $requests = null,
+        private string $unplannedReadPolicy = 'legacy',
     ) {
     }
 
@@ -75,7 +76,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             }
         }
         if ($this->unplannedReadPolicy === 'reject') {
-            throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
+            throw new \AlexFigures\JsonApi\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
         }
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
 
@@ -123,7 +124,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             }
         }
         if ($this->unplannedReadPolicy === 'reject') {
-            throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
+            throw new \AlexFigures\JsonApi\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
         }
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
         $pagination ??= new Pagination(1, 10);
@@ -188,7 +189,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             }
         }
         if ($this->unplannedReadPolicy === 'reject') {
-            throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
+            throw new \AlexFigures\JsonApi\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
         }
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
 
@@ -232,7 +233,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
             }
         }
         if ($this->unplannedReadPolicy === 'reject') {
-            throw new \AlexFigures\Symfony\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
+            throw new \AlexFigures\JsonApi\Http\Exception\BadRequestException('Unplanned relationship read is disabled. Register a bounded relationship reader.');
         }
         $propertyPath = $this->resolveRelationshipProperty($metadata, $relationship);
         $criteria ??= new Criteria();
@@ -254,7 +255,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         if ($this->repository !== null) {
             $targetType = $metadata->relationships[$relationship]->targetType;
             if ($targetType !== null) {
-                $ids = array_map(fn (object $item): string => $this->extractId($item), $objects);
+                $ids = array_map($this->extractId(...), $objects);
                 $targetMetadata = $this->registry->getByType($targetType);
                 $targetEm = $this->getEntityManagerFor($targetMetadata->dataClass);
                 $identifier = $targetEm->getClassMetadata($targetMetadata->dataClass)->getSingleIdentifierFieldName();
@@ -265,7 +266,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
                         return;
                     }
                     $qb->andWhere($qb->getRootAliases()[0] . '.' . $identifier . ' IN (:relationshipIds)');
-                    \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierParameters::bind($qb, $targetEm, $targetMetadata->dataClass, 'relationshipIds', $ids);
+                    \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierParameters::bind($qb, $targetEm, $targetMetadata->dataClass, 'relationshipIds', $ids);
                 };
                 return $this->repository->findCollection($targetType, $selected);
             }
@@ -296,7 +297,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         if ($normalizedTargetId === null) {
             $em = $this->getEntityManagerFor($resource::class);
             if (!RelationshipNullability::allowsNull($em, $resource, $propertyPath, $relationshipMetadata->nullable)) {
-                throw new \AlexFigures\Symfony\Http\Exception\ValidationException([new \AlexFigures\Symfony\Http\Error\ErrorObject(null, null, '422', 'validation-error', 'Validation Error', 'Relationship cannot be null.', new \AlexFigures\Symfony\Http\Error\ErrorSource(pointer: '/data'))]);
+                throw new \AlexFigures\JsonApi\Http\Exception\ValidationException([new \AlexFigures\JsonApi\Http\Error\ErrorObject(null, null, '422', 'validation-error', 'Validation Error', 'Relationship cannot be null.', new \AlexFigures\JsonApi\Http\Error\ErrorSource(pointer: '/data'))]);
             }
             $this->accessor->setValue($resource, $propertyPath, null);
         } else {
@@ -400,7 +401,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
     private function beforeRelationshipMutation(object $resource, ResourceMetadata $metadata, RelationshipMetadata $relationship, string $method, array $ids): void
     {
         $request = $this->requests?->getCurrentRequest();
-        $context = $request === null ? null : \AlexFigures\Symfony\Profile\ProfileContext::fromRequest($request)?->forType($metadata->type);
+        $context = $request === null ? null : \AlexFigures\JsonApi\Profile\ProfileContext::fromRequest($request)?->forType($metadata->type);
         if ($context === null || $context->relationshipHooks() === []) {
             return;
         }
@@ -438,7 +439,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
                 return;
             }
             $query->andWhere($query->getRootAliases()[0] . '.' . $field . ' IN (:fallback_ids)');
-            \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierParameters::bind($query, $em, $metadata->dataClass, 'fallback_ids', $ids);
+            \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierParameters::bind($query, $em, $metadata->dataClass, 'fallback_ids', $ids);
         };
         return $this->repository->findCollection($targetType, $selected);
     }
@@ -455,7 +456,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
         $entityClass = $metadata->dataClass;
 
         $em = $this->getEntityManagerFor($entityClass);
-        $entity = $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
+        $entity = $em->find($entityClass, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         if ($entity === null) {
             throw new NotFoundException(
@@ -512,7 +513,7 @@ final class GenericDoctrineRelationshipHandler implements RelationshipReader, Re
     private function findRelatedEntity(string $entityClass, string $id): object
     {
         $em = $this->getEntityManagerFor($entityClass);
-        $entity = $em->find($entityClass, \AlexFigures\Symfony\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
+        $entity = $em->find($entityClass, \AlexFigures\JsonApi\Bridge\Doctrine\Identifier\IdentifierConverter::convert($em, $entityClass, $id));
 
         if ($entity === null) {
             throw new NotFoundException(

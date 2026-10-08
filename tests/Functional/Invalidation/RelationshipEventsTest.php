@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Functional\Invalidation;
+namespace AlexFigures\JsonApi\Tests\Functional\Invalidation;
 
-use AlexFigures\Symfony\Events\RelationshipChangedEvent;
-use AlexFigures\Symfony\Http\Controller\RelationshipWriteController;
-use AlexFigures\Symfony\Tests\Functional\JsonApiTestCase;
+use AlexFigures\JsonApi\Events\RelationshipChangedEvent;
+use AlexFigures\JsonApi\Http\Controller\RelationshipWriteController;
+use AlexFigures\JsonApi\Tests\Functional\JsonApiTestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -211,35 +211,35 @@ final class RelationshipEventsTest extends JsonApiTestCase
         // Initialize the test case to get all dependencies
         $this->registry();
 
-        $relationshipValidator = new \AlexFigures\Symfony\Http\Write\RelationshipDocumentValidator(
+        $relationshipValidator = new \AlexFigures\JsonApi\Http\Write\RelationshipDocumentValidator(
             $this->registry(),
-            new \AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryExistenceChecker($this->repository()),
+            new \AlexFigures\JsonApi\Tests\Fixtures\InMemory\InMemoryExistenceChecker($this->repository()),
             $this->errorMapper()
         );
 
-        $relationshipUpdater = new \AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater(
+        $relationshipUpdater = new \AlexFigures\JsonApi\Tests\Fixtures\InMemory\InMemoryRelationshipUpdater(
             $this->registry(),
             $this->repository()
         );
 
-        $relationshipReader = new \AlexFigures\Symfony\Tests\Fixtures\InMemory\InMemoryRelationshipReader(
+        $relationshipReader = new \AlexFigures\JsonApi\Tests\Fixtures\InMemory\InMemoryRelationshipReader(
             $this->registry(),
             $this->repository(),
             $this->propertyAccessor()
         );
 
-        $pagination = new \AlexFigures\Symfony\Http\Request\PaginationConfig(defaultSize: 25, maxSize: 100);
+        $pagination = new \AlexFigures\JsonApi\Http\Request\PaginationConfig(defaultSize: 25, maxSize: 100);
 
-        $linkageBuilder = new \AlexFigures\Symfony\Http\Relationship\LinkageBuilder(
+        $linkageBuilder = new \AlexFigures\JsonApi\Http\Relationship\LinkageBuilder(
             $this->registry(),
             $relationshipReader,
             $pagination
         );
 
-        $relationshipResponseConfig = new \AlexFigures\Symfony\Http\Relationship\WriteRelationshipsResponseConfig('linkage');
+        $relationshipResponseConfig = new \AlexFigures\JsonApi\Http\Relationship\WriteRelationshipsResponseConfig('linkage');
 
-        $operationValidator = new \AlexFigures\Symfony\Http\Controller\Support\OperationValidator($this->errorMapper());
-        $requestDecoder = new \AlexFigures\Symfony\Http\Controller\Support\RequestDecoder($this->errorMapper());
+        $operationValidator = new \AlexFigures\JsonApi\Http\Controller\Support\OperationValidator($this->errorMapper());
+        $requestDecoder = new \AlexFigures\JsonApi\Http\Controller\Support\RequestDecoder($this->errorMapper());
 
         return new RelationshipWriteController(
             $operationValidator,

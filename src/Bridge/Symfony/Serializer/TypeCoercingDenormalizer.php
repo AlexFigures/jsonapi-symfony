@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Bridge\Symfony\Serializer;
+namespace AlexFigures\JsonApi\Bridge\Symfony\Serializer;
 
 use Symfony\Component\Serializer\Normalizer\DenormalizerAwareInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerAwareTrait;
@@ -28,6 +28,7 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
  *
  * This denormalizer must be placed BEFORE ObjectNormalizer in the chain
  * to intercept and coerce data before strict type checking occurs.
+ * @internal
  */
 final class TypeCoercingDenormalizer implements DenormalizerInterface, DenormalizerAwareInterface
 {

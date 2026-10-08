@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Query\Fetch;
+namespace AlexFigures\JsonApi\Query\Fetch;
 
 /** @api Request-local results. Never installs partial ORM collections. */
 final class RelationshipReadMap

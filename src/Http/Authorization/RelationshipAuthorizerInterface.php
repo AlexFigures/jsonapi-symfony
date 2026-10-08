@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Authorization;
+namespace AlexFigures\JsonApi\Http\Authorization;
 
 use Symfony\Component\HttpFoundation\Request;
 

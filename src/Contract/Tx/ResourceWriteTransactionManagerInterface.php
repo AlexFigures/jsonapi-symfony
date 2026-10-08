@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Contract\Tx;
+namespace AlexFigures\JsonApi\Contract\Tx;
 
-/** Optional single-resource write capability; Atomic batches still use scoped transactionalFor(). */
+/** Optional single-resource write capability; Atomic batches still use scoped transactionalFor().
+ * @api
+ */
 interface ResourceWriteTransactionManagerInterface extends TransactionManager
 {
     /** @template T

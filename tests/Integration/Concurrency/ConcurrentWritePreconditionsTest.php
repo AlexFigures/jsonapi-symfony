@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Tests\Integration\Concurrency;
+namespace AlexFigures\JsonApi\Tests\Integration\Concurrency;
 
-use AlexFigures\Symfony\Tests\Integration\Atomic\DoctrineAtomicTestCase;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Concurrency\WritePreconditionsHarness;
-use AlexFigures\Symfony\Tests\Integration\Fixtures\Entity\GeneratedRecord;
+use AlexFigures\JsonApi\Tests\Integration\Atomic\DoctrineAtomicTestCase;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Concurrency\WritePreconditionsHarness;
+use AlexFigures\JsonApi\Tests\Integration\Fixtures\Entity\GeneratedRecord;
 
 final class ConcurrentWritePreconditionsTest extends DoctrineAtomicTestCase
 {

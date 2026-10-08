@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace AlexFigures\Symfony\Http\Controller\Support;
+namespace AlexFigures\JsonApi\Http\Controller\Support;
 
-use AlexFigures\Symfony\Http\Negotiation\MediaType;
+use AlexFigures\JsonApi\Http\Negotiation\MediaType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * This service ensures all responses have the correct Content-Type header
  * and follow JSON:API specification requirements.
+ * @internal
  */
 final class JsonApiResponseFactory
 {
@@ -28,7 +29,7 @@ final class JsonApiResponseFactory
         int $status = Response::HTTP_OK,
         bool $isHead = false
     ): JsonResponse {
-        $response = new \AlexFigures\Symfony\Http\Controller\Support\RepresentationResponse($document, $status);
+        $response = new \AlexFigures\JsonApi\Http\Controller\Support\RepresentationResponse($document, $status);
         $response->headers->set('Content-Type', MediaType::JSON_API);
 
         if ($isHead) {
