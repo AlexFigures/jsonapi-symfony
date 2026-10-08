@@ -1,6 +1,6 @@
 # Upgrade to 1.0
 
-This guide records implemented pre-1.0 changes and the reviewed public candidate. No stable release is announced. The independent proof applies to its recorded SHA; final stabilization and RC revisions require fresh platform-specific verification. The namespace migration is recorded below.
+This guide records implemented pre-1.0 changes and the reviewed public contract. No stable release is announced. The merged implementation is independently verified; exact-revision evidence and published-package verification are recorded in the release documentation. The namespace migration is recorded below.
 
 ## Atomic transaction boundaries
 
@@ -82,11 +82,11 @@ Native relationship endpoints now use scoped SQL membership/pagination instead o
 
 **Why:** a root with several related values needs an explicit sort definition.
 
-**Migration:** enable `reject` and register handlers defining MIN/MAX or a domain aggregate. The bundle regression suite demonstrates a correlated MIN handler. The 1.0 candidate retains this default; strict production ordering requires explicit policy and aggregate handlers.
+**Migration:** enable `reject` and register handlers defining MIN/MAX or a domain aggregate. The bundle regression suite demonstrates a correlated MIN handler. The 1.0 contract retains this default; strict production ordering requires explicit policy and aggregate handlers.
 
 ## Reviewed migration scope
 
-The reviewed candidate retains attribute constructor names/defaults and moves its public namespace as recorded below. Active configuration, public types and error semantics are documented below and in the API manifest. Final platform support and release still require exact-revision CI plus independent consumer verification.
+The reviewed contract retains attribute constructor names/defaults and moves its public namespace as recorded below. Active configuration, public types and error semantics are documented below and in the API manifest. Platform verification is recorded in [the compatibility policy](docs/release/compatibility.md); the release checklist tracks published-package checks.
 
 ## Readonly final types
 
@@ -191,7 +191,7 @@ The native representation preloader now embeds the collection scope predicate in
 
 **Migration:** remove `release:` from application configuration. Freeze is enforced by the API inventory, regression/BC tests and release process, not runtime switches.
 
-## Public candidate and error semantics
+## Public contract and error semantics
 
 **Before:** many types were unclassified; extension DTOs could carry internal annotations.
 

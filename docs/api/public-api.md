@@ -1,6 +1,6 @@
-# Public extension contracts — 1.0 candidate
+# Public extension contracts
 
-This index describes the deliberately reviewed 1.0 candidate. The [manifest](public-api-manifest.json) classifies every source declaration; source signatures and named attribute arguments form the proposed 1.x surface. PUBLIC interfaces and their argument/return DTOs are intended extension points. INTERNAL helpers are not consumer API. See [usage examples](extension-examples.md), [BC policy](bc-policy.md) and [audit record](../release/public-api-audit.md).
+This index describes the deliberately reviewed 1.0 contract. The [manifest](public-api-manifest.json) classifies every source declaration; source signatures and named attribute arguments form the reviewed 1.x surface. PUBLIC interfaces and their argument/return DTOs are intended extension points. INTERNAL helpers are not consumer API. See [usage examples](extension-examples.md), [BC policy](bc-policy.md) and [audit record](../release/public-api-audit.md).
 
 ## Persistence
 
@@ -40,7 +40,7 @@ Optional [FetchPlanHookInterface](../../src/Profile/Hook/FetchPlanHookInterface.
 
 ## Resource declarations and queries
 
-Resource attributes live in [Resource/Attribute](../../src/Resource/Attribute); operation/projection enums live in [Resource/Definition](../../src/Resource/Definition). Named attribute arguments, defaults and enum values are part of the proposed consumer surface. [Custom handlers](../guide/custom-handlers.md) extend filters and sorts; filter handlers must preserve logical composition and collection sorts must define aggregate semantics.
+Resource attributes live in [Resource/Attribute](../../src/Resource/Attribute); operation/projection enums live in [Resource/Definition](../../src/Resource/Definition). Named attribute arguments, defaults and enum values are part of the reviewed consumer surface. [Custom handlers](../guide/custom-handlers.md) extend filters and sorts; filter handlers must preserve logical composition and collection sorts must define aggregate semantics.
 
 Configuration keys, service aliases/tags, console commands and HTTP error codes are additional contracts even when no PHP interface is involved. The [audit checklist](../release/public-api-audit.md) covers them. Migration decisions belong in [UPGRADE-1.0](../../UPGRADE-1.0.md).
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "1.0 candidate freeze",
+  "status": "1.0 reviewed public API freeze",
   "symbols": {
     "src/Atomic/AtomicConfig.php": {
       "classification": "INTERNAL",

@@ -1,29 +1,30 @@
-# 1.0 release gate
+# 1.0 release checklist
 
-No release/tag/publication is performed by this stabilization task. `[x]` records repository preparation, not an unexecuted CI/external result.
+The implementation is merged and externally verified, and the RC tag already exists (confirmed by the release owner). Merge the final documentation/release branch, then publish `1.0.0`; no new RC cycle is planned. Evidence is recorded in [verification](verification.md).
 
-- [x] Known runtime correctness gaps closed on the independently tested revision.
-- [x] Revision-specific external evidence recorded: bundle `a17ffd40a7d3a1e642a33aaf788427bb6b117fdb`; acceptance 666/666, 6806 assertions; torture 62, 4185 assertions; zero failures/skips, zero open P0/P1/P2 gaps. Production subset 76 and features subset 273 also pass.
-- [x] Public candidate classified; optional capabilities and transitive DTOs deliberately public; namespace decisions resolved.
-- [x] Active configuration and error contract documented; inert options removed with migration notes.
-- [x] Real PHP/Symfony Composer resolution and blocking compatibility matrix established; BC/mutation tools isolated.
-- [x] Lowest/current ORM 3 / DBAL 3 and 4 lanes and real PostgreSQL/MySQL integration configured.
-- [x] Direct Symfony deprecation gate, strict Composer, tests, PHPStan, style, Deptrac, security, docs and inventory gates configured.
-- [x] BC smoke is executable; real `1.0.0` baseline becomes required once it exists.
-- [x] Canonical docs, onboarding, upgrade/BC guide and packaging/publication preparation provided.
-- [x] Namespace, deprecation cleanup and Rector candidate pass all six full compatibility lanes (1321 tests each). Quality checks, security audits and operational BC smoke pass; exact stages/versions/results are recorded in [local verification](verification.md).
-- [ ] Inspect all remote required CI jobs on the exact stabilization SHA; reconcile [local verification](verification.md) and any remaining compatibility failures.
-- [ ] Merge reviewed stabilization to main.
-- [ ] **External:** verify final stabilization SHA on Symfony 7.4/PHP 8.2 fixture.
-- [ ] **External:** verify final stabilization SHA on Symfony 8.1/PHP 8.4 fixture.
-- [ ] **External:** verify Symfony 8.2 fixture when stable/relevant; stable 8.2 becomes blocking, development evidence is provisional.
-- [ ] Record exact bundle/example SHAs, PHP/Symfony/ORM/DBAL, acceptance/torture results and date for every fixture.
-- [ ] Cut `1.0.0-RC1` after platform gates; announce no final stable release yet.
-- [ ] **External:** install the RC through Composer in version-pinned fixtures with committed locks; rerun all supported platforms.
-- [ ] Create immutable external evidence tags identifying release plus platform (for example `bundle-1.0.0-rc1-sf74`); tags belong to the example repository.
-- [ ] Fix RC defects only; repeat affected evidence for changed revisions.
-- [ ] Release `1.0.0`; update changelog/date and comparison links, platform status and publication registrations.
-- [ ] Verify Packagist metadata and Symfony-hosted documentation rendering; update compatibility wording after stable Symfony 8.2 promotion.
-- [ ] Confirm all subsequent 1.x PRs fail BC changes against immutable `1.0.0`, with no continue-on-error.
+## Completed preparation
 
-See [compatibility and external fixture policy](compatibility.md), [support contract](../reference/support-contract.md), [publication](publication.md) and [BC policy](../api/bc-policy.md). Official support is bundle CI **plus** external proof, not Composer allowance alone. Mutation is advisory until its metric represents the intended surface; Rector recommendations are advisory and do not justify broad mechanical rewrites.
+- [x] Known runtime correctness gaps resolved; no open P0/P1/P2 gaps in the verified consumer.
+- [x] PR #67 merged to main as `96a1530f3155ddf001b7d1e48fd33e375c382d85`.
+- [x] Public API, attribute arguments, configuration and error semantics reviewed; namespace decisions and migration guide complete.
+- [x] PHP/Symfony compatibility matrix, Doctrine minimum/current lanes and PostgreSQL/MySQL/MariaDB integration established.
+- [x] Composer, tests, direct deprecations, PHPStan, CS, Deptrac, audit, documentation and API inventory gates established.
+- [x] All six local compatibility lanes passed 1321 tests each; CI database transport correction passed 505 integration tests on each of its minimum/current lanes.
+- [x] Independent stabilization verification passed Symfony 7.4/PHP 8.2 and Symfony 8.1/PHP 8.4; recorded results are 683 acceptance, 82 production, 280 features and 62 torture PASS on each.
+- [x] Release owner confirmed external verification across all compatibility targets, including the Symfony 8.2-dev forward target. Development evidence does not declare a stable 8.2 release supported.
+- [x] Canonical developer guide, configuration/support references and publication metadata prepared.
+- [x] BC tooling operational; immutable `1.0.0` becomes the required baseline when released.
+- [x] Existing RC tag published, as confirmed by the release owner.
+
+## Final publication
+
+- [ ] Confirm required CI is green on the final documentation/release commit and retain its run links.
+- [ ] Archive exact per-platform example SHAs, committed locks and reports; stabilization snapshots marked dirty are diagnostic proof rather than immutable package evidence.
+- [ ] Inspect the final Composer distribution: runtime/configuration and user documentation included; development artifacts excluded.
+- [ ] Merge the final documentation/release branch to main.
+- [ ] Publish `1.0.0`; set the changelog date/comparison links and verify Packagist metadata.
+- [ ] **External:** verify installation of the published final package and record committed locks/reports and immutable final-release evidence tags, such as `bundle-1.0.0-sf74` and `bundle-1.0.0-sf81`.
+- [ ] Verify Symfony-hosted documentation rendering/registration.
+- [ ] Confirm future 1.x PRs enforce BC against immutable `1.0.0` without continue-on-error.
+
+Promote Symfony 8.2 to a supported stable target only after its stable release passes both required bundle CI and published-package consumer verification. See [compatibility](compatibility.md), [support contract](../reference/support-contract.md), [publication](publication.md) and [BC policy](../api/bc-policy.md). Mutation remains advisory; no runtime feature expansion belongs in this release phase.

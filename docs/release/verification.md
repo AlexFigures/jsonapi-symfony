@@ -1,6 +1,6 @@
 # Stabilization evidence
 
-Local verification was performed on 2026-10-08 for the uncommitted candidate on `fix/acceptance-gaps`, based on `b5e5e3ccbc96954e6b66fee40c931dac651ba00a`. It includes the namespace migration, deprecation cleanup and PHP 8.2 Rector changes. This is not immutable release evidence or a remote CI result.
+Local verification on 2026-10-08 covered the namespace migration, deprecation cleanup and PHP 8.2 Rector changes committed as `b3bd899`. The CI database correction was committed as `773b163`; both are included in merged main `96a1530f3155ddf001b7d1e48fd33e375c382d85`. Local results and independent consumer evidence are recorded separately below.
 
 ## Bundle compatibility
 
@@ -19,10 +19,21 @@ Every lane had zero failures, errors, risky tests and direct deprecations, with 
 
 Strict Composer validation, security audit, PHP syntax, PHPStan with DBAL 3 and 4, deprecation scanning, CS, Deptrac, configuration drift and API inventory passed. Roave 8.23 identical-snapshot smoke passed; the stable 1.0.0 BC baseline does not exist yet. Rector dry-run was clean. Mutation testing was not run. Generated local reports were removed during repository cleanup; reproducible commands, version locks and test artifacts belong in CI evidence, not the source documentation tree.
 
-After CI exposed incomplete database environment wiring, a follow-up corrected every host DSN to TCP `127.0.0.1`, provided both PostgreSQL variable names and added a database connection preflight. Host-network integration reruns passed 505 tests on PHP 8.2/Symfony 7.4/ORM 3.0/DBAL 3.8 (4981 assertions) and PHP 8.4/Symfony 8.1/ORM 3.7.4/DBAL 4.5 (4978 assertions), with zero errors/skips/risky tests/direct deprecations. The old MySQL `localhost` DSN reproduced a connection failure; the replacement passed all connection checks. Remote CI still needs a rerun on the correction's committed SHA.
+After CI exposed incomplete database environment wiring, a follow-up corrected every host DSN to TCP `127.0.0.1`, provided both PostgreSQL variable names and added a database connection preflight. Host-network integration reruns passed 505 tests on PHP 8.2/Symfony 7.4/ORM 3.0/DBAL 3.8 (4981 assertions) and PHP 8.4/Symfony 8.1/ORM 3.7.4/DBAL 4.5 (4978 assertions), with zero errors/skips/risky tests/direct deprecations. The old MySQL `localhost` DSN reproduced a connection failure; the replacement passed all connection checks. The correction was committed as `773b163` and included in merged main `96a1530f3155ddf001b7d1e48fd33e375c382d85`.
 
-## Independent consumer
+## Independent consumer — merged implementation
 
-The separate [example application](https://github.com/AlexFigures/example-jsonapi-bundle) verified bundle `a17ffd40a7d3a1e642a33aaf788427bb6b117fdb`: acceptance 666/666, 6806 assertions; torture 62, 4185 assertions; production subset 76 and features subset 273 pass. There were no failures/skips or open P0/P1/P2 runtime gaps on that revision.
+The release owner confirmed on 2026-10-08 that external verification passed across all runtime/platform targets. The verified merged bundle revision is `96a1530f3155ddf001b7d1e48fd33e375c382d85` (PR #67). The example repository was read only to reconcile existing evidence; its tests/files were not changed during this documentation update.
 
-That evidence does not cover later stabilization changes. The example repository was neither modified nor tested during this task. The final committed SHA needs required remote CI and separate platform-specific consumer verification, then the same verification against the RC. Record immutable release/platform evidence according to the [release checklist](checklist.md) and [compatibility policy](compatibility.md).
+| Recorded environment | ORM / DBAL / DoctrineBundle | Acceptance | Production | Features | Torture |
+| --- | --- | ---: | ---: | ---: | ---: |
+| PHP 8.2.34 / Symfony 7.4.20 | 3.7.4 / 4.5.0 / 2.19.1 | 683 PASS | 82 PASS | 280 PASS | 62 PASS |
+| PHP 8.4.26 / Symfony 8.1.8 | 3.7.4 / 4.5.0 / 3.3.2 | 683 PASS | 82 PASS | 280 PASS | 62 PASS |
+
+The records have zero skips, unexpected failures and open gaps. Both use executable-contract digest `73e5f2e934984189714e71f96df8608ece8e6ffdcf87db869d76ded3d333ed1b`. The release-gate summary records 7127 acceptance and 4185 torture assertions.
+
+Source records are [sf74 evidence](https://github.com/AlexFigures/example-jsonapi-bundle/blob/8c9545e3daf925b44e5f9c55a22644147dc273d7/docs/compatibility-evidence/sf74.json) and [sf81 evidence](https://github.com/AlexFigures/example-jsonapi-bundle/blob/8c9545e3daf925b44e5f9c55a22644147dc273d7/docs/compatibility-evidence/sf81.json). They identify example snapshots `e2dc660b9013951090014372e65fe20cfc7912e8` and `0fb1e3da2aecb707fda5085d017937b7c13f703b`, respectively, and explicitly mark those snapshots dirty. This is passing stabilization evidence; immutable release proof also needs committed source/locks and package-specific tags.
+
+The owner confirmed the remaining compatibility targets, including Symfony 8.2-dev, passed. No per-target versions/counts are inferred from the stable-platform records; archive that target's own machine-readable evidence during release preparation. A development run does not certify a future stable Symfony 8.2 package.
+
+Earlier proof for bundle `a17ffd40a7d3a1e642a33aaf788427bb6b117fdb` (666 acceptance / 62 torture) is superseded for current readiness by the merged-revision evidence above. The release owner confirmed the RC tag already exists and that final publication follows merging this documentation/release branch. No additional RC cycle is planned. The recorded dev-main runs remain exact-revision stabilization evidence; verify installation of the final published package and archive immutable final-platform evidence according to [the release checklist](checklist.md) and [compatibility policy](compatibility.md).
