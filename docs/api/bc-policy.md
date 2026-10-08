@@ -1,6 +1,6 @@
 # Backward compatibility policy
 
-The reviewed [manifest](public-api-manifest.json) and source `@api` annotations define the 1.0 public candidate. `@internal` types and members are implementation details. Constructor named arguments of public attributes, public value objects, interface signatures, documented service tags/aliases, active configuration and the [error contract](errors.md) form the intended 1.x compatibility surface.
+The reviewed [manifest](public-api-manifest.json) and source `@api` annotations define the 1.0 public contract. `@internal` types and members are implementation details. Constructor named arguments of public attributes, public value objects, interface signatures, documented service tags/aliases, active configuration and the [error contract](errors.md) form the intended 1.x compatibility surface.
 
 Required methods are not added to existing application-implemented interfaces during 1.x. New behavior uses optional capability interfaces. Doctrine/Symfony-specific capabilities remain explicitly tied to their supported dependencies. Internal implementation replacement is allowed while observable public behavior remains compatible.
 

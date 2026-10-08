@@ -2,11 +2,11 @@
 
 All notable user-facing changes are recorded here. Versions follow SemVer after the 1.0.0 baseline. No 1.0 release is declared by this file.
 
-## Unreleased — 1.0 stabilization
+## Unreleased — 1.0
 
 ### Added
 
-- Reviewed PUBLIC/INTERNAL candidate contract, stable configuration/error semantics and optional extension capabilities.
+- Reviewed PUBLIC/INTERNAL contract, stable configuration/error semantics and optional extension capabilities.
 - Real PHP 8.2/8.3/8.4, Symfony 7.4/8.1 and forward Symfony 8.2 compatibility lanes; lowest/current ORM 3.x / DBAL 3.x and 4.x with database integration.
 - Operational isolated BC tooling, direct deprecation gates, canonical onboarding/reference and publication preparation.
 
@@ -24,5 +24,10 @@ All notable user-facing changes are recorded here. Versions follow SemVer after 
 - Obsolete internal `ChangeSetFactory::fromAttributes()` alias.
 - Inactive pre-1.0 configuration: `dx.*`, `errors.locale`, five Doctrine performance toggles and inert `release.*`.
 - Root dependency on PHP-8.4-only BC/mutation tools; these remain isolated development tools.
+
+### Verification
+
+- PR #67 merged and independently verified across the compatibility targets. Recorded stable-platform runs pass 683 acceptance and 62 torture tests without failures/skips; [revision-specific evidence](docs/release/verification.md) includes production/feature subsets and platform provenance.
+- Symfony 7.4 and 8.1 are verified stable targets; Symfony 8.2-dev remains a forward target. Final-package installation is verified against the published release.
 
 Migration instructions are in [UPGRADE-1.0](UPGRADE-1.0.md). Final 1.0.0 release notes/date will be added only when release gates pass.

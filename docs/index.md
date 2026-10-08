@@ -1,6 +1,6 @@
 # JsonApiBundle documentation
 
-The guide describes the current 1.0 stabilization contract; no stable release is declared yet. Follow the [developer path](guide/developer-path.md), or choose a topic below. The independent [example application](https://github.com/AlexFigures/example-jsonapi-bundle) demonstrates the bundle in a real Symfony application and verifies it through black-box tests.
+This guide describes the reviewed 1.0 contract. Stable platform targets have passed independent consumer verification; package publication follows the [release checklist](release/checklist.md). Follow the [developer path](guide/developer-path.md), or choose a topic below. The independent [example application](https://github.com/AlexFigures/example-jsonapi-bundle) demonstrates the bundle in a real Symfony application and verifies it through black-box tests.
 
 | Step | Guide |
 | --- | --- |

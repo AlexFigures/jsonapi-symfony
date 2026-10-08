@@ -1,6 +1,6 @@
 # Production policies and boundaries
 
-These policies describe implemented behavior on the stabilization branch. Recorded consumer evidence is revision-specific; final stabilization/RC platform proof remains a release gate. [Support contract](../reference/support-contract.md) maps the implementation to evidence.
+These policies define the 1.0 behavior confirmed by the bundle suites and independent consumer verification. Evidence is revision-specific; installation of the published final package is verified separately. [Support contract](../reference/support-contract.md) maps the implementation to evidence.
 
 ## Atomic and single writes
 
@@ -24,7 +24,7 @@ The native Doctrine read path selects distinct roots before representation hydra
 
 Repository visibility remains part of native edge queries. A subclass overriding `findCollection()` does not automatically opt into the base query projection; custom projection must preserve its complete visibility semantics. Otherwise the bounded scoped fallback applies. Repository decorators must explicitly preserve the query capability with the same outer policy to retain native absolute SQL budgets; opaque wrappers use the safe, more expensive fallback.
 
-To-many sort paths have ambiguous ordering unless a handler defines aggregate semantics. Review the strict collection-sort policy before exposing them. Legacy behavior remains configurable during stabilization; the final default is not frozen.
+To-many sort paths have ambiguous ordering unless a handler defines aggregate semantics. Review the strict collection-sort policy before exposing them. The 1.0 default is `collection_sort_policy: legacy`. Set `reject` and provide explicit aggregate handlers when deterministic collection sorting is required.
 
 A starting production policy, deliberately stricter than some current defaults:
 

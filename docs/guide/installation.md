@@ -4,9 +4,15 @@
 composer require alexfigures/symfony-jsonapi-bundle
 ```
 
-During stabilization use an explicit available development revision or RC constraint in your application; the command above becomes the release path when the package is published. It does not imply that 1.0.0 exists today.
+The command installs a published stable release. During the release-candidate phase, select a published RC explicitly:
 
-The package requires PHP 8.2+ for Symfony 7.4. Symfony 8.x requires PHP 8.4.1+ through its component constraints. Stabilization targets Symfony 7.4 LTS, 8.1 and 8.2 (development lane until release). Composer allows `^7.4 || ^8.0`; official support requires bundle CI and independent application verification for the exact line. See [compatibility evidence](../release/compatibility.md).
+```bash
+composer require alexfigures/symfony-jsonapi-bundle:"^1.0@RC"
+```
+
+Available tags determine what Composer can install; preparing this documentation does not publish a package.
+
+The package requires PHP 8.2+ for Symfony 7.4. Symfony 8.x requires PHP 8.4.1+ through its component constraints. Verified stable targets are Symfony 7.4 LTS and 8.1. Symfony 8.2-dev has forward-compatibility verification; its stable release needs a separate promotion. Composer allows `^7.4 || ^8.0`; this does not declare every resolvable Symfony series supported. See [compatibility evidence](../release/compatibility.md).
 
 Doctrine is optional. The built-in provider targets ORM 3.x and DBAL 3.8+ / 4.3+, with PostgreSQL 16 and MySQL 8.0 integration lanes. Symfony 8.1/8.2 require the DBAL 4.3+ lane because current HttpFoundation conflicts with older DBAL. A custom provider can implement the [data contracts](../api/public-api.md).
 

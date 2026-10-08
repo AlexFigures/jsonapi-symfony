@@ -1,6 +1,6 @@
 # Configuration
 
-Configure the bundle under `jsonapi:` in `config/packages/jsonapi.yaml`. This guide describes the reviewed candidate. The [generated reference](../reference/configuration.md) documents every active node, default, scope, limit and deprecation directly from the actual Symfony tree.
+Configure the bundle under `jsonapi:` in `config/packages/jsonapi.yaml`. This guide describes the reviewed contract. The [generated reference](../reference/configuration.md) documents every active node, default, scope, limit and deprecation directly from the actual Symfony tree.
 
 ## Discovery and provider
 

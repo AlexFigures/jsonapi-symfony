@@ -1,6 +1,6 @@
 # Public API freeze record
 
-The candidate surface is deliberately classified in [public-api-manifest.json](../api/public-api-manifest.json), one decision and rationale per source declaration. `make api-inventory` currently reviews 300 declarations: 135 PUBLIC and 165 INTERNAL. There are no unclassified source symbols or retained deprecated PHP types in this inventory.
+The reviewed surface is deliberately classified in [public-api-manifest.json](../api/public-api-manifest.json), one decision and rationale per source declaration. `make api-inventory` currently reviews 300 declarations: 135 PUBLIC and 165 INTERNAL. There are no unclassified source symbols or retained deprecated PHP types in this inventory.
 
 PUBLIC includes application-implemented persistence/transaction/relationship contracts, typed dispatch, optional batch/preloader/concurrency/query-provider capabilities, their transitive DTOs, resource attributes/enums/metadata, query values and AST values needed by handlers, profile services/contexts/hooks, response/error builders, intended events and exceptions, public documentation/media attributes and selected decoration seams. Compiler passes, ordinary controllers (the explicit Atomic route callable is PUBLIC), parsers, compilers, built-in operator implementations, discovery and wiring machinery are INTERNAL.
 
@@ -10,4 +10,4 @@ The public root moves from `AlexFigures\Symfony` to `AlexFigures\JsonApi`; the B
 
 Attribute constructor names/defaults and enum values are retained. Profiles are container services with constructor DI, activate by negotiated/default/per-type policy and declare optional hooks without expanding required methods. Public factories are obtained from DI; internal collaborators in their construction are wiring details, not application extension dependencies. All supported implementable signatures and DTOs are described in [public API](../api/public-api.md) and [examples](../api/extension-examples.md).
 
-Configuration is generated from the actual tree; removed inert surfaces are in [UPGRADE-1.0](../../UPGRADE-1.0.md). Error status/code/source semantics are in [errors](../api/errors.md). Future changes to this candidate before final 1.0 require deliberate review, a migration note and fresh consumer evidence; the recorded older evidence cannot be reused automatically.
+Configuration is generated from the actual tree; removed inert surfaces are in [UPGRADE-1.0](../../UPGRADE-1.0.md). Error status/code/source semantics are in [errors](../api/errors.md). Future changes to this contract before final 1.0 require deliberate review, a migration note and fresh consumer evidence; the recorded older evidence cannot be reused automatically.
