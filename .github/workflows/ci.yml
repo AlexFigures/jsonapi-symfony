@@ -23,7 +23,7 @@ jobs:
         with:
           python-version: '3.x'
       - run: make docs-check api-inventory
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: public-api-inventory
           path: reports/public-api-inventory.json
@@ -75,7 +75,7 @@ jobs:
         # ORM 3.0 pulls abandoned doctrine/cache in the minimum-API lane.
         # Report that notice; security advisories remain blocking in every lane.
         run: composer audit ${{ matrix.dependencies == 'lowest' && '--abandoned=report' || '' }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: compat-php${{ matrix.php }}-sf${{ matrix.symfony }}-${{ matrix.dependencies }}
@@ -124,7 +124,7 @@ jobs:
       - name: Surface development lane failures
         if: steps.status.outputs.stable != 'true' && steps.forward.outcome != 'success'
         run: echo '::warning::Symfony 8.2-dev forward compatibility failed; inspect this lane before release.'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: symfony-next-resolution
@@ -168,6 +168,6 @@ jobs:
       - name: Mutation visibility (scope excludes database integrations)
         run: make mutation
         env: {XDEBUG_MODE: coverage}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with: {name: mutation-report, path: infection.log}
