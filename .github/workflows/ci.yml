@@ -18,7 +18,7 @@ jobs:
   documentation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: '3.x'
@@ -55,7 +55,7 @@ jobs:
         ports: ['3307:3306']
         options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -102,7 +102,7 @@ jobs:
         ports: ['3307:3306']
         options: --health-cmd="healthcheck.sh --connect --innodb_initialized" --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with: {php-version: '8.4', extensions: 'pdo_pgsql, pdo_mysql, pdo_sqlite, intl, mbstring', tools: 'composer:v2', coverage: none}
       - run: composer validate --strict
@@ -135,7 +135,7 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: {fetch-depth: 0}
       - uses: shivammathur/setup-php@v2
         with: {php-version: '8.4', tools: 'composer:v2', coverage: none}
@@ -157,7 +157,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with: {php-version: '8.4', tools: 'composer:v2', coverage: xdebug}
       - run: composer install --prefer-dist --no-progress --no-interaction
