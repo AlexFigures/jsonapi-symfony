@@ -33,7 +33,7 @@
     "friendsofphp/php-cs-fixer": "^3.64",
     "jbelien/phpstan-sarif-formatter": "^1.2",
     "phpstan/phpstan": "^2.2",
-    "phpunit/phpunit": "^11.5.50",
+    "phpunit/phpunit": "^13.4.6",
     "rector/rector": "^2.0",
     "spatie/phpunit-snapshot-assertions": "^5.2",
     "symfony/cache": "^7.4 || ^8.0",
